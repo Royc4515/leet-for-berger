@@ -1,0 +1,88 @@
+# CLAUDE.md - Leet-For-Berger
+
+Interactive coding assessment platform (LeetCode / HackerRank style). Static SPA, vanilla ES modules, no build step, deploys to GitHub Pages.
+
+Read this file fully before any task. Then read the docs it points to for the area you touch.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Static server on http://localhost:5173 (ES modules + workers need HTTP, not file://) |
+| `npm test` | Unit tests (`node --test`), pure logic only, ~1s |
+| `npm run test:e2e` | Playwright smoke test in Chromium: Monaco, workers, Pyodide, routing, lockdown. Fails on any console error |
+| `npm run check` | Both. Run before every commit |
+
+Local e2e on a machine with Chrome but no Playwright browsers: `PW_CHANNEL=chrome npm run test:e2e`. Skip the slow Pyodide download: `node e2e/smoke.mjs --no-python`. Screenshots: `--shots=/tmp/shots`.
+
+## Architecture map
+
+```
+index.html                 shell: header, <main id="view">, loads src/js/main.js
+src/css/app.css            all styles; design tokens at the top
+src/js/main.js             bootstrap + hash router (every view returns a cleanup fn)
+src/js/engine/             PURE judging logic + execution
+  harness.js               buildSuite (15 cases), judge, deepEqual, preview
+  runners/index.js         language -> runner registry
+  runners/worker-runner.js generic Web Worker runner, per-case watchdog
+  workers/js-worker.js     executes user JS
+  workers/py-worker.js     executes user Python via Pyodide (persistent worker)
+src/js/problems/           one module per problem + index.js (catalog, topics)
+src/js/state/              progress (pure reducers + localStorage), drafts
+src/js/modes/              interview.js, battle.js (pure session logic)
+src/js/mentor/             mentor providers (scripted today, remote later)
+src/js/data/curriculum.js  4 learning-path milestones
+src/js/ui/                 dom helpers, editor (Monaco + fallback), resizer, results console
+src/js/ui/views/           dashboard, workspace, path, modes (hub, interview, battle)
+tests/                     node --test unit tests
+e2e/smoke.mjs              Playwright smoke test
+docs/                      ARCHITECTURE, PROBLEM_FORMAT, ROADMAP, adr/
+```
+
+Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
+
+## Invariants (breaking any of these is a bug, not a style choice)
+
+1. **Every run executes exactly 15 cases**: 5 visible (detailed feedback) + 10 hidden (pass/fail). `buildSuite` throws otherwise. Custom input replaces visible slot 1 on Run only; Submit always uses the canonical 15.
+2. **Expected values never reach a worker.** Workers get `{ id, args }` only. User code could read the message and echo answers.
+3. **Hidden case data never reaches the UI.** `judge()` strips args/expected/actual from hidden cases. Redaction lives in the harness, not in rendering.
+4. **User strings never go through `innerHTML`.** Use `h()` from `ui/dom.js` (text nodes). `trustedHtml` is only for author-written problem statements.
+5. **Hidden tests are deterministic.** Generated inputs use the seeded `mulberry32`, never `Math.random()`.
+6. **Pure modules stay pure.** `engine/harness.js`, `state/progress.js`, `modes/*.js`, `mentor/mentor.js` have no DOM access and take time as a parameter (`now`) so they are unit-testable. Do not read `Date.now()` inside a reducer without a `now` override. (This already caused one bug: tab-switch tracking.)
+7. **Every view returns a cleanup function.** Monaco instances, intervals and listeners leak otherwise.
+8. **CDN versions are pinned** (Monaco 0.52.2, Pyodide 0.27.2). Upgrading is a deliberate task with an e2e run, not a drive-by.
+9. **Zero console errors.** The e2e test enforces it.
+10. **No secrets in the client.** This is a static site. LLM keys, solution vaults and real judging for competitive modes require the backend (ROADMAP Phase 2-3).
+
+## Conventions
+
+- Vanilla JS, ES modules, no framework, no bundler. Adding either needs an ADR in `docs/adr/` first (see ADR 0001 for why).
+- JSDoc on every exported function. Inline comments explain **why**, never what.
+- Flag counterintuitive or load-bearing lines with `// don't touch / <reason>`. Treat these as spec. Do not "simplify" them without reading the reason.
+- Naming: `camelCase` functions, `PascalCase` classes, `kebab-case` files. Problem ids are kebab-case and match the file name.
+- No em dashes anywhere (code, comments, docs, UI copy). Use a regular hyphen.
+- UI copy is short and direct. No exclamation marks except in genuine success states.
+- Accessibility: interactive elements are real `<button>`/`<a>`, keyboard reachable, `aria-*` where state is not visual-only.
+- English for code and docs.
+
+## Workflow
+
+1. Branch per task: `feat/...`, `fix/...`, `content/<problem-id>`, `docs/...`.
+2. Write or update unit tests for any pure-logic change first.
+3. `npm run check` must pass. For UI changes, also look at the screenshots (`--shots`).
+4. Update `CHANGELOG.md` (Unreleased section) and, if the change shifts scope, `docs/ROADMAP.md`.
+5. Small commits with imperative subjects. PR description: what, why, how verified.
+
+## Definition of done
+
+- `npm test` green, `npm run test:e2e` green with zero console errors.
+- New behavior covered by a unit test (logic) or an e2e step (UI flow).
+- Docs and CHANGELOG updated.
+- No new invariant violations (re-read the list above).
+
+## Known limits (do not "fix" by faking)
+
+- Java is editor-only: there is no in-browser JVM. The verdict says so honestly. Real fix is the server runner (ROADMAP Phase 2).
+- "Reveal Solution" is gated by a confirm dialog and marks the problem as assisted, but solutions ship in the client bundle. True secrecy needs the server (Phase 2).
+- Battle is bot-only. Peer battles need server-side judging so clients cannot fake progress (Phase 3).
+- AI Mentor runs on a scripted hint ladder. The LLM provider needs a backend proxy (Phase 3). The system prompt already lives in `src/js/mentor/mentor.js`.
