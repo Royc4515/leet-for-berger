@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Added
+- Essential problems, batch 1 (Arrays & Hashing), each with solutions in 8 languages: Pair Sum Target, Anagram Buckets, Top K Frequent, Longest Streak, Isomorphic Strings, Ticket Queue. Where several answers would be valid, the statement fixes one order so judging is exact. 9 of the 131 essential problems are done.
+- Verifier check that every test case passes exactly the signature's arguments (JavaScript silently ignores extra arguments; this caught a malformed hidden test).
 - Linked lists, binary trees and design problems in the problem format: `ListNode`, `ListNode[]` and `TreeNode` signature types (LeetCode JSON forms) and class signatures tested as operation sequences. Starter code, browser runtime (`src/js/engine/adapters.js`) and the 8-language verifier support all of them.
 - Problems: Reverse List (linked list), Level Order (binary tree) and Min Stack (design), each in 8 languages. All three are on the essential path.
 - `src/js/engine/structures.js`: tree and list helpers for problem references and generators.

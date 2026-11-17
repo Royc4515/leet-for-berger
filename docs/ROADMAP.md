@@ -37,7 +37,7 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 - [x] 8-language verifier in CI (Python, JavaScript, TypeScript, Java, C++, C, C#, Go)
 - [x] Signature types for linked lists and trees, class-based design problems (pilots: Reverse List, Level Order, Min Stack)
 - [ ] Signature types for graphs as node objects, lists with random or cycle pointers; SQL runner
-- [ ] Author the 131 essential problems (3 done)
+- [ ] Author the 131 essential problems (9 done: batch 1 Arrays & Hashing, plus Reverse List, Level Order, Min Stack)
 - [ ] SQL runner (e.g. sql.js) so the SQL topic can ship
 - [ ] Author problems topic by topic, tier 0 first; 15 tests each, solutions in 3 languages
 - [ ] Replace the 4 hand-picked milestones with paths derived from the taxonomy
