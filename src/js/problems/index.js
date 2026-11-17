@@ -41,6 +41,14 @@ import bracketCheck from './bracket-check/problem.js';
 import asteroidCollision from './asteroid-collision/problem.js';
 import warmerDays from './warmer-days/problem.js';
 import postfixEval from './postfix-eval/problem.js';
+import productExceptSelf from './product-except-self/problem.js';
+import subarraySumK from './subarray-sum-k/problem.js';
+import regionSum from './region-sum/problem.js';
+import rangeBookings from './range-bookings/problem.js';
+import largestConcat from './largest-concat/problem.js';
+import mergeRanges from './merge-ranges/problem.js';
+import meetingRoomMinimizer from './meeting-room-minimizer/problem.js';
+import smallerCount from './smaller-count/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -67,7 +75,7 @@ function hydrate(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
@@ -97,7 +105,6 @@ export async function loadSolution(problemId, lang) {
 const planned = [
   { id: 'mirror-check', title: 'Mirror Check (Two Pointers)', difficulty: 'Easy', topics: ['arrays-strings'], milestone: 1 },
   { id: 'longest-distinct-window', title: 'Longest Distinct Window', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 2 },
-  { id: 'meeting-room-minimizer', title: 'Meeting Room Minimizer', difficulty: 'Medium', topics: ['greedy'], milestone: 2 },
   { id: 'rotated-search', title: 'Search in Rotated Array', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 2 },
   { id: 'jump-reach', title: 'Jump Reach', difficulty: 'Medium', topics: ['greedy'], milestone: 2 },
   { id: 'tree-level-sums', title: 'Tree Level Sums', difficulty: 'Easy', topics: ['trees'], milestone: 3 },
