@@ -137,6 +137,8 @@ const CONTENT_IDS = {
   'multiply-strings': ['string-multiply', 'verified'],
   'count-primes': ['prime-count', 'verified'],
   'greatest-common-divisor-of-strings': ['string-gcd', 'verified'],
+  // Integer variant: modular result instead of a double, so judging is exact.
+  'powx-n': ['power-mod', 'verified'],
   'spiral-matrix': ['spiral-order', 'verified'],
   'rotate-image': ['rotate-grid', 'verified'],
   'set-matrix-zeroes': ['zero-rows-cols', 'verified'],
