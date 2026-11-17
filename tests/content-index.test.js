@@ -30,18 +30,18 @@ test('every topic has enough candidates to fill its ladder', () => {
 });
 
 test('validateIndexRecord rejects a rating outside the difficulty band', () => {
-  const rec = { slug: 'x', title: 'X', topic: 'stack', concept: null, difficulty: 'Easy', rating: 6, estMinutes: 15, status: 'indexed', priority: 0.5 };
+  const rec = { slug: 'x', title: 'X', topic: 'stack', concept: null, difficulty: 'Easy', rating: 6, estMinutes: 15, status: 'indexed', priority: 0.5, ladderStep: null, wave: null };
   assert.ok(validateIndexRecord(rec, TOPICS).some((e) => e.includes('outside Easy band')));
 });
 
 test('validateIndexRecord rejects a concept from another topic', () => {
-  const rec = { slug: 'x', title: 'X', topic: 'stack', concept: 'dijkstra', difficulty: 'Medium', rating: 5, estMinutes: 25, status: 'indexed', priority: 0.5 };
+  const rec = { slug: 'x', title: 'X', topic: 'stack', concept: 'dijkstra', difficulty: 'Medium', rating: 5, estMinutes: 25, status: 'indexed', priority: 0.5, ladderStep: null, wave: null };
   assert.ok(validateIndexRecord(rec, TOPICS).some((e) => e.includes('not in stack')));
 });
 
 test('selected problems fill every ladder exactly to its target', () => {
   for (const t of TOPICS) {
-    const mine = index.problems.filter((r) => r.topic === t.id && r.status !== 'indexed');
+    const mine = index.problems.filter((r) => r.topic === t.id && r.ladderStep !== null);
     const got = { easy: 0, medium: 0, hard: 0 };
     for (const r of mine) got[r.difficulty.toLowerCase()]++;
     assert.deepEqual(got, t.ladder, t.id);
@@ -59,4 +59,23 @@ test('every authored or planned problem sits on a ladder', () => {
   for (const r of index.problems.filter((p) => p.contentId)) {
     assert.notEqual(r.status, 'indexed', `${r.contentId} (${r.slug}) is not on any ladder`);
   }
+});
+
+test('every classic and every easy classic is in the core bank', () => {
+  for (const r of index.problems) {
+    if (r.lists.includes('blind75') || r.lists.includes('neetcode150')) assert.notEqual(r.wave, null, r.slug);
+    if (r.difficulty === 'Easy' && r.lists.includes('neetcode-all')) assert.notEqual(r.wave, null, r.slug);
+  }
+});
+
+test('wave 1 is the learning core, wave 2 is company coverage only', () => {
+  for (const r of index.problems.filter((p) => p.wave !== null)) {
+    const learning = r.core.some((c) => c !== 'company-common');
+    assert.equal(r.wave, learning ? 1 : 2, r.slug);
+  }
+});
+
+test('validateIndexRecord rejects a ladder problem without a concept', () => {
+  const rec = { slug: 'x', title: 'X', topic: 'stack', concept: null, difficulty: 'Medium', rating: 5, estMinutes: 25, status: 'selected', priority: 0.5, ladderStep: 0, wave: 1 };
+  assert.ok(validateIndexRecord(rec, TOPICS).some((e) => e.includes('needs a concept')));
 });

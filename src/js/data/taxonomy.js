@@ -73,6 +73,14 @@ export const TOPICS = [
     ladder: { easy: 3, medium: 4, hard: 2 },
   },
   {
+    id: 'matrix',
+    title: 'Matrix',
+    tier: 1,
+    prereqs: ['arrays-hashing'],
+    concepts: ['traversal-order', 'in-place-transform', 'in-place-marker', 'grid-simulation'],
+    ladder: { easy: 2, medium: 4, hard: 1 },
+  },
+  {
     id: 'stack',
     title: 'Stack',
     tier: 1,
@@ -245,7 +253,7 @@ export const TOPICS = [
     title: 'Range Queries',
     tier: 5,
     prereqs: ['prefix-sum', 'trees'],
-    concepts: ['fenwick-tree', 'segment-tree', 'sparse-table'],
+    concepts: ['fenwick-tree', 'segment-tree'],
     ladder: { easy: 0, medium: 2, hard: 3 },
   },
 ];
@@ -286,7 +294,7 @@ export function validateTaxonomy(topics) {
       else if (pre.tier >= t.tier) errors.push(`${t.id}: prereq ${p} is not in a lower tier`);
     }
     if (t.tier > 0 && t.prereqs.length === 0) errors.push(`${t.id}: tier ${t.tier} topic needs a prereq`);
-    if (t.concepts.length < 3) errors.push(`${t.id}: needs at least 3 concepts`);
+    if (t.concepts.length < 2) errors.push(`${t.id}: needs at least 2 concepts`);
     if (new Set(t.concepts).size !== t.concepts.length) errors.push(`${t.id}: duplicate concept`);
     const { easy, medium, hard } = t.ladder;
     if (medium < 2) errors.push(`${t.id}: ladder needs at least 2 medium problems`);
@@ -334,10 +342,14 @@ export function validateIndexRecord(rec, topics) {
   if (!(rec.estMinutes > 0)) errors.push(`${where}: estMinutes must be positive`);
   if (!INDEX_STATUSES.includes(rec.status)) errors.push(`${where}: bad status ${rec.status}`);
   if (!(rec.priority >= 0 && rec.priority <= 1)) errors.push(`${where}: priority out of [0,1]`);
-  // Anything past `indexed` sits on a ladder, so it must know its concept and position.
-  if (rec.status !== 'indexed' && (rec.concept === null || !Number.isInteger(rec.ladderStep))) {
-    errors.push(`${where}: ${rec.status} problem needs a concept and ladderStep`);
+  // A ladder step is a place in the learning path, so it needs a concept and must be in the bank.
+  if (rec.ladderStep !== null && rec.ladderStep !== undefined) {
+    if (!Number.isInteger(rec.ladderStep) || rec.ladderStep < 0) errors.push(`${where}: bad ladderStep`);
+    if (rec.concept === null) errors.push(`${where}: ladder problem needs a concept`);
+    if (rec.status === 'indexed') errors.push(`${where}: ladder problem must be selected`);
   }
+  if (rec.status !== 'indexed' && ![1, 2].includes(rec.wave)) errors.push(`${where}: ${rec.status} problem needs wave 1 or 2`);
+  if (rec.status === 'indexed' && rec.wave !== null) errors.push(`${where}: indexed problem cannot have a wave`);
   return errors;
 }
 

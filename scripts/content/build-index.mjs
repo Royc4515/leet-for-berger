@@ -80,6 +80,8 @@ const TAG_RULES = [
   [['Counting Sort'], 'sorting-intervals', 'counting-bucket-sort'],
   [['Bucket Sort'], 'sorting-intervals', 'counting-bucket-sort'],
   [['Sorting'], 'sorting-intervals', null],
+  [['Matrix', 'Simulation'], 'matrix', 'grid-simulation'],
+  [['Matrix'], 'matrix', null],
   [['Greatest Common Divisor'], 'math-basics', 'gcd-lcm'],
   [['Sieve Theory'], 'math-basics', 'prime-sieve'],
   [['Geometry'], 'math-basics', 'geometry'],
@@ -260,6 +262,37 @@ async function main() {
     });
   }
 
+  // Core bank selection, driven by content/selection.json so thresholds are data, not code.
+  const selection = JSON.parse(await readFile(join(ROOT, 'content/selection.json'), 'utf8'));
+  const companyTop = new Set();
+  {
+    const byCompany = new Map();
+    for (const p of problems.values()) {
+      for (const c of p.companies.values()) {
+        if (!byCompany.has(c.name)) byCompany.set(c.name, []);
+        byCompany.get(c.name).push([p.slug, c.frequency]);
+      }
+    }
+    const { topCompanies, topPerCompany } = selection.wave2;
+    [...byCompany.values()]
+      .sort((a, b) => b.length - a.length)
+      .slice(0, topCompanies)
+      // Same tie-break as the audit, so "top N" means the same problems in both.
+      .forEach((list) => list.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, topPerCompany).forEach(([slug]) => companyTop.add(slug)));
+  }
+  /** Why a problem is in the core bank; empty means it stays index-only. */
+  const coreReasons = (p, ladder) => {
+    const why = [];
+    const { wave1, wave2 } = selection;
+    if (wave1.ladders && ladder) why.push('ladder');
+    if (wave1.classicLists.some((l) => p.lists.includes(l))) why.push('classic');
+    if (p.difficulty === 'Easy' && (wave1.easyClassics.lists.some((l) => p.lists.includes(l)) || p.companies.size >= wave1.easyClassics.minCompanies)) {
+      why.push('easy-classic');
+    }
+    if (p.companies.size >= wave2.minCompanies || companyTop.has(p.slug)) why.push('company-common');
+    return why;
+  };
+
   const maxCompanies = Math.max(...[...problems.values()].map((p) => p.companies.size));
   const records = [];
   for (const p of problems.values()) {
@@ -268,7 +301,9 @@ async function main() {
     const fromTags = classify(p.tags);
     // NeetCode's hand-assigned pattern beats tag heuristics when both exist.
     const ladder = ladderOf.get(p.slug);
-    const topic = ladder?.topic ?? p.neetcodePattern ?? fromTags.topic;
+    // NeetCode files matrix problems (Spiral Matrix, Rotate Image) under "Math & Geometry".
+    const neetcodeTopic = p.neetcodePattern === 'math-basics' && fromTags.topic === 'matrix' ? 'matrix' : p.neetcodePattern;
+    const topic = ladder?.topic ?? neetcodeTopic ?? fromTags.topic;
     const concept = ladder?.concept ?? (topic === fromTags.topic ? fromTags.concept : null);
     const companies = [...p.companies.values()].sort((a, b) => b.frequency - a.frequency);
     const recentShare = companies.length ? companies.filter((c) => c.recency !== 'older').length / companies.length : 0;
@@ -278,7 +313,9 @@ async function main() {
       0.3 * (p.lists.includes('neetcode150') ? 1 : p.lists.length ? 0.5 : 0) +
       0.2 * recentShare;
     const [contentId, authored] = CONTENT_IDS[p.slug] ?? [null, null];
-    const status = authored ?? (ladder ? 'selected' : 'indexed');
+    const why = coreReasons(p, ladder);
+    const wave = why.length === 0 ? null : why.some((r) => r !== 'company-common') ? 1 : 2;
+    const status = authored ?? (wave ? 'selected' : 'indexed');
     records.push({
       slug: p.slug,
       number: p.number ?? contest?.number ?? null,
@@ -296,6 +333,8 @@ async function main() {
       companies,
       priority: Math.round(priority * 1000) / 1000,
       ladderStep: ladder ? ladder.step : null,
+      wave,
+      core: why,
       contentId,
       status,
     });

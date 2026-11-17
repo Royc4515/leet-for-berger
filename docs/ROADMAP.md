@@ -19,14 +19,16 @@ Status legend: [x] done, [~] partial / placeholder, [ ] not started.
 
 ## Phase 1 - Content
 
-Scope changed: the bank is now a learning network of 25 topics with an Easy -> Hard ladder per topic (218 target problems). See `content/README.md`.
+Scope: every classic topic and every commonly asked company problem, with an easy on-ramp, in all common interview languages (Python, Java, C++, JavaScript; C# and Go as extras). Core bank: 552 problems in two waves, on a learning network of 26 topics with an Easy -> Hard ladder per topic (225 problems). See `content/README.md`.
 
 - [x] Topic taxonomy: prerequisites, concepts per topic, ladder targets, practice modes (`src/js/data/taxonomy.js`)
 - [x] Problem index: 3,398 problems with topic, rating, company frequency and recency, priority (`content/index/problems.json`)
 - [x] Select per-topic ladders from the index and assign concepts (`content/ladders.json`)
-- [ ] Review `content/AUDIT.md` and adjust taxonomy and ladders
+- [x] Review `content/AUDIT.md`: core bank of 552 (waves), Matrix topic, 0 audit gaps
+- [ ] Problem families: group near-identical problems, pick the version each company asks
+- [ ] Language-neutral problem format: typed signature spec, JSON tests, generated starter code and harness per language
+- [ ] Multi-language verifier in CI (Python, Java, C++, JavaScript)
 - [ ] SQL runner (e.g. sql.js) so the SQL topic can ship
-- [ ] Solution verifier: every shipped solution in every language passes its 15 cases in CI
 - [ ] Author problems topic by topic, tier 0 first; 15 tests each, solutions in 3 languages
 - [ ] Replace the 4 hand-picked milestones with paths derived from the taxonomy
 - [ ] Practice modes on top of the index: topic drill, mixed review, mock OA, company set, daily, weak spots
@@ -34,7 +36,7 @@ Scope changed: the bank is now a learning network of 25 topics with an Easy -> H
 - [ ] Per-problem submission history in the workspace
 - [ ] Interview mode picks 2 problems by difficulty mix once the bank allows it
 
-## Phase 2 - Server runner (needs a backend)
+## Phase 2 - Server runner (needs a backend, moved up: Java and C++ are required languages)
 
 - [ ] Execution service (e.g. Judge0 self-hosted or containerized runners) with the same `run()` contract
 - [ ] Java execution

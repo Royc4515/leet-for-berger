@@ -39,6 +39,15 @@
   ["department-top-three-salaries", "window-functions"],
   ["human-traffic-of-stadium", "window-functions"]
  ],
+ "matrix": [
+  ["transpose-matrix", "traversal-order"],
+  ["matrix-diagonal-sum", "traversal-order"],
+  ["spiral-matrix", "traversal-order"],
+  ["rotate-image", "in-place-transform"],
+  ["set-matrix-zeroes", "in-place-marker"],
+  ["game-of-life", "grid-simulation"],
+  ["find-the-minimum-area-to-cover-all-ones-ii", "grid-simulation"]
+ ],
  "two-pointers": [
   ["valid-palindrome", "opposite-ends"],
   ["merge-sorted-array", "same-direction"],

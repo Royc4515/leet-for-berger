@@ -1,5 +1,18 @@
 # Content
 
+## Scope
+
+The bank must cover every classic topic and every commonly asked company problem, with an easy on-ramp, in all common interview languages (Python, Java, C++, JavaScript; C# and Go as extras).
+
+| Set | Rule | Size |
+|---|---|---|
+| Ladders | One per topic, every concept covered, easy -> hard | 225 |
+| **Wave 1**, learning core | Ladders + Blind 75 + NeetCode 150 + easy classics (NeetCode Easy, or Easy asked by 8+ companies) | 356 |
+| **Wave 2**, company coverage | Asked by 15+ companies, or top 30 at one of the 20 companies with the most tagged problems | +196 |
+| **Core bank** | Everything we author | **552** |
+
+Thresholds live in `content/selection.json`. Current numbers and coverage: `content/AUDIT.md`.
+
 The problem bank is built as a **learning network**: topics with prerequisites, and inside each topic a ladder of problems from Easy to Hard, ordered by concept. Every practice mode (path, topic drill, mock OA, interview, company set, daily, weak spots) selects from the same data.
 
 Source of truth for the network: `src/js/data/taxonomy.js` (validated by `tests/taxonomy.test.js`). Regenerate the graph and table below with `node scripts/taxonomy-graph.mjs`.
@@ -29,16 +42,19 @@ One record per problem, one record per line, sorted by `priority`:
 {
   "slug": "two-sum", "number": 1, "title": "Two Sum",
   "difficulty": "Easy", "rating": 2, "contestRating": null,
-  "topic": "arrays-hashing", "concept": null,
+  "topic": "arrays-hashing", "concept": "complement-lookup",
   "tags": ["Array", "Hash Table"], "estMinutes": 15,
   "url": "https://leetcode.com/problems/two-sum/",
   "lists": ["blind75", "neetcode150", "neetcode-all"],
   "companyCount": 113,
   "companies": [{ "name": "Google", "frequency": 100, "recency": "30d" }],
   "priority": 0.844,
+  "ladderStep": 3, "wave": 1, "core": ["ladder", "classic", "easy-classic", "company-common"],
   "contentId": "pair-sum-target", "status": "selected"
 }
 ```
+
+`status` is `selected` for every core-bank problem.
 
 | Field | Meaning |
 |---|---|
@@ -48,6 +64,7 @@ One record per problem, one record per line, sorted by `priority`:
 | `companies` | Per company: `frequency` (0-100, all time) and `recency`, the newest window it was asked in (`30d`, `3m`, `6m`, `older`) |
 | `priority` | 0-1: 50% how many companies ask it, 30% curated list membership, 20% share of companies asking it recently |
 | `ladderStep` | Position on its topic's ladder (0 = first), null when not selected |
+| `wave`, `core` | Core bank membership: `wave` 1 or 2 (null = index only), `core` lists why (`ladder`, `classic`, `easy-classic`, `company-common`) |
 | `contentId`, `status` | Link to `src/js/problems/<contentId>.js`. `indexed` -> `selected` -> `authored` -> `verified`; only `verified` ships |
 
 Content we write keeps the problem (same task, same constraints, same diversity) and rewrites the statement, examples and tests in our own words.
@@ -71,6 +88,7 @@ graph TD
   math_basics["Math Basics"]
   sql["SQL"]
   two_pointers["Two Pointers"]
+  matrix["Matrix"]
   stack["Stack"]
   prefix_sum["Prefix Sum"]
   sorting_intervals["Sorting & Intervals"]
@@ -93,6 +111,7 @@ graph TD
   advanced_graphs["Advanced Graphs"]
   range_queries["Range Queries"]
   arrays_hashing --> two_pointers
+  arrays_hashing --> matrix
   arrays_hashing --> stack
   arrays_hashing --> prefix_sum
   arrays_hashing --> sorting_intervals
@@ -126,6 +145,7 @@ graph TD
 | 0 | Math Basics | 3 | 4 | 3 | digit-manipulation, modular-arithmetic, gcd-lcm, prime-sieve, fast-power, combinatorics, geometry, game-theory |
 | 0 | SQL | 4 | 5 | 3 | select-filter, joins, group-by-aggregation, subqueries, window-functions |
 | 1 | Two Pointers | 3 | 4 | 2 | opposite-ends, same-direction, partition-in-place, sort-then-scan |
+| 1 | Matrix | 2 | 4 | 1 | traversal-order, in-place-transform, in-place-marker, grid-simulation |
 | 1 | Stack | 2 | 5 | 2 | matching-brackets, simulation, auxiliary-stack-design, monotonic-stack, expression-evaluation |
 | 1 | Prefix Sum | 2 | 4 | 2 | prefix-1d, prefix-plus-hashmap, prefix-2d, difference-array |
 | 1 | Sorting & Intervals | 2 | 4 | 2 | custom-comparator, merge-intervals, sweep-line, counting-bucket-sort |
@@ -146,13 +166,13 @@ graph TD
 | 4 | 2D Dynamic Programming | 1 | 5 | 4 | grid-paths, two-sequences, knapsack-2d, interval-dp, state-machine |
 | 5 | Union Find | 0 | 3 | 2 | connectivity, union-by-rank, offline-queries |
 | 5 | Advanced Graphs | 0 | 4 | 4 | dijkstra, bounded-hops-shortest-path, minimum-spanning-tree, dag-dp, zero-one-bfs |
-| 5 | Range Queries | 0 | 2 | 3 | fenwick-tree, segment-tree, sparse-table |
-| | **Total (218)** | **47** | **107** | **64** | |
+| 5 | Range Queries | 0 | 2 | 3 | fenwick-tree, segment-tree |
+| | **Total (225)** | **49** | **111** | **65** | |
 
 ## Pipeline
 
 1. **Index** (done): 3,398 problems from 470 companies, NeetCode lists and contest ratings, mapped to `topic` + `rating`.
-2. **Select** (done): `content/ladders.json` holds 218 hand-picked problems, one ladder per topic, each with its concept, in learning order. Picked from the highest-priority candidates.
+2. **Select** (done): `content/selection.json` defines the core bank (552), `content/ladders.json` holds 225 hand-picked problems, one ladder per topic, each with its concept, in learning order. Picked from the highest-priority candidates.
 3. **Audit**: `node scripts/content/audit.mjs` writes `content/AUDIT.md` (ladder fill, concept coverage, Blind 75 / NeetCode 150 coverage, top-company coverage, high-priority problems left out, gaps).
 4. **Author**: write the problem module with `/add-problem`.
 5. **Verify**: solutions in every language pass all 15 cases, then flip `status` to `verified`.
