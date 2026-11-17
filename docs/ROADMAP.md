@@ -35,8 +35,9 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 - [x] Essential path: 131 problems, one per subtopic; the rest is optional practice
 - [x] Language-neutral problem format: typed signature, generated starter code, solution files per language
 - [x] 8-language verifier in CI (Python, JavaScript, TypeScript, Java, C++, C, C#, Go)
-- [ ] Signature types for linked lists, trees, graphs and class-based design problems
-- [ ] Author the 131 essential problems
+- [x] Signature types for linked lists and trees, class-based design problems (pilots: Reverse List, Level Order, Min Stack)
+- [ ] Signature types for graphs as node objects, lists with random or cycle pointers; SQL runner
+- [ ] Author the 131 essential problems (3 done)
 - [ ] SQL runner (e.g. sql.js) so the SQL topic can ship
 - [ ] Author problems topic by topic, tier 0 first; 15 tests each, solutions in 3 languages
 - [ ] Replace the 4 hand-picked milestones with paths derived from the taxonomy

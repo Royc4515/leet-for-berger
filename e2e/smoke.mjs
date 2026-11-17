@@ -20,8 +20,8 @@ const server = await startServer(PORT);
 const browser = await chromium.launch({ channel: process.env.PW_CHANNEL || undefined });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const errors = [];
-page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text()}`));
-page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+page.on('console', (m) => m.type() === 'error' && errors.push(`console (during step ${step}): ${m.text()}`));
+page.on('pageerror', (e) => errors.push(`pageerror (during step ${step}): ${e.message}${process.env.E2E_STACKS ? '\n' + e.stack : ''}`));
 if (shotsDir) await mkdir(shotsDir, { recursive: true });
 const shot = async (name) => {
   if (!shotsDir) return;
@@ -154,6 +154,31 @@ try {
     const solved = await page.locator('.stat-value').first().textContent();
     if (solved.trim() !== '1') throw new Error(`solved = ${solved}`);
   });
+
+  // Linked lists, trees and design classes run through engine/adapters.js in the browser workers.
+  await check('design problem (Min Stack): JS reveal + submit is Accepted through the adapter', async () => {
+    await page.goto(`${BASE}#/problem/min-stack`);
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class MinStack')));
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 30000);
+    await expectText('.result-head', /15 \/ 15/);
+  });
+
+  if (!skipPython) {
+    await check('linked list problem (Reverse List): Python reveal + submit is Accepted', async () => {
+      await page.goto(`${BASE}#/problem/reverse-list`);
+      await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+      await page.selectOption('.toolbar select', 'python');
+      await page.click('button:has-text("Reveal Solution")');
+      await page.click('dialog.modal button:has-text("Reveal")');
+      await page.click('button:has-text("Submit")');
+      await expectText('.result-head', /Accepted/, 90000);
+      await page.selectOption('.toolbar select', 'javascript');
+    });
+  }
 
   await check('learning path shows 4 milestones', async () => {
     await page.click('a[data-nav="path"]');

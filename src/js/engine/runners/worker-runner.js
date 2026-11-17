@@ -2,7 +2,7 @@
  * Generic worker-backed runner with a per-case watchdog.
  *
  * Worker protocol
- *   main  -> worker  { type: 'run', code, entry, cases: [{ id, args }] }
+ *   main  -> worker  { type: 'run', code, entry, cases: [{ id, args }], adapter?: { before, after, entry } }
  *   worker -> main   { type: 'ready' }                      (optional, slow-boot runtimes)
  *                    { type: 'case', id, state, actual?, error?, stdout?, timeMs }
  *                    { type: 'fatal', error }               (compile / load failure)
@@ -67,9 +67,10 @@ export class WorkerRunner {
    * @param {{ id: number, args: unknown[] }[]} job.cases
    * @param {number} job.timeLimitMs per-case wall-clock budget
    * @param {(status: string) => void} [job.onStatus]
+   * @param {{ before: string, after: string, entry: string } | null} [job.adapter] JSON <-> objects bridge (engine/adapters.js)
    * @returns {Promise<import('../harness.js').RawResult[]>}
    */
-  async run({ code, entry, cases, timeLimitMs, onStatus }) {
+  async run({ code, entry, cases, timeLimitMs, onStatus, adapter = null }) {
     if (this.busy) throw new Error('A run is already in progress.');
     this.busy = true;
     try {
@@ -82,14 +83,14 @@ export class WorkerRunner {
         return cases.map((c) => ({ id: c.id, state: 'error', error: err.message }));
       }
       onStatus?.('Running...');
-      return await this.#execute({ code, entry, cases, timeLimitMs });
+      return await this.#execute({ code, entry, cases, timeLimitMs, adapter });
     } finally {
       this.busy = false;
       if (!this.persistent) this.#kill();
     }
   }
 
-  #execute({ code, entry, cases, timeLimitMs }) {
+  #execute({ code, entry, cases, timeLimitMs, adapter }) {
     return new Promise((resolve) => {
       const worker = this.worker;
       const results = new Map();
@@ -136,7 +137,7 @@ export class WorkerRunner {
       worker.addEventListener('message', onMessage);
       worker.addEventListener('error', onError);
       arm();
-      worker.postMessage({ type: 'run', code, entry, cases });
+      worker.postMessage({ type: 'run', code, entry, cases, adapter });
     });
   }
 }

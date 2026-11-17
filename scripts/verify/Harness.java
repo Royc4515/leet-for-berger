@@ -4,15 +4,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
- * Runs Solution.<entry> on JSON test cases and prints one JSON result per line.
+ * Runs a Java solution on JSON test cases and prints one JSON result per line.
  * Used by tests/solutions.test.js to verify the Java solution every problem ships.
- * Usage: java Harness <entry> < cases.json   (cases.json: [[arg1, arg2, ...], ...])
+ *   java Harness <method>  < cases.json   function problems: cases are [[arg1, arg2, ...], ...]
+ *   java Harness <Class>   < cases.json   design problems: cases are [[ops, argLists], ...]
+ * ListNode and TreeNode arrive as JSON arrays ([1,2,3]; level order with nulls) and leave the same way.
  */
 public class Harness {
     public static void main(String[] argv) throws Exception {
         String entry = argv[0];
         String input = new String(System.in.readAllBytes(), StandardCharsets.UTF_8);
         List<?> cases = (List<?>) new Json(input).parse();
+        if (Character.isUpperCase(entry.charAt(0))) {
+            runClass(entry, cases);
+            return;
+        }
         Object solution = Class.forName("Solution").getDeclaredConstructor().newInstance();
         Method method = null;
         for (Method m : solution.getClass().getDeclaredMethods()) if (m.getName().equals(entry)) method = m;
@@ -24,13 +30,70 @@ public class Harness {
             Class<?>[] types = method.getParameterTypes();
             Object[] converted = new Object[types.length];
             for (int i = 0; i < types.length; i++) converted[i] = convert(args.get(i), types[i]);
-            out.println(toJson(method.invoke(solution, converted)));
+            out.println(toJson(method.invoke(solution, converted), method.getReturnType()));
         }
         out.flush();
     }
 
+    // Design problems: construct with ops[0]'s arguments, then call each method by name.
+    static void runClass(String className, List<?> cases) throws Exception {
+        Class<?> cls = Class.forName(className);
+        PrintStream out = new PrintStream(new BufferedOutputStream(System.out), false, StandardCharsets.UTF_8);
+        for (Object c : cases) {
+            List<?> ops = (List<?>) ((List<?>) c).get(0);
+            List<?> args = (List<?>) ((List<?>) c).get(1);
+            StringBuilder sb = new StringBuilder("[");
+            Object obj = null;
+            for (int i = 0; i < ops.size(); i++) {
+                List<?> a = (List<?>) args.get(i);
+                if (i > 0) sb.append(',');
+                if (i == 0) {
+                    Constructor<?> ctor = null;
+                    for (Constructor<?> k : cls.getDeclaredConstructors()) if (k.getParameterCount() == a.size()) ctor = k;
+                    if (ctor == null) throw new IllegalStateException("No constructor with " + a.size() + " params");
+                    ctor.setAccessible(true);
+                    obj = ctor.newInstance(convertAll(a, ctor.getParameterTypes()));
+                    sb.append("null");
+                    continue;
+                }
+                Method m = null;
+                for (Method k : cls.getDeclaredMethods()) if (k.getName().equals(ops.get(i)) && k.getParameterCount() == a.size()) m = k;
+                if (m == null) throw new IllegalStateException("No method " + ops.get(i));
+                m.setAccessible(true);
+                Object r = m.invoke(obj, convertAll(a, m.getParameterTypes()));
+                sb.append(m.getReturnType() == void.class ? "null" : toJson(r, m.getReturnType()));
+            }
+            out.println(sb.append(']'));
+        }
+        out.flush();
+    }
+
+    static Object[] convertAll(List<?> args, Class<?>[] types) {
+        Object[] out = new Object[types.length];
+        for (int i = 0; i < types.length; i++) out[i] = convert(args.get(i), types[i]);
+        return out;
+    }
+
     // Maps parsed JSON (Long, Double, String, Boolean, List) onto the declared Java parameter type.
     static Object convert(Object v, Class<?> t) {
+        if (t == ListNode.class) {
+            ListNode d = new ListNode(), n = d;
+            for (Object x : (List<?>) v) { n.next = new ListNode(((Number) x).intValue()); n = n.next; }
+            return d.next;
+        }
+        if (t == TreeNode.class) {
+            List<?> a = (List<?>) v;
+            if (a.isEmpty() || a.get(0) == null) return null;
+            TreeNode root = new TreeNode(((Number) a.get(0)).intValue());
+            Deque<TreeNode> q = new ArrayDeque<>(List.of(root));
+            int k = 1;
+            while (!q.isEmpty() && k < a.size()) {
+                TreeNode x = q.poll();
+                if (k < a.size()) { Object l = a.get(k++); if (l != null) { x.left = new TreeNode(((Number) l).intValue()); q.add(x.left); } }
+                if (k < a.size()) { Object r = a.get(k++); if (r != null) { x.right = new TreeNode(((Number) r).intValue()); q.add(x.right); } }
+            }
+            return root;
+        }
         if (t == int.class || t == Integer.class) return ((Number) v).intValue();
         if (t == long.class || t == Long.class) return ((Number) v).longValue();
         if (t == double.class || t == Double.class) return ((Number) v).doubleValue();
@@ -48,7 +111,31 @@ public class Harness {
         throw new IllegalArgumentException("Unsupported parameter type " + t);
     }
 
+    // A null list or tree is the empty structure, written []; the declared type tells them apart.
+    static String toJson(Object v, Class<?> declared) {
+        if (v == null && (declared == ListNode.class || declared == TreeNode.class)) return "[]";
+        return toJson(v);
+    }
+
     static String toJson(Object v) {
+        if (v instanceof ListNode ln) {
+            StringBuilder sb = new StringBuilder("[");
+            for (ListNode n = ln; n != null; n = n.next) sb.append(n == ln ? "" : ",").append(n.val);
+            return sb.append(']').toString();
+        }
+        if (v instanceof TreeNode tn) {
+            List<String> out = new ArrayList<>();
+            List<TreeNode> q = new ArrayList<>(List.of(tn));
+            for (int h = 0; h < q.size(); h++) {
+                TreeNode x = q.get(h);
+                if (x == null) { out.add("null"); continue; }
+                out.add(String.valueOf(x.val));
+                q.add(x.left);
+                q.add(x.right);
+            }
+            while (!out.isEmpty() && out.get(out.size() - 1).equals("null")) out.remove(out.size() - 1);
+            return "[" + String.join(",", out) + "]";
+        }
         if (v == null) return "null";
         if (v instanceof String s) return quote(s);
         if (v instanceof Character ch) return quote(String.valueOf(ch));

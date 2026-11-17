@@ -12,7 +12,7 @@
 const STDOUT_LIMIT = 2000;
 
 self.onmessage = (event) => {
-  const { type, code, entry, cases } = event.data || {};
+  const { type, code, entry, cases, adapter } = event.data || {};
   if (type !== 'run') return;
 
   let fn;
@@ -20,7 +20,11 @@ self.onmessage = (event) => {
     // Function constructor instead of eval: user code gets its own function scope, and
     // the trailing lookup finds the entry whether it was declared with function/const/class.
     // don't touch / the "\n" before return protects against user code ending in a // comment.
-    fn = new Function(`${code}\nreturn typeof ${entry} === 'function' ? ${entry} : undefined;`)();
+    // With an adapter (linked lists, trees, design classes) the user's code is wrapped by
+    // engine/adapters.js, which converts JSON cases to objects and back.
+    fn = adapter
+      ? new Function(`${adapter.before}${code}${adapter.after}\nreturn ${adapter.entry};`)()
+      : new Function(`${code}\nreturn typeof ${entry} === 'function' ? ${entry} : undefined;`)();
   } catch (err) {
     self.postMessage({ type: 'fatal', error: `Compile error: ${describe(err)}` });
     return;

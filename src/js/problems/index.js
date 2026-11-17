@@ -7,8 +7,12 @@
  * To add a problem: see docs/PROBLEM_FORMAT.md or run the /add-problem Claude Code command.
  */
 import { LANGUAGES, LANGUAGE_IDS, entryName, starterCode } from '../engine/codegen.js';
+import { adapterFor } from '../engine/adapters.js';
 import smallestBaseSegment from './smallest-base-segment/problem.js';
 import notifyRecipients from './notify-recipients/problem.js';
+import reverseList from './reverse-list/problem.js';
+import levelOrder from './level-order/problem.js';
+import minStack from './min-stack/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -30,10 +34,12 @@ function hydrate(problem) {
     ...problem,
     signatures: Object.fromEntries(LANGUAGE_IDS.map((l) => [l, { entry: entryName(l, problem.signature.name) }])),
     starterCode: Object.fromEntries(LANGUAGE_IDS.map((l) => [l, starterCode(l, problem.signature)])),
+    // Browser-executable languages get a JSON <-> objects adapter when the signature needs one.
+    adapters: { javascript: adapterFor('javascript', problem.signature), python: adapterFor('python', problem.signature) },
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
