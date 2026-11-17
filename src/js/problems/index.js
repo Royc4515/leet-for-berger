@@ -8,6 +8,7 @@
  */
 import { LANGUAGES, LANGUAGE_IDS, entryName, starterCode } from '../engine/codegen.js';
 import { adapterFor } from '../engine/adapters.js';
+import { SQL_LANGUAGE, isSql, sqlSetup, sqlStarter, comparatorFor, tablesInputExample } from '../engine/sql.js';
 import smallestBaseSegment from './smallest-base-segment/problem.js';
 import notifyRecipients from './notify-recipients/problem.js';
 import reverseList from './reverse-list/problem.js';
@@ -88,6 +89,11 @@ import stairPaths from './stair-paths/problem.js';
 import risingChain from './rising-chain/problem.js';
 import bestRunProduct from './best-run-product/problem.js';
 import goodStringCount from './good-string-count/problem.js';
+import greenProducts from './green-products/problem.js';
+import addressLookup from './address-lookup/problem.js';
+import repeatedEmails from './repeated-emails/problem.js';
+import runnerUpSalary from './runner-up-salary/problem.js';
+import tripleRepeat from './triple-repeat/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -95,6 +101,7 @@ export const TOPICS = [
   { id: 'dp', label: 'Dynamic Programming' },
   { id: 'graphs', label: 'Graphs' },
   { id: 'trees', label: 'Trees' },
+  { id: 'sql', label: 'SQL' },
 ];
 
 export const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
@@ -105,8 +112,10 @@ export const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
  * @param {object} problem
  */
 function hydrate(problem) {
+  if (isSql(problem.signature)) return hydrateSql(problem);
   return {
     ...problem,
+    languages: LANGUAGES,
     signatures: Object.fromEntries(LANGUAGE_IDS.map((l) => [l, { entry: entryName(l, problem.signature.name) }])),
     starterCode: Object.fromEntries(LANGUAGE_IDS.map((l) => [l, starterCode(l, problem.signature)])),
     // Browser-executable languages get a JSON <-> objects adapter when the signature needs one.
@@ -114,7 +123,26 @@ function hydrate(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak, islandCount, courseCheck, courseOrder, wordMorph, lockSteps, twoColorCheck, extraLink, accountMerge, limitedPaths, medianStream, kthHighest, cooldownTasks, noAdjacentRepeat, rangeCover, gridWord, keypadWords, subsetBuilder, allOrderings, bestRunSum, jumpReach, overlapTrim, cookieMatch, oneSwapMax, fewestCoins, streetHeist, stairPaths, risingChain, bestRunProduct, goodStringCount].map(hydrate);
+/**
+ * A SQL problem has one language and no function to call: the tables are the interface.
+ * The worker gets the schema as its adapter, and judging compares result sets (engine/sql.js).
+ * @param {object} problem
+ */
+function hydrateSql(problem) {
+  const sig = problem.signature;
+  return {
+    ...problem,
+    argNames: sig.tables.map((t) => t.name),
+    languages: [SQL_LANGUAGE],
+    signatures: { sql: { entry: 'query' } },
+    starterCode: { sql: sqlStarter(sig) },
+    adapters: { sql: sqlSetup(sig) },
+    compare: comparatorFor(sig),
+    customInputExample: tablesInputExample(sig, problem.visibleTests[0].args),
+  };
+}
+
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak, islandCount, courseCheck, courseOrder, wordMorph, lockSteps, twoColorCheck, extraLink, accountMerge, limitedPaths, medianStream, kthHighest, cooldownTasks, noAdjacentRepeat, rangeCover, gridWord, keypadWords, subsetBuilder, allOrderings, bestRunSum, jumpReach, overlapTrim, cookieMatch, oneSwapMax, fewestCoins, streetHeist, stairPaths, risingChain, bestRunProduct, goodStringCount, greenProducts, addressLookup, repeatedEmails, runnerUpSalary, tripleRepeat].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
@@ -122,7 +150,7 @@ const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOr
  * @param {string} lang
  */
 export function solutionUrl(problemId, lang) {
-  const file = LANGUAGES.find((l) => l.id === lang)?.file;
+  const file = [...LANGUAGES, SQL_LANGUAGE].find((l) => l.id === lang)?.file;
   if (!file) throw new Error(`Unknown language "${lang}"`);
   return new URL(`./${problemId}/solutions/${file}`, import.meta.url).href;
 }

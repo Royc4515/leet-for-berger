@@ -34,6 +34,7 @@ A global budget makes the verdict ambiguous (which case hung?). Re-arming after 
 |---|---|---|---|
 | JavaScript | `js-worker.js` | fresh worker per run | clean globals every run; boot is ~ms |
 | Python | `py-worker.js` (Pyodide 0.27.2) | persistent, recreated after a kill | boot is seconds, so it warms up when Python is selected; watchdog starts only after `ready` |
+| SQL | `sql-worker.js` (sql.js 1.13.0) | persistent, recreated after a kill | SQL problems only; fresh read-only SQLite database per case, results judged as result sets (ADR 0003) |
 | Java | `UnsupportedRunner` | n/a | honest "not supported yet" verdict |
 
 Adding a language = a worker (or remote runner) implementing the protocol in `worker-runner.js` + an entry in `runners/index.js` + starter code and solution in each problem.

@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- SQL problems (ADR 0003): sql.js 1.13.0 (SQLite in WebAssembly) runs queries in a worker, one fresh read-only database per case; CI verifies `solution.sql` with the same build (pinned devDependency). Results are judged as result sets, as a multiset unless the statement fixes the order. SQL problems offer only SQL. First five: Green Products, Address Lookup, Repeated Emails, Runner-up Salary, Triple Repeat.
 - Essential problems, wave 2, each with solutions in 8 languages, most adapted from imported open-source solutions:
   - Sliding Window and Binary Search: Longest Distinct Window, Window Maximums, Covering Window, Vowel Window, Rotated Search, Eating Speed, Merged Median, Matrix Search, Target Range, Mountain Peak.
   - Greedy and 1D DP: Best Run Sum, Jump Reach, Overlap Trim, Cookie Match, One Swap Max, Fewest Coins, Street Heist, Stair Paths, Rising Chain, Best Run Product, Good String Count.

@@ -26,6 +26,8 @@ class UnsupportedRunner {
 const runners = {
   javascript: new WorkerRunner({ workerUrl: workerUrl('js-worker.js') }),
   python: new WorkerRunner({ workerUrl: workerUrl('py-worker.js'), persistent: true, waitForReady: true }),
+  // SQL problems only (docs/adr/0003-sql-problems.md): sql.js boots once, each case gets a fresh database.
+  sql: new WorkerRunner({ workerUrl: workerUrl('sql-worker.js'), persistent: true, waitForReady: true }),
 };
 // Compiled and typed languages need the server-side runner (ROADMAP Phase 2): editor only today.
 for (const l of LANGUAGES.filter((x) => !x.executable)) {

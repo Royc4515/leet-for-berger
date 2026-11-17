@@ -99,7 +99,43 @@ A test is a sequence of calls: `args` is `[operations, argumentLists]` with `ope
 
 C follows LeetCode conventions: array params carry explicit sizes, array returns use `int* returnSize` (and `int** returnColumnSizes` for 2D) and must be `malloc`ed.
 
-Not supported yet: graphs as node objects (Clone Graph), lists with random or cycle pointers, and SQL problems. Add them to codegen, adapters and harnesses before authoring problems that need them.
+Not supported yet: graphs as node objects (Clone Graph), lists with random or cycle pointers. Add them to codegen, adapters and harnesses before authoring problems that need them. SQL problems have their own format, below.
+
+## SQL problems
+
+Design and dialect: [ADR 0003](adr/0003-sql-problems.md). Reference: `src/js/problems/address-lookup/` (two tables, LEFT JOIN, NULLs).
+
+```
+src/js/problems/<id>/
+  problem.js          statement, schema signature, tests (reference + seeded generators), hints
+  solutions/
+    solution.sql      the one shipped solution (SQLite dialect)
+```
+
+A SQL problem ships **exactly one** solution, `solution.sql`, and offers only SQL in the language picker. The 8-language rule applies to algorithm problems. Everything else in the table above applies, except that `argNames`, starter code and the worker setup are derived from the schema.
+
+```js
+signature: {
+  kind: 'sql',
+  tables: [
+    { name: 'Person', columns: [
+      { name: 'personId', type: 'int', primaryKey: true },
+      { name: 'city', type: 'string', nullable: true },
+      { name: 'low_fats', type: 'string', values: ['Y', 'N'] }, // ENUM
+    ] },
+  ],
+  result: { columns: ['firstName', 'city'], ordered: false },
+},
+```
+
+- Column types: `int`, `double`, `string`, `date` (`'YYYY-MM-DD'` text). Columns are `NOT NULL` unless `nullable`; at most one `primaryKey` per table (unique, not null). Test rows are checked against all of this.
+- A case's `args` holds one array of rows per table, in `tables` order; a row is an array in column order: `args: [[[1, 'Wang', 'Allen']], [[1, 2, 'NYC', 'NY']]]`.
+- `expected` is a result set `{ columns, rows }` with `columns` equal to `result.columns`. Compute it with the JS `reference(...args)`.
+- `result.ordered: false` when the statement says "any order": rows are judged as a multiset (duplicates count). `true` only when the statement fixes an `ORDER BY`; then rows must match in order.
+- `parseCustomInput` uses `parseTablesInput(signature, raw)` from `src/js/engine/sql.js` (a JSON object `{"Person": [[...]], ...}`), plus any problem constraint the schema cannot express.
+- The statement says the exact output column names, the row order rule, and "Dialect: SQLite" in the constraints. Avoid problems whose canonical solution needs MySQL-only functions.
+- Tests in `tests/<id>.test.js` use `sqlProblemTests` from `tests/helpers/sql-problem.js`: reference vs `solution.sql` on seeded random tables, plus the classic wrong queries, each of which must fail one of the 15 cases. Hidden tests include an empty table and at least two tables with thousands of rows.
+- `tests/solutions.test.js` runs `solution.sql` on the 15 cases with the same sql.js build and case runner as the browser (`scripts/verify/sql.mjs`).
 
 ## Test design checklist
 

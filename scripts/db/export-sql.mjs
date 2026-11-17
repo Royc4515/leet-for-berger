@@ -11,6 +11,7 @@ import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { TOPICS } from '../../src/js/data/taxonomy.js';
 import { LANGUAGES } from '../../src/js/engine/codegen.js';
+import { SQL_LANGUAGE } from '../../src/js/engine/sql.js';
 import { availableProblems } from '../../src/js/problems/index.js';
 import { buildSuite } from '../../src/js/engine/harness.js';
 
@@ -42,7 +43,7 @@ const tables = [];
 const add = (table, cols, key, rows, conflict = key) => tables.push({ table, cols, key, rows, conflict });
 
 add('languages', ['id', 'label', 'solution_file', 'executable_in_browser'], ['id'],
-  LANGUAGES.map((l) => [lit(l.id), lit(l.label), lit(l.file), lit(l.executable)]));
+  [...LANGUAGES, SQL_LANGUAGE].map((l) => [lit(l.id), lit(l.label), lit(l.file), lit(l.executable)]));
 add('topics', ['id', 'title', 'tier', 'position'], ['id'], TOPICS.map((t, i) => [lit(t.id), lit(t.title), t.tier, i]));
 add('subtopics', ['topic_id', 'id', 'position'], ['topic_id', 'id'], TOPICS.flatMap((t) => t.concepts.map((c, i) => [lit(t.id), lit(c), i])));
 add('topic_prereqs', ['topic_id', 'prereq_id'], ['topic_id', 'prereq_id'], TOPICS.flatMap((t) => t.prereqs.map((p) => [lit(t.id), lit(p)])));
@@ -76,7 +77,8 @@ for (const problem of availableProblems()) {
   if (!slug) throw new Error(`${problem.id} has no index record`);
   contentRows.push([lit(slug), lit(problem.statementHtml.trim()), textArray(problem.constraints), textArray(problem.hints), jlit(problem.signature), problem.timeLimitMs, lit(version)]);
   for (const tc of buildSuite(problem)) caseRows.push([lit(slug), tc.id, lit(tc.visible), jlit(tc.args), jlit(tc.expected)]);
-  for (const l of LANGUAGES) {
+  // Algorithm problems ship 8 solutions; SQL problems ship one (problem.languages, set by hydrate).
+  for (const l of problem.languages) {
     const code = await readFile(`${ROOT}src/js/problems/${problem.id}/solutions/${l.file}`, 'utf8');
     solutionRows.push([lit(slug), lit(l.id), lit(code), lit(now)]);
   }

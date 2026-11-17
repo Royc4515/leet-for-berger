@@ -180,6 +180,29 @@ try {
     });
   }
 
+  // SQL problems run in sql.js (SQLite wasm) in a worker; SQL is the only language offered.
+  await check('SQL problem: only SQL offered, write is rejected, reveal + submit is Accepted', async () => {
+    await page.goto(`${BASE}#/problem/address-lookup`);
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('-- Write your query here')));
+    const options = await page.locator('.toolbar select option').evaluateAll((os) => os.map((o) => o.value));
+    if (options.join() !== 'sql') throw new Error(`language options: ${options}`);
+    await setCode('DELETE FROM Person RETURNING firstName, lastName, firstName AS city, lastName AS state');
+    await page.click('button:has-text("Run Code")');
+    await expectText('.result-head', /Runtime Error/, 60000);
+    await expectText('.case-detail', /readonly/);
+    // A runaway recursive CTE must cost one worker; the next run boots a fresh one.
+    await setCode('WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM r) SELECT n, n, n, n FROM r WHERE n < 0');
+    await page.click('button:has-text("Run Code")');
+    await expectText('.result-head', /Time Limit Exceeded/, 30000);
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 60000);
+    await expectText('.result-head', /15 \/ 15/);
+    await shot('05-sql-accepted');
+  });
+
   await check('learning path shows 4 milestones', async () => {
     await page.click('a[data-nav="path"]');
     await page.waitForSelector('.milestone');

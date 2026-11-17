@@ -209,6 +209,12 @@ const CONTENT_IDS = {
   'redundant-connection': ['extra-link', 'verified'],
   'accounts-merge': ['account-merge', 'verified'],
   'checking-existence-of-edge-length-limited-paths': ['limited-paths', 'verified'],
+  // SQL problems: one verified solution.sql each (docs/adr/0003-sql-problems.md).
+  'recyclable-and-low-fat-products': ['green-products', 'verified'],
+  'combine-two-tables': ['address-lookup', 'verified'],
+  'duplicate-emails': ['repeated-emails', 'verified'],
+  'second-highest-salary': ['runner-up-salary', 'verified'],
+  'consecutive-numbers': ['triple-repeat', 'verified'],
 };
 
 const WINDOWS = [

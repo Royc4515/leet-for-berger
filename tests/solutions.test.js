@@ -13,6 +13,8 @@ import { availableProblems } from '../src/js/problems/index.js';
 import { buildSuite, deepEqual } from '../src/js/engine/harness.js';
 import { LANGUAGES, validateSignature } from '../src/js/engine/codegen.js';
 import { buildHarness, encodeCases } from '../scripts/verify/harnesses.mjs';
+import { isSql, validateSqlProblem } from '../src/js/engine/sql.js';
+import { sqlEngineAvailable, loadSqlEngine, runSqlCases } from '../scripts/verify/sql.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const REQUIRE_ALL = process.env.REQUIRE_ALL_LANGUAGES === '1';
@@ -73,8 +75,39 @@ function execute(lang, problem, cases, { source, compileOnly = false } = {}) {
   return out.trim().split('\n').map((l) => JSON.parse(l));
 }
 
+// SQL problems ship one solution, solution.sql, run by the same sql.js build and case runner as
+// the browser worker (docs/adr/0003-sql-problems.md). The 8-language rule is for algorithm problems.
+function verifySql(problem, suite) {
+  test(`${problem.id}: SQL schema and all 15 cases are valid`, () => {
+    assert.deepEqual(validateSqlProblem(problem), []);
+  });
+  const available = sqlEngineAvailable();
+  const skip = !available && !REQUIRE_ALL && 'sql.js devDependency not installed (npm ci)';
+  test(`${problem.id}: SQL solution passes all 15 cases`, { skip }, async () => {
+    assert.ok(available, 'sql.js missing but REQUIRE_ALL_LANGUAGES=1');
+    const query = readFileSync(join(ROOT, 'src/js/problems', problem.id, 'solutions/solution.sql'), 'utf8');
+    // Engine boot is timed too, like process startup for the other languages.
+    const t0 = performance.now();
+    await loadSqlEngine();
+    const actuals = await runSqlCases(problem.signature, query, suite.map((tc) => tc.args));
+    const ms = performance.now() - t0;
+    suite.forEach((tc, i) => {
+      assert.equal(actuals[i].error, undefined, `case ${tc.id}: ${actuals[i].error}`);
+      assert.ok(problem.compare(actuals[i], tc.expected), `SQL: case ${tc.id} failed`);
+    });
+    // Same budget rule as the other languages: all 15 cases within one case's limit.
+    const factor = Number(process.env.LFB_TIME_FACTOR ?? 1);
+    if (factor > 0) assert.ok(ms <= problem.timeLimitMs * factor, `SQL: 15 cases took ${Math.round(ms)} ms, budget ${problem.timeLimitMs * factor} ms`);
+    if (process.env.LFB_TIMINGS) appendFileSync(process.env.LFB_TIMINGS, `${problem.id}\tsql\t${Math.round(ms)}\t${problem.timeLimitMs}\n`);
+  });
+}
+
 for (const problem of availableProblems()) {
   const suite = buildSuite(problem);
+  if (isSql(problem.signature)) {
+    verifySql(problem, suite);
+    continue;
+  }
 
   test(`${problem.id}: signature is valid`, () => {
     assert.deepEqual(validateSignature(problem.signature), []);

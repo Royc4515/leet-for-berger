@@ -27,6 +27,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      # npm ci also installs sql.js, the SQLite engine the verifier runs SQL solutions with.
       - run: npm ci --no-audit --no-fund
       - name: Unit tests and 8-language solution verifier
         run: npm test
