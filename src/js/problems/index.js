@@ -25,6 +25,14 @@ import stringMultiply from './string-multiply/problem.js';
 import primeCount from './prime-count/problem.js';
 import powerMod from './power-mod/problem.js';
 import stringGcd from './string-gcd/problem.js';
+import spiralOrder from './spiral-order/problem.js';
+import rotateGrid from './rotate-grid/problem.js';
+import zeroRowsCols from './zero-rows-cols/problem.js';
+import loneNumber from './lone-number/problem.js';
+import bitCount from './bit-count/problem.js';
+import addWithoutPlus from './add-without-plus/problem.js';
+import circleElimination from './circle-elimination/problem.js';
+import grammarSymbol from './grammar-symbol/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -51,7 +59,7 @@ function hydrate(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
