@@ -20,7 +20,7 @@ import { buildSuite, judge } from '../../engine/harness.js';
 import { getRunner, LANGUAGES } from '../../engine/runners/index.js';
 import { recordSubmission, markRevealed } from '../../state/progress.js';
 import { loadDraft, saveDraft, clearDraft } from '../../state/drafts.js';
-import { TOPICS } from '../../problems/index.js';
+import { TOPICS, loadSolution } from '../../problems/index.js';
 import { createMentorPanel } from '../mentor-panel.js';
 
 const LANG_KEY = 'lfb:lang';
@@ -203,7 +203,15 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       confirmLabel: 'Reveal',
     });
     if (!ok) return;
-    editor.setValue(problem.solutions[language]);
+    let code;
+    try {
+      code = await loadSolution(problem.id, language);
+    } catch (err) {
+      toast(`Could not load the solution: ${err.message}`, 'error');
+      return;
+    }
+    if (disposed || !editor) return;
+    editor.setValue(code);
     store.update((s) => markRevealed(s, problem.id));
     toast('Solution loaded. Read it, then try to rewrite it from memory.', 'info');
   });

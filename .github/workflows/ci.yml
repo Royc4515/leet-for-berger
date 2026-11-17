@@ -14,9 +14,29 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # Toolchains for the solution verifier: every shipped solution is compiled and run in all
+      # 8 languages. Python 3, gcc and g++ come with the runner image.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
       - run: npm ci --no-audit --no-fund
-      - name: Unit tests
+      - name: Unit tests and 8-language solution verifier
         run: npm test
+        env:
+          # A missing toolchain fails the build instead of silently skipping a language.
+          REQUIRE_ALL_LANGUAGES: '1'
+      - name: Database schema and git -> database sync checks
+        run: |
+          ls /usr/lib/postgresql/*/bin/initdb >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq postgresql)
+          bash scripts/db/check-schema.sh
       - name: Install Chromium for Playwright
         run: npx playwright install --with-deps chromium
       - name: E2E smoke test (Monaco, workers, Pyodide, zero console errors)

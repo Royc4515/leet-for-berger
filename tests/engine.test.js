@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import problem, { reference } from '../src/js/problems/smallest-base-segment.js';
+import problem, { reference } from '../src/js/problems/smallest-base-segment/problem.js';
 import { buildSuite, judge, TOTAL_COUNT, preview } from '../src/js/engine/harness.js';
 import { mulberry32 } from '../src/js/engine/rng.js';
 
@@ -70,7 +70,7 @@ test('custom input parser accepts JSON and bare text, rejects bad input', () => 
 });
 
 test('hidden tests are deterministic across module loads', async () => {
-  const again = await import('../src/js/problems/smallest-base-segment.js?reload=1');
+  const again = await import('../src/js/problems/smallest-base-segment/problem.js?reload=1');
   assert.deepEqual(again.default.hiddenTests, problem.hiddenTests);
 });
 

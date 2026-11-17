@@ -1,0 +1,17 @@
+{
+ "_doc": "Original problems written for this platform, usually from candidate reports with no LeetCode equivalent. The problem module lives in src/js/problems/<slug>.js.",
+ "site": "original",
+ "list": "original",
+ "problems": [
+  {
+   "slug": "notify-recipients",
+   "title": "Notify Recipients",
+   "difficulty": "Medium",
+   "url": "#/problem/notify-recipients",
+   "topic": "arrays-hashing",
+   "concept": "group-by-key",
+   "equivalent": null,
+   "inspiredBy": "monday.com reports: notify a list of user or group ids; users and teams data structure"
+  }
+ ]
+}

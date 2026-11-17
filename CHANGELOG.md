@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added
+- ADR 0002: PostgreSQL on Supabase as the runtime store, git as the content source of truth. `db/schema.sql` (18 tables, row level security: hidden test cases and solutions never reach clients, `reveal_solution()` marks a problem assisted). `scripts/db/export-sql.mjs` syncs git into the database without touching user data. `scripts/db/check-schema.sh` (`npm run check:db`, in CI) verifies all of it against a throwaway PostgreSQL with the real content.
+- Essential path: 131 problems, one per subtopic (the most asked, ladder problems first). Index records carry `essential`; the audit lists the path by topic. The rest of the bank is optional practice.
+- Eight interview languages: Python, JavaScript, TypeScript, Java, C++, C, C#, Go. Problems declare one neutral typed `signature`; `src/js/engine/codegen.js` generates entry names and starter code for every language (C in LeetCode style).
+- Problem folders: `src/js/problems/<id>/problem.js` plus `solutions/` with one real file per language. "Reveal Solution" fetches the file.
+- 8-language verifier: `tests/solutions.test.js` compiles and runs every solution against the 15 cases and checks the generated starter code compiles. Harnesses in `scripts/verify/harnesses.mjs`; C, C++, Go and C# read a flat token stream. CI installs Java, Go, .NET and TypeScript and sets `REQUIRE_ALL_LANGUAGES=1` so no language is skipped.
+- Problem: Notify Recipients (original, from reported monday.com tasks): resolve user and group targets to a sorted, deduplicated recipient list. Hidden tests punish re-expanding a repeated group, scanning all users per request, and sorting ids as text.
+- Solution verifier: `tests/solutions.test.js` runs every problem's shipped JavaScript, Python and Java solution against all 15 cases; Java through `scripts/verify/Harness.java`. Smallest Base Segment's Python and Java solutions are now verified too.
+- Distinct problem count: `distinctProblems()` collapses family versions; the core bank's 711 entries are 596 distinct problems. Reported first in `content/AUDIT.md`.
+- More Israeli companies: Taboola, JFrog and Payoneer reports; Playtika, AppsFlyer and Gong listed with no concrete coding data found.
+- More sources: a second company-tag dataset (678 companies in total, including Israeli ones), LeetCode's Top Interview 150, 47 Codility lesson tasks (`content/external/codility.json`) linked into families, and candidate reports for Israeli companies without tag data (`content/reports.json`: Check Point, CyberArk, Wiz, monday.com). Company groups in `content/companies.json`.
+- Topic + subtopic for every core problem: hand-assigned in `content/subtopics.json` where ladders and tag rules do not place a problem, plus `secondary` topic tags. New subtopics where the data needed them (closed-form math, tree DP, implicit-graph BFS, greedy with a heap, peak finding, Eulerian path and others).
+- Core bank is now 710 problems (wave 1: 419, wave 2: 291). Audit adds subtopic counts, Israeli company and other-site sections.
+- Problem index: `content/index/problems.json`, 3,398 problems from 470 companies' tag lists, NeetCode lists and contest ratings, each mapped to a topic with rating, company frequency and recency, and a priority score. Built by `scripts/content/build-index.mjs`, validated by `tests/content-index.test.js`.
+- Problem families: `content/families.json`, 79 families of near-identical problems (222 problems), each version with its one-line twist. `pickVersion` (`src/js/data/families.js`) returns the version a given company asks most; those versions join the core bank (+27, total 579). Audit reports per-company versions.
+- Core bank: 552 problems in two waves (`content/selection.json`). Wave 1 (356): ladders, Blind 75, NeetCode 150 and easy classics. Wave 2 (196): problems asked by 15+ companies or in the top 30 of a top-20 company. Every index record carries `wave` and `core` (why it was selected).
+- Matrix topic (Spiral Matrix, Rotate Image, Set Matrix Zeroes, Game of Life). Removed the `sparse-table` concept, which had no interview problems.
+- Ladders: `content/ladders.json`, 225 hand-picked problems across 26 topics, each with a concept and a learning-order step, filling every Easy/Medium/Hard target.
+- Content audit: `scripts/content/audit.mjs` writes `content/AUDIT.md`.
+- Learning network taxonomy: 26 topics (including SQL, Matrix and Data Structure Design) in 6 tiers with prerequisites, ordered concepts and Easy/Medium/Hard ladder targets (225 problems), plus the practice modes the content must support.
+- `content/README.md`: two-layer content model (index of facts vs. original content), index record format, allowed sources, pipeline.
+- `scripts/taxonomy-graph.mjs` to regenerate the network diagram.
+
 ## [0.1.0] - 2026-11-16
 
 ### Added

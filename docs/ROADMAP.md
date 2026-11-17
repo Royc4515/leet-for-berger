@@ -19,12 +19,36 @@ Status legend: [x] done, [~] partial / placeholder, [ ] not started.
 
 ## Phase 1 - Content
 
-- [ ] Author the 16 planned problems (milestones 1-4), 15 tests each, solutions in 3 languages
+Scope: every classic topic and every commonly asked company problem, with an easy on-ramp, in the 8 common interview languages (Python, JavaScript, TypeScript, Java, C++, C, C#, Go). Core bank: 596 distinct problems (711 entries including versions) in two waves (company-specific versions of 92 problem families, Israeli companies, Codility lessons), on a learning network of 26 topics with an Easy -> Hard ladder per topic (225 problems). See `content/README.md`.
+
+- [x] Topic taxonomy: prerequisites, concepts per topic, ladder targets, practice modes (`src/js/data/taxonomy.js`)
+- [x] Problem index: 3,398 problems with topic, rating, company frequency and recency, priority (`content/index/problems.json`)
+- [x] Select per-topic ladders from the index and assign concepts (`content/ladders.json`)
+- [x] Review `content/AUDIT.md`: core bank of 552 (waves), Matrix topic, 0 audit gaps
+- [x] Problem families: 79 families, company version picking, company versions in the core bank (579)
+- [x] More sources: second tag dataset, Top Interview 150, Codility lessons, Israeli companies (tags + candidate reports)
+- [x] Topic + subtopic for every core problem, secondary topic tags
+- [ ] CodeSignal / HackerRank question data: none public; revisit if a source appears
+- [x] Original problem for the monday.com tasks: Notify Recipients
+- [x] Solution verifier for JavaScript, Python and Java in CI (`tests/solutions.test.js`)
+- [ ] Original problems for remaining reported tasks (JFrog connection pool, Payoneer multithreaded logger: concurrency, needs a runner that supports threads)
+- [x] Essential path: 131 problems, one per subtopic; the rest is optional practice
+- [x] Language-neutral problem format: typed signature, generated starter code, solution files per language
+- [x] 8-language verifier in CI (Python, JavaScript, TypeScript, Java, C++, C, C#, Go)
+- [ ] Signature types for linked lists, trees, graphs and class-based design problems
+- [ ] Author the 131 essential problems
+- [ ] SQL runner (e.g. sql.js) so the SQL topic can ship
+- [ ] Author problems topic by topic, tier 0 first; 15 tests each, solutions in 3 languages
+- [ ] Replace the 4 hand-picked milestones with paths derived from the taxonomy
+- [ ] Practice modes on top of the index: topic drill, mixed review, mock OA, company set, daily, weak spots
 - [ ] Problem editorial view (unlocked after solve)
 - [ ] Per-problem submission history in the workspace
 - [ ] Interview mode picks 2 problems by difficulty mix once the bank allows it
 
-## Phase 2 - Server runner (needs a backend)
+## Phase 2 - Server runner (needs a backend, moved up: Java and C++ are required languages)
+
+- [x] ADR 0002: PostgreSQL on Supabase, schema (`db/schema.sql`), git -> database sync (`scripts/db/export-sql.mjs`), verified by `scripts/db/check-schema.sh` in CI
+- [ ] Create the Supabase project, apply the schema, run the sync from CI on merge to main
 
 - [ ] Execution service (e.g. Judge0 self-hosted or containerized runners) with the same `run()` contract
 - [ ] Java execution
@@ -40,5 +64,5 @@ Status legend: [x] done, [~] partial / placeholder, [ ] not started.
 
 ## Open decisions
 
-- Backend stack (Supabase + edge functions vs. small Node service). Write an ADR before Phase 2.
+- ~~Backend stack~~: decided in ADR 0002, PostgreSQL on Supabase with git as the content source of truth.
 - Whether to adopt TypeScript once the codebase passes ~5k lines (JSDoc types today).

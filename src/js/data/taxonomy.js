@@ -1,0 +1,373 @@
+/**
+ * Learning network: topics, their prerequisites, and the easy -> hard ladder each topic needs.
+ *
+ * This is the backbone every content decision hangs off. A problem is placed by
+ * (topic, concept, rating), never by a hand-picked "milestone", so the path, topic drills,
+ * mock OAs and weak-spot practice can all be derived from the same data.
+ *
+ * Pure data + pure helpers: no DOM, safe to import from node tests.
+ */
+
+/**
+ * Difficulty ratings are finer than Easy/Medium/Hard so problems inside one band can still be
+ * ordered. The bands are the contract with the UI label.
+ */
+export const RATING_BANDS = {
+  Easy: [1, 3],
+  Medium: [4, 7],
+  Hard: [8, 10],
+};
+
+/**
+ * @typedef {{
+ *   id: string,
+ *   title: string,
+ *   tier: number,
+ *   prereqs: string[],
+ *   concepts: string[],
+ *   ladder: { easy: number, medium: number, hard: number },
+ * }} Topic
+ */
+
+/**
+ * `concepts` are ordered from first-seen to last-seen inside the topic: the ladder walks them
+ * in this order, so a learner never meets "monotonic stack" before "matching brackets".
+ * `ladder` is the target count of problems per band for that topic.
+ * @type {Topic[]}
+ */
+export const TOPICS = [
+  // Tier 0: vocabulary
+  {
+    id: 'arrays-hashing',
+    title: 'Arrays & Hashing',
+    tier: 0,
+    prereqs: [],
+    concepts: ['frequency-count', 'hash-set-membership', 'complement-lookup', 'group-by-key', 'two-way-mapping', 'in-place-indexing', 'string-processing', 'array-simulation', 'encode-decode'],
+    ladder: { easy: 4, medium: 5, hard: 2 },
+  },
+  {
+    id: 'math-basics',
+    title: 'Math Basics',
+    tier: 0,
+    prereqs: [],
+    concepts: ['digit-manipulation', 'number-conversion', 'big-number-arithmetic', 'closed-form', 'modular-arithmetic', 'gcd-lcm', 'prime-sieve', 'fast-power', 'combinatorics', 'geometry', 'game-theory'],
+    ladder: { easy: 3, medium: 4, hard: 3 },
+  },
+  {
+    // A separate track: needs an in-browser SQL runner (e.g. sql.js) before problems can ship.
+    id: 'sql',
+    title: 'SQL',
+    tier: 0,
+    prereqs: [],
+    concepts: ['select-filter', 'joins', 'group-by-aggregation', 'subqueries', 'window-functions'],
+    ladder: { easy: 4, medium: 5, hard: 3 },
+  },
+
+  // Tier 1: first patterns
+  {
+    id: 'two-pointers',
+    title: 'Two Pointers',
+    tier: 1,
+    prereqs: ['arrays-hashing'],
+    concepts: ['opposite-ends', 'same-direction', 'partition-in-place', 'sort-then-scan'],
+    ladder: { easy: 3, medium: 4, hard: 2 },
+  },
+  {
+    id: 'matrix',
+    title: 'Matrix',
+    tier: 1,
+    prereqs: ['arrays-hashing'],
+    concepts: ['traversal-order', 'in-place-transform', 'in-place-marker', 'grid-simulation'],
+    ladder: { easy: 2, medium: 4, hard: 1 },
+  },
+  {
+    id: 'stack',
+    title: 'Stack',
+    tier: 1,
+    prereqs: ['arrays-hashing'],
+    concepts: ['matching-brackets', 'simulation', 'auxiliary-stack-design', 'monotonic-stack', 'expression-evaluation'],
+    ladder: { easy: 2, medium: 5, hard: 2 },
+  },
+  {
+    id: 'prefix-sum',
+    title: 'Prefix Sum',
+    tier: 1,
+    prereqs: ['arrays-hashing'],
+    concepts: ['prefix-1d', 'prefix-plus-hashmap', 'prefix-2d', 'difference-array'],
+    ladder: { easy: 2, medium: 4, hard: 2 },
+  },
+  {
+    id: 'sorting-intervals',
+    title: 'Sorting & Intervals',
+    tier: 1,
+    prereqs: ['arrays-hashing'],
+    concepts: ['custom-comparator', 'merge-intervals', 'sweep-line', 'counting-bucket-sort'],
+    ladder: { easy: 2, medium: 4, hard: 2 },
+  },
+  {
+    id: 'bit-manipulation',
+    title: 'Bit Manipulation',
+    tier: 1,
+    prereqs: ['math-basics'],
+    concepts: ['xor-tricks', 'masks-and-shifts', 'counting-bits', 'bitmask-subsets'],
+    ladder: { easy: 3, medium: 3, hard: 1 },
+  },
+  {
+    id: 'recursion',
+    title: 'Recursion',
+    tier: 1,
+    prereqs: ['arrays-hashing'],
+    concepts: ['base-and-step', 'divide-and-conquer', 'memoization-intro'],
+    ladder: { easy: 2, medium: 3, hard: 1 },
+  },
+
+  // Tier 2: patterns built on patterns
+  {
+    id: 'sliding-window',
+    title: 'Sliding Window',
+    tier: 2,
+    prereqs: ['two-pointers'],
+    concepts: ['fixed-window', 'variable-window', 'window-frequency-map', 'monotonic-deque'],
+    ladder: { easy: 2, medium: 5, hard: 3 },
+  },
+  {
+    id: 'binary-search',
+    title: 'Binary Search',
+    tier: 2,
+    prereqs: ['two-pointers'],
+    concepts: ['classic-search', 'lower-upper-bound', 'peak-finding', 'rotated-array', 'search-on-answer', 'search-2d'],
+    ladder: { easy: 2, medium: 5, hard: 3 },
+  },
+  {
+    id: 'linked-list',
+    title: 'Linked List',
+    tier: 2,
+    prereqs: ['two-pointers'],
+    concepts: ['dummy-node-traversal', 'reversal', 'fast-slow-cycle', 'merge-lists', 'list-restructuring', 'deep-copy', 'cache-design'],
+    ladder: { easy: 3, medium: 4, hard: 2 },
+  },
+  {
+    id: 'greedy',
+    title: 'Greedy',
+    tier: 2,
+    prereqs: ['sorting-intervals'],
+    concepts: ['local-choice', 'greedy-construction', 'exchange-argument', 'interval-scheduling', 'reach-extension'],
+    ladder: { easy: 2, medium: 5, hard: 3 },
+  },
+
+  // Tier 3: core data structures
+  {
+    id: 'trees',
+    title: 'Trees',
+    tier: 3,
+    prereqs: ['recursion', 'linked-list'],
+    concepts: ['dfs-traversal', 'bfs-level-order', 'bst-properties', 'path-problems', 'tree-dp', 'construct-serialize'],
+    ladder: { easy: 3, medium: 6, hard: 3 },
+  },
+  {
+    id: 'backtracking',
+    title: 'Backtracking',
+    tier: 3,
+    prereqs: ['recursion'],
+    concepts: ['subsets', 'permutations', 'combinations-with-pruning', 'constraint-search'],
+    ladder: { easy: 2, medium: 5, hard: 3 },
+  },
+  {
+    id: 'dp-1d',
+    title: '1D Dynamic Programming',
+    tier: 3,
+    prereqs: ['recursion'],
+    concepts: ['linear-recurrence', 'take-or-skip', 'subarray-dp', 'longest-increasing', 'knapsack-1d', 'counting-dp'],
+    ladder: { easy: 2, medium: 6, hard: 2 },
+  },
+  {
+    id: 'design',
+    title: 'Data Structure Design',
+    tier: 3,
+    prereqs: ['linked-list', 'stack'],
+    concepts: ['hash-structure-design', 'iterator-design', 'data-stream', 'randomized-set', 'time-keyed-store', 'composite-design'],
+    ladder: { easy: 1, medium: 5, hard: 3 },
+  },
+  {
+    id: 'strings-advanced',
+    title: 'Advanced Strings',
+    tier: 3,
+    prereqs: ['sliding-window'],
+    concepts: ['expand-around-center', 'prefix-function', 'rolling-hash', 'z-function'],
+    ladder: { easy: 2, medium: 3, hard: 3 },
+  },
+
+  // Tier 4: structures on structures
+  {
+    id: 'heap',
+    title: 'Heap / Priority Queue',
+    tier: 4,
+    prereqs: ['trees'],
+    concepts: ['top-k', 'k-way-merge', 'greedy-with-heap', 'two-heaps', 'scheduling'],
+    ladder: { easy: 1, medium: 4, hard: 3 },
+  },
+  {
+    id: 'tries',
+    title: 'Tries',
+    tier: 4,
+    prereqs: ['trees'],
+    concepts: ['insert-search', 'prefix-counting', 'trie-guided-search'],
+    ladder: { easy: 1, medium: 2, hard: 2 },
+  },
+  {
+    id: 'graphs',
+    title: 'Graphs',
+    tier: 4,
+    prereqs: ['trees'],
+    concepts: ['grid-traversal', 'adjacency-traversal', 'implicit-graph-bfs', 'cycle-detection', 'topological-sort', 'bipartite'],
+    ladder: { easy: 1, medium: 6, hard: 3 },
+  },
+  {
+    id: 'dp-2d',
+    title: '2D Dynamic Programming',
+    tier: 4,
+    prereqs: ['dp-1d'],
+    concepts: ['grid-paths', 'two-sequences', 'knapsack-2d', 'interval-dp', 'state-machine'],
+    ladder: { easy: 1, medium: 5, hard: 4 },
+  },
+
+  // Tier 5: advanced
+  {
+    id: 'union-find',
+    title: 'Union Find',
+    tier: 5,
+    prereqs: ['graphs'],
+    concepts: ['connectivity', 'union-by-rank', 'offline-queries'],
+    ladder: { easy: 0, medium: 3, hard: 2 },
+  },
+  {
+    id: 'advanced-graphs',
+    title: 'Advanced Graphs',
+    tier: 5,
+    prereqs: ['graphs', 'heap'],
+    concepts: ['dijkstra', 'bounded-hops-shortest-path', 'minimum-spanning-tree', 'dag-dp', 'zero-one-bfs', 'eulerian-path'],
+    ladder: { easy: 0, medium: 4, hard: 4 },
+  },
+  {
+    id: 'range-queries',
+    title: 'Range Queries',
+    tier: 5,
+    prereqs: ['prefix-sum', 'trees'],
+    concepts: ['fenwick-tree', 'segment-tree'],
+    ladder: { easy: 0, medium: 2, hard: 3 },
+  },
+];
+
+/**
+ * Practice modes the content must support. Each lists the problem fields it selects on,
+ * so the index schema cannot silently drop something a mode depends on.
+ * @type {{ id: string, title: string, selectsOn: string[] }[]}
+ */
+export const PRACTICE_MODES = [
+  { id: 'learning-path', title: 'Learning Path', selectsOn: ['topic', 'concept', 'rating'] },
+  { id: 'topic-drill', title: 'Topic Drill', selectsOn: ['topic', 'rating'] },
+  { id: 'mixed-review', title: 'Mixed Review', selectsOn: ['topic', 'rating'] },
+  { id: 'mock-oa', title: 'Mock OA', selectsOn: ['difficulty', 'estMinutes'] },
+  { id: 'interview', title: 'Interview Simulator', selectsOn: ['difficulty', 'estMinutes'] },
+  { id: 'company-set', title: 'Company Set', selectsOn: ['companies'] },
+  { id: 'daily', title: 'Daily Challenge', selectsOn: ['rating'] },
+  { id: 'weak-spots', title: 'Weak Spots', selectsOn: ['topic', 'concept', 'rating'] },
+];
+
+/**
+ * Structural checks. Returns a list of human-readable errors; empty means valid.
+ * @param {Topic[]} topics
+ * @returns {string[]}
+ */
+export function validateTaxonomy(topics) {
+  const errors = [];
+  const byId = new Map();
+  for (const t of topics) {
+    if (byId.has(t.id)) errors.push(`duplicate topic id: ${t.id}`);
+    byId.set(t.id, t);
+  }
+  for (const t of topics) {
+    for (const p of t.prereqs) {
+      const pre = byId.get(p);
+      if (!pre) errors.push(`${t.id}: unknown prereq ${p}`);
+      // A strictly lower tier makes cycles impossible and keeps the drawn network layered.
+      else if (pre.tier >= t.tier) errors.push(`${t.id}: prereq ${p} is not in a lower tier`);
+    }
+    if (t.tier > 0 && t.prereqs.length === 0) errors.push(`${t.id}: tier ${t.tier} topic needs a prereq`);
+    if (t.concepts.length < 2) errors.push(`${t.id}: needs at least 2 concepts`);
+    if (new Set(t.concepts).size !== t.concepts.length) errors.push(`${t.id}: duplicate concept`);
+    const { easy, medium, hard } = t.ladder;
+    if (medium < 2) errors.push(`${t.id}: ladder needs at least 2 medium problems`);
+    if (hard < 1) errors.push(`${t.id}: ladder needs at least 1 hard problem`);
+    if (easy + medium + hard < 5) errors.push(`${t.id}: ladder needs at least 5 problems`);
+  }
+  return errors;
+}
+
+/**
+ * Total target problem count per band, across all topics.
+ * @param {Topic[]} topics
+ */
+export function ladderTotals(topics) {
+  const totals = { easy: 0, medium: 0, hard: 0, all: 0 };
+  for (const t of topics) {
+    totals.easy += t.ladder.easy;
+    totals.medium += t.ladder.medium;
+    totals.hard += t.ladder.hard;
+  }
+  totals.all = totals.easy + totals.medium + totals.hard;
+  return totals;
+}
+
+export const INDEX_STATUSES = ['indexed', 'selected', 'authored', 'verified'];
+
+/**
+ * Checks one record of content/index/problems.json against the taxonomy.
+ * @param {any} rec
+ * @param {Topic[]} topics
+ * @returns {string[]} errors, empty when valid
+ */
+export function validateIndexRecord(rec, topics) {
+  const errors = [];
+  const where = rec?.slug ?? '(no slug)';
+  const topic = topics.find((t) => t.id === rec.topic);
+  if (!rec.slug || !/^[a-z0-9-]+$/.test(rec.slug)) errors.push(`${where}: bad slug`);
+  if (!rec.title) errors.push(`${where}: missing title`);
+  if (!topic) errors.push(`${where}: unknown topic ${rec.topic}`);
+  else if (rec.concept !== null && !topic.concepts.includes(rec.concept)) {
+    errors.push(`${where}: concept ${rec.concept} not in ${rec.topic}`);
+  }
+  if (!RATING_BANDS[rec.difficulty]) errors.push(`${where}: bad difficulty ${rec.difficulty}`);
+  else if (bandOf(rec.rating) !== rec.difficulty) errors.push(`${where}: rating ${rec.rating} outside ${rec.difficulty} band`);
+  if (!(rec.estMinutes > 0)) errors.push(`${where}: estMinutes must be positive`);
+  if (!INDEX_STATUSES.includes(rec.status)) errors.push(`${where}: bad status ${rec.status}`);
+  if (!(rec.priority >= 0 && rec.priority <= 1)) errors.push(`${where}: priority out of [0,1]`);
+  // A ladder step is a place in the learning path, so it needs a concept and must be in the bank.
+  if (rec.ladderStep !== null && rec.ladderStep !== undefined) {
+    if (!Number.isInteger(rec.ladderStep) || rec.ladderStep < 0) errors.push(`${where}: bad ladderStep`);
+    if (rec.concept === null) errors.push(`${where}: ladder problem needs a concept`);
+    if (rec.status === 'indexed') errors.push(`${where}: ladder problem must be selected`);
+  }
+  if (rec.status !== 'indexed' && ![1, 2].includes(rec.wave)) errors.push(`${where}: ${rec.status} problem needs wave 1 or 2`);
+  // Every problem we author is tagged with a topic and a subtopic, so drills can select by either.
+  if (rec.status !== 'indexed' && rec.concept === null) errors.push(`${where}: core problem needs a subtopic (concept)`);
+  for (const sec of rec.secondary ?? []) {
+    const t = topics.find((x) => x.id === sec.topic);
+    if (!t) errors.push(`${where}: unknown secondary topic ${sec.topic}`);
+    else if (sec.concept !== null && !t.concepts.includes(sec.concept)) errors.push(`${where}: secondary concept ${sec.concept} not in ${sec.topic}`);
+  }
+  if (rec.status === 'indexed' && rec.wave !== null) errors.push(`${where}: indexed problem cannot have a wave`);
+  return errors;
+}
+
+/**
+ * Maps a 1-10 rating to its Easy/Medium/Hard label.
+ * @param {number} rating
+ * @returns {'Easy'|'Medium'|'Hard'|null}
+ */
+export function bandOf(rating) {
+  for (const [label, [lo, hi]] of Object.entries(RATING_BANDS)) {
+    if (rating >= lo && rating <= hi) return /** @type {'Easy'|'Medium'|'Hard'} */ (label);
+  }
+  return null;
+}
