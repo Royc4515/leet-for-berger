@@ -12,12 +12,19 @@
  *
  * Neutral types: int, long, double, bool, string and arrays of them up to two dimensions
  * (int[], string[][]); ListNode (singly linked list of int, JSON form [1,2,3]), ListNode[];
- * TreeNode (binary tree of int, JSON form level order with nulls [3,9,20,null,null,15,7]).
+ * TreeNode (binary tree of int, JSON form level order with nulls [3,9,20,null,null,15,7]);
+ * ListNode@cycle (input only: a list whose tail links back to index pos, JSON form [values, pos],
+ * pos -1 for no cycle; the user's code receives a plain ListNode and never sees pos);
+ * RandomListNode (list whose nodes also carry a random pointer, JSON [[val, randomIndex|null], ...]);
+ * NestedInteger[] (input only: LeetCode's nested list interface, JSON nested arrays [[1,1],2,[1,1]]).
  * 'void' is allowed only as a class method's return. Pure module: no DOM, safe under node --test.
  */
 
 export const BASE_TYPES = ['int', 'long', 'double', 'bool', 'string'];
-export const STRUCT_TYPES = ['ListNode', 'TreeNode'];
+export const STRUCT_TYPES = ['ListNode', 'TreeNode', 'RandomListNode', 'NestedInteger'];
+
+/** Types that exist only as inputs: their JSON carries data (pos) or nesting no output form needs. */
+const inputOnly = (t) => Boolean(t.cycle) || t.base === 'NestedInteger';
 
 /**
  * The eight interview languages. `executable` means it runs in the browser today; the rest are
@@ -40,20 +47,28 @@ export const LANGUAGE_IDS = LANGUAGES.map((l) => l.id);
 export const isClass = (sig) => sig?.kind === 'class';
 
 /**
- * @param {string} type e.g. 'int[][]', 'ListNode', 'TreeNode'
- * @returns {{ base: string, dims: number, struct: boolean }}
+ * @param {string} type e.g. 'int[][]', 'ListNode', 'TreeNode', 'ListNode@cycle', 'NestedInteger[]'
+ * @returns {{ base: string, dims: number, struct: boolean, cycle?: true }}
  */
 export function parseType(type) {
-  const m = /^([A-Za-z]+)((?:\[\])*)$/.exec(type);
+  const m = /^([A-Za-z]+)(@cycle)?((?:\[\])*)$/.exec(type);
   if (!m) throw new Error(`Unknown type "${type}"`);
   const base = m[1];
-  const dims = m[2].length / 2;
+  const dims = m[3].length / 2;
+  // The modifier only changes how the input is built; every language sees a plain ListNode.
+  if (m[2]) {
+    if (base !== 'ListNode' || dims) throw new Error(`Type "${type}" is not supported (only ListNode@cycle)`);
+    return { base, dims, struct: true, cycle: true };
+  }
   const struct = STRUCT_TYPES.includes(base);
   if (!struct && !BASE_TYPES.includes(base)) throw new Error(`Unknown type "${type}"`);
   if (dims > 2) throw new Error(`Type "${type}" has more than 2 dimensions`);
   // Arrays of trees, or 2D arrays of lists, have no interview problem that needs them yet.
   if (base === 'TreeNode' && dims > 0) throw new Error(`Type "${type}" is not supported (only TreeNode)`);
   if (base === 'ListNode' && dims > 1) throw new Error(`Type "${type}" is not supported (ListNode or ListNode[])`);
+  if (base === 'RandomListNode' && dims) throw new Error(`Type "${type}" is not supported (only RandomListNode)`);
+  // LeetCode only ever hands over a list of NestedInteger, never a single one or a grid.
+  if (base === 'NestedInteger' && dims !== 1) throw new Error(`Type "${type}" is not supported (only NestedInteger[])`);
   return { base, dims, struct };
 }
 
@@ -98,7 +113,7 @@ export function validateSignature(sig) {
       checkParams(m.params, `method ${m.name}`, errors);
       if (m.returns !== 'void') {
         try {
-          parseType(m.returns ?? '');
+          if (inputOnly(parseType(m.returns ?? ''))) errors.push(`method ${m.name} returns: ${m.returns} is input only`);
         } catch (e) {
           errors.push(`method ${m.name} returns: ${e.message}`);
         }
@@ -109,7 +124,7 @@ export function validateSignature(sig) {
   if (!/^[a-z][A-Za-z0-9]*$/.test(sig?.name ?? '')) errors.push('name must be camelCase');
   checkParams(sig?.params, '', errors);
   try {
-    parseType(sig?.returns ?? '');
+    if (inputOnly(parseType(sig?.returns ?? ''))) errors.push(`returns: ${sig.returns} is input only`);
   } catch (e) {
     errors.push(`returns: ${e.message}`);
   }
@@ -159,6 +174,18 @@ const SCALAR = {
   csharp: { int: 'int', long: 'long', double: 'double', bool: 'bool', string: 'string', ListNode: 'ListNode', TreeNode: 'TreeNode' },
   go: { int: 'int', long: 'int64', double: 'float64', bool: 'bool', string: 'string', ListNode: '*ListNode', TreeNode: '*TreeNode' },
 };
+// Kept apart from the rows above so the original table stays as it was.
+const EXTRA_SCALAR = {
+  python: { RandomListNode: 'Optional[RandomListNode]', NestedInteger: 'NestedInteger' },
+  javascript: { RandomListNode: 'RandomListNode', NestedInteger: 'NestedInteger' },
+  typescript: { RandomListNode: 'RandomListNode | null', NestedInteger: 'NestedInteger' },
+  java: { RandomListNode: 'RandomListNode', NestedInteger: 'NestedInteger' },
+  cpp: { RandomListNode: 'RandomListNode*', NestedInteger: 'NestedInteger' },
+  c: { RandomListNode: 'struct RandomListNode*', NestedInteger: 'struct NestedInteger*' },
+  csharp: { RandomListNode: 'RandomListNode', NestedInteger: 'NestedInteger' },
+  go: { RandomListNode: '*RandomListNode', NestedInteger: '*NestedInteger' },
+};
+for (const [lang, extra] of Object.entries(EXTRA_SCALAR)) Object.assign(SCALAR[lang], extra);
 
 /**
  * A neutral type written in a language (C is handled separately: arrays expand into params).
@@ -172,6 +199,9 @@ export function typeIn(lang, type) {
   // A list of possibly-empty lists: the element type loses its "| null" / Optional wrapper.
   if (dims > 0 && lang === 'typescript' && base === 'ListNode') s = '(ListNode | null)';
   if (dims > 0 && lang === 'python' && base === 'ListNode') s = 'Optional[ListNode]';
+  // LeetCode's own spelling for the nested list parameter.
+  if (base === 'NestedInteger' && lang === 'java') return 'List<NestedInteger>';
+  if (base === 'NestedInteger' && lang === 'csharp') return 'IList<NestedInteger>';
   switch (lang) {
     case 'python':
       return dims === 0 ? s : dims === 1 ? `list[${s}]` : `list[list[${s}]]`;
@@ -253,6 +283,29 @@ const STRUCT_DOCS = {
     csharp: '/**\n * Definition for a binary tree node (provided):\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val = 0, TreeNode left = null, TreeNode right = null) { this.val = val; this.left = left; this.right = right; }\n * }\n */\n',
     go: '/**\n * Definition for a binary tree node (provided):\n * type TreeNode struct {\n *     Val   int\n *     Left  *TreeNode\n *     Right *TreeNode\n * }\n */\n',
   },
+};
+
+STRUCT_DOCS.RandomListNode = {
+  python: '# Definition for a list node with a random pointer (provided, do not redefine):\n# class RandomListNode:\n#     def __init__(self, val=0, next=None, random=None):\n#         self.val = val\n#         self.next = next\n#         self.random = random\n',
+  javascript: '/**\n * Definition for a list node with a random pointer (provided):\n * function RandomListNode(val, next, random) {\n *     this.val = (val === undefined ? 0 : val);\n *     this.next = (next === undefined ? null : next);\n *     this.random = (random === undefined ? null : random);\n * }\n */\n',
+  typescript: '/**\n * Definition for a list node with a random pointer (provided):\n * class RandomListNode {\n *     val: number\n *     next: RandomListNode | null\n *     random: RandomListNode | null\n *     constructor(val?: number, next?: RandomListNode | null, random?: RandomListNode | null)\n * }\n */\n',
+  java: '/**\n * Definition for a list node with a random pointer (provided):\n * public class RandomListNode {\n *     int val;\n *     RandomListNode next;\n *     RandomListNode random;\n *     RandomListNode(int val) { this.val = val; }\n * }\n */\n',
+  cpp: '/**\n * Definition for a list node with a random pointer (provided):\n * struct RandomListNode {\n *     int val;\n *     RandomListNode *next;\n *     RandomListNode *random;\n *     RandomListNode(int x) : val(x), next(nullptr), random(nullptr) {}\n * };\n */\n',
+  c: '/**\n * Definition for a list node with a random pointer (provided):\n * struct RandomListNode {\n *     int val;\n *     struct RandomListNode *next;\n *     struct RandomListNode *random;\n * };\n */\n',
+  csharp: '/**\n * Definition for a list node with a random pointer (provided):\n * public class RandomListNode {\n *     public int val;\n *     public RandomListNode next;\n *     public RandomListNode random;\n *     public RandomListNode(int val = 0, RandomListNode next = null, RandomListNode random = null) { ... }\n * }\n */\n',
+  go: '/**\n * Definition for a list node with a random pointer (provided):\n * type RandomListNode struct {\n *     Val    int\n *     Next   *RandomListNode\n *     Random *RandomListNode\n * }\n */\n',
+};
+
+// The nested list is an interface: users read it, never build it, so only the accessors are shown.
+STRUCT_DOCS.NestedInteger = {
+  python: '# Nested list interface (provided, do not redefine):\n# class NestedInteger:\n#     def is_integer(self) -> bool         True if this holds a single integer\n#     def get_integer(self) -> int         the integer (None when this holds a list)\n#     def get_list(self) -> list[NestedInteger]   the list ([] when this holds an integer)\n# LeetCode\'s names isInteger, getInteger and getList work too.\n',
+  javascript: '/**\n * Nested list interface (provided):\n * class NestedInteger {\n *     isInteger(): boolean        true if this holds a single integer\n *     getInteger(): number        the integer (null when this holds a list)\n *     getList(): NestedInteger[]  the list ([] when this holds an integer)\n * }\n */\n',
+  typescript: '/**\n * Nested list interface (provided):\n * class NestedInteger {\n *     isInteger(): boolean        true if this holds a single integer\n *     getInteger(): number        the integer (null when this holds a list)\n *     getList(): NestedInteger[]  the list ([] when this holds an integer)\n * }\n */\n',
+  java: 'import java.util.*;\n\n/**\n * Nested list interface (provided):\n * public interface NestedInteger {\n *     boolean isInteger();            // true if this holds a single integer\n *     Integer getInteger();           // the integer (null when this holds a list)\n *     List<NestedInteger> getList();  // the list (empty when this holds an integer)\n * }\n */\n',
+  cpp: '/**\n * Nested list interface (provided):\n * class NestedInteger {\n *   public:\n *     bool isInteger() const;                        // true if this holds a single integer\n *     int getInteger() const;                        // the integer (only when isInteger())\n *     const vector<NestedInteger> &getList() const;  // the list (empty when this holds an integer)\n * };\n */\n',
+  c: '/**\n * Nested list interface (provided):\n * struct NestedInteger;\n * bool nestedIntegerIsInteger(struct NestedInteger* n);                // true if n holds a single integer\n * int nestedIntegerGetInteger(struct NestedInteger* n);                // the integer (only when it is one)\n * struct NestedInteger** nestedIntegerGetList(struct NestedInteger* n); // the list (NULL for an integer)\n * int nestedIntegerGetListSize(struct NestedInteger* n);               // its length (0 for an integer)\n */\n',
+  csharp: '/**\n * Nested list interface (provided):\n * public interface NestedInteger {\n *     bool IsInteger();                // true if this holds a single integer\n *     int GetInteger();                // the integer (only when IsInteger())\n *     IList<NestedInteger> GetList();  // the list (empty when this holds an integer)\n * }\n */\n',
+  go: '/**\n * Nested list interface (provided):\n * type NestedInteger struct { ... }\n * func (n NestedInteger) IsInteger() bool             // true if n holds a single integer\n * func (n NestedInteger) GetInteger() int             // the integer (only when IsInteger())\n * func (n NestedInteger) GetList() []*NestedInteger   // the list (empty when n holds an integer)\n */\n',
 };
 
 function structDocs(lang, sig) {

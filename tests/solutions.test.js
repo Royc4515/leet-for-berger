@@ -3,6 +3,9 @@
 //
 // A language runs only where its toolchain exists. Locally a missing toolchain skips; with
 // REQUIRE_ALL_LANGUAGES=1 (CI) it fails, so CI can never go green on a skipped language.
+//
+// VERIFY_LANGUAGES=java,go (or "sql", or "none") limits which solutions run, so CI can run one
+// language per parallel job; unset runs all. tests/ci.test.js checks the CI matrix covers them all.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -10,29 +13,38 @@ import { appendFileSync, mkdtempSync, writeFileSync, copyFileSync, readFileSync,
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { availableProblems } from '../src/js/problems/index.js';
-import { buildSuite, deepEqual } from '../src/js/engine/harness.js';
+import { buildSuite, comparatorFor } from '../src/js/engine/harness.js';
 import { LANGUAGES, validateSignature } from '../src/js/engine/codegen.js';
 import { buildHarness, encodeCases } from '../scripts/verify/harnesses.mjs';
+import { isSql, validateSqlProblem } from '../src/js/engine/sql.js';
+import { sqlEngineAvailable, loadSqlEngine, runSqlCases } from '../scripts/verify/sql.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const REQUIRE_ALL = process.env.REQUIRE_ALL_LANGUAGES === '1';
+const ONLY = process.env.VERIFY_LANGUAGES ? new Set(process.env.VERIFY_LANGUAGES.split(',').map((l) => l.trim())) : null;
+const selected = (lang) => !ONLY || ONLY.has(lang);
 const works = (cmd, args) => {
   const r = spawnSync(cmd, args, { stdio: 'ignore' });
   return !r.error && r.status === 0;
 };
+// Each probe spawns a process; with 133 problems that is a thousand spawns, so probe once.
+const once = (fn) => {
+  let v;
+  return () => (v ??= fn());
+};
 const localTsc = join(ROOT, 'node_modules/.bin/tsc');
 const TSC = existsSync(localTsc) ? localTsc : 'tsc';
-const dotnetVersion = () => Number(execFileSync('dotnet', ['--version'], { encoding: 'utf8' }).split('.')[0]);
+const dotnetVersion = once(() => Number(execFileSync('dotnet', ['--version'], { encoding: 'utf8' }).split('.')[0]));
 
 const TOOLCHAIN = {
   javascript: () => true,
-  python: () => works('python3', ['--version']),
-  typescript: () => works(TSC, ['--version']),
-  java: () => works('javac', ['-version']),
-  cpp: () => works('g++', ['--version']),
-  c: () => works('gcc', ['--version']),
-  go: () => works('go', ['version']),
-  csharp: () => works('dotnet', ['--version']),
+  python: once(() => works('python3', ['--version'])),
+  typescript: once(() => works(TSC, ['--version'])),
+  java: once(() => works('javac', ['-version'])),
+  cpp: once(() => works('g++', ['--version'])),
+  c: once(() => works('gcc', ['--version'])),
+  go: once(() => works('go', ['version'])),
+  csharp: once(() => works('dotnet', ['--version'])),
 };
 
 const JAVA_HARNESS = join(ROOT, 'scripts/verify/Harness.java');
@@ -51,9 +63,10 @@ function execute(lang, problem, cases, { source, compileOnly = false } = {}) {
   let out;
   if (lang === 'java') {
     copyFileSync(JAVA_HARNESS, join(dir, 'Harness.java'));
-    // ListNode and TreeNode are always compiled in: the harness refers to them, as do solutions.
-    for (const f of ['ListNode.java', 'TreeNode.java']) copyFileSync(join(ROOT, 'scripts/verify', f), join(dir, f));
-    run('javac', ['-d', dir, ...['Solution.java', 'Harness.java', 'ListNode.java', 'TreeNode.java'].map((f) => join(dir, f))], { stdio: 'pipe' });
+    // The structure classes are always compiled in: the harness refers to them, as do solutions.
+    const structs = ['ListNode.java', 'TreeNode.java', 'RandomListNode.java', 'NestedInteger.java'];
+    for (const f of structs) copyFileSync(join(ROOT, 'scripts/verify', f), join(dir, f));
+    run('javac', ['-d', dir, ...['Solution.java', 'Harness.java', ...structs].map((f) => join(dir, f))], { stdio: 'pipe' });
     if (compileOnly) return [];
     const t0 = performance.now();
     out = run('java', ['-Xss64m', '-cp', dir, 'Harness', problem.signature.name], { input: JSON.stringify(cases) });
@@ -73,8 +86,40 @@ function execute(lang, problem, cases, { source, compileOnly = false } = {}) {
   return out.trim().split('\n').map((l) => JSON.parse(l));
 }
 
+// SQL problems ship one solution, solution.sql, run by the same sql.js build and case runner as
+// the browser worker (docs/adr/0003-sql-problems.md). The 8-language rule is for algorithm problems.
+function verifySql(problem, suite) {
+  test(`${problem.id}: SQL schema and all 15 cases are valid`, () => {
+    assert.deepEqual(validateSqlProblem(problem), []);
+  });
+  if (!selected('sql')) return;
+  const available = sqlEngineAvailable();
+  const skip = !available && !REQUIRE_ALL && 'sql.js devDependency not installed (npm ci)';
+  test(`${problem.id}: SQL solution passes all 15 cases`, { skip }, async () => {
+    assert.ok(available, 'sql.js missing but REQUIRE_ALL_LANGUAGES=1');
+    const query = readFileSync(join(ROOT, 'src/js/problems', problem.id, 'solutions/solution.sql'), 'utf8');
+    // Engine boot is timed too, like process startup for the other languages.
+    const t0 = performance.now();
+    await loadSqlEngine();
+    const actuals = await runSqlCases(problem.signature, query, suite.map((tc) => tc.args));
+    const ms = performance.now() - t0;
+    suite.forEach((tc, i) => {
+      assert.equal(actuals[i].error, undefined, `case ${tc.id}: ${actuals[i].error}`);
+      assert.ok(problem.compare(actuals[i], tc.expected), `SQL: case ${tc.id} failed`);
+    });
+    // Same budget rule as the other languages: all 15 cases within one case's limit.
+    const factor = Number(process.env.LFB_TIME_FACTOR ?? 1);
+    if (factor > 0) assert.ok(ms <= problem.timeLimitMs * factor, `SQL: 15 cases took ${Math.round(ms)} ms, budget ${problem.timeLimitMs * factor} ms`);
+    if (process.env.LFB_TIMINGS) appendFileSync(process.env.LFB_TIMINGS, `${problem.id}\tsql\t${Math.round(ms)}\t${problem.timeLimitMs}\n`);
+  });
+}
+
 for (const problem of availableProblems()) {
   const suite = buildSuite(problem);
+  if (isSql(problem.signature)) {
+    verifySql(problem, suite);
+    continue;
+  }
 
   test(`${problem.id}: signature is valid`, () => {
     assert.deepEqual(validateSignature(problem.signature), []);
@@ -88,13 +133,16 @@ for (const problem of availableProblems()) {
   });
 
   for (const { id: lang, label } of LANGUAGES) {
+    if (!selected(lang)) continue;
     const available = TOOLCHAIN[lang]();
     const skip = !available && !REQUIRE_ALL && `${label} toolchain not installed`;
     test(`${problem.id}: ${label} solution passes all 15 cases`, { skip }, () => {
       assert.ok(available, `${label} toolchain missing but REQUIRE_ALL_LANGUAGES=1`);
       const actuals = execute(lang, problem, suite.map((tc) => tc.args));
       assert.equal(actuals.length, suite.length, `${label}: wrong number of results`);
-      suite.forEach((tc, i) => assert.ok(deepEqual(actuals[i], tc.expected), `${label}: case ${tc.id} failed`));
+      // The problem's judge mode, as in the browser (exact equality unless it declares one).
+      const compare = comparatorFor(problem);
+      suite.forEach((tc, i) => assert.ok(compare(actuals[i], tc.expected, tc), `${label}: case ${tc.id} failed`));
       // The browser watchdog only enforces limits for JavaScript and Python. Here every language
       // must finish all 15 cases, process startup included, within one case's limit: optimal
       // solutions use under half of it, while a naive O(n^2) on a max-size case needs seconds.

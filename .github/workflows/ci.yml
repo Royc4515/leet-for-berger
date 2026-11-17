@@ -6,33 +6,21 @@ on:
   pull_request:
 
 jobs:
+  # Unit tests, signature checks, database checks and the browser smoke test. Solutions are
+  # verified per language in the `verify` jobs below (VERIFY_LANGUAGES=none skips them here).
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # Toolchains for the solution verifier: every shipped solution is compiled and run in all
-      # 8 languages. Python 3, gcc and g++ come with the runner image.
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-          cache: false
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
       - run: npm ci --no-audit --no-fund
-      - name: Unit tests and 8-language solution verifier
+      - name: Unit tests
         run: npm test
         env:
-          # A missing toolchain fails the build instead of silently skipping a language.
-          REQUIRE_ALL_LANGUAGES: '1'
+          VERIFY_LANGUAGES: none
       - name: Database schema and git -> database sync checks
         run: |
           ls /usr/lib/postgresql/*/bin/initdb >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq postgresql)
@@ -48,3 +36,40 @@ jobs:
           name: e2e-screenshots
           path: e2e-shots
           if-no-files-found: ignore
+
+  # Every shipped solution, one job per language so the jobs run in parallel. The list must match
+  # the languages in src/js/engine/codegen.js plus sql (tests/ci.test.js enforces it).
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [python, javascript, typescript, java, cpp, c, csharp, go, sql]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Python 3, gcc and g++ come with the runner image; npm ci installs TypeScript and sql.js.
+      - if: matrix.lang == 'java'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - if: matrix.lang == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: false
+      - if: matrix.lang == 'csharp'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: npm ci --no-audit --no-fund
+      - name: Verify ${{ matrix.lang }} solutions
+        run: node --test tests/solutions.test.js
+        env:
+          VERIFY_LANGUAGES: ${{ matrix.lang }}
+          # A missing toolchain fails the job instead of silently skipping the language.
+          REQUIRE_ALL_LANGUAGES: '1'

@@ -8,6 +8,7 @@
  */
 import { LANGUAGES, LANGUAGE_IDS, entryName, starterCode } from '../engine/codegen.js';
 import { adapterFor } from '../engine/adapters.js';
+import { SQL_LANGUAGE, isSql, sqlSetup, sqlStarter, comparatorFor, tablesInputExample } from '../engine/sql.js';
 import smallestBaseSegment from './smallest-base-segment/problem.js';
 import notifyRecipients from './notify-recipients/problem.js';
 import reverseList from './reverse-list/problem.js';
@@ -88,6 +89,59 @@ import stairPaths from './stair-paths/problem.js';
 import risingChain from './rising-chain/problem.js';
 import bestRunProduct from './best-run-product/problem.js';
 import goodStringCount from './good-string-count/problem.js';
+import greenProducts from './green-products/problem.js';
+import addressLookup from './address-lookup/problem.js';
+import repeatedEmails from './repeated-emails/problem.js';
+import runnerUpSalary from './runner-up-salary/problem.js';
+import tripleRepeat from './triple-repeat/problem.js';
+import treeHeight from './tree-height/problem.js';
+import bestTreePath from './best-tree-path/problem.js';
+import kthInOrder from './kth-in-order/problem.js';
+import treeHeist from './tree-heist/problem.js';
+import treeCodec from './tree-codec/problem.js';
+import editSteps from './edit-steps/problem.js';
+import uphillPath from './uphill-path/problem.js';
+import balloonPop from './balloon-pop/problem.js';
+import coinCombos from './coin-combos/problem.js';
+import tradeCooldown from './trade-cooldown/problem.js';
+import sharedPrefix from './shared-prefix/problem.js';
+import digitListSum from './digit-list-sum/problem.js';
+import shiftList from './shift-list/problem.js';
+import mergeManyLists from './merge-many-lists/problem.js';
+import recentCache from './recent-cache/problem.js';
+import frequentCache from './frequent-cache/problem.js';
+import versionedStore from './versioned-store/problem.js';
+import bucketMap from './bucket-map/problem.js';
+import hitWindow from './hit-window/problem.js';
+import prefixTree from './prefix-tree/problem.js';
+import boardWords from './board-words/problem.js';
+import listLoop from './list-loop/problem.js';
+import randomLinkCopy from './random-link-copy/problem.js';
+import nestedFlatten from './nested-flatten/problem.js';
+import randomPool from './random-pool/problem.js';
+import cheapestRouteKStops from './cheapest-route-k-stops/problem.js';
+import ticketItinerary from './ticket-itinerary/problem.js';
+import signalSpread from './signal-spread/problem.js';
+import pointWiring from './point-wiring/problem.js';
+import courseFinishTime from './course-finish-time/problem.js';
+import obstacleClearing from './obstacle-clearing/problem.js';
+import doubleInversions from './double-inversions/problem.js';
+import skylineOutline from './skyline-outline/problem.js';
+import visitAllNodes from './visit-all-nodes/problem.js';
+import widestPalindrome from './widest-palindrome/problem.js';
+import firstMatchIndex from './first-match-index/problem.js';
+import dnaRepeats from './dna-repeats/problem.js';
+import prefixScoreSum from './prefix-score-sum/problem.js';
+import justifyLines from './justify-lines/problem.js';
+import stringCodec from './string-codec/problem.js';
+import doubledArray from './doubled-array/problem.js';
+import squareCounter from './square-counter/problem.js';
+import productSign from './product-sign/problem.js';
+import goodDigitStrings from './good-digit-strings/problem.js';
+import stoneTakeGame from './stone-take-game/problem.js';
+import anagramArrangements from './anagram-arrangements/problem.js';
+import lifeStep from './life-step/problem.js';
+import fibonacciMod from './fibonacci-mod/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -95,6 +149,7 @@ export const TOPICS = [
   { id: 'dp', label: 'Dynamic Programming' },
   { id: 'graphs', label: 'Graphs' },
   { id: 'trees', label: 'Trees' },
+  { id: 'sql', label: 'SQL' },
 ];
 
 export const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
@@ -105,8 +160,10 @@ export const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
  * @param {object} problem
  */
 function hydrate(problem) {
+  if (isSql(problem.signature)) return hydrateSql(problem);
   return {
     ...problem,
+    languages: LANGUAGES,
     signatures: Object.fromEntries(LANGUAGE_IDS.map((l) => [l, { entry: entryName(l, problem.signature.name) }])),
     starterCode: Object.fromEntries(LANGUAGE_IDS.map((l) => [l, starterCode(l, problem.signature)])),
     // Browser-executable languages get a JSON <-> objects adapter when the signature needs one.
@@ -114,7 +171,29 @@ function hydrate(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak, islandCount, courseCheck, courseOrder, wordMorph, lockSteps, twoColorCheck, extraLink, accountMerge, limitedPaths, medianStream, kthHighest, cooldownTasks, noAdjacentRepeat, rangeCover, gridWord, keypadWords, subsetBuilder, allOrderings, bestRunSum, jumpReach, overlapTrim, cookieMatch, oneSwapMax, fewestCoins, streetHeist, stairPaths, risingChain, bestRunProduct, goodStringCount].map(hydrate);
+/**
+ * A SQL problem has one language and no function to call: the tables are the interface.
+ * The worker gets the schema as its adapter, and judging compares result sets (engine/sql.js).
+ * @param {object} problem
+ */
+function hydrateSql(problem) {
+  const sig = problem.signature;
+  return {
+    ...problem,
+    argNames: sig.tables.map((t) => t.name),
+    languages: [SQL_LANGUAGE],
+    signatures: { sql: { entry: 'query' } },
+    starterCode: { sql: sqlStarter(sig) },
+    adapters: { sql: sqlSetup(sig) },
+    compare: comparatorFor(sig),
+    customInputExample: tablesInputExample(sig, problem.visibleTests[0].args),
+  };
+}
+
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak, islandCount, courseCheck, courseOrder, wordMorph, lockSteps, twoColorCheck, extraLink, accountMerge, limitedPaths, medianStream, kthHighest, cooldownTasks, noAdjacentRepeat, rangeCover, gridWord, keypadWords, subsetBuilder, allOrderings, bestRunSum, jumpReach, overlapTrim, cookieMatch, oneSwapMax, fewestCoins, streetHeist, stairPaths, risingChain, bestRunProduct, goodStringCount, greenProducts, addressLookup, repeatedEmails, runnerUpSalary, tripleRepeat, treeHeight, bestTreePath, kthInOrder, treeHeist, treeCodec, editSteps, uphillPath, balloonPop, coinCombos, tradeCooldown, sharedPrefix, digitListSum, shiftList, mergeManyLists, recentCache, frequentCache, versionedStore, bucketMap, hitWindow, prefixTree, boardWords, cheapestRouteKStops, ticketItinerary, signalSpread, pointWiring, courseFinishTime, obstacleClearing, doubleInversions, skylineOutline, visitAllNodes, widestPalindrome, firstMatchIndex, dnaRepeats, prefixScoreSum, justifyLines, stringCodec, doubledArray, squareCounter, productSign, goodDigitStrings, stoneTakeGame, anagramArrangements, lifeStep, fibonacciMod].map(hydrate);
+// Problems on the input types added later (ListNode@cycle, RandomListNode, NestedInteger[]) and the
+// randomized-set judge mode. A separate line keeps parallel content waves from colliding above.
+implemented.push(...[listLoop, randomLinkCopy, nestedFlatten, randomPool].map(hydrate));
 
 /**
  * URL of a problem's solution file for a language.
@@ -122,7 +201,7 @@ const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOr
  * @param {string} lang
  */
 export function solutionUrl(problemId, lang) {
-  const file = LANGUAGES.find((l) => l.id === lang)?.file;
+  const file = [...LANGUAGES, SQL_LANGUAGE].find((l) => l.id === lang)?.file;
   if (!file) throw new Error(`Unknown language "${lang}"`);
   return new URL(`./${problemId}/solutions/${file}`, import.meta.url).href;
 }
@@ -146,9 +225,7 @@ const planned = [
   { id: 'tree-level-sums', title: 'Tree Level Sums', difficulty: 'Easy', topics: ['trees'], milestone: 3 },
   { id: 'lowest-shared-ancestor', title: 'Lowest Shared Ancestor', difficulty: 'Medium', topics: ['trees'], milestone: 3 },
   { id: 'k-closest-points', title: 'K Closest Points (Heap)', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 3 },
-  { id: 'edit-distance-lite', title: 'Edit Distance Lite', difficulty: 'Hard', topics: ['dp'], milestone: 4 },
   { id: 'grid-min-path', title: 'Grid Minimum Path', difficulty: 'Medium', topics: ['dp'], milestone: 4 },
-  { id: 'cheapest-route-k-stops', title: 'Cheapest Route Within K Stops', difficulty: 'Hard', topics: ['graphs'], milestone: 4 },
 ];
 
 const byId = new Map(implemented.map((p) => [p.id, p]));

@@ -3,6 +3,16 @@
 ## [Unreleased]
 
 ### Added
+- Essential path complete: 131 of 131 problems, wave 3 (53 problems):
+  - Linked List, Design and Tries: Recent Cache, Merge Many Lists, Digit List Sum, Shift List, Versioned Store, Frequent Cache, Bucket Map, Hit Window, Prefix Tree, Board Words, Shared Prefix.
+  - Trees and 2D DP: Best Tree Path, Tree Codec, Tree Height, Kth In Order, Tree Heist, Edit Steps, Uphill Path, Balloon Pop, Coin Combos, Trade Cooldown.
+  - Advanced Graphs, Range Queries and Bitmask: Cheapest Route K Stops, Ticket Itinerary, Signal Spread, Point Wiring, Course Finish Time, Obstacle Clearing, Double Inversions, Skyline Outline, Visit All Nodes.
+  - Strings, Math and classics: Widest Palindrome, First Match Index, DNA Repeats, Prefix Score Sum, Justify Lines, String Codec, Doubled Array, Square Counter, Product Sign, Good Digit Strings, Stone Take Game, Anagram Arrangements, Life Step, Fibonacci Mod.
+  - Plus the SQL problems and the new-input-type problems listed below.
+- SQL problems (ADR 0003): sql.js 1.13.0 (SQLite in WebAssembly) runs queries in a worker, one fresh read-only database per case; CI verifies `solution.sql` with the same build (pinned devDependency). Results are judged as result sets, as a multiset unless the statement fixes the order. SQL problems offer only SQL. First five: Green Products, Address Lookup, Repeated Emails, Runner-up Salary, Triple Repeat.
+- Input types `ListNode@cycle` (`[values, pos]`, the function sees only the head), `RandomListNode` (`[[val, randomIndex|null], ...]`) and `NestedInteger[]` (nested arrays, LeetCode's interface), in starter code, the browser adapters and all 8 verifier harnesses. A copied `RandomListNode` list that reuses input nodes is a wrong answer in every language.
+- Judge modes (`judge` in `problem.js`, `comparatorFor` in `engine/harness.js`): `randomized-set` accepts any current member from `getRandom` and checks long runs for uniformity; insert and remove stay exact. The browser and the verifier use the same mode.
+- Problems: List Loop, Random Link Copy, Nested Flattener and Random Pool, each in 8 languages.
 - Essential problems, wave 2, each with solutions in 8 languages, most adapted from imported open-source solutions:
   - Sliding Window and Binary Search: Longest Distinct Window, Window Maximums, Covering Window, Vowel Window, Rotated Search, Eating Speed, Merged Median, Matrix Search, Target Range, Mountain Peak.
   - Greedy and 1D DP: Best Run Sum, Jump Reach, Overlap Trim, Cookie Match, One Swap Max, Fewest Coins, Street Heist, Stair Paths, Rising Chain, Best Run Product, Good String Count.
@@ -19,6 +29,8 @@
 - `src/js/engine/structures.js`: tree and list helpers for problem references and generators.
 
 ### Fixed
+- CI hit its 15-minute limit: verifying 133 problems in 8 languages one after another takes over 30 minutes. Solutions now verify in one parallel job per language (`VERIFY_LANGUAGES`), and `tests/ci.test.js` fails if the matrix misses a language. Toolchain probes run once instead of once per problem.
+- Database sync ran out of memory at 133 problems: `scripts/db/export-sql.mjs` built the whole script (about 370 MB, mostly test data) as one string. It now streams batched inserts and waits on a full pipe.
 - Python names for signatures with acronyms: `lengthOfLIS` became `length_of_l_i_s`; an acronym is now one word (`length_of_lis`). No existing problem changes.
 - Java verifier reused one `Solution` object for all 15 cases, so state left in instance fields leaked between cases (found with an imported Subsets solution). It now creates one per case, like LeetCode and the C++ and C# harnesses.
 - Uncaught "Canceled" errors when leaving a problem: Monaco cancels in-flight work on close, and its scripts loaded without CORS, so the errors were muted and impossible to handle. Monaco now loads with CORS, editors are disposed before their models, and only Monaco's exact cancellation error is ignored.

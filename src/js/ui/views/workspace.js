@@ -16,8 +16,8 @@ import { h, mount, trustedHtml, toast, confirmDialog, difficultyBadge } from '..
 import { attachResizer } from '../resizer.js';
 import { createEditor } from '../editor.js';
 import { renderIdle, renderPending, renderResult, renderError } from '../results.js';
-import { buildSuite, judge } from '../../engine/harness.js';
-import { getRunner, LANGUAGES } from '../../engine/runners/index.js';
+import { buildSuite, judge, comparatorFor } from '../../engine/harness.js';
+import { getRunner } from '../../engine/runners/index.js';
 import { recordSubmission, markRevealed } from '../../state/progress.js';
 import { loadDraft, saveDraft, clearDraft } from '../../state/drafts.js';
 import { TOPICS, loadSolution } from '../../problems/index.js';
@@ -25,12 +25,14 @@ import { createMentorPanel } from '../mentor-panel.js';
 
 const LANG_KEY = 'lfb:lang';
 
-function preferredLanguage() {
+/** The saved language when this problem offers it; SQL problems offer only SQL. */
+function preferredLanguage(languages) {
+  const fallback = languages.some((x) => x.id === 'javascript') ? 'javascript' : languages[0].id;
   try {
     const l = localStorage.getItem(LANG_KEY);
-    return LANGUAGES.some((x) => x.id === l) ? l : 'javascript';
+    return languages.some((x) => x.id === l) ? l : fallback;
   } catch {
-    return 'javascript';
+    return fallback;
   }
 }
 
@@ -41,7 +43,8 @@ function preferredLanguage() {
  */
 export function renderWorkspace(root, { problem, store, session = null }) {
   const cleanups = [];
-  let language = preferredLanguage();
+  const languages = problem.languages;
+  let language = preferredLanguage(languages);
   let editor = null;
   let running = false;
   let lastResult = null;
@@ -66,7 +69,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
   const customInput = h('textarea#custom-input.custom-input', {
     rows: 3,
     spellcheck: 'false',
-    placeholder: '"abcabc"',
+    placeholder: problem.customInputExample ?? '"abcabc"',
     'aria-label': 'Custom test input',
   });
   const topicLabels = problem.topics.map((t) => TOPICS.find((x) => x.id === t)?.label ?? t);
@@ -109,7 +112,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
   const langSelect = h(
     'select.select',
     { 'aria-label': 'Language' },
-    LANGUAGES.map((l) => h('option', { value: l.id, selected: l.id === language }, l.label + (l.executable ? '' : ' (editor only)'))),
+    languages.map((l) => h('option', { value: l.id, selected: l.id === language }, l.label + (l.executable ? '' : ' (editor only)'))),
   );
   const runBtn = h('button.btn.btn-secondary', { type: 'button', title: "Run Code (Ctrl+')" }, 'Run Code');
   const submitBtn = h('button.btn.btn-primary', { type: 'button', title: 'Submit (Ctrl+Enter)' }, 'Submit');
@@ -156,7 +159,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
 
   /* ---------- Editor ---------- */
   const codeFor = (lang) => drafts.load(lang) ?? problem.starterCode[lang];
-  const monacoLang = (lang) => LANGUAGES.find((l) => l.id === lang).monaco;
+  const monacoLang = (lang) => languages.find((l) => l.id === lang).monaco;
 
   createEditor(editorHost, { value: codeFor(language), language: monacoLang(language) }).then((ed) => {
     if (disposed) return ed.dispose();
@@ -186,7 +189,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     // Pyodide takes seconds to boot; start it now rather than on the first Run.
     if (language === 'python') getRunner('python').warmUp()?.catch(() => {});
   });
-  if (language === 'python') getRunner('python').warmUp()?.catch(() => {});
+  if (language === 'python' || language === 'sql') getRunner(language).warmUp()?.catch(() => {});
 
   resetBtn.addEventListener('click', async () => {
     const ok = await confirmDialog({ title: 'Reset code?', body: 'Your current code for this language will be replaced by the starter code.', confirmLabel: 'Reset', danger: true });
@@ -246,11 +249,12 @@ export function renderWorkspace(root, { problem, store, session = null }) {
         onStatus: (s) => !disposed && renderPending(consoleBody, s),
       });
       if (disposed) return;
-      const result = judge(suite, raw);
+      // The problem decides how answers are compared: SQL result sets, judge modes, or exact JSON.
+      const result = judge(suite, raw, comparatorFor(problem));
       lastResult = result;
       renderResult(consoleBody, result, { kind, argNames: problem.argNames, elapsedMs: performance.now() - started });
 
-      const executable = LANGUAGES.find((l) => l.id === language).executable;
+      const executable = languages.find((l) => l.id === language).executable;
       if (kind === 'submit' && executable) {
         store.update((s) => recordSubmission(s, { problemId: problem.id, accepted: result.accepted }));
         toast(result.accepted ? 'Accepted. Nice work.' : `${result.verdict}: ${result.passed}/15`, result.accepted ? 'success' : 'error');

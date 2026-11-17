@@ -27,9 +27,7 @@ public class Harness {
         PrintStream out = new PrintStream(new BufferedOutputStream(System.out), false, StandardCharsets.UTF_8);
         for (Object c : cases) {
             List<?> args = (List<?>) c;
-            Class<?>[] types = method.getParameterTypes();
-            Object[] converted = new Object[types.length];
-            for (int i = 0; i < types.length; i++) converted[i] = convert(args.get(i), types[i]);
+            Object[] converted = convertAll(args, method.getParameterTypes(), method.getGenericParameterTypes());
             // A fresh Solution per case, as on LeetCode: state left in instance fields by one case
             // must not leak into the next (C++ and C# harnesses already do this).
             Object solution = solutionClass.getDeclaredConstructor().newInstance();
@@ -41,6 +39,7 @@ public class Harness {
     // Design problems: construct with ops[0]'s arguments, then call each method by name.
     static void runClass(String className, List<?> cases) throws Exception {
         Class<?> cls = Class.forName(className);
+        Map<String, Method> methods = new HashMap<>();
         PrintStream out = new PrintStream(new BufferedOutputStream(System.out), false, StandardCharsets.UTF_8);
         for (Object c : cases) {
             List<?> ops = (List<?>) ((List<?>) c).get(0);
@@ -55,15 +54,21 @@ public class Harness {
                     for (Constructor<?> k : cls.getDeclaredConstructors()) if (k.getParameterCount() == a.size()) ctor = k;
                     if (ctor == null) throw new IllegalStateException("No constructor with " + a.size() + " params");
                     ctor.setAccessible(true);
-                    obj = ctor.newInstance(convertAll(a, ctor.getParameterTypes()));
+                    obj = ctor.newInstance(convertAll(a, ctor.getParameterTypes(), ctor.getGenericParameterTypes()));
                     sb.append("null");
                     continue;
                 }
-                Method m = null;
-                for (Method k : cls.getDeclaredMethods()) if (k.getName().equals(ops.get(i)) && k.getParameterCount() == a.size()) m = k;
+                // Looked up once per name and arity: reflection lookups per call dominated 10^5-call cases.
+                String name = (String) ops.get(i);
+                int arity = a.size();
+                Method m = methods.computeIfAbsent(name + "/" + arity, key -> {
+                    Method found = null;
+                    for (Method k : cls.getDeclaredMethods()) if (k.getName().equals(name) && k.getParameterCount() == arity) found = k;
+                    if (found != null) found.setAccessible(true);
+                    return found;
+                });
                 if (m == null) throw new IllegalStateException("No method " + ops.get(i));
-                m.setAccessible(true);
-                Object r = m.invoke(obj, convertAll(a, m.getParameterTypes()));
+                Object r = m.invoke(obj, convertAll(a, m.getParameterTypes(), m.getGenericParameterTypes()));
                 sb.append(m.getReturnType() == void.class ? "null" : toJson(r, m.getReturnType()));
             }
             out.println(sb.append(']'));
@@ -71,14 +76,52 @@ public class Harness {
         out.flush();
     }
 
-    static Object[] convertAll(List<?> args, Class<?>[] types) {
+    static Object[] convertAll(List<?> args, Class<?>[] types, Type[] generics) {
         Object[] out = new Object[types.length];
-        for (int i = 0; i < types.length; i++) out[i] = convert(args.get(i), types[i]);
+        for (int i = 0; i < types.length; i++) {
+            // List<NestedInteger> is the one parameter whose element type only the generic signature knows.
+            boolean nested = generics[i] instanceof ParameterizedType p && p.getActualTypeArguments()[0] == NestedInteger.class;
+            out[i] = nested ? toNested((List<?>) args.get(i)) : convert(args.get(i), types[i]);
+        }
         return out;
     }
 
+    static List<NestedInteger> toNested(List<?> a) {
+        List<NestedInteger> out = new ArrayList<>();
+        for (Object x : a) out.add(x instanceof List<?> l ? new NestedIntegerImpl(toNested(l)) : new NestedIntegerImpl(((Number) x).intValue()));
+        return out;
+    }
+
+    // Input nodes of the current RandomListNode case, by identity, so a returned original is caught.
+    static final Set<RandomListNode> GIVEN = Collections.newSetFromMap(new IdentityHashMap<>());
+    // Same strings as COPY_MARKERS in src/js/engine/adapters.js.
+    static final String SHARED_NODE = "not a copy: the returned list reuses input nodes";
+    static final String OUTSIDE_RANDOM = "not a copy: a random pointer leaves the returned list";
+
     // Maps parsed JSON (Long, Double, String, Boolean, List) onto the declared Java parameter type.
     static Object convert(Object v, Class<?> t) {
+        // ListNode@cycle arrives as [values, pos]: a plain list's items are numbers, never a list.
+        if (t == ListNode.class && !((List<?>) v).isEmpty() && ((List<?>) v).get(0) instanceof List<?> values) {
+            int pos = ((Number) ((List<?>) v).get(1)).intValue();
+            List<ListNode> nodes = new ArrayList<>();
+            for (Object x : values) nodes.add(new ListNode(((Number) x).intValue()));
+            for (int i = 0; i + 1 < nodes.size(); i++) nodes.get(i).next = nodes.get(i + 1);
+            if (pos >= 0 && !nodes.isEmpty()) nodes.get(nodes.size() - 1).next = nodes.get(pos);
+            return nodes.isEmpty() ? null : nodes.get(0);
+        }
+        if (t == RandomListNode.class) {
+            List<?> pairs = (List<?>) v;
+            List<RandomListNode> nodes = new ArrayList<>();
+            for (Object p : pairs) nodes.add(new RandomListNode(((Number) ((List<?>) p).get(0)).intValue()));
+            GIVEN.clear();
+            for (int i = 0; i < nodes.size(); i++) {
+                Object r = ((List<?>) pairs.get(i)).get(1);
+                nodes.get(i).next = i + 1 < nodes.size() ? nodes.get(i + 1) : null;
+                nodes.get(i).random = r == null ? null : nodes.get(((Number) r).intValue());
+                GIVEN.add(nodes.get(i));
+            }
+            return nodes.isEmpty() ? null : nodes.get(0);
+        }
         if (t == ListNode.class) {
             ListNode d = new ListNode(), n = d;
             for (Object x : (List<?>) v) { n.next = new ListNode(((Number) x).intValue()); n = n.next; }
@@ -116,11 +159,32 @@ public class Harness {
 
     // A null list or tree is the empty structure, written []; the declared type tells them apart.
     static String toJson(Object v, Class<?> declared) {
-        if (v == null && (declared == ListNode.class || declared == TreeNode.class)) return "[]";
+        if (v == null && (declared == ListNode.class || declared == TreeNode.class || declared == RandomListNode.class)) return "[]";
         return toJson(v);
     }
 
+    // [[val, randomIndex|null], ...], or a marker string when the result is not a real copy.
+    static String randomListJson(RandomListNode head) {
+        Map<RandomListNode, Integer> index = new IdentityHashMap<>();
+        List<RandomListNode> order = new ArrayList<>();
+        for (RandomListNode n = head; n != null; n = n.next) {
+            if (GIVEN.contains(n)) return quote(SHARED_NODE);
+            if (index.containsKey(n)) throw new IllegalStateException("Returned list has a cycle");
+            index.put(n, order.size());
+            order.add(n);
+        }
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < order.size(); i++) {
+            RandomListNode r = order.get(i).random;
+            if (r != null && GIVEN.contains(r)) return quote(SHARED_NODE);
+            if (r != null && !index.containsKey(r)) return quote(OUTSIDE_RANDOM);
+            sb.append(i > 0 ? "," : "").append('[').append(order.get(i).val).append(',').append(r == null ? "null" : String.valueOf(index.get(r))).append(']');
+        }
+        return sb.append(']').toString();
+    }
+
     static String toJson(Object v) {
+        if (v instanceof RandomListNode rn) return randomListJson(rn);
         if (v instanceof ListNode ln) {
             StringBuilder sb = new StringBuilder("[");
             for (ListNode n = ln; n != null; n = n.next) sb.append(n == ln ? "" : ",").append(n.val);
@@ -209,7 +273,9 @@ public class Harness {
             int start = i;
             while (i < s.length() && "+-0123456789.eE".indexOf(s.charAt(i)) >= 0) i++;
             String num = s.substring(start, i);
-            return num.matches("-?\\d+") ? (Object) Long.parseLong(num) : (Object) Double.parseDouble(num);
+            // Not String.matches: it compiles a regex per number, a third of the run on 10^5-call cases.
+            boolean integral = num.indexOf('.') < 0 && num.indexOf('e') < 0 && num.indexOf('E') < 0;
+            return integral ? (Object) Long.parseLong(num) : (Object) Double.parseDouble(num);
         }
 
         private void skip() { while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++; }

@@ -31,7 +31,9 @@ src/js/engine/             PURE judging logic + execution
   runners/worker-runner.js generic Web Worker runner, per-case watchdog
   workers/js-worker.js     executes user JS
   workers/py-worker.js     executes user Python via Pyodide (persistent worker)
-src/js/problems/<id>/      problem.js + solutions/ (8 language files); index.js = catalog, hydrate, loadSolution
+  workers/sql-worker.js    executes user SQL via sql.js (SQLite wasm); sql-core.js is shared with the verifier
+  sql.js                   SQL problems: schema validation, starter, result-set judging (ADR 0003)
+src/js/problems/<id>/      problem.js + solutions/ (8 language files, or solution.sql); index.js = catalog, hydrate, loadSolution
 src/js/state/              progress (pure reducers + localStorage), drafts
 src/js/modes/              interview.js, battle.js (pure session logic)
 src/js/mentor/             mentor providers (scripted today, remote later)
@@ -60,10 +62,10 @@ Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/
 5. **Hidden tests are deterministic.** Generated inputs use the seeded `mulberry32`, never `Math.random()`.
 6. **Pure modules stay pure.** `engine/harness.js`, `engine/codegen.js`, `data/*.js`, `state/progress.js`, `modes/*.js`, `mentor/mentor.js` have no DOM access and take time as a parameter (`now`) so they are unit-testable. Do not read `Date.now()` inside a reducer without a `now` override. (This already caused one bug: tab-switch tracking.)
 7. **Every view returns a cleanup function.** Monaco instances, intervals and listeners leak otherwise.
-8. **CDN versions are pinned** (Monaco 0.52.2, Pyodide 0.27.2). Upgrading is a deliberate task with an e2e run, not a drive-by.
+8. **CDN versions are pinned** (Monaco 0.52.2, Pyodide 0.27.2, sql.js 1.13.0, which must equal the `sql.js` devDependency). Upgrading is a deliberate task with an e2e run, not a drive-by.
 9. **Zero console errors.** The e2e test enforces it.
 10. **No secrets in the client.** This is a static site. LLM keys, solution vaults and real judging for competitive modes require the backend (ROADMAP Phase 2-3).
-11. **Every shipped solution is verified.** Each problem has a solution file per language (8), and `tests/solutions.test.js` runs all of them against the 15 cases, and each language must finish all 15 within one case's `timeLimitMs`; CI requires every toolchain (`REQUIRE_ALL_LANGUAGES=1`). Starter code is generated from the signature, never hand-written.
+11. **Every shipped solution is verified.** Each algorithm problem has a solution file per language (8); each SQL problem has exactly one, `solutions/solution.sql` (ADR 0003). `tests/solutions.test.js` runs all of them against the 15 cases, and each language must finish all 15 within one case's `timeLimitMs`; CI requires every toolchain (`REQUIRE_ALL_LANGUAGES=1`). Starter code is generated from the signature, never hand-written.
 
 ## Conventions
 
@@ -93,7 +95,7 @@ Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/
 
 ## Known limits (do not "fix" by faking)
 
-- Only JavaScript and Python run in the browser. TypeScript, Java, C++, C, C# and Go are editor-only and the verdict says so honestly. Their solutions are still verified in CI (`tests/solutions.test.js`). Real fix is the server runner (ROADMAP Phase 2).
+- Only JavaScript, Python and SQL (SQLite dialect, not LeetCode's MySQL) run in the browser. TypeScript, Java, C++, C, C# and Go are editor-only and the verdict says so honestly. Their solutions are still verified in CI (`tests/solutions.test.js`). Real fix is the server runner (ROADMAP Phase 2).
 - "Reveal Solution" is gated by a confirm dialog and marks the problem as assisted, but solutions ship in the client bundle. True secrecy needs the server (Phase 2).
 - Battle is bot-only. Peer battles need server-side judging so clients cannot fake progress (Phase 3).
 - AI Mentor runs on a scripted hint ladder. The LLM provider needs a backend proxy (Phase 3). The system prompt already lives in `src/js/mentor/mentor.js`.

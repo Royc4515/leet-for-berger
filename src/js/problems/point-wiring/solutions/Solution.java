@@ -1,0 +1,32 @@
+// Adapted from doocs/leetcode (CC BY-SA 4.0): https://github.com/doocs/leetcode/blob/HEAD/solution/1500-1599/1584.Min%20Cost%20to%20Connect%20All%20Points/Solution.java
+import java.util.*;
+
+class Solution {
+    // O(n^2) - Prim's algorithm on the complete graph without building it: dist[k] is the
+    // cheapest wire from outside point k into the tree, computed on the fly.
+    public int minCostConnectPoints(int[][] points) {
+        int n = points.length;
+        int[] dist = new int[n];
+        boolean[] vis = new boolean[n];
+        Arrays.fill(dist, Integer.MAX_VALUE);
+        dist[0] = 0;
+        int ans = 0;
+        for (int i = 0; i < n; ++i) {
+            int j = -1;
+            for (int k = 0; k < n; ++k) {
+                if (!vis[k] && (j == -1 || dist[k] < dist[j])) {
+                    j = k;
+                }
+            }
+            vis[j] = true;
+            ans += dist[j];
+            int x = points[j][0], y = points[j][1];
+            for (int k = 0; k < n; ++k) {
+                if (!vis[k]) {
+                    dist[k] = Math.min(dist[k], Math.abs(points[k][0] - x) + Math.abs(points[k][1] - y));
+                }
+            }
+        }
+        return ans;
+    }
+}

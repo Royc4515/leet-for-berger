@@ -5,6 +5,7 @@
 #   3. dropping a problem that users submitted to fails loudly instead of deleting their data
 #   4. row level security: anon sees visible test cases only, never hidden ones or solutions
 #   5. reveal_solution needs a signed-in user and marks the problem assisted
+#   6. SQL problems ship exactly one solution, in language sql
 # Needs PostgreSQL server binaries (initdb, pg_ctl) and psql. Usage: bash scripts/db/check-schema.sh
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -71,4 +72,7 @@ code=$(as_role authenticated "$USER_ID" "select reveal_solution('notify-recipien
 echo "$code" | grep -q "def notify_recipients" || fail "reveal_solution returned the wrong code"
 [ "$($VAL -c "select assisted from solves where user_id = '$USER_ID' and problem_slug = 'notify-recipients'")" = "t" ] || fail "reveal did not mark the problem assisted"
 echo "5. reveal_solution: signed-in only, marks the problem assisted"
+
+[ "$($VAL -c "select string_agg(language_id, ',') from solutions where problem_slug = 'combine-two-tables'")" = "sql" ] || fail "a SQL problem must ship exactly one solution, in sql"
+echo "6. SQL problems ship exactly one solution (language sql)"
 echo "All database checks passed."

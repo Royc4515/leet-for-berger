@@ -49,6 +49,7 @@ Given a non-empty string `s`, return the shortest `t` such that `s` is `t` repea
 - [Roadmap](docs/ROADMAP.md)
 - [ADR 0001: no build step](docs/adr/0001-no-build-step.md)
 - [ADR 0002: PostgreSQL on Supabase, git as content source](docs/adr/0002-postgres-supabase.md)
+- [ADR 0003: SQL problems on sql.js](docs/adr/0003-sql-problems.md)
 
 ## Deploy
 

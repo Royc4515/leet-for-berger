@@ -10,10 +10,13 @@
 // Every program prints one JSON value per case, one per line.
 import { parseType, entryName, methodName, isClass, cSignatureParts, usesStruct } from '../../src/js/engine/codegen.js';
 import { adapterFor } from '../../src/js/engine/adapters.js';
+// ListNode@cycle, RandomListNode and NestedInteger[] (encoding and per-language code) live there.
+import * as extra from './extra-types.mjs';
 
 /* ---------- token encoding (C, C++, Go, C#) ---------- */
 
 function putValue(out, v, type) {
+  if (extra.putExtra(out, v, type)) return;
   const { base, dims } = parseType(type);
   if (base === 'TreeNode') {
     out.push(String(v.length));
@@ -107,14 +110,15 @@ function cppType(type) {
   const s = CPP_SCALAR[base];
   return dims === 0 ? s : dims === 1 ? `vector<${s}>` : `vector<vector<${s}>>`;
 }
+const cppRead = (type) => extra.cppRead(type) ?? `R<${cppType(type)}>::get()`;
 
 function cpp(sig, solution) {
   const caseBody = isClass(sig)
     ? (() => {
-        const ctorReads = sig.constructor.params.map((p, j) => `auto c${j} = R<${cppType(p.type)}>::get(); `).join('');
+        const ctorReads = sig.constructor.params.map((p, j) => `auto c${j} = ${cppRead(p.type)}; `).join('');
         const branches = sig.methods
           .map((m) => {
-            const reads = m.params.map((p, j) => `auto a${j} = R<${cppType(p.type)}>::get(); `).join('');
+            const reads = m.params.map((p, j) => `auto a${j} = ${cppRead(p.type)}; `).join('');
             const call = `obj->${m.name}(${m.params.map((_, j) => `a${j}`).join(', ')})`;
             return `if (op == "${m.name}") { ${reads}${m.returns === 'void' ? `${call}; cout << "null";` : `W(cout, ${call});`} }`;
           })
@@ -127,7 +131,7 @@ function cpp(sig, solution) {
         }
         cout << ']';`;
       })()
-    : `${sig.params.map((p, i) => `        auto a${i} = R<${cppType(p.type)}>::get();`).join('\n')}
+    : `${sig.params.map((p, i) => `        auto a${i} = ${cppRead(p.type)};`).join('\n')}
         Solution sol;
         W(cout, sol.${entryName('cpp', sig.name)}(${sig.params.map((_, i) => `a${i}`).join(', ')}));`;
   return {
@@ -136,7 +140,7 @@ function cpp(sig, solution) {
 using namespace std;
 struct ListNode { int val; ListNode *next; ListNode() : val(0), next(nullptr) {} ListNode(int x) : val(x), next(nullptr) {} ListNode(int x, ListNode *n) : val(x), next(n) {} };
 struct TreeNode { int val; TreeNode *left; TreeNode *right; TreeNode() : val(0), left(nullptr), right(nullptr) {} TreeNode(int x) : val(x), left(nullptr), right(nullptr) {} TreeNode(int x, TreeNode *l, TreeNode *r) : val(x), left(l), right(r) {} };
-${solution}
+${extra.cppTypes(sig)}${solution}
 // ---- harness ----
 static string IN_; static size_t P_ = 0;
 static void ws_() { while (P_ < IN_.size() && isspace((unsigned char)IN_[P_])) P_++; }
@@ -168,7 +172,7 @@ static void W(ostream& o, TreeNode* r) {
     while (!out.empty() && out.back() == "null") out.pop_back();
     o << '['; for (size_t i = 0; i < out.size(); i++) { if (i) o << ','; o << out[i]; } o << ']'; }
 template <class T> static void W(ostream& o, const vector<T>& v) { o << '['; for (size_t i = 0; i < v.size(); i++) { if (i) o << ','; W(o, (T)v[i]); } o << ']'; }
-int main() {
+${extra.cppHelpers(sig)}int main() {
     ios::sync_with_stdio(false);
     IN_.assign(istreambuf_iterator<char>(cin), istreambuf_iterator<char>());
     long long cases = rdI_();
@@ -192,6 +196,8 @@ const C_WRITE = { int: 'printf("%d", X)', long: 'printf("%lld", X)', double: 'pr
 
 /** Declarations that read one neutral param into C locals; returns the call arguments. */
 function cReadParam(type, v, lines) {
+  const ex = extra.cReadExtra(type, v, lines);
+  if (ex) return ex;
   const { base, dims } = parseType(type);
   const s = C_SCALAR[base];
   if (dims === 0) {
@@ -211,7 +217,7 @@ function cReadParam(type, v, lines) {
 function cCallAndPrint(fn, args, returns) {
   if (returns === 'void') return `${fn}(${args.join(', ')}); printf("null");`;
   const { base, dims } = parseType(returns);
-  const w = (x) => C_WRITE[base].replace('X', x);
+  const w = (x) => (extra.cWriteExtra(base) ?? C_WRITE[base]).replace('X', x);
   if (dims === 0) return `{ ${cSignatureParts.cReturn(returns).ret} r_ = ${fn}(${args.join(', ')}); ${w('r_')}; }`;
   if (dims === 1) return `{ int rn_ = 0; ${C_SCALAR[base]}* r_ = ${fn}(${[...args, '&rn_'].join(', ')}); putchar('['); for (int i_ = 0; i_ < rn_; i_++) { if (i_) putchar(','); ${w('r_[i_]')}; } putchar(']'); }`;
   return `{ int rn_ = 0; int* rc_ = NULL; ${C_SCALAR[base]}** r_ = ${fn}(${[...args, '&rn_', '&rc_'].join(', ')}); putchar('['); for (int i_ = 0; i_ < rn_; i_++) { if (i_) putchar(','); putchar('['); for (int j_ = 0; j_ < rc_[i_]; j_++) { if (j_) putchar(','); ${w('r_[i_][j_]')}; } putchar(']'); } putchar(']'); }`;
@@ -252,7 +258,7 @@ function c(sig, solution) {
 #include <limits.h>
 struct ListNode { int val; struct ListNode *next; };
 struct TreeNode { int val; struct TreeNode *left; struct TreeNode *right; };
-${solution}
+${extra.cTypes(sig)}${solution}
 /* ---- harness ---- */
 static char* IN_; static long P_, N_;
 static void ws_(void) { while (P_ < N_ && isspace((unsigned char)IN_[P_])) P_++; }
@@ -275,7 +281,7 @@ static void wTree_(struct TreeNode* r) {
     for (long h = 0; h < qt; h++) { if (isNull[h]) continue; last = h; if (qt + 2 > cap) { cap *= 2; q = realloc(q, sizeof(struct TreeNode*) * cap); isNull = realloc(isNull, cap); }
         struct TreeNode* kids[2] = { q[h]->left, q[h]->right }; for (int s = 0; s < 2; s++) { q[qt] = kids[s]; isNull[qt++] = kids[s] == NULL; } }
     putchar('['); for (long h = 0; h <= last; h++) { if (h) putchar(','); if (isNull[h]) printf("null"); else printf("%d", q[h]->val); } putchar(']'); }
-int main(void) {
+${extra.cHelpers(sig)}int main(void) {
     size_t cap = 1 << 20; IN_ = malloc(cap); N_ = 0; size_t k;
     while ((k = fread(IN_ + N_, 1, cap - N_ - 1, stdin)) > 0) { N_ += k; if (cap - N_ < 2) { cap *= 2; IN_ = realloc(IN_, cap); } }
     IN_[N_] = 0;
@@ -297,6 +303,8 @@ ${body}
 
 const GO_SCALAR = { int: 'int', long: 'int64', double: 'float64', bool: 'bool', string: 'string', ListNode: '*ListNode', TreeNode: '*TreeNode' };
 function goReader(type) {
+  const ex = extra.goRead(type);
+  if (ex) return ex;
   const { base, dims } = parseType(type);
   const scalar = { int: 'int(rdI())', long: 'rdI()', double: 'rdD()', bool: '(rdI() != 0)', string: 'rdS()', ListNode: 'rdList()', TreeNode: 'rdTree()' }[base];
   const g = GO_SCALAR[base];
@@ -378,7 +386,7 @@ var listType = reflect.TypeOf((*ListNode)(nil))
 var treeType = reflect.TypeOf((*TreeNode)(nil))
 
 func write(w *bufio.Writer, v reflect.Value) {
-\tif v.Type() == listType {
+${extra.goWriteHook(sig)}\tif v.Type() == listType {
 \t\tw.WriteByte('['); first := true
 \t\tfor n := v.Interface().(*ListNode); n != nil; n = n.Next { if !first { w.WriteByte(',') }; w.WriteString(strconv.Itoa(n.Val)); first = false }
 \t\tw.WriteByte(']'); return
@@ -416,7 +424,7 @@ ${body}
 \t\tw.WriteByte('\\n')
 \t}
 }
-`,
+${extra.goHelpers(sig)}`,
     },
     compile: ['go', 'build', '-o', 'main', 'solution.go', 'harness.go'],
     run: ['./main'],
@@ -427,6 +435,8 @@ ${body}
 
 const CS_SCALAR = { int: 'int', long: 'long', double: 'double', bool: 'bool', string: 'string', ListNode: 'ListNode', TreeNode: 'TreeNode' };
 function csReader(type) {
+  const ex = extra.csRead(type);
+  if (ex) return ex;
   const { base, dims } = parseType(type);
   const scalar = { int: '(int)RdI()', long: 'RdI()', double: 'RdD()', bool: '(RdI() != 0)', string: 'RdS()', ListNode: 'RdList()', TreeNode: 'RdTree()' }[base];
   const cs = CS_SCALAR[base];
@@ -438,7 +448,7 @@ function csReader(type) {
 /** Writes a C# call's result; a null list or tree is the empty structure, so it prints []. */
 function csWrite(type, call) {
   const { base, dims } = parseType(type);
-  if ((base === 'ListNode' || base === 'TreeNode') && dims === 0) return `{ var r_ = ${call}; if (r_ == null) o.Append("[]"); else W(o, r_); }`;
+  if ((base === 'ListNode' || base === 'TreeNode' || base === 'RandomListNode') && dims === 0) return `{ var r_ = ${call}; if (r_ == null) o.Append("[]"); else W(o, r_); }`;
   return `W(o, ${call});`;
 }
 
@@ -476,7 +486,7 @@ using System.Text;
 
 public class ListNode { public int val; public ListNode next; public ListNode(int val = 0, ListNode next = null) { this.val = val; this.next = next; } }
 public class TreeNode { public int val; public TreeNode left; public TreeNode right; public TreeNode(int val = 0, TreeNode left = null, TreeNode right = null) { this.val = val; this.left = left; this.right = right; } }
-
+${extra.csTypes(sig)}
 static class Harness {
     static byte[] In_ = Array.Empty<byte>();
     static int P_;
@@ -508,11 +518,11 @@ static class Harness {
                 while (outv.Count > 0 && outv[^1] == "null") outv.RemoveAt(outv.Count - 1);
                 o.Append('[').Append(string.Join(",", outv)).Append(']'); break;
             }
-            case System.Collections.IEnumerable e: o.Append('['); bool f = true; foreach (var x in e) { if (!f) o.Append(','); W(o, x); f = false; } o.Append(']'); break;
+${extra.csWriteCase(sig)}            case System.Collections.IEnumerable e: o.Append('['); bool f = true; foreach (var x in e) { if (!f) o.Append(','); W(o, x); f = false; } o.Append(']'); break;
             default: o.Append(Convert.ToString(v, CultureInfo.InvariantCulture)); break;
         }
     }
-    static void Main() {
+${extra.csHelpers(sig)}    static void Main() {
         using (var ms = new MemoryStream()) { Console.OpenStandardInput().CopyTo(ms); In_ = ms.ToArray(); }
         var o = new StringBuilder();
         long cases = RdI();

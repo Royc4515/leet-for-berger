@@ -15,3 +15,5 @@ Add a new problem to Leet-For-Berger: $ARGUMENTS
 8. Register in `problems/index.js` (move out of `planned`).
 9. Add `tests/<id>.test.js`. Run `npm run check`: `tests/solutions.test.js` must pass for all 8 languages (install missing toolchains or rely on CI, which requires all of them).
 10. Update CHANGELOG.md (Unreleased).
+
+SQL problems (topic `sql`) differ: a schema signature instead of a function, one `solutions/solution.sql` instead of 8 files, tests via `tests/helpers/sql-problem.js`. Follow "SQL problems" in PROBLEM_FORMAT.md and `src/js/problems/address-lookup/`.
