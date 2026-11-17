@@ -12,6 +12,9 @@ test('eight languages, each with a solution file name', () => {
 
 test('entry names follow each language convention', () => {
   assert.equal(entryName('python', 'notifyRecipients'), 'notify_recipients');
+  assert.equal(entryName('python', 'topKFrequent'), 'top_k_frequent');
+  assert.equal(entryName('python', 'lengthOfLIS'), 'length_of_lis');
+  assert.equal(entryName('python', 'parseHTTPHeader'), 'parse_http_header');
   assert.equal(entryName('csharp', 'notifyRecipients'), 'NotifyRecipients');
   assert.equal(entryName('go', 'notifyRecipients'), 'notifyRecipients');
 });
