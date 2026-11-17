@@ -29,6 +29,7 @@
 - `src/js/engine/structures.js`: tree and list helpers for problem references and generators.
 
 ### Fixed
+- CI hit its 15-minute limit: verifying 133 problems in 8 languages one after another takes over 30 minutes. Solutions now verify in one parallel job per language (`VERIFY_LANGUAGES`), and `tests/ci.test.js` fails if the matrix misses a language. Toolchain probes run once instead of once per problem.
 - Database sync ran out of memory at 133 problems: `scripts/db/export-sql.mjs` built the whole script (about 370 MB, mostly test data) as one string. It now streams batched inserts and waits on a full pipe.
 - Python names for signatures with acronyms: `lengthOfLIS` became `length_of_l_i_s`; an acronym is now one word (`length_of_lis`). No existing problem changes.
 - Java verifier reused one `Solution` object for all 15 cases, so state left in instance fields leaked between cases (found with an imported Subsets solution). It now creates one per case, like LeetCode and the C++ and C# harnesses.

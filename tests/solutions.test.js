@@ -3,6 +3,9 @@
 //
 // A language runs only where its toolchain exists. Locally a missing toolchain skips; with
 // REQUIRE_ALL_LANGUAGES=1 (CI) it fails, so CI can never go green on a skipped language.
+//
+// VERIFY_LANGUAGES=java,go (or "sql", or "none") limits which solutions run, so CI can run one
+// language per parallel job; unset runs all. tests/ci.test.js checks the CI matrix covers them all.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -18,23 +21,30 @@ import { sqlEngineAvailable, loadSqlEngine, runSqlCases } from '../scripts/verif
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const REQUIRE_ALL = process.env.REQUIRE_ALL_LANGUAGES === '1';
+const ONLY = process.env.VERIFY_LANGUAGES ? new Set(process.env.VERIFY_LANGUAGES.split(',').map((l) => l.trim())) : null;
+const selected = (lang) => !ONLY || ONLY.has(lang);
 const works = (cmd, args) => {
   const r = spawnSync(cmd, args, { stdio: 'ignore' });
   return !r.error && r.status === 0;
 };
+// Each probe spawns a process; with 133 problems that is a thousand spawns, so probe once.
+const once = (fn) => {
+  let v;
+  return () => (v ??= fn());
+};
 const localTsc = join(ROOT, 'node_modules/.bin/tsc');
 const TSC = existsSync(localTsc) ? localTsc : 'tsc';
-const dotnetVersion = () => Number(execFileSync('dotnet', ['--version'], { encoding: 'utf8' }).split('.')[0]);
+const dotnetVersion = once(() => Number(execFileSync('dotnet', ['--version'], { encoding: 'utf8' }).split('.')[0]));
 
 const TOOLCHAIN = {
   javascript: () => true,
-  python: () => works('python3', ['--version']),
-  typescript: () => works(TSC, ['--version']),
-  java: () => works('javac', ['-version']),
-  cpp: () => works('g++', ['--version']),
-  c: () => works('gcc', ['--version']),
-  go: () => works('go', ['version']),
-  csharp: () => works('dotnet', ['--version']),
+  python: once(() => works('python3', ['--version'])),
+  typescript: once(() => works(TSC, ['--version'])),
+  java: once(() => works('javac', ['-version'])),
+  cpp: once(() => works('g++', ['--version'])),
+  c: once(() => works('gcc', ['--version'])),
+  go: once(() => works('go', ['version'])),
+  csharp: once(() => works('dotnet', ['--version'])),
 };
 
 const JAVA_HARNESS = join(ROOT, 'scripts/verify/Harness.java');
@@ -82,6 +92,7 @@ function verifySql(problem, suite) {
   test(`${problem.id}: SQL schema and all 15 cases are valid`, () => {
     assert.deepEqual(validateSqlProblem(problem), []);
   });
+  if (!selected('sql')) return;
   const available = sqlEngineAvailable();
   const skip = !available && !REQUIRE_ALL && 'sql.js devDependency not installed (npm ci)';
   test(`${problem.id}: SQL solution passes all 15 cases`, { skip }, async () => {
@@ -122,6 +133,7 @@ for (const problem of availableProblems()) {
   });
 
   for (const { id: lang, label } of LANGUAGES) {
+    if (!selected(lang)) continue;
     const available = TOOLCHAIN[lang]();
     const skip = !available && !REQUIRE_ALL && `${label} toolchain not installed`;
     test(`${problem.id}: ${label} solution passes all 15 cases`, { skip }, () => {
