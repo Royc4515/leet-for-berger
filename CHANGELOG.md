@@ -4,6 +4,9 @@
 
 ### Added
 - SQL problems (ADR 0003): sql.js 1.13.0 (SQLite in WebAssembly) runs queries in a worker, one fresh read-only database per case; CI verifies `solution.sql` with the same build (pinned devDependency). Results are judged as result sets, as a multiset unless the statement fixes the order. SQL problems offer only SQL. First five: Green Products, Address Lookup, Repeated Emails, Runner-up Salary, Triple Repeat.
+- Input types `ListNode@cycle` (`[values, pos]`, the function sees only the head), `RandomListNode` (`[[val, randomIndex|null], ...]`) and `NestedInteger[]` (nested arrays, LeetCode's interface), in starter code, the browser adapters and all 8 verifier harnesses. A copied `RandomListNode` list that reuses input nodes is a wrong answer in every language.
+- Judge modes (`judge` in `problem.js`, `comparatorFor` in `engine/harness.js`): `randomized-set` accepts any current member from `getRandom` and checks long runs for uniformity; insert and remove stay exact. The browser and the verifier use the same mode.
+- Problems: List Loop, Random Link Copy, Nested Flattener and Random Pool, each in 8 languages.
 - Essential problems, wave 2, each with solutions in 8 languages, most adapted from imported open-source solutions:
   - Sliding Window and Binary Search: Longest Distinct Window, Window Maximums, Covering Window, Vowel Window, Rotated Search, Eating Speed, Merged Median, Matrix Search, Target Range, Mountain Peak.
   - Greedy and 1D DP: Best Run Sum, Jump Reach, Overlap Trim, Cookie Match, One Swap Max, Fewest Coins, Street Heist, Stair Paths, Rising Chain, Best Run Product, Good String Count.

@@ -53,6 +53,7 @@ Starter code and per-language entry names are **generated** from the signature (
 | `hiddenTests` | exactly 10 `{args, expected}` | pass/fail only |
 | `parseCustomInput(raw)` | fn | returns `{ok:true,args}` or `{ok:false,error}`; enforce constraints |
 | `solveReference(args)` | fn | computes expected for custom input |
+| `judge` | string, optional | judge mode when exact equality cannot judge the answer (see Judge modes); default `'exact'` |
 
 Also export the JS `reference` function so tests can import it.
 
@@ -66,6 +67,9 @@ Structures, written in tests as JSON in the LeetCode convention:
 |---|---|---|
 | `ListNode`, `ListNode[]` | `[1,2,3]` (head to tail), `[]` for an empty list | singly linked list of int |
 | `TreeNode` | level order with `null` for a missing child, no trailing nulls: `[3,9,20,null,null,15,7]`, `[]` for an empty tree | binary tree of int; use `src/js/engine/structures.js` in references and generators |
+| `ListNode@cycle` | `[values, pos]`: `[[3,2,0,-4], 1]`, `pos` = index the tail links back to, `-1` for none | input only. Every language receives a plain `ListNode` head and never sees `pos` (List Loop) |
+| `RandomListNode` | `[[val, randomIndex], ...]` head to tail, `randomIndex` `null` for none: `[[3,null],[8,0]]` | list whose nodes also have `random`; param and return (Random Link Copy) |
+| `NestedInteger[]` | nested arrays of int: `[[1,1],2,[1,1]]` | input only. LeetCode's read-only interface `isInteger()`, `getInteger()`, `getList()` (Python `is_integer` etc., camelCase also works; C# and Go PascalCase; C `nestedIntegerIsInteger(n)`, `nestedIntegerGetList(n)` + `nestedIntegerGetListSize(n)`). Java `List<NestedInteger>`, C# `IList<NestedInteger>`, C++ `vector<NestedInteger>`, Go `[]*NestedInteger`, C `struct NestedInteger**` + size (Nested Flattener) |
 
 Starter code shows each structure's definition as a comment; the runtime provides it (do not redefine it in solutions).
 
@@ -99,7 +103,13 @@ A test is a sequence of calls: `args` is `[operations, argumentLists]` with `ope
 
 C follows LeetCode conventions: array params carry explicit sizes, array returns use `int* returnSize` (and `int** returnColumnSizes` for 2D) and must be `malloc`ed.
 
-Not supported yet: graphs as node objects (Clone Graph), lists with random or cycle pointers. Add them to codegen, adapters and harnesses before authoring problems that need them. SQL problems have their own format, below.
+The types beyond `ListNode` and `TreeNode` are emitted only for a signature that uses them: the source adapters (`adapters.js`) and the native harness code (`scripts/verify/extra-types.mjs`, which `harnesses.mjs` calls; Java has `RandomListNode.java` and `NestedInteger.java`). Native harnesses read them as tokens: `ListNode@cycle` as `<n> values <pos>`, `RandomListNode` as `<n>` then `<val> <random>` per node (`-1` = null), `NestedInteger[]` as `<n>` then `i <val>` or `l` and a nested list per item.
+
+**Copies.** A correct copy of a `RandomListNode` list serializes to its input, so equality alone cannot catch a solution that returns the original. Every harness remembers the input nodes by identity and, when the returned list reuses one (as a node or as a `random` target) or a `random` pointer leaves the returned list, outputs a marker string instead of the list (`COPY_MARKERS` in `adapters.js`, same text in every language). The marker never equals an expected list, so the case is a wrong answer and a visible case shows why.
+
+**Iterators.** An iterator is a design class (Nested Flattener: `NestedIterator(nestedList)`, `next()`, `hasNext()`), so a test is an operation sequence like any class. That lets hidden tests call `hasNext` several times in a row, which LeetCode's drain loop (`while hasNext: next`) never does; the custom input takes just the list and builds that drain loop.
+
+Not supported yet: graphs as node objects (Clone Graph). Add them to codegen, adapters and harnesses before authoring problems that need them. SQL problems have their own format, below.
 
 ## SQL problems
 
@@ -136,6 +146,17 @@ signature: {
 - The statement says the exact output column names, the row order rule, and "Dialect: SQLite" in the constraints. Avoid problems whose canonical solution needs MySQL-only functions.
 - Tests in `tests/<id>.test.js` use `sqlProblemTests` from `tests/helpers/sql-problem.js`: reference vs `solution.sql` on seeded random tables, plus the classic wrong queries, each of which must fail one of the 15 cases. Hidden tests include an empty table and at least two tables with thousands of rows.
 - `tests/solutions.test.js` runs `solution.sql` on the 15 cases with the same sql.js build and case runner as the browser (`scripts/verify/sql.mjs`).
+
+## Judge modes
+
+By default a case passes when the output equals `expected` exactly (`deepEqual`, JSON-canonical). A problem whose answer is legitimately random sets `judge: '<mode>'` in `problem.js`; `comparatorFor(problem)` in `src/js/engine/harness.js` returns the mode's function `(actual, expected, tc) => boolean`, and both the workspace and `tests/solutions.test.js` judge with it. Modes run on the main thread after the worker has finished, so `expected` still never reaches a worker, and `judge()` still strips hidden cases before rendering.
+
+| Mode | Used by | Rule |
+|---|---|---|
+| `exact` | default | `deepEqual(actual, expected)` |
+| `randomized-set` | Random Pool | design class with `insert(val) -> bool`, `remove(val) -> bool`, `getRandom() -> int`. insert and remove must equal `expected`; `expected` holds `null` at `getRandom` positions, and the mode replays the calls to check each pick is a current member. Every run of picks on an unchanged set with at least 100 expected picks per member must also look uniform: each member's count within 6.5 binomial standard deviations of the mean (a fair picker fails a submission by chance less than once in 10^8) |
+
+A new mode needs unit tests in `tests/judge-modes.test.js`, including a check that a correct solution passes every shipped case repeatedly.
 
 ## Test design checklist
 
