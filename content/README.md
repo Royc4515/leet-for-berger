@@ -11,46 +11,52 @@ Source of truth for the network: `src/js/data/taxonomy.js` (validated by `tests/
 | **Index** | Facts about problems: source link, difficulty, topic, concept, lists, company signals | `content/index/` | Collect broadly. No statements, examples or tests copied from other platforms |
 | **Content** | What the app runs: our own statement, 15 tests, 3 solutions | `src/js/problems/<id>.js` | Original writing only. See `docs/PROBLEM_FORMAT.md` |
 
-Why: LeetCode's terms forbid crawling and scraping and forbid competing services, and problem statements are copyrighted. The site deploys publicly. A problem in the index points at an idea; the content layer re-expresses that idea in our own words and tests (e.g. `pair-sum-target`, not "Two Sum").
+Why: a problem idea is free to reuse, its exact wording is not. The index points at the idea; the content layer keeps the same problem and re-expresses it in our own words and tests (e.g. `pair-sum-target` for "Two Sum").
 
 ## Index record
 
-One record per problem idea, in `content/index/problems.json`:
+`content/index/problems.json` is generated, never edited by hand:
+
+```bash
+bash scripts/content/fetch-sources.sh   # datasets -> content/.cache (gitignored)
+node scripts/content/build-index.mjs    # -> content/index/problems.json
+```
+
+One record per problem, one record per line, sorted by `priority`:
 
 ```json
 {
-  "id": "pair-sum-target",
-  "topic": "arrays-hashing",
-  "concept": "complement-lookup",
-  "rating": 2,
-  "difficulty": "Easy",
-  "estMinutes": 15,
-  "references": [
-    { "platform": "leetcode", "number": 1, "title": "Two Sum", "url": "https://leetcode.com/problems/two-sum/" }
-  ],
-  "lists": ["blind75", "neetcode150", "grind75"],
-  "companies": [{ "name": "Google", "frequency": 0.82, "window": "6m" }],
-  "status": "indexed"
+  "slug": "two-sum", "number": 1, "title": "Two Sum",
+  "difficulty": "Easy", "rating": 2, "contestRating": null,
+  "topic": "arrays-hashing", "concept": null,
+  "tags": ["Array", "Hash Table"], "estMinutes": 15,
+  "url": "https://leetcode.com/problems/two-sum/",
+  "lists": ["blind75", "neetcode150", "neetcode-all"],
+  "companyCount": 113,
+  "companies": [{ "name": "Google", "frequency": 100, "recency": "30d" }],
+  "priority": 0.844,
+  "contentId": "pair-sum-target", "status": "selected"
 }
 ```
 
 | Field | Meaning |
 |---|---|
-| `topic`, `concept` | Place in the network. `concept` must be one of the topic's concepts |
-| `rating` | 1-10, finer than difficulty so a ladder can be ordered. Bands: Easy 1-3, Medium 4-7, Hard 8-10 |
-| `estMinutes` | Used by Mock OA and Interview to fit a time budget |
-| `references` | Links only. Used for attribution and for "solve the original too" |
-| `lists` | Membership in well-known curated lists |
-| `companies` | Signal for prioritization and Company Set mode. Internal use until we decide how to publish it |
-| `status` | `indexed` -> `selected` -> `authored` -> `verified`. Only `verified` ships |
+| `topic`, `concept` | Place in the network. NeetCode's pattern wins when present, otherwise the most specific LeetCode tag (rules in `build-index.mjs`). `concept` is null until a problem is selected for a ladder |
+| `rating` | 1-10 inside the band of `difficulty` (Easy 1-3, Medium 4-7, Hard 8-10). Positioned by `contestRating` when the problem appeared in a contest, otherwise the band middle |
+| `estMinutes` | Time budget for Mock OA and Interview |
+| `companies` | Per company: `frequency` (0-100, all time) and `recency`, the newest window it was asked in (`30d`, `3m`, `6m`, `older`) |
+| `priority` | 0-1: 50% how many companies ask it, 30% curated list membership, 20% share of companies asking it recently |
+| `contentId`, `status` | Link to `src/js/problems/<contentId>.js`. `indexed` -> `selected` -> `authored` -> `verified`; only `verified` ships |
+
+Content we write keeps the problem (same task, same constraints, same diversity) and rewrites the statement, examples and tests in our own words.
 
 ## Sources
 
 | Source | Take | Allowed |
 |---|---|---|
-| LeetCode | Link, number, title, difficulty | Link only, no scraping |
+| LeetCode | Link, number, title, difficulty (via the datasets) | No direct scraping needed |
 | Blind 75 / NeetCode 150 / Grind 75 | Membership | Yes, lists of names |
-| Community company-tag datasets on GitHub | Company, frequency, recency | Grey (derived from paid data). Internal prioritization only |
+| Community company-tag datasets on GitHub | Company, frequency, recency | Yes, used in the index and Company Set mode |
 | Contest rating datasets | Numeric difficulty to seed `rating` | Yes, as a number |
 | Exercism problem-specifications (MIT) | Statements and canonical tests | Yes, with attribution |
 | Interview reports (Israeli companies, etc.) | Topic and difficulty signal | Manual, our own summary |
@@ -61,6 +67,7 @@ One record per problem idea, in `content/index/problems.json`:
 graph TD
   arrays_hashing["Arrays & Hashing"]
   math_basics["Math Basics"]
+  sql["SQL"]
   two_pointers["Two Pointers"]
   stack["Stack"]
   prefix_sum["Prefix Sum"]
@@ -74,6 +81,7 @@ graph TD
   trees["Trees"]
   backtracking["Backtracking"]
   dp_1d["1D Dynamic Programming"]
+  design["Data Structure Design"]
   strings_advanced["Advanced Strings"]
   heap["Heap / Priority Queue"]
   tries["Tries"]
@@ -96,6 +104,8 @@ graph TD
   linked_list --> trees
   recursion --> backtracking
   recursion --> dp_1d
+  linked_list --> design
+  stack --> design
   sliding_window --> strings_advanced
   trees --> heap
   trees --> tries
@@ -111,7 +121,8 @@ graph TD
 | Tier | Topic | Easy | Medium | Hard | Concepts (in ladder order) |
 |---|---|---|---|---|---|
 | 0 | Arrays & Hashing | 4 | 5 | 2 | frequency-count, hash-set-membership, complement-lookup, group-by-key, encode-decode |
-| 0 | Math Basics | 3 | 3 | 2 | digit-manipulation, modular-arithmetic, gcd-lcm, prime-sieve, fast-power |
+| 0 | Math Basics | 3 | 4 | 3 | digit-manipulation, modular-arithmetic, gcd-lcm, prime-sieve, fast-power, combinatorics, geometry, game-theory |
+| 0 | SQL | 4 | 5 | 3 | select-filter, joins, group-by-aggregation, subqueries, window-functions |
 | 1 | Two Pointers | 3 | 4 | 2 | opposite-ends, same-direction, partition-in-place, sort-then-scan |
 | 1 | Stack | 2 | 5 | 2 | matching-brackets, simulation, auxiliary-stack-design, monotonic-stack, expression-evaluation |
 | 1 | Prefix Sum | 2 | 4 | 2 | prefix-1d, prefix-plus-hashmap, prefix-2d, difference-array |
@@ -125,6 +136,7 @@ graph TD
 | 3 | Trees | 3 | 6 | 3 | dfs-traversal, bfs-level-order, bst-properties, path-problems, construct-serialize |
 | 3 | Backtracking | 1 | 5 | 3 | subsets, permutations, combinations-with-pruning, constraint-search |
 | 3 | 1D Dynamic Programming | 2 | 6 | 2 | linear-recurrence, take-or-skip, longest-increasing, knapsack-1d |
+| 3 | Data Structure Design | 1 | 5 | 3 | iterator-design, data-stream, randomized-set, time-keyed-store, composite-design |
 | 3 | Advanced Strings | 1 | 3 | 3 | expand-around-center, prefix-function, rolling-hash, z-function |
 | 4 | Heap / Priority Queue | 1 | 4 | 3 | top-k, k-way-merge, two-heaps, scheduling |
 | 4 | Tries | 1 | 2 | 2 | insert-search, prefix-counting, trie-guided-search |
@@ -133,11 +145,11 @@ graph TD
 | 5 | Union Find | 0 | 3 | 2 | connectivity, union-by-rank, offline-queries |
 | 5 | Advanced Graphs | 0 | 4 | 4 | dijkstra, bounded-hops-shortest-path, minimum-spanning-tree, dag-dp, zero-one-bfs |
 | 5 | Range Queries | 0 | 2 | 3 | fenwick-tree, segment-tree, sparse-table |
-| | **Total (194)** | **41** | **96** | **57** | |
+| | **Total (217)** | **46** | **107** | **64** | |
 
 ## Pipeline
 
-1. **Index**: merge lists and datasets into `content/index/problems.json`, mapping each idea to `topic` + `concept` + `rating`.
-2. **Select**: per topic, pick problems to fill the ladder targets above, covering every concept in order.
+1. **Index** (done): 3,398 problems from 470 companies, NeetCode lists and contest ratings, mapped to `topic` + `rating`.
+2. **Select**: per topic, pick problems by `priority` to fill the ladder targets above, assign `concept`, cover every concept in order.
 3. **Author**: write the problem module with `/add-problem`.
 4. **Verify**: solutions in every language pass all 15 cases, then flip `status` to `verified`.

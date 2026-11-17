@@ -19,10 +19,12 @@ Status legend: [x] done, [~] partial / placeholder, [ ] not started.
 
 ## Phase 1 - Content
 
-Scope changed: the bank is now a learning network of 23 topics with an Easy -> Hard ladder per topic (194 target problems). See `content/README.md`.
+Scope changed: the bank is now a learning network of 25 topics with an Easy -> Hard ladder per topic (217 target problems). See `content/README.md`.
 
 - [x] Topic taxonomy: prerequisites, concepts per topic, ladder targets, practice modes (`src/js/data/taxonomy.js`)
-- [ ] Problem index: merge curated lists and company signals into `content/index/problems.json` (facts and links only)
+- [x] Problem index: 3,398 problems with topic, rating, company frequency and recency, priority (`content/index/problems.json`)
+- [ ] Select per-topic ladders from the index and assign concepts
+- [ ] SQL runner (e.g. sql.js) so the SQL topic can ship
 - [ ] Solution verifier: every shipped solution in every language passes its 15 cases in CI
 - [ ] Author problems topic by topic, tier 0 first; 15 tests each, solutions in 3 languages
 - [ ] Replace the 4 hand-picked milestones with paths derived from the taxonomy

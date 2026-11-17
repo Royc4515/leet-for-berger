@@ -50,8 +50,17 @@ export const TOPICS = [
     title: 'Math Basics',
     tier: 0,
     prereqs: [],
-    concepts: ['digit-manipulation', 'modular-arithmetic', 'gcd-lcm', 'prime-sieve', 'fast-power'],
-    ladder: { easy: 3, medium: 3, hard: 2 },
+    concepts: ['digit-manipulation', 'modular-arithmetic', 'gcd-lcm', 'prime-sieve', 'fast-power', 'combinatorics', 'geometry', 'game-theory'],
+    ladder: { easy: 3, medium: 4, hard: 3 },
+  },
+  {
+    // A separate track: needs an in-browser SQL runner (e.g. sql.js) before problems can ship.
+    id: 'sql',
+    title: 'SQL',
+    tier: 0,
+    prereqs: [],
+    concepts: ['select-filter', 'joins', 'group-by-aggregation', 'subqueries', 'window-functions'],
+    ladder: { easy: 4, medium: 5, hard: 3 },
   },
 
   // Tier 1: first patterns
@@ -162,6 +171,14 @@ export const TOPICS = [
     prereqs: ['recursion'],
     concepts: ['linear-recurrence', 'take-or-skip', 'longest-increasing', 'knapsack-1d'],
     ladder: { easy: 2, medium: 6, hard: 2 },
+  },
+  {
+    id: 'design',
+    title: 'Data Structure Design',
+    tier: 3,
+    prereqs: ['linked-list', 'stack'],
+    concepts: ['iterator-design', 'data-stream', 'randomized-set', 'time-keyed-store', 'composite-design'],
+    ladder: { easy: 1, medium: 5, hard: 3 },
   },
   {
     id: 'strings-advanced',
@@ -292,6 +309,32 @@ export function ladderTotals(topics) {
   }
   totals.all = totals.easy + totals.medium + totals.hard;
   return totals;
+}
+
+export const INDEX_STATUSES = ['indexed', 'selected', 'authored', 'verified'];
+
+/**
+ * Checks one record of content/index/problems.json against the taxonomy.
+ * @param {any} rec
+ * @param {Topic[]} topics
+ * @returns {string[]} errors, empty when valid
+ */
+export function validateIndexRecord(rec, topics) {
+  const errors = [];
+  const where = rec?.slug ?? '(no slug)';
+  const topic = topics.find((t) => t.id === rec.topic);
+  if (!rec.slug || !/^[a-z0-9-]+$/.test(rec.slug)) errors.push(`${where}: bad slug`);
+  if (!rec.title) errors.push(`${where}: missing title`);
+  if (!topic) errors.push(`${where}: unknown topic ${rec.topic}`);
+  else if (rec.concept !== null && !topic.concepts.includes(rec.concept)) {
+    errors.push(`${where}: concept ${rec.concept} not in ${rec.topic}`);
+  }
+  if (!RATING_BANDS[rec.difficulty]) errors.push(`${where}: bad difficulty ${rec.difficulty}`);
+  else if (bandOf(rec.rating) !== rec.difficulty) errors.push(`${where}: rating ${rec.rating} outside ${rec.difficulty} band`);
+  if (!(rec.estMinutes > 0)) errors.push(`${where}: estMinutes must be positive`);
+  if (!INDEX_STATUSES.includes(rec.status)) errors.push(`${where}: bad status ${rec.status}`);
+  if (!(rec.priority >= 0 && rec.priority <= 1)) errors.push(`${where}: priority out of [0,1]`);
+  return errors;
 }
 
 /**

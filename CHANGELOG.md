@@ -3,7 +3,8 @@
 ## [Unreleased]
 
 ### Added
-- Learning network taxonomy: 23 topics in 6 tiers with prerequisites, ordered concepts and Easy/Medium/Hard ladder targets (194 problems), plus the practice modes the content must support.
+- Problem index: `content/index/problems.json`, 3,398 problems from 470 companies' tag lists, NeetCode lists and contest ratings, each mapped to a topic with rating, company frequency and recency, and a priority score. Built by `scripts/content/build-index.mjs`, validated by `tests/content-index.test.js`.
+- Learning network taxonomy: 25 topics (including SQL and Data Structure Design) in 6 tiers with prerequisites, ordered concepts and Easy/Medium/Hard ladder targets (217 problems), plus the practice modes the content must support.
 - `content/README.md`: two-layer content model (index of facts vs. original content), index record format, allowed sources, pipeline.
 - `scripts/taxonomy-graph.mjs` to regenerate the network diagram.
 
