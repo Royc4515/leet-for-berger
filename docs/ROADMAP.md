@@ -47,6 +47,9 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 
 ## Phase 2 - Server runner (needs a backend, moved up: Java and C++ are required languages)
 
+- [x] ADR 0002: PostgreSQL on Supabase, schema (`db/schema.sql`), git -> database sync (`scripts/db/export-sql.mjs`), verified by `scripts/db/check-schema.sh` in CI
+- [ ] Create the Supabase project, apply the schema, run the sync from CI on merge to main
+
 - [ ] Execution service (e.g. Judge0 self-hosted or containerized runners) with the same `run()` contract
 - [ ] Java execution
 - [ ] Hidden tests and solutions served from the server only; real "secure reveal"
@@ -61,5 +64,5 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 
 ## Open decisions
 
-- Backend stack (Supabase + edge functions vs. small Node service). Write an ADR before Phase 2.
+- ~~Backend stack~~: decided in ADR 0002, PostgreSQL on Supabase with git as the content source of truth.
 - Whether to adopt TypeScript once the codebase passes ~5k lines (JSDoc types today).

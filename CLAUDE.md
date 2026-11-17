@@ -12,6 +12,7 @@ Read this file fully before any task. Then read the docs it points to for the ar
 | `npm test` | Unit tests (`node --test`), pure logic only, ~1s |
 | `npm run test:e2e` | Playwright smoke test in Chromium: Monaco, workers, Pyodide, routing, lockdown. Fails on any console error |
 | `npm run check` | Both. Run before every commit |
+| `npm run check:db` | Schema + git -> database sync against a throwaway PostgreSQL (needs PostgreSQL binaries) |
 
 Local e2e on a machine with Chrome but no Playwright browsers: `PW_CHANNEL=chrome npm run test:e2e`. Skip the slow Pyodide download: `node e2e/smoke.mjs --no-python`. Screenshots: `--shots=/tmp/shots`.
 
@@ -38,6 +39,7 @@ src/js/data/families.js    problem families, pickVersion per company, distinctPr
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md)
 scripts/content/           fetch sources, build index, audit
 scripts/verify/            per-language test harnesses for the solution verifier
+db/schema.sql              PostgreSQL schema (ADR 0002); scripts/db/ = git -> database sync + checks
 src/js/ui/                 dom helpers, editor (Monaco + fallback), resizer, results console
 src/js/ui/views/           dashboard, workspace, path, modes (hub, interview, battle)
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
