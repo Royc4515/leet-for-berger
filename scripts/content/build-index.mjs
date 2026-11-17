@@ -226,6 +226,19 @@ const CONTENT_IDS = {
   // Count modulo 10^9 + 7, so intermediate counts cannot overflow silently.
   'coin-change-ii': ['coin-combos', 'verified'],
   'best-time-to-buy-and-sell-stock-with-cooldown': ['trade-cooldown', 'verified'],
+  'lru-cache': ['recent-cache', 'verified'],
+  'merge-k-sorted-lists': ['merge-many-lists', 'verified'],
+  'add-two-numbers': ['digit-list-sum', 'verified'],
+  'rotate-list': ['shift-list', 'verified'],
+  'time-based-key-value-store': ['versioned-store', 'verified'],
+  'lfu-cache': ['frequent-cache', 'verified'],
+  // Keys up to 10^9 so the map must hash; built-in maps are forbidden on trust, not checked.
+  'design-hashmap': ['bucket-map', 'verified'],
+  'design-hit-counter': ['hit-window', 'verified'],
+  'implement-trie-prefix-tree': ['prefix-tree', 'verified'],
+  // Output fixed to lexicographic order so the answer is unique.
+  'word-search-ii': ['board-words', 'verified'],
+  'longest-common-prefix': ['shared-prefix', 'verified'],
 };
 
 const WINDOWS = [
