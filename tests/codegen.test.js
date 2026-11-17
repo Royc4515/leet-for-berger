@@ -93,3 +93,57 @@ test('struct types map per language and starters document the definition', () =>
   const sig = { name: 'maxDepth', params: [{ name: 'root', type: 'TreeNode' }], returns: 'int' };
   for (const l of LANGUAGES) assert.ok(starterCode(l.id, sig).includes('TreeNode'), l.id);
 });
+
+test('ListNode@cycle is an input-only plain ListNode in every language', () => {
+  assert.deepEqual(parseType('ListNode@cycle'), { base: 'ListNode', dims: 0, struct: true, cycle: true });
+  assert.throws(() => parseType('TreeNode@cycle'));
+  assert.throws(() => parseType('ListNode@cycle[]'));
+  assert.throws(() => parseType('ListNode@loop'));
+  const sig = { name: 'hasCycle', params: [{ name: 'head', type: 'ListNode@cycle' }], returns: 'bool' };
+  assert.deepEqual(validateSignature(sig), []);
+  assert.equal(typeIn('go', 'ListNode@cycle'), '*ListNode');
+  for (const l of LANGUAGES) {
+    const code = starterCode(l.id, sig);
+    assert.ok(code.includes('ListNode') && !code.includes('@cycle') && !code.includes('pos'), l.id);
+  }
+  assert.ok(validateSignature({ name: 'f', params: [], returns: 'ListNode@cycle' }).some((e) => e.includes('input only')));
+});
+
+test('RandomListNode maps per language and starters document it', () => {
+  assert.deepEqual(parseType('RandomListNode'), { base: 'RandomListNode', dims: 0, struct: true });
+  assert.throws(() => parseType('RandomListNode[]'));
+  assert.equal(typeIn('c', 'RandomListNode'), 'struct RandomListNode*');
+  assert.equal(typeIn('typescript', 'RandomListNode'), 'RandomListNode | null');
+  assert.equal(typeIn('python', 'RandomListNode'), 'Optional[RandomListNode]');
+  const sig = { name: 'copyRandomList', params: [{ name: 'head', type: 'RandomListNode' }], returns: 'RandomListNode' };
+  assert.deepEqual(validateSignature(sig), []);
+  for (const l of LANGUAGES) assert.ok(/random/.test(starterCode(l.id, sig)), l.id);
+  assert.ok(starterCode('cpp', sig).includes('RandomListNode* copyRandomList(RandomListNode* head)'));
+});
+
+test('NestedInteger[] uses LeetCode spellings and is input only', () => {
+  assert.deepEqual(parseType('NestedInteger[]'), { base: 'NestedInteger', dims: 1, struct: true });
+  assert.throws(() => parseType('NestedInteger'));
+  assert.throws(() => parseType('NestedInteger[][]'));
+  assert.equal(typeIn('java', 'NestedInteger[]'), 'List<NestedInteger>');
+  assert.equal(typeIn('csharp', 'NestedInteger[]'), 'IList<NestedInteger>');
+  assert.equal(typeIn('go', 'NestedInteger[]'), '[]*NestedInteger');
+  assert.equal(typeIn('cpp', 'NestedInteger[]'), 'vector<NestedInteger>');
+  assert.equal(typeIn('python', 'NestedInteger[]'), 'list[NestedInteger]');
+  const sig = {
+    kind: 'class',
+    name: 'NestedIterator',
+    constructor: { params: [{ name: 'nestedList', type: 'NestedInteger[]' }] },
+    methods: [
+      { name: 'next', params: [], returns: 'int' },
+      { name: 'hasNext', params: [], returns: 'bool' },
+    ],
+  };
+  assert.deepEqual(validateSignature(sig), []);
+  // Java's List needs java.util, so the starter imports it ahead of the class.
+  assert.ok(starterCode('java', sig).startsWith('import java.util.*;'));
+  assert.ok(starterCode('c', sig).includes('nestedIteratorCreate(struct NestedInteger** nestedList, int nestedListSize)'));
+  for (const l of LANGUAGES) assert.ok(/[iI]s_?[iI]nteger/.test(starterCode(l.id, sig)), l.id);
+  const bad = { ...sig, methods: [{ name: 'peek', params: [], returns: 'NestedInteger[]' }] };
+  assert.ok(validateSignature(bad).some((e) => e.includes('input only')));
+});

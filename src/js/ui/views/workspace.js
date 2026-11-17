@@ -16,7 +16,7 @@ import { h, mount, trustedHtml, toast, confirmDialog, difficultyBadge } from '..
 import { attachResizer } from '../resizer.js';
 import { createEditor } from '../editor.js';
 import { renderIdle, renderPending, renderResult, renderError } from '../results.js';
-import { buildSuite, judge } from '../../engine/harness.js';
+import { buildSuite, judge, comparatorFor } from '../../engine/harness.js';
 import { getRunner } from '../../engine/runners/index.js';
 import { recordSubmission, markRevealed } from '../../state/progress.js';
 import { loadDraft, saveDraft, clearDraft } from '../../state/drafts.js';
@@ -249,8 +249,8 @@ export function renderWorkspace(root, { problem, store, session = null }) {
         onStatus: (s) => !disposed && renderPending(consoleBody, s),
       });
       if (disposed) return;
-      // SQL problems compare result sets (row order per the statement); others compare JSON.
-      const result = judge(suite, raw, problem.compare);
+      // The problem decides how answers are compared: SQL result sets, judge modes, or exact JSON.
+      const result = judge(suite, raw, comparatorFor(problem));
       lastResult = result;
       renderResult(consoleBody, result, { kind, argNames: problem.argNames, elapsedMs: performance.now() - started });
 

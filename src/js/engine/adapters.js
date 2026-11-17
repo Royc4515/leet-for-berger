@@ -4,16 +4,167 @@
  * Test cases are plain JSON: a linked list is [1,2,3], a tree is level order with nulls, a design
  * problem is [operations, argumentLists]. User code works with real ListNode / TreeNode objects and
  * class instances. An adapter bridges the two: it is source text placed before and after the user's
- * code, and it defines `__lfb_entry(...jsonArgs) -> jsonResult`.
+ * code, and it defines `__lfb_entry(...jsonArgs) -> jsonResult`. ListNode@cycle, RandomListNode and
+ * NestedInteger (see codegen.js) are emitted only for signatures that use them.
  *
  * The same adapter runs in the browser workers and in the CI verifier, so both judge the same way.
  * Pure module (string generation only).
  */
-import { parseType, isClass, entryName, methodName, usesStruct } from './codegen.js';
+import { parseType, isClass, entryName, methodName, usesStruct, typesUsed, STRUCT_TYPES } from './codegen.js';
 
 /** True when plain JSON in and out is enough and no adapter is needed. */
 export function needsAdapter(sig) {
-  return isClass(sig) || usesStruct(sig, 'ListNode') || usesStruct(sig, 'TreeNode');
+  return isClass(sig) || STRUCT_TYPES.some((t) => usesStruct(sig, t));
+}
+
+/**
+ * What a copy problem reports instead of the list when the returned list is not a real copy.
+ * The strings never equal an expected list, so the case fails as a wrong answer, and a visible
+ * case shows the reason. Every language's harness prints the same strings.
+ */
+export const COPY_MARKERS = {
+  sharedNode: 'not a copy: the returned list reuses input nodes',
+  outsideRandom: 'not a copy: a random pointer leaves the returned list',
+};
+
+const usesCycle = (sig) => typesUsed(sig).some((t) => parseType(t).cycle);
+
+/* ---------- Types beyond ListNode / TreeNode (only emitted when a signature uses them) ---------- */
+
+function jsExtras(sig, ts) {
+  const A = ts ? ': any' : '';
+  let s = '';
+  if (usesCycle(sig)) {
+    s += `function __lfb_toCycleList(a${A}) {
+  const nodes${A} = a[0].map((v${A}) => new ListNode(v));
+  for (let i = 0; i + 1 < nodes.length; i++) nodes[i].next = nodes[i + 1];
+  if (a[1] >= 0 && nodes.length) nodes[nodes.length - 1].next = nodes[a[1]];
+  return nodes.length ? nodes[0] : null;
+}
+`;
+  }
+  if (usesStruct(sig, 'RandomListNode')) {
+    s += ts
+      ? 'class RandomListNode { val: number; next: RandomListNode | null; random: RandomListNode | null; constructor(val?: number, next?: RandomListNode | null, random?: RandomListNode | null) { this.val = val === undefined ? 0 : val; this.next = next === undefined ? null : next; this.random = random === undefined ? null : random; } }\n'
+      : 'function RandomListNode(val, next, random) { this.val = val === undefined ? 0 : val; this.next = next === undefined ? null : next; this.random = random === undefined ? null : random; }\n';
+    // Input nodes are remembered so the output walk can tell a copy from the original.
+    s += `let __lfb_given${A} = new Set();
+function __lfb_toRandomList(a${A}) {
+  const nodes${A} = a.map((p${A}) => new RandomListNode(p[0]));
+  __lfb_given = new Set();
+  nodes.forEach((n${A}, i${A}) => { n.next = i + 1 < nodes.length ? nodes[i + 1] : null; n.random = a[i][1] === null ? null : nodes[a[i][1]]; __lfb_given.add(n); });
+  return nodes.length ? nodes[0] : null;
+}
+function __lfb_fromRandomList(n${A}) {
+  const index${A} = new Map(); const order${A} = [];
+  for (; n; n = n.next) {
+    if (__lfb_given.has(n)) return ${JSON.stringify(COPY_MARKERS.sharedNode)};
+    if (index.has(n) || order.length > __lfb_cap) throw new Error('Returned list has a cycle');
+    index.set(n, order.length); order.push(n);
+  }
+  const out${A} = [];
+  for (const x of order) {
+    if (x.random === null || x.random === undefined) { out.push([x.val, null]); continue; }
+    if (__lfb_given.has(x.random)) return ${JSON.stringify(COPY_MARKERS.sharedNode)};
+    if (!index.has(x.random)) return ${JSON.stringify(COPY_MARKERS.outsideRandom)};
+    out.push([x.val, index.get(x.random)]);
+  }
+  return out;
+}
+`;
+  }
+  if (usesStruct(sig, 'NestedInteger')) {
+    // Private field: user code reads the list only through LeetCode's three accessors.
+    s += ts
+      ? `class NestedInteger { #v: number | NestedInteger[]; constructor(v: number | NestedInteger[]) { this.#v = v; } isInteger(): boolean { return !Array.isArray(this.#v); } getInteger(): number { return (Array.isArray(this.#v) ? null : this.#v) as number; } getList(): NestedInteger[] { return Array.isArray(this.#v) ? this.#v : []; } }
+`
+      : `class NestedInteger { #v; constructor(v) { this.#v = v; } isInteger() { return !Array.isArray(this.#v); } getInteger() { return Array.isArray(this.#v) ? null : this.#v; } getList() { return Array.isArray(this.#v) ? this.#v : []; } }
+`;
+    s += `function __lfb_toNested(a${A})${ts ? ': NestedInteger[]' : ''} { return a.map((x${A}) => new NestedInteger(Array.isArray(x) ? __lfb_toNested(x) : x)); }
+`;
+  }
+  return s;
+}
+
+const PY_RANDOM = `
+class RandomListNode:
+    def __init__(self, val=0, next=None, random=None):
+        self.val = val
+        self.next = next
+        self.random = random
+
+__lfb_given = set()
+
+def __lfb_to_random_list(a):
+    nodes = [RandomListNode(p[0]) for p in a]
+    for i, n in enumerate(nodes):
+        n.next = nodes[i + 1] if i + 1 < len(nodes) else None
+        n.random = None if a[i][1] is None else nodes[a[i][1]]
+    __lfb_given.clear()
+    __lfb_given.update(nodes)
+    return nodes[0] if nodes else None
+
+def __lfb_from_random_list(node):
+    index = {}
+    order = []
+    while node is not None:
+        if node in __lfb_given:
+            return ${JSON.stringify(COPY_MARKERS.sharedNode)}
+        if node in index or len(order) > __lfb_cap:
+            raise ValueError("Returned list has a cycle")
+        index[node] = len(order)
+        order.append(node)
+        node = node.next
+    out = []
+    for x in order:
+        if x.random is None:
+            out.append([x.val, None])
+        elif x.random in __lfb_given:
+            return ${JSON.stringify(COPY_MARKERS.sharedNode)}
+        elif x.random not in index:
+            return ${JSON.stringify(COPY_MARKERS.outsideRandom)}
+        else:
+            out.append([x.val, index[x.random]])
+    return out
+`;
+
+const PY_CYCLE = `
+def __lfb_to_cycle_list(a):
+    nodes = [ListNode(v) for v in a[0]]
+    for i in range(len(nodes) - 1):
+        nodes[i].next = nodes[i + 1]
+    if a[1] >= 0 and nodes:
+        nodes[-1].next = nodes[a[1]]
+    return nodes[0] if nodes else None
+`;
+
+const PY_NESTED = `
+class NestedInteger:
+    __slots__ = ("_v",)
+
+    def __init__(self, v):
+        self._v = v
+
+    def is_integer(self) -> bool:
+        return not isinstance(self._v, list)
+
+    def get_integer(self):
+        return None if isinstance(self._v, list) else self._v
+
+    def get_list(self):
+        return self._v if isinstance(self._v, list) else []
+
+    # LeetCode spells these in camelCase; both work.
+    isInteger = is_integer
+    getInteger = get_integer
+    getList = get_list
+
+def __lfb_to_nested(a):
+    return [NestedInteger(__lfb_to_nested(x) if isinstance(x, list) else x) for x in a]
+`;
+
+function pyExtras(sig) {
+  return (usesCycle(sig) ? PY_CYCLE : '') + (usesStruct(sig, 'RandomListNode') ? PY_RANDOM : '') + (usesStruct(sig, 'NestedInteger') ? PY_NESTED : '');
 }
 
 /* ---------- JavaScript / TypeScript ---------- */
@@ -57,9 +208,12 @@ function __lfb_fromTree(root${A}) {
 
 function jsIn(type, expr) {
   if (type === 'void') return expr;
-  const { base, dims } = parseType(type);
+  const { base, dims, cycle } = parseType(type);
+  if (cycle) return `__lfb_toCycleList(${expr})`;
   if (base === 'ListNode') return dims ? `${expr}.map(__lfb_toList)` : `__lfb_toList(${expr})`;
   if (base === 'TreeNode') return `__lfb_toTree(${expr})`;
+  if (base === 'RandomListNode') return `__lfb_toRandomList(${expr})`;
+  if (base === 'NestedInteger') return `__lfb_toNested(${expr})`;
   return expr;
 }
 function jsOut(type, expr) {
@@ -67,6 +221,7 @@ function jsOut(type, expr) {
   const { base, dims } = parseType(type);
   if (base === 'ListNode') return dims ? `(${expr}).map(__lfb_fromList)` : `__lfb_fromList(${expr})`;
   if (base === 'TreeNode') return `__lfb_fromTree(${expr})`;
+  if (base === 'RandomListNode') return `__lfb_fromRandomList(${expr})`;
   return `(${expr} === undefined ? null : ${expr})`;
 }
 
@@ -74,7 +229,7 @@ function jsAdapter(sig, ts) {
   const name = entryName('javascript', sig.name);
   const any = ts ? ': any' : '';
   // TypeScript checks the whole file strictly, so the helpers carry explicit `any` annotations.
-  const before = `${ts ? TS_PRELUDE : JS_PRELUDE}${jsConvert(any)}const __lfb_user${any} = (function () {\n`;
+  const before = `${ts ? TS_PRELUDE : JS_PRELUDE}${jsConvert(any)}${jsExtras(sig, ts)}const __lfb_user${any} = (function () {\n`;
   let after = `\nreturn typeof ${name} === 'function' ? ${name} : undefined;\n})();\n`;
   const missing = `throw new Error('${isClass(sig) ? 'Class' : 'Function'} "${name}" was not found. Keep the starter signature.')`;
   if (isClass(sig)) {
@@ -183,9 +338,12 @@ def __lfb_from_tree(root):
 `;
 
 function pyIn(type, expr) {
-  const { base, dims } = parseType(type);
+  const { base, dims, cycle } = parseType(type);
+  if (cycle) return `__lfb_to_cycle_list(${expr})`;
   if (base === 'ListNode') return dims ? `[__lfb_to_list(x) for x in ${expr}]` : `__lfb_to_list(${expr})`;
   if (base === 'TreeNode') return `__lfb_to_tree(${expr})`;
+  if (base === 'RandomListNode') return `__lfb_to_random_list(${expr})`;
+  if (base === 'NestedInteger') return `__lfb_to_nested(${expr})`;
   return expr;
 }
 function pyOut(type, expr) {
@@ -193,6 +351,7 @@ function pyOut(type, expr) {
   const { base, dims } = parseType(type);
   if (base === 'ListNode') return dims ? `[__lfb_from_list(x) for x in ${expr}]` : `__lfb_from_list(${expr})`;
   if (base === 'TreeNode') return `__lfb_from_tree(${expr})`;
+  if (base === 'RandomListNode') return `__lfb_from_random_list(${expr})`;
   return expr;
 }
 
@@ -231,7 +390,7 @@ def __lfb_entry(*args):
     return ${pyOut(sig.returns, 'r')}
 `;
   }
-  return { before: PY_PRELUDE + PY_CONVERT, after, entry: '__lfb_entry' };
+  return { before: PY_PRELUDE + PY_CONVERT + pyExtras(sig), after, entry: '__lfb_entry' };
 }
 
 /**

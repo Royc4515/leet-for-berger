@@ -10,7 +10,7 @@ import { appendFileSync, mkdtempSync, writeFileSync, copyFileSync, readFileSync,
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { availableProblems } from '../src/js/problems/index.js';
-import { buildSuite, deepEqual } from '../src/js/engine/harness.js';
+import { buildSuite, comparatorFor } from '../src/js/engine/harness.js';
 import { LANGUAGES, validateSignature } from '../src/js/engine/codegen.js';
 import { buildHarness, encodeCases } from '../scripts/verify/harnesses.mjs';
 import { isSql, validateSqlProblem } from '../src/js/engine/sql.js';
@@ -53,9 +53,10 @@ function execute(lang, problem, cases, { source, compileOnly = false } = {}) {
   let out;
   if (lang === 'java') {
     copyFileSync(JAVA_HARNESS, join(dir, 'Harness.java'));
-    // ListNode and TreeNode are always compiled in: the harness refers to them, as do solutions.
-    for (const f of ['ListNode.java', 'TreeNode.java']) copyFileSync(join(ROOT, 'scripts/verify', f), join(dir, f));
-    run('javac', ['-d', dir, ...['Solution.java', 'Harness.java', 'ListNode.java', 'TreeNode.java'].map((f) => join(dir, f))], { stdio: 'pipe' });
+    // The structure classes are always compiled in: the harness refers to them, as do solutions.
+    const structs = ['ListNode.java', 'TreeNode.java', 'RandomListNode.java', 'NestedInteger.java'];
+    for (const f of structs) copyFileSync(join(ROOT, 'scripts/verify', f), join(dir, f));
+    run('javac', ['-d', dir, ...['Solution.java', 'Harness.java', ...structs].map((f) => join(dir, f))], { stdio: 'pipe' });
     if (compileOnly) return [];
     const t0 = performance.now();
     out = run('java', ['-Xss64m', '-cp', dir, 'Harness', problem.signature.name], { input: JSON.stringify(cases) });
@@ -127,7 +128,9 @@ for (const problem of availableProblems()) {
       assert.ok(available, `${label} toolchain missing but REQUIRE_ALL_LANGUAGES=1`);
       const actuals = execute(lang, problem, suite.map((tc) => tc.args));
       assert.equal(actuals.length, suite.length, `${label}: wrong number of results`);
-      suite.forEach((tc, i) => assert.ok(deepEqual(actuals[i], tc.expected), `${label}: case ${tc.id} failed`));
+      // The problem's judge mode, as in the browser (exact equality unless it declares one).
+      const compare = comparatorFor(problem);
+      suite.forEach((tc, i) => assert.ok(compare(actuals[i], tc.expected, tc), `${label}: case ${tc.id} failed`));
       // The browser watchdog only enforces limits for JavaScript and Python. Here every language
       // must finish all 15 cases, process startup included, within one case's limit: optimal
       // solutions use under half of it, while a naive O(n^2) on a max-size case needs seconds.
