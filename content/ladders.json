@@ -1,0 +1,271 @@
+{
+ "_doc": "Hand-curated ladders: per topic, problems in learning order (easy -> hard, concepts in taxonomy order). Each entry is [leetcode-slug, concept]. build-index.mjs applies these on top of the generated index.",
+ "arrays-hashing": [
+  ["contains-duplicate", "hash-set-membership"],
+  ["valid-anagram", "frequency-count"],
+  ["majority-element", "frequency-count"],
+  ["two-sum", "complement-lookup"],
+  ["group-anagrams", "group-by-key"],
+  ["top-k-frequent-elements", "frequency-count"],
+  ["valid-sudoku", "hash-set-membership"],
+  ["longest-consecutive-sequence", "hash-set-membership"],
+  ["encode-and-decode-strings", "encode-decode"],
+  ["first-missing-positive", "hash-set-membership"],
+  ["naming-a-company", "group-by-key"]
+ ],
+ "math-basics": [
+  ["palindrome-number", "digit-manipulation"],
+  ["nim-game", "game-theory"],
+  ["greatest-common-divisor-of-strings", "gcd-lcm"],
+  ["count-primes", "prime-sieve"],
+  ["count-good-numbers", "modular-arithmetic"],
+  ["powx-n", "fast-power"],
+  ["detect-squares", "geometry"],
+  ["reaching-points", "gcd-lcm"],
+  ["count-anagrams", "combinatorics"],
+  ["max-points-on-a-line", "geometry"]
+ ],
+ "sql": [
+  ["recyclable-and-low-fat-products", "select-filter"],
+  ["combine-two-tables", "joins"],
+  ["duplicate-emails", "group-by-aggregation"],
+  ["customers-who-never-order", "subqueries"],
+  ["monthly-transactions-i", "group-by-aggregation"],
+  ["managers-with-at-least-5-direct-reports", "group-by-aggregation"],
+  ["second-highest-salary", "subqueries"],
+  ["rank-scores", "window-functions"],
+  ["consecutive-numbers", "window-functions"],
+  ["trips-and-users", "joins"],
+  ["department-top-three-salaries", "window-functions"],
+  ["human-traffic-of-stadium", "window-functions"]
+ ],
+ "two-pointers": [
+  ["valid-palindrome", "opposite-ends"],
+  ["merge-sorted-array", "same-direction"],
+  ["move-zeroes", "partition-in-place"],
+  ["two-sum-ii-input-array-is-sorted", "opposite-ends"],
+  ["container-with-most-water", "opposite-ends"],
+  ["sort-colors", "partition-in-place"],
+  ["3sum", "sort-then-scan"],
+  ["trapping-rain-water", "opposite-ends"],
+  ["last-substring-in-lexicographical-order", "same-direction"]
+ ],
+ "stack": [
+  ["valid-parentheses", "matching-brackets"],
+  ["baseball-game", "simulation"],
+  ["min-stack", "auxiliary-stack-design"],
+  ["asteroid-collision", "simulation"],
+  ["evaluate-reverse-polish-notation", "expression-evaluation"],
+  ["decode-string", "expression-evaluation"],
+  ["daily-temperatures", "monotonic-stack"],
+  ["largest-rectangle-in-histogram", "monotonic-stack"],
+  ["basic-calculator", "expression-evaluation"]
+ ],
+ "prefix-sum": [
+  ["running-sum-of-1d-array", "prefix-1d"],
+  ["find-pivot-index", "prefix-1d"],
+  ["product-of-array-except-self", "prefix-1d"],
+  ["subarray-sum-equals-k", "prefix-plus-hashmap"],
+  ["range-sum-query-2d-immutable", "prefix-2d"],
+  ["corporate-flight-bookings", "difference-array"],
+  ["count-subarrays-with-median-k", "prefix-plus-hashmap"],
+  ["number-of-submatrices-that-sum-to-target", "prefix-2d"]
+ ],
+ "sorting-intervals": [
+  ["how-many-numbers-are-smaller-than-the-current-number", "counting-bucket-sort"],
+  ["meeting-rooms", "merge-intervals"],
+  ["largest-number", "custom-comparator"],
+  ["merge-intervals", "merge-intervals"],
+  ["insert-interval", "merge-intervals"],
+  ["meeting-rooms-ii", "sweep-line"],
+  ["data-stream-as-disjoint-intervals", "merge-intervals"],
+  ["minimum-interval-to-include-each-query", "sweep-line"]
+ ],
+ "bit-manipulation": [
+  ["single-number", "xor-tricks"],
+  ["reverse-bits", "masks-and-shifts"],
+  ["number-of-1-bits", "counting-bits"],
+  ["sum-of-two-integers", "masks-and-shifts"],
+  ["single-number-ii", "counting-bits"],
+  ["maximum-product-of-word-lengths", "bitmask-subsets"],
+  ["shortest-path-visiting-all-nodes", "bitmask-subsets"]
+ ],
+ "recursion": [
+  ["power-of-two", "base-and-step"],
+  ["fibonacci-number", "memoization-intro"],
+  ["find-the-winner-of-the-circular-game", "base-and-step"],
+  ["k-th-symbol-in-grammar", "divide-and-conquer"],
+  ["different-ways-to-add-parentheses", "memoization-intro"],
+  ["integer-to-english-words", "base-and-step"]
+ ],
+ "sliding-window": [
+  ["maximum-average-subarray-i", "fixed-window"],
+  ["best-time-to-buy-and-sell-stock", "variable-window"],
+  ["maximum-number-of-vowels-in-a-substring-of-given-length", "fixed-window"],
+  ["longest-substring-without-repeating-characters", "variable-window"],
+  ["minimum-size-subarray-sum", "variable-window"],
+  ["longest-repeating-character-replacement", "window-frequency-map"],
+  ["permutation-in-string", "window-frequency-map"],
+  ["minimum-window-substring", "window-frequency-map"],
+  ["subarrays-with-k-different-integers", "window-frequency-map"],
+  ["sliding-window-maximum", "monotonic-deque"]
+ ],
+ "binary-search": [
+  ["binary-search", "classic-search"],
+  ["search-insert-position", "lower-upper-bound"],
+  ["find-first-and-last-position-of-element-in-sorted-array", "lower-upper-bound"],
+  ["find-minimum-in-rotated-sorted-array", "rotated-array"],
+  ["search-in-rotated-sorted-array", "rotated-array"],
+  ["koko-eating-bananas", "search-on-answer"],
+  ["search-a-2d-matrix", "search-2d"],
+  ["median-of-two-sorted-arrays", "classic-search"],
+  ["split-array-largest-sum", "search-on-answer"],
+  ["find-k-th-smallest-pair-distance", "search-on-answer"]
+ ],
+ "linked-list": [
+  ["reverse-linked-list", "reversal"],
+  ["merge-two-sorted-lists", "merge-lists"],
+  ["linked-list-cycle", "fast-slow-cycle"],
+  ["remove-nth-node-from-end-of-list", "dummy-node-traversal"],
+  ["add-two-numbers", "dummy-node-traversal"],
+  ["reorder-list", "reversal"],
+  ["lru-cache", "cache-design"],
+  ["merge-k-sorted-lists", "merge-lists"],
+  ["reverse-nodes-in-k-group", "reversal"]
+ ],
+ "greedy": [
+  ["lemonade-change", "local-choice"],
+  ["assign-cookies", "exchange-argument"],
+  ["maximum-subarray", "local-choice"],
+  ["gas-station", "local-choice"],
+  ["non-overlapping-intervals", "interval-scheduling"],
+  ["jump-game", "reach-extension"],
+  ["jump-game-ii", "reach-extension"],
+  ["candy", "local-choice"],
+  ["maximum-number-of-non-overlapping-substrings", "interval-scheduling"],
+  ["minimum-number-of-taps-to-open-to-water-a-garden", "reach-extension"]
+ ],
+ "trees": [
+  ["maximum-depth-of-binary-tree", "dfs-traversal"],
+  ["invert-binary-tree", "dfs-traversal"],
+  ["diameter-of-binary-tree", "path-problems"],
+  ["binary-tree-level-order-traversal", "bfs-level-order"],
+  ["maximum-level-sum-of-a-binary-tree", "bfs-level-order"],
+  ["validate-binary-search-tree", "bst-properties"],
+  ["kth-smallest-element-in-a-bst", "bst-properties"],
+  ["lowest-common-ancestor-of-a-binary-tree", "path-problems"],
+  ["construct-binary-tree-from-preorder-and-inorder-traversal", "construct-serialize"],
+  ["vertical-order-traversal-of-a-binary-tree", "bfs-level-order"],
+  ["binary-tree-maximum-path-sum", "path-problems"],
+  ["serialize-and-deserialize-binary-tree", "construct-serialize"]
+ ],
+ "backtracking": [
+  ["sum-of-all-subset-xor-totals", "subsets"],
+  ["subsets", "subsets"],
+  ["permutations", "permutations"],
+  ["combination-sum", "combinations-with-pruning"],
+  ["letter-combinations-of-a-phone-number", "combinations-with-pruning"],
+  ["word-search", "constraint-search"],
+  ["remove-invalid-parentheses", "combinations-with-pruning"],
+  ["n-queens", "constraint-search"],
+  ["sudoku-solver", "constraint-search"]
+ ],
+ "dp-1d": [
+  ["climbing-stairs", "linear-recurrence"],
+  ["min-cost-climbing-stairs", "linear-recurrence"],
+  ["house-robber", "take-or-skip"],
+  ["decode-ways", "linear-recurrence"],
+  ["word-break", "linear-recurrence"],
+  ["coin-change", "knapsack-1d"],
+  ["partition-equal-subset-sum", "knapsack-1d"],
+  ["longest-increasing-subsequence", "longest-increasing"],
+  ["maximum-profit-in-job-scheduling", "take-or-skip"],
+  ["russian-doll-envelopes", "longest-increasing"]
+ ],
+ "design": [
+  ["implement-queue-using-stacks", "composite-design"],
+  ["insert-delete-getrandom-o1", "randomized-set"],
+  ["design-hit-counter", "data-stream"],
+  ["flatten-nested-list-iterator", "iterator-design"],
+  ["time-based-key-value-store", "time-keyed-store"],
+  ["snapshot-array", "time-keyed-store"],
+  ["insert-delete-getrandom-o1-duplicates-allowed", "randomized-set"],
+  ["all-oone-data-structure", "composite-design"],
+  ["lfu-cache", "composite-design"]
+ ],
+ "strings-advanced": [
+  ["find-the-index-of-the-first-occurrence-in-a-string", "prefix-function"],
+  ["repeated-substring-pattern", "prefix-function"],
+  ["longest-palindromic-substring", "expand-around-center"],
+  ["palindromic-substrings", "expand-around-center"],
+  ["repeated-dna-sequences", "rolling-hash"],
+  ["shortest-palindrome", "prefix-function"],
+  ["longest-duplicate-substring", "rolling-hash"],
+  ["sum-of-scores-of-built-strings", "z-function"]
+ ],
+ "heap": [
+  ["kth-largest-element-in-a-stream", "top-k"],
+  ["kth-largest-element-in-an-array", "top-k"],
+  ["k-closest-points-to-origin", "top-k"],
+  ["kth-smallest-element-in-a-sorted-matrix", "k-way-merge"],
+  ["task-scheduler", "scheduling"],
+  ["smallest-range-covering-elements-from-k-lists", "k-way-merge"],
+  ["find-median-from-data-stream", "two-heaps"],
+  ["ipo", "scheduling"]
+ ],
+ "tries": [
+  ["longest-common-prefix", "prefix-counting"],
+  ["implement-trie-prefix-tree", "insert-search"],
+  ["design-add-and-search-words-data-structure", "trie-guided-search"],
+  ["design-search-autocomplete-system", "prefix-counting"],
+  ["word-search-ii", "trie-guided-search"]
+ ],
+ "graphs": [
+  ["flood-fill", "grid-traversal"],
+  ["number-of-islands", "grid-traversal"],
+  ["rotting-oranges", "grid-traversal"],
+  ["clone-graph", "adjacency-traversal"],
+  ["course-schedule", "cycle-detection"],
+  ["course-schedule-ii", "topological-sort"],
+  ["is-graph-bipartite", "bipartite"],
+  ["word-ladder", "adjacency-traversal"],
+  ["alien-dictionary", "topological-sort"],
+  ["critical-connections-in-a-network", "adjacency-traversal"]
+ ],
+ "dp-2d": [
+  ["pascals-triangle", "grid-paths"],
+  ["minimum-path-sum", "grid-paths"],
+  ["longest-common-subsequence", "two-sequences"],
+  ["edit-distance", "two-sequences"],
+  ["coin-change-ii", "knapsack-2d"],
+  ["best-time-to-buy-and-sell-stock-with-cooldown", "state-machine"],
+  ["longest-increasing-path-in-a-matrix", "grid-paths"],
+  ["regular-expression-matching", "two-sequences"],
+  ["burst-balloons", "interval-dp"],
+  ["minimum-cost-to-cut-a-stick", "interval-dp"]
+ ],
+ "union-find": [
+  ["number-of-provinces", "connectivity"],
+  ["redundant-connection", "union-by-rank"],
+  ["accounts-merge", "connectivity"],
+  ["number-of-islands-ii", "union-by-rank"],
+  ["checking-existence-of-edge-length-limited-paths", "offline-queries"]
+ ],
+ "advanced-graphs": [
+  ["network-delay-time", "dijkstra"],
+  ["path-with-minimum-effort", "dijkstra"],
+  ["cheapest-flights-within-k-stops", "bounded-hops-shortest-path"],
+  ["min-cost-to-connect-all-points", "minimum-spanning-tree"],
+  ["swim-in-rising-water", "dijkstra"],
+  ["minimum-obstacle-removal-to-reach-corner", "zero-one-bfs"],
+  ["parallel-courses-iii", "dag-dp"],
+  ["find-critical-and-pseudo-critical-edges-in-minimum-spanning-tree", "minimum-spanning-tree"]
+ ],
+ "range-queries": [
+  ["range-sum-query-mutable", "segment-tree"],
+  ["count-number-of-teams", "fenwick-tree"],
+  ["count-of-smaller-numbers-after-self", "fenwick-tree"],
+  ["reverse-pairs", "fenwick-tree"],
+  ["the-skyline-problem", "segment-tree"]
+ ]
+}

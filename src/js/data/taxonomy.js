@@ -186,7 +186,7 @@ export const TOPICS = [
     tier: 3,
     prereqs: ['sliding-window'],
     concepts: ['expand-around-center', 'prefix-function', 'rolling-hash', 'z-function'],
-    ladder: { easy: 1, medium: 3, hard: 3 },
+    ladder: { easy: 2, medium: 3, hard: 3 },
   },
 
   // Tier 4: structures on structures
@@ -334,6 +334,10 @@ export function validateIndexRecord(rec, topics) {
   if (!(rec.estMinutes > 0)) errors.push(`${where}: estMinutes must be positive`);
   if (!INDEX_STATUSES.includes(rec.status)) errors.push(`${where}: bad status ${rec.status}`);
   if (!(rec.priority >= 0 && rec.priority <= 1)) errors.push(`${where}: priority out of [0,1]`);
+  // Anything past `indexed` sits on a ladder, so it must know its concept and position.
+  if (rec.status !== 'indexed' && (rec.concept === null || !Number.isInteger(rec.ladderStep))) {
+    errors.push(`${where}: ${rec.status} problem needs a concept and ladderStep`);
+  }
   return errors;
 }
 

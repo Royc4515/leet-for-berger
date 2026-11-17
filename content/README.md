@@ -19,7 +19,8 @@ Why: a problem idea is free to reuse, its exact wording is not. The index points
 
 ```bash
 bash scripts/content/fetch-sources.sh   # datasets -> content/.cache (gitignored)
-node scripts/content/build-index.mjs    # -> content/index/problems.json
+node scripts/content/build-index.mjs    # -> content/index/problems.json (applies content/ladders.json)
+node scripts/content/audit.mjs          # -> content/AUDIT.md
 ```
 
 One record per problem, one record per line, sorted by `priority`:
@@ -46,6 +47,7 @@ One record per problem, one record per line, sorted by `priority`:
 | `estMinutes` | Time budget for Mock OA and Interview |
 | `companies` | Per company: `frequency` (0-100, all time) and `recency`, the newest window it was asked in (`30d`, `3m`, `6m`, `older`) |
 | `priority` | 0-1: 50% how many companies ask it, 30% curated list membership, 20% share of companies asking it recently |
+| `ladderStep` | Position on its topic's ladder (0 = first), null when not selected |
 | `contentId`, `status` | Link to `src/js/problems/<contentId>.js`. `indexed` -> `selected` -> `authored` -> `verified`; only `verified` ships |
 
 Content we write keeps the problem (same task, same constraints, same diversity) and rewrites the statement, examples and tests in our own words.
@@ -137,7 +139,7 @@ graph TD
 | 3 | Backtracking | 1 | 5 | 3 | subsets, permutations, combinations-with-pruning, constraint-search |
 | 3 | 1D Dynamic Programming | 2 | 6 | 2 | linear-recurrence, take-or-skip, longest-increasing, knapsack-1d |
 | 3 | Data Structure Design | 1 | 5 | 3 | iterator-design, data-stream, randomized-set, time-keyed-store, composite-design |
-| 3 | Advanced Strings | 1 | 3 | 3 | expand-around-center, prefix-function, rolling-hash, z-function |
+| 3 | Advanced Strings | 2 | 3 | 3 | expand-around-center, prefix-function, rolling-hash, z-function |
 | 4 | Heap / Priority Queue | 1 | 4 | 3 | top-k, k-way-merge, two-heaps, scheduling |
 | 4 | Tries | 1 | 2 | 2 | insert-search, prefix-counting, trie-guided-search |
 | 4 | Graphs | 1 | 6 | 3 | grid-traversal, adjacency-traversal, cycle-detection, topological-sort, bipartite |
@@ -145,11 +147,12 @@ graph TD
 | 5 | Union Find | 0 | 3 | 2 | connectivity, union-by-rank, offline-queries |
 | 5 | Advanced Graphs | 0 | 4 | 4 | dijkstra, bounded-hops-shortest-path, minimum-spanning-tree, dag-dp, zero-one-bfs |
 | 5 | Range Queries | 0 | 2 | 3 | fenwick-tree, segment-tree, sparse-table |
-| | **Total (217)** | **46** | **107** | **64** | |
+| | **Total (218)** | **47** | **107** | **64** | |
 
 ## Pipeline
 
 1. **Index** (done): 3,398 problems from 470 companies, NeetCode lists and contest ratings, mapped to `topic` + `rating`.
-2. **Select**: per topic, pick problems by `priority` to fill the ladder targets above, assign `concept`, cover every concept in order.
-3. **Author**: write the problem module with `/add-problem`.
-4. **Verify**: solutions in every language pass all 15 cases, then flip `status` to `verified`.
+2. **Select** (done): `content/ladders.json` holds 218 hand-picked problems, one ladder per topic, each with its concept, in learning order. Picked from the highest-priority candidates.
+3. **Audit**: `node scripts/content/audit.mjs` writes `content/AUDIT.md` (ladder fill, concept coverage, Blind 75 / NeetCode 150 coverage, top-company coverage, high-priority problems left out, gaps).
+4. **Author**: write the problem module with `/add-problem`.
+5. **Verify**: solutions in every language pass all 15 cases, then flip `status` to `verified`.

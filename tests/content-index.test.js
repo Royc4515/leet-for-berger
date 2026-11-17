@@ -38,3 +38,25 @@ test('validateIndexRecord rejects a concept from another topic', () => {
   const rec = { slug: 'x', title: 'X', topic: 'stack', concept: 'dijkstra', difficulty: 'Medium', rating: 5, estMinutes: 25, status: 'indexed', priority: 0.5 };
   assert.ok(validateIndexRecord(rec, TOPICS).some((e) => e.includes('not in stack')));
 });
+
+test('selected problems fill every ladder exactly to its target', () => {
+  for (const t of TOPICS) {
+    const mine = index.problems.filter((r) => r.topic === t.id && r.status !== 'indexed');
+    const got = { easy: 0, medium: 0, hard: 0 };
+    for (const r of mine) got[r.difficulty.toLowerCase()]++;
+    assert.deepEqual(got, t.ladder, t.id);
+  }
+});
+
+test('ladder steps are a contiguous sequence per topic', () => {
+  for (const t of TOPICS) {
+    const steps = index.problems.filter((r) => r.topic === t.id && r.ladderStep !== null).map((r) => r.ladderStep).sort((a, b) => a - b);
+    assert.deepEqual(steps, steps.map((_, i) => i), t.id);
+  }
+});
+
+test('every authored or planned problem sits on a ladder', () => {
+  for (const r of index.problems.filter((p) => p.contentId)) {
+    assert.notEqual(r.status, 'indexed', `${r.contentId} (${r.slug}) is not on any ladder`);
+  }
+});

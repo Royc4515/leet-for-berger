@@ -112,25 +112,29 @@ const NEETCODE_PATTERNS = {
   'Bit Manipulation': 'bit-manipulation',
 };
 
-/** Problems already authored or planned in the app, keyed by LeetCode slug. */
+/**
+ * Problems already authored or planned in the app, keyed by LeetCode slug. Status here only
+ * records authoring progress; ladder membership (content/ladders.json) is what makes a
+ * problem `selected`.
+ */
 const CONTENT_IDS = {
   'repeated-substring-pattern': ['smallest-base-segment', 'verified'],
-  'two-sum': ['pair-sum-target', 'selected'],
-  'group-anagrams': ['anagram-buckets', 'selected'],
-  'valid-palindrome': ['mirror-check', 'selected'],
-  'longest-substring-without-repeating-characters': ['longest-distinct-window', 'selected'],
-  'meeting-rooms-ii': ['meeting-room-minimizer', 'selected'],
-  'search-in-rotated-sorted-array': ['rotated-search', 'selected'],
-  'jump-game': ['jump-reach', 'selected'],
-  'maximum-level-sum-of-a-binary-tree': ['tree-level-sums', 'selected'],
-  'lowest-common-ancestor-of-a-binary-tree': ['lowest-shared-ancestor', 'selected'],
-  'number-of-islands': ['island-count', 'selected'],
-  'k-closest-points-to-origin': ['k-closest-points', 'selected'],
-  subsets: ['subset-builder', 'selected'],
-  'climbing-stairs': ['stair-paths', 'selected'],
-  'edit-distance': ['edit-distance-lite', 'selected'],
-  'minimum-path-sum': ['grid-min-path', 'selected'],
-  'cheapest-flights-within-k-stops': ['cheapest-route-k-stops', 'selected'],
+  'two-sum': ['pair-sum-target', null],
+  'group-anagrams': ['anagram-buckets', null],
+  'valid-palindrome': ['mirror-check', null],
+  'longest-substring-without-repeating-characters': ['longest-distinct-window', null],
+  'meeting-rooms-ii': ['meeting-room-minimizer', null],
+  'search-in-rotated-sorted-array': ['rotated-search', null],
+  'jump-game': ['jump-reach', null],
+  'maximum-level-sum-of-a-binary-tree': ['tree-level-sums', null],
+  'lowest-common-ancestor-of-a-binary-tree': ['lowest-shared-ancestor', null],
+  'number-of-islands': ['island-count', null],
+  'k-closest-points-to-origin': ['k-closest-points', null],
+  subsets: ['subset-builder', null],
+  'climbing-stairs': ['stair-paths', null],
+  'edit-distance': ['edit-distance-lite', null],
+  'minimum-path-sum': ['grid-min-path', null],
+  'cheapest-flights-within-k-stops': ['cheapest-route-k-stops', null],
 };
 
 const WINDOWS = [
@@ -244,6 +248,18 @@ async function main() {
     if (slug) elo.set(slug, { rating: Number(rating), number: Number(id) });
   }
 
+  // Hand-curated ladders override topic and concept from the heuristics above.
+  const ladders = JSON.parse(await readFile(join(ROOT, 'content/ladders.json'), 'utf8'));
+  const ladderOf = new Map();
+  for (const [topic, entries] of Object.entries(ladders)) {
+    if (topic.startsWith('_')) continue;
+    entries.forEach(([slug, concept], step) => {
+      if (!problems.has(slug)) throw new Error(`ladders.json: ${slug} is not in the index`);
+      if (ladderOf.has(slug)) throw new Error(`ladders.json: ${slug} is on two ladders`);
+      ladderOf.set(slug, { topic, concept, step });
+    });
+  }
+
   const maxCompanies = Math.max(...[...problems.values()].map((p) => p.companies.size));
   const records = [];
   for (const p of problems.values()) {
@@ -251,8 +267,9 @@ async function main() {
     const contest = elo.get(p.slug);
     const fromTags = classify(p.tags);
     // NeetCode's hand-assigned pattern beats tag heuristics when both exist.
-    const topic = p.neetcodePattern ?? fromTags.topic;
-    const concept = topic === fromTags.topic ? fromTags.concept : null;
+    const ladder = ladderOf.get(p.slug);
+    const topic = ladder?.topic ?? p.neetcodePattern ?? fromTags.topic;
+    const concept = ladder?.concept ?? (topic === fromTags.topic ? fromTags.concept : null);
     const companies = [...p.companies.values()].sort((a, b) => b.frequency - a.frequency);
     const recentShare = companies.length ? companies.filter((c) => c.recency !== 'older').length / companies.length : 0;
     // Priority: how widely asked, whether a curated list picked it, and how recently it is asked.
@@ -260,7 +277,8 @@ async function main() {
       0.5 * (Math.log1p(companies.length) / Math.log1p(maxCompanies)) +
       0.3 * (p.lists.includes('neetcode150') ? 1 : p.lists.length ? 0.5 : 0) +
       0.2 * recentShare;
-    const [contentId, status] = CONTENT_IDS[p.slug] ?? [null, 'indexed'];
+    const [contentId, authored] = CONTENT_IDS[p.slug] ?? [null, null];
+    const status = authored ?? (ladder ? 'selected' : 'indexed');
     records.push({
       slug: p.slug,
       number: p.number ?? contest?.number ?? null,
@@ -277,6 +295,7 @@ async function main() {
       companyCount: companies.length,
       companies,
       priority: Math.round(priority * 1000) / 1000,
+      ladderStep: ladder ? ladder.step : null,
       contentId,
       status,
     });
