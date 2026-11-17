@@ -251,6 +251,23 @@ const CONTENT_IDS = {
   'reverse-pairs': ['double-inversions', 'verified'],
   'the-skyline-problem': ['skyline-outline', 'verified'],
   'shortest-path-visiting-all-nodes': ['visit-all-nodes', 'verified'],
+  'longest-palindromic-substring': ['widest-palindrome', 'verified'],
+  'find-the-index-of-the-first-occurrence-in-a-string': ['first-match-index', 'verified'],
+  'repeated-dna-sequences': ['dna-repeats', 'verified'],
+  'sum-of-scores-of-built-strings': ['prefix-score-sum', 'verified'],
+  'text-justification': ['justify-lines', 'verified'],
+  // Exact length-prefix format instead of "any encoding", so encode and decode are judgeable.
+  'encode-and-decode-strings': ['string-codec', 'verified'],
+  'concatenation-of-array': ['doubled-array', 'verified'],
+  'detect-squares': ['square-counter', 'verified'],
+  'sign-of-the-product-of-an-array': ['product-sign', 'verified'],
+  'count-good-numbers': ['good-digit-strings', 'verified'],
+  'nim-game': ['stone-take-game', 'verified'],
+  'count-anagrams': ['anagram-arrangements', 'verified'],
+  // Returns the next board instead of mutating it in place, so every harness can judge it.
+  'game-of-life': ['life-step', 'verified'],
+  // n raised to 10^6 with a modulus, so exponential recursion times out.
+  'fibonacci-number': ['fibonacci-mod', 'verified'],
 };
 
 const WINDOWS = [
