@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, copyFileSync, readFileSync, existsSync } from 'node:fs';
+import { appendFileSync, mkdtempSync, writeFileSync, copyFileSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { availableProblems } from '../src/js/problems/index.js';
@@ -38,6 +38,9 @@ const TOOLCHAIN = {
 const JAVA_HARNESS = join(ROOT, 'scripts/verify/Harness.java');
 const run = (cmd, args, opts) => execFileSync(cmd, args, { maxBuffer: 1 << 28, encoding: 'utf8', ...opts });
 
+/** Wall time of the most recent run (compile excluded), read by the time-limit check. */
+let lastRunMs = 0;
+
 /** Compiles and runs one language's solution on the cases; returns one parsed value per case. */
 function execute(lang, problem, cases, { source, compileOnly = false } = {}) {
   const solution = source ?? readFileSync(join(ROOT, 'src/js/problems', problem.id, 'solutions', LANGUAGES.find((l) => l.id === lang).file), 'utf8');
@@ -52,7 +55,9 @@ function execute(lang, problem, cases, { source, compileOnly = false } = {}) {
     for (const f of ['ListNode.java', 'TreeNode.java']) copyFileSync(join(ROOT, 'scripts/verify', f), join(dir, f));
     run('javac', ['-d', dir, ...['Solution.java', 'Harness.java', 'ListNode.java', 'TreeNode.java'].map((f) => join(dir, f))], { stdio: 'pipe' });
     if (compileOnly) return [];
+    const t0 = performance.now();
     out = run('java', ['-Xss64m', '-cp', dir, 'Harness', problem.signature.name], { input: JSON.stringify(cases) });
+    lastRunMs = performance.now() - t0;
   } else {
     if (h.compile) {
       const [cmd, ...args] = h.compile;
@@ -61,7 +66,9 @@ function execute(lang, problem, cases, { source, compileOnly = false } = {}) {
     if (compileOnly) return [];
     const [cmd, ...args] = h.run;
     const input = h.input === 'json' ? JSON.stringify(cases) : encodeCases(cases, problem.signature);
+    const t0 = performance.now();
     out = run(cmd, args, { cwd: dir, input });
+    lastRunMs = performance.now() - t0;
   }
   return out.trim().split('\n').map((l) => JSON.parse(l));
 }
@@ -88,6 +95,16 @@ for (const problem of availableProblems()) {
       const actuals = execute(lang, problem, suite.map((tc) => tc.args));
       assert.equal(actuals.length, suite.length, `${label}: wrong number of results`);
       suite.forEach((tc, i) => assert.ok(deepEqual(actuals[i], tc.expected), `${label}: case ${tc.id} failed`));
+      // The browser watchdog only enforces limits for JavaScript and Python. Here every language
+      // must finish all 15 cases, process startup included, within one case's limit: optimal
+      // solutions use under half of it, while a naive O(n^2) on a max-size case needs seconds.
+      // LFB_TIME_FACTOR scales the budget on slow machines; 0 disables the check.
+      const factor = Number(process.env.LFB_TIME_FACTOR ?? 1);
+      if (factor > 0) {
+        const budget = problem.timeLimitMs * factor;
+        assert.ok(lastRunMs <= budget, `${label}: 15 cases took ${Math.round(lastRunMs)} ms, budget ${budget} ms`);
+      }
+      if (process.env.LFB_TIMINGS) appendFileSync(process.env.LFB_TIMINGS, `${problem.id}\t${lang}\t${Math.round(lastRunMs)}\t${problem.timeLimitMs}\n`);
     });
 
     // The generated starter code is what users see first; it must compile in every language.

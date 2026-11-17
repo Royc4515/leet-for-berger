@@ -63,7 +63,7 @@ Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/
 8. **CDN versions are pinned** (Monaco 0.52.2, Pyodide 0.27.2). Upgrading is a deliberate task with an e2e run, not a drive-by.
 9. **Zero console errors.** The e2e test enforces it.
 10. **No secrets in the client.** This is a static site. LLM keys, solution vaults and real judging for competitive modes require the backend (ROADMAP Phase 2-3).
-11. **Every shipped solution is verified.** Each problem has a solution file per language (8), and `tests/solutions.test.js` runs all of them against the 15 cases; CI requires every toolchain (`REQUIRE_ALL_LANGUAGES=1`). Starter code is generated from the signature, never hand-written.
+11. **Every shipped solution is verified.** Each problem has a solution file per language (8), and `tests/solutions.test.js` runs all of them against the 15 cases, and each language must finish all 15 within one case's `timeLimitMs`; CI requires every toolchain (`REQUIRE_ALL_LANGUAGES=1`). Starter code is generated from the signature, never hand-written.
 
 ## Conventions
 

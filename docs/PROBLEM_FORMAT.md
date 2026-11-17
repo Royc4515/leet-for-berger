@@ -18,6 +18,18 @@ src/js/problems/<id>/
 
 Reference implementations: `src/js/problems/notify-recipients/` (arrays and strings), `reverse-list/` (linked list), `level-order/` (binary tree), `min-stack/` (design class).
 
+## Starting from imported solutions
+
+Do not write 8 solutions from scratch when an open-source one exists. `npm run import:solutions -- <leetcode-slug>...` (or `-- --essential`) stages candidates in `content/.cache/imports/<slug>/` (gitignored): doocs/leetcode first, walkccc/LeetCode as fallback, JavaScript transpiled from TypeScript when missing. `--coverage` only reports what is available. C# and C are often missing; translate them from the Java and C++ files.
+
+Staged files are raw material. To ship one:
+- adapt it to this problem's signature, names and output rules (fixed order, returning instead of mutating);
+- keep the first-line `Adapted from ...` attribution comment (license requirement, see `THIRD_PARTY_NOTICES.md`);
+- rewrite or drop comments so they are English, explain why, and contain no em dashes;
+- pass `tests/solutions.test.js`. The verifier, not the source, is what makes it shippable.
+
+The statement, tests, hints and `reference` are always written for this project.
+
 Starter code and per-language entry names are **generated** from the signature (`src/js/engine/codegen.js`); never write them by hand. Solutions are real files so the verifier can compile them and editors can highlight them; the app fetches one when the user clicks "Reveal Solution".
 
 ## Required fields in `problem.js`
@@ -105,6 +117,6 @@ Hidden tests must target the classic wrong answers, not just "more of the same":
 1. Import it in `src/js/problems/index.js` and add it to the `implemented` list.
 2. Remove its `planned` entry if one exists.
 3. Add `tests/<id>.test.js`: reference vs brute force on random inputs, visible expectations agree with reference, parser accepts/rejects correctly.
-4. `npm run check`. `tests/solutions.test.js` compiles and runs all 8 solutions against the 15 cases and checks that the generated starter code compiles in every language. Locally a missing toolchain skips that language; CI sets `REQUIRE_ALL_LANGUAGES=1` and installs all of them, so nothing ships unverified.
+4. `npm run check`. `tests/solutions.test.js` compiles and runs all 8 solutions against the 15 cases and checks that the generated starter code compiles in every language. It also times each language's run (process startup included) and fails it if all 15 cases take longer than one case's `timeLimitMs`, so max-size tests must actually separate the target complexity from a naive one. `LFB_TIME_FACTOR` scales the budget on a slow machine (0 disables it); `LFB_TIMINGS=<file>` records the times. Locally a missing toolchain skips that language; CI sets `REQUIRE_ALL_LANGUAGES=1` and installs all of them, so nothing ships unverified.
 
 Harnesses live in `scripts/verify/`: `harnesses.mjs` generates a test program per language from the signature (C, C++, Go and C# read a flat token stream, the others JSON), `Harness.java` runs Java by reflection.
