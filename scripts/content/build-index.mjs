@@ -239,6 +239,10 @@ const CONTENT_IDS = {
   // Output fixed to lexicographic order so the answer is unique.
   'word-search-ii': ['board-words', 'verified'],
   'longest-common-prefix': ['shared-prefix', 'verified'],
+  'linked-list-cycle': ['list-loop', 'verified'],
+  'copy-list-with-random-pointer': ['random-link-copy', 'verified'],
+  'flatten-nested-list-iterator': ['nested-flatten', 'verified'],
+  'insert-delete-getrandom-o1': ['random-pool', 'verified'],
 };
 
 const WINDOWS = [

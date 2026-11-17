@@ -167,6 +167,29 @@ try {
     await expectText('.result-head', /15 \/ 15/);
   });
 
+  // RandomListNode (copy checked by node identity) and the randomized-set judge mode, in the browser.
+  await check('random pointer copy (Random Link Copy): JS reveal + submit is Accepted', async () => {
+    await page.goto(`${BASE}#/problem/random-link-copy`);
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('function copyRandomList')));
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 30000);
+    await expectText('.result-head', /15 \/ 15/);
+  });
+
+  await check('random answers (Random Pool): JS reveal + submit is Accepted by the randomized-set judge', async () => {
+    await page.goto(`${BASE}#/problem/random-pool`);
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class RandomizedSet')));
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 30000);
+    await expectText('.result-head', /15 \/ 15/);
+  });
+
   if (!skipPython) {
     await check('linked list problem (Reverse List): Python reveal + submit is Accepted', async () => {
       await page.goto(`${BASE}#/problem/reverse-list`);

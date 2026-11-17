@@ -115,6 +115,10 @@ import bucketMap from './bucket-map/problem.js';
 import hitWindow from './hit-window/problem.js';
 import prefixTree from './prefix-tree/problem.js';
 import boardWords from './board-words/problem.js';
+import listLoop from './list-loop/problem.js';
+import randomLinkCopy from './random-link-copy/problem.js';
+import nestedFlatten from './nested-flatten/problem.js';
+import randomPool from './random-pool/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -164,6 +168,9 @@ function hydrateSql(problem) {
 }
 
 const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak, islandCount, courseCheck, courseOrder, wordMorph, lockSteps, twoColorCheck, extraLink, accountMerge, limitedPaths, medianStream, kthHighest, cooldownTasks, noAdjacentRepeat, rangeCover, gridWord, keypadWords, subsetBuilder, allOrderings, bestRunSum, jumpReach, overlapTrim, cookieMatch, oneSwapMax, fewestCoins, streetHeist, stairPaths, risingChain, bestRunProduct, goodStringCount, greenProducts, addressLookup, repeatedEmails, runnerUpSalary, tripleRepeat, treeHeight, bestTreePath, kthInOrder, treeHeist, treeCodec, editSteps, uphillPath, balloonPop, coinCombos, tradeCooldown, sharedPrefix, digitListSum, shiftList, mergeManyLists, recentCache, frequentCache, versionedStore, bucketMap, hitWindow, prefixTree, boardWords].map(hydrate);
+// Problems on the input types added later (ListNode@cycle, RandomListNode, NestedInteger[]) and the
+// randomized-set judge mode. A separate line keeps parallel content waves from colliding above.
+implemented.push(...[listLoop, randomLinkCopy, nestedFlatten, randomPool].map(hydrate));
 
 /**
  * URL of a problem's solution file for a language.
