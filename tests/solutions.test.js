@@ -73,6 +73,13 @@ for (const problem of availableProblems()) {
     assert.deepEqual(validateSignature(problem.signature), []);
   });
 
+  // A case whose argument list does not match the signature is silently accepted by
+  // JavaScript (extra args are ignored) while typed languages reject it.
+  test(`${problem.id}: every case passes exactly the signature's arguments`, () => {
+    const arity = problem.signature.kind === 'class' ? 2 : problem.signature.params.length;
+    for (const tc of suite) assert.equal(tc.args.length, arity, `case ${tc.id} has ${tc.args.length} args, expected ${arity}`);
+  });
+
   for (const { id: lang, label } of LANGUAGES) {
     const available = TOOLCHAIN[lang]();
     const skip = !available && !REQUIRE_ALL && `${label} toolchain not installed`;

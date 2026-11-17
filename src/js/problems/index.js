@@ -13,6 +13,12 @@ import notifyRecipients from './notify-recipients/problem.js';
 import reverseList from './reverse-list/problem.js';
 import levelOrder from './level-order/problem.js';
 import minStack from './min-stack/problem.js';
+import pairSumTarget from './pair-sum-target/problem.js';
+import anagramBuckets from './anagram-buckets/problem.js';
+import topKFrequent from './top-k-frequent/problem.js';
+import longestStreak from './longest-streak/problem.js';
+import isomorphicStrings from './isomorphic-strings/problem.js';
+import ticketQueue from './ticket-queue/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -39,7 +45,7 @@ function hydrate(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
@@ -67,8 +73,6 @@ export async function loadSolution(problemId, lang) {
 
 /** @type {{id:string,title:string,difficulty:string,topics:string[],milestone:number}[]} */
 const planned = [
-  { id: 'pair-sum-target', title: 'Pair Sum Target', difficulty: 'Easy', topics: ['arrays-strings'], milestone: 1 },
-  { id: 'anagram-buckets', title: 'Anagram Buckets', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 1 },
   { id: 'mirror-check', title: 'Mirror Check (Two Pointers)', difficulty: 'Easy', topics: ['arrays-strings'], milestone: 1 },
   { id: 'longest-distinct-window', title: 'Longest Distinct Window', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 2 },
   { id: 'meeting-room-minimizer', title: 'Meeting Room Minimizer', difficulty: 'Medium', topics: ['greedy'], milestone: 2 },
