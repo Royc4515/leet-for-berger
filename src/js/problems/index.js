@@ -33,6 +33,14 @@ import bitCount from './bit-count/problem.js';
 import addWithoutPlus from './add-without-plus/problem.js';
 import circleElimination from './circle-elimination/problem.js';
 import grammarSymbol from './grammar-symbol/problem.js';
+import rainTrap from './rain-trap/problem.js';
+import mergeSorted from './merge-sorted/problem.js';
+import zerosToEnd from './zeros-to-end/problem.js';
+import zeroTriplets from './zero-triplets/problem.js';
+import bracketCheck from './bracket-check/problem.js';
+import asteroidCollision from './asteroid-collision/problem.js';
+import warmerDays from './warmer-days/problem.js';
+import postfixEval from './postfix-eval/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -59,7 +67,7 @@ function hydrate(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
