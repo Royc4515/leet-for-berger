@@ -7,6 +7,7 @@
  * To add a problem: see docs/PROBLEM_FORMAT.md or run the /add-problem Claude Code command.
  */
 import smallestBaseSegment from './smallest-base-segment.js';
+import notifyRecipients from './notify-recipients.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -18,7 +19,7 @@ export const TOPICS = [
 
 export const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
 
-const implemented = [smallestBaseSegment];
+const implemented = [smallestBaseSegment, notifyRecipients];
 
 /** @type {{id:string,title:string,difficulty:string,topics:string[],milestone:number}[]} */
 const planned = [

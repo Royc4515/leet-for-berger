@@ -20,7 +20,8 @@
   "topPerCompany": 30,
   "israeliTopPerCompany": 30,
   "platformLists": [
-   "codility-lessons"
+   "codility-lessons",
+   "original"
   ]
  }
 }

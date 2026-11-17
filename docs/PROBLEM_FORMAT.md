@@ -44,4 +44,4 @@ Hidden tests must target the classic wrong answers, not just "more of the same":
 1. Import it in `src/js/problems/index.js` and add to `implemented`.
 2. Remove its `planned` entry if one exists.
 3. Add `tests/<id>.test.js`: reference vs brute force on random inputs, visible expectations agree with reference, parser accepts/rejects correctly.
-4. `npm run check`.
+4. `npm run check`. `tests/solutions.test.js` runs the shipped JavaScript, Python and Java solutions against all 15 cases (Python and Java where `python3` / `javac` exist; CI has both). Java solutions run through `scripts/verify/Harness.java`, which supports `int`, `long`, `double`, `boolean`, `String`, `char`, arrays of these and `List` parameters.

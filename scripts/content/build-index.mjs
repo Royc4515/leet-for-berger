@@ -122,6 +122,7 @@ const NEETCODE_PATTERNS = {
  */
 const CONTENT_IDS = {
   'repeated-substring-pattern': ['smallest-base-segment', 'verified'],
+  'notify-recipients': ['notify-recipients', 'verified'],
   'two-sum': ['pair-sum-target', null],
   'group-anagrams': ['anagram-buckets', null],
   'valid-palindrome': ['mirror-check', null],
@@ -324,12 +325,12 @@ async function main() {
   }
 
   // Other sites: facts and links only, placed in the network by hand.
-  const externalSites = ['codility'];
+  const externalSites = ['codility', 'original'];
   for (const site of externalSites) {
     const ext = JSON.parse(await readFile(join(ROOT, `content/external/${site}.json`), 'utf8'));
     for (const e of ext.problems) {
       problems.set(e.slug, {
-        slug: e.slug, number: null, title: e.title, difficulty: e.difficulty, tags: [], lists: [`${site}-lessons`],
+        slug: e.slug, number: null, title: e.title, difficulty: e.difficulty, tags: [], lists: [ext.list ?? `${site}-lessons`],
         companies: new Map(), neetcodePattern: null, platform: site, url: e.url,
         fixedTopic: e.topic, fixedConcept: e.concept, equivalent: e.equivalent,
       });

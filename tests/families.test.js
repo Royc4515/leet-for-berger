@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { validateFamilies, pickVersion, frequencyLookup } from '../src/js/data/families.js';
+import { validateFamilies, pickVersion, frequencyLookup, distinctProblems } from '../src/js/data/families.js';
 
 const { families } = JSON.parse(readFileSync(new URL('../content/families.json', import.meta.url), 'utf8'));
 const { problems } = JSON.parse(readFileSync(new URL('../content/index/problems.json', import.meta.url), 'utf8'));
@@ -71,4 +71,30 @@ test('every version a top company is shown is in the core bank', () => {
   for (const company of ['Google', 'Amazon', 'Meta', 'Microsoft', 'Bloomberg']) {
     for (const f of families) assert.notEqual(bySlug.get(pickVersion(f, company, lookup)).wave, null, `${f.id} for ${company}`);
   }
+});
+
+test('distinctProblems counts each family once and skips non-core members', () => {
+  const families = [
+    { id: 'f', title: 'F', members: [{ slug: 'a', twist: 'x' }, { slug: 'b', twist: 'y' }, { slug: 'c', twist: 'z' }] },
+    { id: 'g', title: 'G', members: [{ slug: 'd', twist: 'x' }, { slug: 'e', twist: 'y' }] },
+  ];
+  const records = [
+    { slug: 'a', wave: null },
+    { slug: 'b', wave: 1 },
+    { slug: 'c', wave: 2 },
+    { slug: 'd', wave: null },
+    { slug: 'e', wave: null },
+    { slug: 'solo', wave: 1 },
+  ];
+  assert.deepEqual(distinctProblems(families, records), [
+    { representative: 'b', versions: ['b', 'c'], family: 'f' },
+    { representative: 'solo', versions: ['solo'], family: null },
+  ]);
+});
+
+test('distinct problems plus extra versions add up to the core bank', () => {
+  const units = distinctProblems(families, problems);
+  const core = problems.filter((p) => p.wave !== null).length;
+  assert.equal(units.reduce((a, u) => a + u.versions.length, 0), core);
+  assert.ok(units.length < core);
 });

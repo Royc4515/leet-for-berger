@@ -9,7 +9,9 @@ The bank must cover every classic topic and every commonly asked company problem
 | Ladders | One per topic, every core subtopic taught, easy -> hard | 226 |
 | **Wave 1**, learning core | Ladders + Blind 75 + NeetCode 150 + Top Interview 150 + easy classics (NeetCode Easy, or Easy asked by 8+ companies) | 419 |
 | **Wave 2**, company coverage | Asked by 15+ companies; top 30 at one of the 20 companies with the most tags; the family version a top company asks; top 30 of each Israeli company; Codility lessons | +291 |
-| **Core bank** | Everything we author | **710** |
+| **Core bank** | Everything we author | **711 entries = 596 distinct problems** |
+
+**Distinct problems** is the number that counts: all versions of one family are one problem (a company's variant, a Codility version), so 711 entries are 596 distinct problems (203 Easy / 281 Medium / 112 Hard). `distinctProblems()` in `src/js/data/families.js` computes it; `content/AUDIT.md` reports it first.
 
 Every core problem is tagged with a **topic** (e.g. Trees), a **subtopic** (`concept`, e.g. BFS level order) and, where relevant, **secondary** topics it also touches (Two Sum IV is a tree problem that also uses two pointers). Subtopics come from the ladders, then `content/subtopics.json` (hand-assigned), then tag rules.
 
@@ -84,7 +86,8 @@ Content we write keeps the problem (same task, same constraints, same diversity)
 | zerotrac/leetcode_problem_rating | Contest-based difficulty | `content/.cache/ratings.txt` |
 | javadev/LeetCode-in-Java README | LeetCode's Top Interview 150 study plan | `content/.cache/lij.md` |
 | Codility public lessons | 47 OA-style training tasks (Codility is the OA platform of Check Point and others) | `content/external/codility.json` |
-| Candidate reports (Glassdoor, prep sites) | Questions for Israeli companies with no tag data: Check Point, CyberArk, Wiz, monday.com | `content/reports.json` |
+| Candidate reports (Glassdoor, prep sites) | Questions for Israeli companies with no tag data: Check Point, CyberArk, Wiz, monday.com, Taboola, JFrog, Payoneer | `content/reports.json` |
+| Original problems | Problems we write for reported tasks with no LeetCode equivalent (first: Notify Recipients, from monday.com reports) | `content/external/original.json` |
 | Company groups | Israeli companies and Israeli R&D hubs | `content/companies.json` |
 
 Not usable yet: CodeSignal and HackerRank publish no per-company question data (their OA formats feed Mock OA instead); the Grind 169 list is only available as a rendered page.

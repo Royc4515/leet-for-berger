@@ -83,3 +83,28 @@ export function frequencyLookup(records) {
   for (const r of records) table.set(r.slug, new Map(r.companies.map((c) => [c.name, c.frequency])));
   return (slug, company) => table.get(slug)?.get(company) ?? 0;
 }
+
+/**
+ * Collapses the core bank into distinct problems: every family counts once (its versions are
+ * the same problem), every problem outside a family counts once.
+ * The representative is the first core member in family order (the canonical one when it is core).
+ *
+ * @param {Family[]} families
+ * @param {{ slug: string, wave: number|null }[]} records
+ * @returns {{ representative: string, versions: string[], family: string|null }[]}
+ */
+export function distinctProblems(families, records) {
+  const core = new Map(records.filter((r) => r.wave !== null).map((r) => [r.slug, r]));
+  const inFamily = new Set();
+  const out = [];
+  for (const f of families) {
+    const versions = f.members.map((m) => m.slug).filter((s) => core.has(s));
+    if (!versions.length) continue;
+    versions.forEach((s) => inFamily.add(s));
+    out.push({ representative: versions[0], versions, family: f.id });
+  }
+  for (const slug of core.keys()) {
+    if (!inFamily.has(slug)) out.push({ representative: slug, versions: [slug], family: null });
+  }
+  return out;
+}
