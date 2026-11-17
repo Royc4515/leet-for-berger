@@ -19,6 +19,12 @@ import topKFrequent from './top-k-frequent/problem.js';
 import longestStreak from './longest-streak/problem.js';
 import isomorphicStrings from './isomorphic-strings/problem.js';
 import ticketQueue from './ticket-queue/problem.js';
+import digitPalindrome from './digit-palindrome/problem.js';
+import romanNumeralValue from './roman-numeral-value/problem.js';
+import stringMultiply from './string-multiply/problem.js';
+import primeCount from './prime-count/problem.js';
+import powerMod from './power-mod/problem.js';
+import stringGcd from './string-gcd/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -45,7 +51,7 @@ function hydrate(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
