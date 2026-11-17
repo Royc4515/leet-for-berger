@@ -198,7 +198,7 @@ const CONTENT_IDS = {
   'k-closest-points-to-origin': ['k-closest-points', null],
   subsets: ['subset-builder', 'verified'],
   'climbing-stairs': ['stair-paths', 'verified'],
-  'edit-distance': ['edit-distance-lite', null],
+  'edit-distance': ['edit-steps', 'verified'],
   'minimum-path-sum': ['grid-min-path', null],
   'cheapest-flights-within-k-stops': ['cheapest-route-k-stops', null],
   'course-schedule': ['course-check', 'verified'],
@@ -215,6 +215,17 @@ const CONTENT_IDS = {
   'duplicate-emails': ['repeated-emails', 'verified'],
   'second-highest-salary': ['runner-up-salary', 'verified'],
   'consecutive-numbers': ['triple-repeat', 'verified'],
+  'binary-tree-maximum-path-sum': ['best-tree-path', 'verified'],
+  // Exact format variant: pre-order with '#' for missing children, so each direction is judged.
+  'serialize-and-deserialize-binary-tree': ['tree-codec', 'verified'],
+  'maximum-depth-of-binary-tree': ['tree-height', 'verified'],
+  'kth-smallest-element-in-a-bst': ['kth-in-order', 'verified'],
+  'house-robber-iii': ['tree-heist', 'verified'],
+  'longest-increasing-path-in-a-matrix': ['uphill-path', 'verified'],
+  'burst-balloons': ['balloon-pop', 'verified'],
+  // Count modulo 10^9 + 7, so intermediate counts cannot overflow silently.
+  'coin-change-ii': ['coin-combos', 'verified'],
+  'best-time-to-buy-and-sell-stock-with-cooldown': ['trade-cooldown', 'verified'],
 };
 
 const WINDOWS = [

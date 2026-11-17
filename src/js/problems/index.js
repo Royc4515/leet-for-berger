@@ -94,6 +94,16 @@ import addressLookup from './address-lookup/problem.js';
 import repeatedEmails from './repeated-emails/problem.js';
 import runnerUpSalary from './runner-up-salary/problem.js';
 import tripleRepeat from './triple-repeat/problem.js';
+import treeHeight from './tree-height/problem.js';
+import bestTreePath from './best-tree-path/problem.js';
+import kthInOrder from './kth-in-order/problem.js';
+import treeHeist from './tree-heist/problem.js';
+import treeCodec from './tree-codec/problem.js';
+import editSteps from './edit-steps/problem.js';
+import uphillPath from './uphill-path/problem.js';
+import balloonPop from './balloon-pop/problem.js';
+import coinCombos from './coin-combos/problem.js';
+import tradeCooldown from './trade-cooldown/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -142,7 +152,7 @@ function hydrateSql(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak, islandCount, courseCheck, courseOrder, wordMorph, lockSteps, twoColorCheck, extraLink, accountMerge, limitedPaths, medianStream, kthHighest, cooldownTasks, noAdjacentRepeat, rangeCover, gridWord, keypadWords, subsetBuilder, allOrderings, bestRunSum, jumpReach, overlapTrim, cookieMatch, oneSwapMax, fewestCoins, streetHeist, stairPaths, risingChain, bestRunProduct, goodStringCount, greenProducts, addressLookup, repeatedEmails, runnerUpSalary, tripleRepeat].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak, islandCount, courseCheck, courseOrder, wordMorph, lockSteps, twoColorCheck, extraLink, accountMerge, limitedPaths, medianStream, kthHighest, cooldownTasks, noAdjacentRepeat, rangeCover, gridWord, keypadWords, subsetBuilder, allOrderings, bestRunSum, jumpReach, overlapTrim, cookieMatch, oneSwapMax, fewestCoins, streetHeist, stairPaths, risingChain, bestRunProduct, goodStringCount, greenProducts, addressLookup, repeatedEmails, runnerUpSalary, tripleRepeat, treeHeight, bestTreePath, kthInOrder, treeHeist, treeCodec, editSteps, uphillPath, balloonPop, coinCombos, tradeCooldown].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
@@ -174,7 +184,6 @@ const planned = [
   { id: 'tree-level-sums', title: 'Tree Level Sums', difficulty: 'Easy', topics: ['trees'], milestone: 3 },
   { id: 'lowest-shared-ancestor', title: 'Lowest Shared Ancestor', difficulty: 'Medium', topics: ['trees'], milestone: 3 },
   { id: 'k-closest-points', title: 'K Closest Points (Heap)', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 3 },
-  { id: 'edit-distance-lite', title: 'Edit Distance Lite', difficulty: 'Hard', topics: ['dp'], milestone: 4 },
   { id: 'grid-min-path', title: 'Grid Minimum Path', difficulty: 'Medium', topics: ['dp'], milestone: 4 },
   { id: 'cheapest-route-k-stops', title: 'Cheapest Route Within K Stops', difficulty: 'Hard', topics: ['graphs'], milestone: 4 },
 ];
