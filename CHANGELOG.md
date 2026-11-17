@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+- Learning network taxonomy: 23 topics in 6 tiers with prerequisites, ordered concepts and Easy/Medium/Hard ladder targets (194 problems), plus the practice modes the content must support.
+- `content/README.md`: two-layer content model (index of facts vs. original content), index record format, allowed sources, pipeline.
+- `scripts/taxonomy-graph.mjs` to regenerate the network diagram.
+
 ## [0.1.0] - 2026-11-16
 
 ### Added
