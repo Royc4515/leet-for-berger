@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LANGUAGES, entryName, typeIn, parseType, validateSignature, starterCode } from '../src/js/engine/codegen.js';
+import { LANGUAGES, entryName, methodName, typeIn, parseType, validateSignature, starterCode } from '../src/js/engine/codegen.js';
 
 const sig = { name: 'notifyRecipients', params: [{ name: 'users', type: 'int[][]' }, { name: 'requests', type: 'string[]' }], returns: 'int[]' };
 
@@ -25,7 +25,9 @@ test('types map per language', () => {
 });
 
 test('parseType rejects unknown types and deep arrays', () => {
-  assert.deepEqual(parseType('double[]'), { base: 'double', dims: 1 });
+  assert.deepEqual(parseType('double[]'), { base: 'double', dims: 1, struct: false });
+  assert.deepEqual(parseType('ListNode[]'), { base: 'ListNode', dims: 1, struct: true });
+  assert.throws(() => parseType('TreeNode[]'));
   assert.throws(() => parseType('float'));
   assert.throws(() => parseType('int[][][]'));
 });
@@ -47,4 +49,44 @@ test('C starter uses LeetCode-style sizes and out-params', () => {
 
 test('every language gets starter code naming the entry', () => {
   for (const l of LANGUAGES) assert.ok(starterCode(l.id, sig).includes(entryName(l.id, sig.name)), l.id);
+});
+
+const minStack = {
+  kind: 'class',
+  name: 'MinStack',
+  constructor: { params: [] },
+  methods: [
+    { name: 'push', params: [{ name: 'val', type: 'int' }], returns: 'void' },
+    { name: 'getMin', params: [], returns: 'int' },
+  ],
+};
+
+test('class signatures validate and reject bad shapes', () => {
+  assert.deepEqual(validateSignature(minStack), []);
+  const errors = validateSignature({ kind: 'class', name: 'bad', constructor: { params: [] }, methods: [] });
+  assert.ok(errors.some((e) => e.includes('PascalCase')));
+  assert.ok(errors.some((e) => e.includes('at least one method')));
+});
+
+test('method names follow each language convention', () => {
+  assert.equal(methodName('python', 'MinStack', 'getMin'), 'get_min');
+  assert.equal(methodName('go', 'MinStack', 'getMin'), 'GetMin');
+  assert.equal(methodName('csharp', 'MinStack', 'getMin'), 'GetMin');
+  assert.equal(methodName('c', 'MinStack', 'getMin'), 'minStackGetMin');
+  assert.equal(methodName('java', 'MinStack', 'getMin'), 'getMin');
+});
+
+test('class starters name every method in every language', () => {
+  for (const l of LANGUAGES) {
+    const code = starterCode(l.id, minStack);
+    for (const m of minStack.methods) assert.ok(code.includes(methodName(l.id, 'MinStack', m.name)), `${l.id} ${m.name}`);
+  }
+});
+
+test('struct types map per language and starters document the definition', () => {
+  assert.equal(typeIn('go', 'ListNode'), '*ListNode');
+  assert.equal(typeIn('c', 'TreeNode'), 'struct TreeNode*');
+  assert.equal(typeIn('typescript', 'ListNode[]'), '(ListNode | null)[]');
+  const sig = { name: 'maxDepth', params: [{ name: 'root', type: 'TreeNode' }], returns: 'int' };
+  for (const l of LANGUAGES) assert.ok(starterCode(l.id, sig).includes('TreeNode'), l.id);
 });

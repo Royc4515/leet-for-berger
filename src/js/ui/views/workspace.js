@@ -240,6 +240,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       const raw = await getRunner(language).run({
         code: editor.getValue(),
         entry: problem.signatures[language].entry,
+        adapter: problem.adapters?.[language] ?? null,
         cases: suite.map(({ id, args }) => ({ id, args })),
         timeLimitMs: problem.timeLimitMs,
         onStatus: (s) => !disposed && renderPending(consoleBody, s),

@@ -48,7 +48,9 @@ function execute(lang, problem, cases, { source, compileOnly = false } = {}) {
   let out;
   if (lang === 'java') {
     copyFileSync(JAVA_HARNESS, join(dir, 'Harness.java'));
-    run('javac', ['-d', dir, join(dir, 'Solution.java'), join(dir, 'Harness.java')], { stdio: 'pipe' });
+    // ListNode and TreeNode are always compiled in: the harness refers to them, as do solutions.
+    for (const f of ['ListNode.java', 'TreeNode.java']) copyFileSync(join(ROOT, 'scripts/verify', f), join(dir, f));
+    run('javac', ['-d', dir, ...['Solution.java', 'Harness.java', 'ListNode.java', 'TreeNode.java'].map((f) => join(dir, f))], { stdio: 'pipe' });
     if (compileOnly) return [];
     out = run('java', ['-Xss64m', '-cp', dir, 'Harness', problem.signature.name], { input: JSON.stringify(cases) });
   } else {

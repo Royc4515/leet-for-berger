@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- Linked lists, binary trees and design problems in the problem format: `ListNode`, `ListNode[]` and `TreeNode` signature types (LeetCode JSON forms) and class signatures tested as operation sequences. Starter code, browser runtime (`src/js/engine/adapters.js`) and the 8-language verifier support all of them.
+- Problems: Reverse List (linked list), Level Order (binary tree) and Min Stack (design), each in 8 languages. All three are on the essential path.
+- `src/js/engine/structures.js`: tree and list helpers for problem references and generators.
+
+### Fixed
+- Uncaught "Canceled" errors when leaving a problem: Monaco cancels in-flight work on close, and its scripts loaded without CORS, so the errors were muted and impossible to handle. Monaco now loads with CORS, editors are disposed before their models, and only Monaco's exact cancellation error is ignored.
 - ADR 0002: PostgreSQL on Supabase as the runtime store, git as the content source of truth. `db/schema.sql` (18 tables, row level security: hidden test cases and solutions never reach clients, `reveal_solution()` marks a problem assisted). `scripts/db/export-sql.mjs` syncs git into the database without touching user data. `scripts/db/check-schema.sh` (`npm run check:db`, in CI) verifies all of it against a throwaway PostgreSQL with the real content.
 - Essential path: 131 problems, one per subtopic (the most asked, ladder problems first). Index records carry `essential`; the audit lists the path by topic. The rest of the bank is optional practice.
 - Eight interview languages: Python, JavaScript, TypeScript, Java, C++, C, C#, Go. Problems declare one neutral typed `signature`; `src/js/engine/codegen.js` generates entry names and starter code for every language (C in LeetCode style).

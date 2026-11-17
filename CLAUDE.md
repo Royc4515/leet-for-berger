@@ -24,7 +24,9 @@ src/css/app.css            all styles; design tokens at the top
 src/js/main.js             bootstrap + hash router (every view returns a cleanup fn)
 src/js/engine/             PURE judging logic + execution
   harness.js               buildSuite (15 cases), judge, deepEqual, preview
-  codegen.js               8 languages, neutral signature -> entry names, types, starter code
+  codegen.js               8 languages, neutral signature (function or class) -> names, types, starter code
+  adapters.js              JSON <-> ListNode/TreeNode/class dispatch for JS, TS, Python (browser + verifier)
+  structures.js            tree/list helpers for problem references and generators
   runners/index.js         language -> runner registry
   runners/worker-runner.js generic Web Worker runner, per-case watchdog
   workers/js-worker.js     executes user JS

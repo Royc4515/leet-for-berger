@@ -16,7 +16,7 @@ src/js/problems/<id>/
     solution.go       Go
 ```
 
-Reference implementation: `src/js/problems/notify-recipients/`.
+Reference implementations: `src/js/problems/notify-recipients/` (arrays and strings), `reverse-list/` (linked list), `level-order/` (binary tree), `min-stack/` (design class).
 
 Starter code and per-language entry names are **generated** from the signature (`src/js/engine/codegen.js`); never write them by hand. Solutions are real files so the verifier can compile them and editors can highlight them; the app fetches one when the user clicks "Reveal Solution".
 
@@ -48,6 +48,35 @@ Also export the JS `reference` function so tests can import it.
 
 `int`, `long`, `double`, `bool`, `string`, and arrays of them up to two dimensions (`int[]`, `string[][]`). Names are camelCase; each language gets its own convention (`notify_recipients` in Python, `NotifyRecipients` in C#).
 
+Structures, written in tests as JSON in the LeetCode convention:
+
+| Type | JSON form | Notes |
+|---|---|---|
+| `ListNode`, `ListNode[]` | `[1,2,3]` (head to tail), `[]` for an empty list | singly linked list of int |
+| `TreeNode` | level order with `null` for a missing child, no trailing nulls: `[3,9,20,null,null,15,7]`, `[]` for an empty tree | binary tree of int; use `src/js/engine/structures.js` in references and generators |
+
+Starter code shows each structure's definition as a comment; the runtime provides it (do not redefine it in solutions).
+
+### Design problems (class signatures)
+
+```js
+signature: {
+  kind: 'class',
+  name: 'MinStack',
+  constructor: { params: [] },
+  methods: [
+    { name: 'push', params: [{ name: 'val', type: 'int' }], returns: 'void' },
+    { name: 'getMin', params: [], returns: 'int' },
+  ],
+},
+```
+
+A test is a sequence of calls: `args` is `[operations, argumentLists]` with `operations[0]` the class name, and `expected` lists every call's result (`null` for the constructor and `void` methods). Method names follow each language (Python `get_min`, C# and Go `GetMin`, C `minStackGetMin(MinStack* obj)` with `minStackCreate` / `minStackFree`, Go `Constructor()`).
+
+### How structures and classes run
+
+`src/js/engine/adapters.js` generates source placed before and after the user's code for JavaScript, TypeScript and Python. It provides ListNode and TreeNode, converts JSON to objects and back, and dispatches design operations. The browser workers and the CI verifier run the same adapter. C, C++, Go, C# and Java harnesses in `scripts/verify/` do the same natively.
+
 | Neutral | Python | Java | C++ | C | C# | Go | TS / JS |
 |---|---|---|---|---|---|---|---|
 | `int` | int | int | int | int | int | int | number |
@@ -58,7 +87,7 @@ Also export the JS `reference` function so tests can import it.
 
 C follows LeetCode conventions: array params carry explicit sizes, array returns use `int* returnSize` (and `int** returnColumnSizes` for 2D) and must be `malloc`ed.
 
-Not supported yet: linked lists, trees, graphs as node objects, and class-based design problems. Add them to the codegen and harnesses before authoring problems that need them.
+Not supported yet: graphs as node objects (Clone Graph), lists with random or cycle pointers, and SQL problems. Add them to codegen, adapters and harnesses before authoring problems that need them.
 
 ## Test design checklist
 

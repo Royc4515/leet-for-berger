@@ -123,6 +123,9 @@ const NEETCODE_PATTERNS = {
 const CONTENT_IDS = {
   'repeated-substring-pattern': ['smallest-base-segment', 'verified'],
   'notify-recipients': ['notify-recipients', 'verified'],
+  'reverse-linked-list': ['reverse-list', 'verified'],
+  'binary-tree-level-order-traversal': ['level-order', 'verified'],
+  'min-stack': ['min-stack', 'verified'],
   'two-sum': ['pair-sum-target', null],
   'group-anagrams': ['anagram-buckets', null],
   'valid-palindrome': ['mirror-check', null],

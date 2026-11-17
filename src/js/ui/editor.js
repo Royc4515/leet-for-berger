@@ -13,10 +13,62 @@ const LOAD_TIMEOUT_MS = 12000;
 
 let monacoPromise = null;
 
+/**
+ * Monaco's CancellationError: its constructor sets both message and name to "Canceled".
+ * Matched exactly so no other error is ever swallowed.
+ * @param {unknown} reason
+ */
+export function isMonacoCancellation(reason) {
+  return reason instanceof Error && reason.name === 'Canceled' && reason.message === 'Canceled';
+}
+
+// don't touch / closing an editor cancels some of Monaco's in-flight work by design (for example
+// its link detector), and a few of those promises have no rejection handler, so a close can leak
+// an uncaught "Canceled". It is not a failure, but left alone it trips the zero-console-errors
+// invariant. Only Monaco's exact cancellation error is ignored. This only works because Monaco
+// loads with CORS (see loadMonaco): errors from a no-CORS cross-origin script are "muted" and
+// never reach the page's handlers.
+let cancellationGuardInstalled = false;
+function installCancellationGuard() {
+  if (cancellationGuardInstalled) return;
+  cancellationGuardInstalled = true;
+  window.addEventListener('unhandledrejection', (e) => {
+    if (isMonacoCancellation(e.reason)) e.preventDefault();
+  });
+  window.addEventListener('error', (e) => {
+    if (isMonacoCancellation(e.error)) e.preventDefault();
+  });
+}
+
+/**
+ * Runs `load` while every <script> the page creates is requested with CORS. Monaco's AMD loader
+ * creates its own script tags and has no option for this, so creation is wrapped for exactly the
+ * duration of the load and restored afterwards.
+ * @param {(done: () => void) => void} load calls done() when loading has finished either way
+ */
+function withCorsScripts(load) {
+  const native = document.createElement;
+  // don't touch / without crossOrigin the CDN scripts are no-CORS, their errors are muted and the
+  // cancellation guard above cannot see them. jsDelivr answers with Access-Control-Allow-Origin: *.
+  document.createElement = function createElement(tag, options) {
+    const el = native.call(this, tag, options);
+    if (String(tag).toLowerCase() === 'script') el.crossOrigin = 'anonymous';
+    return el;
+  };
+  load(() => {
+    document.createElement = native;
+  });
+}
+
 /** @returns {Promise<any|null>} the monaco namespace, or null when unavailable */
 export function loadMonaco() {
   if (monacoPromise) return monacoPromise;
-  monacoPromise = new Promise((resolve) => {
+  installCancellationGuard();
+  monacoPromise = new Promise((outerResolve) => withCorsScripts((loaded) => {
+    const resolve = (value) => {
+      loaded();
+      outerResolve(value);
+    };
     const timer = setTimeout(() => resolve(null), LOAD_TIMEOUT_MS);
 
     // don't touch / Monaco's language workers are cross-origin (CDN). Browsers refuse
@@ -50,7 +102,7 @@ export function loadMonaco() {
       resolve(null);
     };
     document.head.append(script);
-  });
+  }));
   return monacoPromise;
 }
 
@@ -121,8 +173,12 @@ export async function createEditor(host, { value, language }) {
     focus: () => editor.focus(),
     dispose: () => {
       ro.disconnect();
-      editor.getModel()?.dispose();
+      // don't touch / editor first, then its model. Disposing the model while the editor is still
+      // attached fires model events into live contributions, which cancel in-flight requests and
+      // surface as uncaught "Canceled" errors (fails the zero-console-errors invariant).
+      const model = editor.getModel();
       editor.dispose();
+      model?.dispose();
     },
   };
 }

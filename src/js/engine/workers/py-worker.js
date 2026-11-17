@@ -39,7 +39,7 @@ pyodideReady = boot().then(
 );
 
 self.onmessage = async (event) => {
-  const { type, code, entry, cases } = event.data || {};
+  const { type, code, entry, cases, adapter } = event.data || {};
   if (type !== 'run') return;
 
   let py;
@@ -52,10 +52,14 @@ self.onmessage = async (event) => {
   let fn;
   try {
     // Fresh namespace per run so a function deleted from the editor does not linger.
+    // An adapter runs as separate exec calls around the user's code so the user's traceback
+    // line numbers stay their own.
     py.globals.set('__lfb_code', code);
-    py.runPython('__lfb_ns = {}\nexec(__lfb_code, __lfb_ns)');
+    py.globals.set('__lfb_before', adapter ? adapter.before : '');
+    py.globals.set('__lfb_after', adapter ? adapter.after : '');
+    py.runPython('__lfb_ns = {}\nexec(__lfb_before, __lfb_ns)\nexec(__lfb_code, __lfb_ns)\nexec(__lfb_after, __lfb_ns)');
     const ns = py.globals.get('__lfb_ns');
-    fn = ns.get(entry);
+    fn = ns.get(adapter ? adapter.entry : entry);
     ns.destroy();
   } catch (err) {
     self.postMessage({ type: 'fatal', error: `Compile error:\n${cleanTrace(err)}` });
