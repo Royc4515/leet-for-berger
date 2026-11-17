@@ -29,6 +29,7 @@
 - `src/js/engine/structures.js`: tree and list helpers for problem references and generators.
 
 ### Fixed
+- Database sync ran out of memory at 133 problems: `scripts/db/export-sql.mjs` built the whole script (about 370 MB, mostly test data) as one string. It now streams batched inserts and waits on a full pipe.
 - Python names for signatures with acronyms: `lengthOfLIS` became `length_of_l_i_s`; an acronym is now one word (`length_of_lis`). No existing problem changes.
 - Java verifier reused one `Solution` object for all 15 cases, so state left in instance fields leaked between cases (found with an imported Subsets solution). It now creates one per case, like LeetCode and the C++ and C# harnesses.
 - Uncaught "Canceled" errors when leaving a problem: Monaco cancels in-flight work on close, and its scripts loaded without CORS, so the errors were muted and impossible to handle. Monaco now loads with CORS, editors are disposed before their models, and only Monaco's exact cancellation error is ignored.
