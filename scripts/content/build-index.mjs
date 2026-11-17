@@ -200,7 +200,7 @@ const CONTENT_IDS = {
   'climbing-stairs': ['stair-paths', 'verified'],
   'edit-distance': ['edit-steps', 'verified'],
   'minimum-path-sum': ['grid-min-path', null],
-  'cheapest-flights-within-k-stops': ['cheapest-route-k-stops', null],
+  'cheapest-flights-within-k-stops': ['cheapest-route-k-stops', 'verified'],
   'course-schedule': ['course-check', 'verified'],
   'course-schedule-ii': ['course-order', 'verified'],
   'word-ladder': ['word-morph', 'verified'],
@@ -243,6 +243,14 @@ const CONTENT_IDS = {
   'copy-list-with-random-pointer': ['random-link-copy', 'verified'],
   'flatten-nested-list-iterator': ['nested-flatten', 'verified'],
   'insert-delete-getrandom-o1': ['random-pool', 'verified'],
+  'reconstruct-itinerary': ['ticket-itinerary', 'verified'],
+  'network-delay-time': ['signal-spread', 'verified'],
+  'min-cost-to-connect-all-points': ['point-wiring', 'verified'],
+  'parallel-courses-iii': ['course-finish-time', 'verified'],
+  'minimum-obstacle-removal-to-reach-corner': ['obstacle-clearing', 'verified'],
+  'reverse-pairs': ['double-inversions', 'verified'],
+  'the-skyline-problem': ['skyline-outline', 'verified'],
+  'shortest-path-visiting-all-nodes': ['visit-all-nodes', 'verified'],
 };
 
 const WINDOWS = [

@@ -119,6 +119,15 @@ import listLoop from './list-loop/problem.js';
 import randomLinkCopy from './random-link-copy/problem.js';
 import nestedFlatten from './nested-flatten/problem.js';
 import randomPool from './random-pool/problem.js';
+import cheapestRouteKStops from './cheapest-route-k-stops/problem.js';
+import ticketItinerary from './ticket-itinerary/problem.js';
+import signalSpread from './signal-spread/problem.js';
+import pointWiring from './point-wiring/problem.js';
+import courseFinishTime from './course-finish-time/problem.js';
+import obstacleClearing from './obstacle-clearing/problem.js';
+import doubleInversions from './double-inversions/problem.js';
+import skylineOutline from './skyline-outline/problem.js';
+import visitAllNodes from './visit-all-nodes/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -167,7 +176,7 @@ function hydrateSql(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak, islandCount, courseCheck, courseOrder, wordMorph, lockSteps, twoColorCheck, extraLink, accountMerge, limitedPaths, medianStream, kthHighest, cooldownTasks, noAdjacentRepeat, rangeCover, gridWord, keypadWords, subsetBuilder, allOrderings, bestRunSum, jumpReach, overlapTrim, cookieMatch, oneSwapMax, fewestCoins, streetHeist, stairPaths, risingChain, bestRunProduct, goodStringCount, greenProducts, addressLookup, repeatedEmails, runnerUpSalary, tripleRepeat, treeHeight, bestTreePath, kthInOrder, treeHeist, treeCodec, editSteps, uphillPath, balloonPop, coinCombos, tradeCooldown, sharedPrefix, digitListSum, shiftList, mergeManyLists, recentCache, frequentCache, versionedStore, bucketMap, hitWindow, prefixTree, boardWords].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak, islandCount, courseCheck, courseOrder, wordMorph, lockSteps, twoColorCheck, extraLink, accountMerge, limitedPaths, medianStream, kthHighest, cooldownTasks, noAdjacentRepeat, rangeCover, gridWord, keypadWords, subsetBuilder, allOrderings, bestRunSum, jumpReach, overlapTrim, cookieMatch, oneSwapMax, fewestCoins, streetHeist, stairPaths, risingChain, bestRunProduct, goodStringCount, greenProducts, addressLookup, repeatedEmails, runnerUpSalary, tripleRepeat, treeHeight, bestTreePath, kthInOrder, treeHeist, treeCodec, editSteps, uphillPath, balloonPop, coinCombos, tradeCooldown, sharedPrefix, digitListSum, shiftList, mergeManyLists, recentCache, frequentCache, versionedStore, bucketMap, hitWindow, prefixTree, boardWords, cheapestRouteKStops, ticketItinerary, signalSpread, pointWiring, courseFinishTime, obstacleClearing, doubleInversions, skylineOutline, visitAllNodes].map(hydrate);
 // Problems on the input types added later (ListNode@cycle, RandomListNode, NestedInteger[]) and the
 // randomized-set judge mode. A separate line keeps parallel content waves from colliding above.
 implemented.push(...[listLoop, randomLinkCopy, nestedFlatten, randomPool].map(hydrate));
@@ -203,7 +212,6 @@ const planned = [
   { id: 'lowest-shared-ancestor', title: 'Lowest Shared Ancestor', difficulty: 'Medium', topics: ['trees'], milestone: 3 },
   { id: 'k-closest-points', title: 'K Closest Points (Heap)', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 3 },
   { id: 'grid-min-path', title: 'Grid Minimum Path', difficulty: 'Medium', topics: ['dp'], milestone: 4 },
-  { id: 'cheapest-route-k-stops', title: 'Cheapest Route Within K Stops', difficulty: 'Hard', topics: ['graphs'], milestone: 4 },
 ];
 
 const byId = new Map(implemented.map((p) => [p.id, p]));
