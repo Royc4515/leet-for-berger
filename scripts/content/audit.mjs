@@ -32,8 +32,8 @@ w();
 w('| Set | What it is | Easy / Medium / Hard | Total |');
 w('|---|---|---|---|');
 w(`| Ladders | Learning path, one ladder per topic, every concept covered | ${mix(ladder)} | ${ladder.length} |`);
-w(`| Wave 1 | Learning core: ladders + Blind 75 + NeetCode 150 + easy classics | ${mix(wave1)} | ${wave1.length} |`);
-w(`| Wave 2 | Company coverage: asked by ${selection.wave2.minCompanies}+ companies, top ${selection.wave2.topPerCompany} at a top-${selection.wave2.topCompanies} company, or the family version a top company asks | ${mix(wave2)} | ${wave2.length} |`);
+w(`| Wave 1 | Learning core: ladders + Blind 75 + NeetCode 150 + Top Interview 150 + easy classics | ${mix(wave1)} | ${wave1.length} |`);
+w(`| Wave 2 | Company coverage: asked by ${selection.wave2.minCompanies}+ companies, top ${selection.wave2.topPerCompany} at a top-${selection.wave2.topCompanies} company, the family version a top company asks, top 30 of each Israeli company, Codility lessons | ${mix(wave2)} | ${wave2.length} |`);
 w(`| **Core bank** | Everything we author (wave 1 + wave 2) | ${mix(core)} | **${core.length}** |`);
 w(`| Index | Everything known, available for later waves | ${mix(problems)} | ${problems.length} |`);
 w();
@@ -56,9 +56,10 @@ for (const t of TOPICS) {
     if (got !== target[b]) gaps.push(`${t.title}: ${b} ladder has ${got}, target ${target[b]}`);
     return `${got}/${target[b]}`;
   });
-  const covered = new Set(mine.map((p) => p.concept));
+  // A subtopic must be practiced somewhere in the bank; the ladder teaches the core ones.
+  const covered = new Set(mineCore.map((p) => p.concept));
   const missing = t.concepts.filter((c) => !covered.has(c));
-  for (const c of missing) gaps.push(`${t.title}: concept \`${c}\` has no ladder problem`);
+  for (const c of missing) gaps.push(`${t.title}: subtopic \`${c}\` has no core problem`);
   const easyCore = count(mineCore, 'Easy');
   // Tier 4+ topics are entered through their prerequisites' easy problems, not their own.
   if (t.tier < 4 && easyCore < MIN_EASY_ENTRY) gaps.push(`${t.title}: only ${easyCore} Easy problem(s) in the core bank, below the ${MIN_EASY_ENTRY} needed for a gradual start`);
@@ -67,9 +68,24 @@ for (const t of TOPICS) {
 }
 w();
 
+w('## Subtopics');
+w();
+w('Core problems per subtopic (Easy / Medium / Hard). Every core problem carries a topic and a subtopic; `secondary` lists other topics it touches.');
+w();
+for (const t of TOPICS) {
+  const cells = t.concepts.map((c) => {
+    const ps = core.filter((p) => p.topic === t.id && p.concept === c);
+    return `${c} ${mix(ps)}`;
+  });
+  w(`- **${t.title}**: ${cells.join(' · ')}`);
+}
+w();
+w(`${core.filter((p) => p.secondary.length).length} of ${core.length} core problems also carry secondary topic tags.`);
+w();
+
 w('## Curated lists');
 w();
-for (const list of ['blind75', 'neetcode150', 'neetcode-all']) {
+for (const list of ['blind75', 'neetcode150', 'top-interview-150', 'neetcode-all', 'codility-lessons']) {
   const inList = problems.filter((p) => p.lists.includes(list));
   const inCore = inList.filter((p) => p.wave !== null);
   const onLadder = inList.filter((p) => p.ladderStep !== null);
@@ -134,6 +150,38 @@ for (const id of showcase) {
   if (!f) continue;
   w(`| ${f.title} | ${five.map((c) => bySlug.get(pickVersion(f, c, lookup)).title).join(' | ')} |`);
 }
+w();
+
+const groups = JSON.parse(await readFile(ROOT + 'content/companies.json', 'utf8'));
+const { reports } = JSON.parse(await readFile(ROOT + 'content/reports.json', 'utf8'));
+w('## Israeli companies');
+w();
+w('Tag data where it exists, candidate reports (anecdotal, sourced in `content/reports.json`) where it does not.');
+w();
+w('| Company | Problems known | In core | Source |');
+w('|---|---|---|---|');
+for (const name of groups.israeli) {
+  const known = problems.filter((p) => p.companies.some((c) => c.name === name));
+  const reported = known.filter((p) => p.companies.find((c) => c.name === name).recency === 'reported').length;
+  const inCore = known.filter((p) => p.wave !== null).length;
+  const src = known.length === 0 ? 'none' : reported === known.length ? 'reports' : reported ? 'tags + reports' : 'tags';
+  if (known.length === 0) gaps.push(`${name}: no problem data (tags or reports)`);
+  w(`| ${name} | ${known.length} | ${inCore} | ${src} |`);
+}
+w();
+const openReports = reports.filter((r) => !r.slug);
+w(`Reported tasks with no LeetCode equivalent (${openReports.length}), candidates for original problems:`);
+w();
+for (const r of openReports) w(`- **${r.company}**: ${r.note}`);
+w();
+w(`Israeli R&D hubs of global companies (${groups.israelHubs.join(', ')}) use the same tag data as their global teams.`);
+w();
+
+w('## Other sites');
+w();
+const codility = problems.filter((p) => p.platform === 'codility');
+w(`- **Codility** (OA platform, used by Check Point among others): ${codility.length} public lesson tasks, ${codility.filter((p) => p.wave !== null).length} in the core bank, ${codility.filter((p) => p.family).length} linked into a family through their LeetCode equivalent.`);
+w('- **CodeSignal, HackerRank**: no public per-company question data found. Their OA formats (CodeSignal GCA: 4 tasks in 70 minutes; HackerRank: 2-3 tasks in 90-120 minutes) are inputs for Mock OA, not problem sources.');
 w();
 
 w('## Highest-priority problems outside the core bank');

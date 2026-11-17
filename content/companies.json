@@ -1,0 +1,5 @@
+{
+ "_doc": "Company groups. `israeli`: companies founded or headquartered in Israel. `israelHubs`: global companies with major Israeli R&D centers (their LeetCode tags are global, not Israel-specific). Names must match the company names in the index.",
+ "israeli": ["Wix", "Fiverr", "Mobileye", "Amdocs", "Navan", "Check Point", "CyberArk", "Wiz", "monday.com"],
+ "israelHubs": ["Google", "Microsoft", "Amazon", "Meta", "Apple", "Intel", "Nvidia", "PayPal", "eBay", "Salesforce", "KLA"]
+}

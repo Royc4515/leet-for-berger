@@ -2,12 +2,25 @@
  "_doc": "Which indexed problems make the core bank (status 'selected'). build-index.mjs reads this; change a threshold and rebuild. Wave 1 = learning core, wave 2 = company coverage.",
  "wave1": {
   "ladders": true,
-  "classicLists": ["blind75", "neetcode150"],
-  "easyClassics": { "lists": ["neetcode-all"], "minCompanies": 8 }
+  "classicLists": [
+   "blind75",
+   "neetcode150",
+   "top-interview-150"
+  ],
+  "easyClassics": {
+   "lists": [
+    "neetcode-all"
+   ],
+   "minCompanies": 8
+  }
  },
  "wave2": {
   "minCompanies": 15,
   "topCompanies": 20,
-  "topPerCompany": 30
+  "topPerCompany": 30,
+  "israeliTopPerCompany": 30,
+  "platformLists": [
+   "codility-lessons"
+  ]
  }
 }

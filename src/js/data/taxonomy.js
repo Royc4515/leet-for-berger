@@ -42,7 +42,7 @@ export const TOPICS = [
     title: 'Arrays & Hashing',
     tier: 0,
     prereqs: [],
-    concepts: ['frequency-count', 'hash-set-membership', 'complement-lookup', 'group-by-key', 'encode-decode'],
+    concepts: ['frequency-count', 'hash-set-membership', 'complement-lookup', 'group-by-key', 'two-way-mapping', 'in-place-indexing', 'string-processing', 'array-simulation', 'encode-decode'],
     ladder: { easy: 4, medium: 5, hard: 2 },
   },
   {
@@ -50,7 +50,7 @@ export const TOPICS = [
     title: 'Math Basics',
     tier: 0,
     prereqs: [],
-    concepts: ['digit-manipulation', 'modular-arithmetic', 'gcd-lcm', 'prime-sieve', 'fast-power', 'combinatorics', 'geometry', 'game-theory'],
+    concepts: ['digit-manipulation', 'number-conversion', 'big-number-arithmetic', 'closed-form', 'modular-arithmetic', 'gcd-lcm', 'prime-sieve', 'fast-power', 'combinatorics', 'geometry', 'game-theory'],
     ladder: { easy: 3, medium: 4, hard: 3 },
   },
   {
@@ -135,7 +135,7 @@ export const TOPICS = [
     title: 'Binary Search',
     tier: 2,
     prereqs: ['two-pointers'],
-    concepts: ['classic-search', 'lower-upper-bound', 'rotated-array', 'search-on-answer', 'search-2d'],
+    concepts: ['classic-search', 'lower-upper-bound', 'peak-finding', 'rotated-array', 'search-on-answer', 'search-2d'],
     ladder: { easy: 2, medium: 5, hard: 3 },
   },
   {
@@ -143,7 +143,7 @@ export const TOPICS = [
     title: 'Linked List',
     tier: 2,
     prereqs: ['two-pointers'],
-    concepts: ['dummy-node-traversal', 'reversal', 'fast-slow-cycle', 'merge-lists', 'cache-design'],
+    concepts: ['dummy-node-traversal', 'reversal', 'fast-slow-cycle', 'merge-lists', 'list-restructuring', 'deep-copy', 'cache-design'],
     ladder: { easy: 3, medium: 4, hard: 2 },
   },
   {
@@ -151,7 +151,7 @@ export const TOPICS = [
     title: 'Greedy',
     tier: 2,
     prereqs: ['sorting-intervals'],
-    concepts: ['local-choice', 'exchange-argument', 'interval-scheduling', 'reach-extension'],
+    concepts: ['local-choice', 'greedy-construction', 'exchange-argument', 'interval-scheduling', 'reach-extension'],
     ladder: { easy: 2, medium: 5, hard: 3 },
   },
 
@@ -161,7 +161,7 @@ export const TOPICS = [
     title: 'Trees',
     tier: 3,
     prereqs: ['recursion', 'linked-list'],
-    concepts: ['dfs-traversal', 'bfs-level-order', 'bst-properties', 'path-problems', 'construct-serialize'],
+    concepts: ['dfs-traversal', 'bfs-level-order', 'bst-properties', 'path-problems', 'tree-dp', 'construct-serialize'],
     ladder: { easy: 3, medium: 6, hard: 3 },
   },
   {
@@ -170,14 +170,14 @@ export const TOPICS = [
     tier: 3,
     prereqs: ['recursion'],
     concepts: ['subsets', 'permutations', 'combinations-with-pruning', 'constraint-search'],
-    ladder: { easy: 1, medium: 5, hard: 3 },
+    ladder: { easy: 2, medium: 5, hard: 3 },
   },
   {
     id: 'dp-1d',
     title: '1D Dynamic Programming',
     tier: 3,
     prereqs: ['recursion'],
-    concepts: ['linear-recurrence', 'take-or-skip', 'longest-increasing', 'knapsack-1d'],
+    concepts: ['linear-recurrence', 'take-or-skip', 'subarray-dp', 'longest-increasing', 'knapsack-1d', 'counting-dp'],
     ladder: { easy: 2, medium: 6, hard: 2 },
   },
   {
@@ -185,7 +185,7 @@ export const TOPICS = [
     title: 'Data Structure Design',
     tier: 3,
     prereqs: ['linked-list', 'stack'],
-    concepts: ['iterator-design', 'data-stream', 'randomized-set', 'time-keyed-store', 'composite-design'],
+    concepts: ['hash-structure-design', 'iterator-design', 'data-stream', 'randomized-set', 'time-keyed-store', 'composite-design'],
     ladder: { easy: 1, medium: 5, hard: 3 },
   },
   {
@@ -203,7 +203,7 @@ export const TOPICS = [
     title: 'Heap / Priority Queue',
     tier: 4,
     prereqs: ['trees'],
-    concepts: ['top-k', 'k-way-merge', 'two-heaps', 'scheduling'],
+    concepts: ['top-k', 'k-way-merge', 'greedy-with-heap', 'two-heaps', 'scheduling'],
     ladder: { easy: 1, medium: 4, hard: 3 },
   },
   {
@@ -219,7 +219,7 @@ export const TOPICS = [
     title: 'Graphs',
     tier: 4,
     prereqs: ['trees'],
-    concepts: ['grid-traversal', 'adjacency-traversal', 'cycle-detection', 'topological-sort', 'bipartite'],
+    concepts: ['grid-traversal', 'adjacency-traversal', 'implicit-graph-bfs', 'cycle-detection', 'topological-sort', 'bipartite'],
     ladder: { easy: 1, medium: 6, hard: 3 },
   },
   {
@@ -245,7 +245,7 @@ export const TOPICS = [
     title: 'Advanced Graphs',
     tier: 5,
     prereqs: ['graphs', 'heap'],
-    concepts: ['dijkstra', 'bounded-hops-shortest-path', 'minimum-spanning-tree', 'dag-dp', 'zero-one-bfs'],
+    concepts: ['dijkstra', 'bounded-hops-shortest-path', 'minimum-spanning-tree', 'dag-dp', 'zero-one-bfs', 'eulerian-path'],
     ladder: { easy: 0, medium: 4, hard: 4 },
   },
   {
@@ -349,6 +349,13 @@ export function validateIndexRecord(rec, topics) {
     if (rec.status === 'indexed') errors.push(`${where}: ladder problem must be selected`);
   }
   if (rec.status !== 'indexed' && ![1, 2].includes(rec.wave)) errors.push(`${where}: ${rec.status} problem needs wave 1 or 2`);
+  // Every problem we author is tagged with a topic and a subtopic, so drills can select by either.
+  if (rec.status !== 'indexed' && rec.concept === null) errors.push(`${where}: core problem needs a subtopic (concept)`);
+  for (const sec of rec.secondary ?? []) {
+    const t = topics.find((x) => x.id === sec.topic);
+    if (!t) errors.push(`${where}: unknown secondary topic ${sec.topic}`);
+    else if (sec.concept !== null && !t.concepts.includes(sec.concept)) errors.push(`${where}: secondary concept ${sec.concept} not in ${sec.topic}`);
+  }
   if (rec.status === 'indexed' && rec.wave !== null) errors.push(`${where}: indexed problem cannot have a wave`);
   return errors;
 }

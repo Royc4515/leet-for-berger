@@ -19,7 +19,8 @@
     {"slug": "best-time-to-buy-and-sell-stock-iii", "twist": "at most two transactions"},
     {"slug": "best-time-to-buy-and-sell-stock-iv", "twist": "at most k transactions"},
     {"slug": "best-time-to-buy-and-sell-stock-with-cooldown", "twist": "one-day cooldown after selling"},
-    {"slug": "best-time-to-buy-and-sell-stock-with-transaction-fee", "twist": "fee per transaction"}
+    {"slug": "best-time-to-buy-and-sell-stock-with-transaction-fee", "twist": "fee per transaction"},
+    {"slug": "codility-max-profit", "twist": "Codility lesson version"}
   ]},
   {"id": "house-robber", "title": "No two adjacent picks", "members": [
     {"slug": "house-robber", "twist": "houses in a line"},
@@ -35,7 +36,8 @@
     {"slug": "valid-parentheses", "twist": "three bracket types, valid or not"},
     {"slug": "minimum-remove-to-make-valid-parentheses", "twist": "remove fewest to make valid, return string"},
     {"slug": "minimum-add-to-make-parentheses-valid", "twist": "count insertions to make valid"},
-    {"slug": "valid-parenthesis-string", "twist": "'*' can be anything"}
+    {"slug": "valid-parenthesis-string", "twist": "'*' can be anything"},
+    {"slug": "codility-brackets", "twist": "Codility lesson version"}
   ]},
   {"id": "calculator", "title": "Expression calculator", "members": [
     {"slug": "basic-calculator", "twist": "+, - and parentheses"},
@@ -260,11 +262,13 @@
   {"id": "single-number", "title": "Find the unique number", "members": [
     {"slug": "single-number", "twist": "others appear twice"},
     {"slug": "single-number-ii", "twist": "others appear three times"},
-    {"slug": "single-number-iii", "twist": "two unique numbers"}
+    {"slug": "single-number-iii", "twist": "two unique numbers"},
+    {"slug": "codility-odd-occurrences-in-array", "twist": "Codility lesson version"}
   ]},
   {"id": "majority-element", "title": "Majority element", "members": [
     {"slug": "majority-element", "twist": "more than n/2"},
-    {"slug": "majority-element-ii", "twist": "more than n/3"}
+    {"slug": "majority-element-ii", "twist": "more than n/3"},
+    {"slug": "codility-dominator", "twist": "Codility lesson version"}
   ]},
   {"id": "contains-duplicate", "title": "Duplicate detection", "members": [
     {"slug": "contains-duplicate", "twist": "any duplicate"},
@@ -380,6 +384,58 @@
   {"id": "middle-of-list", "title": "Middle of a linked list", "members": [
     {"slug": "middle-of-the-linked-list", "twist": "return the middle"},
     {"slug": "delete-the-middle-node-of-a-linked-list", "twist": "delete the middle"}
+  ]},
+  {"id": "binary-gap", "title": "Binary Gap", "members": [
+    {"slug": "codility-binary-gap", "twist": "Codility lesson version"},
+    {"slug": "binary-gap", "twist": "LeetCode version"}
+  ]},
+  {"id": "rotate-array", "title": "Rotate Array", "members": [
+    {"slug": "rotate-array", "twist": "LeetCode version"},
+    {"slug": "codility-cyclic-rotation", "twist": "Codility lesson version"}
+  ]},
+  {"id": "missing-number", "title": "Missing Number", "members": [
+    {"slug": "missing-number", "twist": "LeetCode version"},
+    {"slug": "codility-perm-missing-elem", "twist": "Codility lesson version"}
+  ]},
+  {"id": "first-missing-positive", "title": "First Missing Positive", "members": [
+    {"slug": "first-missing-positive", "twist": "LeetCode version"},
+    {"slug": "codility-missing-integer", "twist": "Codility lesson version"}
+  ]},
+  {"id": "maximum-product-of-three-numbers", "title": "Maximum Product of Three Numbers", "members": [
+    {"slug": "maximum-product-of-three-numbers", "twist": "LeetCode version"},
+    {"slug": "codility-max-product-of-three", "twist": "Codility lesson version"}
+  ]},
+  {"id": "asteroid-collision", "title": "Asteroid Collision", "members": [
+    {"slug": "asteroid-collision", "twist": "LeetCode version"},
+    {"slug": "codility-fish", "twist": "Codility lesson version"}
+  ]},
+  {"id": "maximum-subarray", "title": "Maximum Subarray", "members": [
+    {"slug": "maximum-subarray", "twist": "LeetCode version"},
+    {"slug": "codility-max-slice-sum", "twist": "Codility lesson version"}
+  ]},
+  {"id": "climbing-stairs", "title": "Climbing Stairs", "members": [
+    {"slug": "climbing-stairs", "twist": "LeetCode version"},
+    {"slug": "codility-ladder", "twist": "Codility lesson version"}
+  ]},
+  {"id": "split-array-largest-sum", "title": "Split Array Largest Sum", "members": [
+    {"slug": "split-array-largest-sum", "twist": "LeetCode version"},
+    {"slug": "codility-min-max-division", "twist": "Codility lesson version"}
+  ]},
+  {"id": "valid-triangle-number", "title": "Valid Triangle Number", "members": [
+    {"slug": "codility-count-triangles", "twist": "Codility lesson version"},
+    {"slug": "valid-triangle-number", "twist": "LeetCode version"}
+  ]},
+  {"id": "non-overlapping-intervals", "title": "Non-overlapping Intervals", "members": [
+    {"slug": "non-overlapping-intervals", "twist": "LeetCode version"},
+    {"slug": "codility-max-nonoverlapping-segments", "twist": "Codility lesson version"}
+  ]},
+  {"id": "last-stone-weight-ii", "title": "Last Stone Weight II", "members": [
+    {"slug": "codility-min-abs-sum", "twist": "Codility lesson version"},
+    {"slug": "last-stone-weight-ii", "twist": "LeetCode version"}
+  ]},
+  {"id": "jump-game-vi", "title": "Jump Game VI", "members": [
+    {"slug": "codility-number-solitaire", "twist": "Codility lesson version"},
+    {"slug": "jump-game-vi", "twist": "LeetCode version"}
   ]}
  ]
 }

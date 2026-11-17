@@ -19,4 +19,14 @@ curl -sSfL -o "$CACHE/ratings.txt" https://raw.githubusercontent.com/zerotrac/le
 # NeetCode problem list with pattern and Blind 75 / NeetCode 150 membership.
 curl -sSfL -o "$CACHE/neetcode.json" https://raw.githubusercontent.com/neetcode-gh/leetcode/main/.problemSiteData.json
 
+# Second company dataset: more companies (incl. Israeli ones), LeetCode problem numbers.
+if [ -d "$CACHE/companies2/.git" ]; then
+  git -C "$CACHE/companies2" pull -q --ff-only
+else
+  git clone -q --depth 1 https://github.com/snehasishroy/leetcode-companywise-interview-questions.git "$CACHE/companies2"
+fi
+
+# Public solutions index whose README lists LeetCode's Top Interview 150 study plan.
+curl -sSfL -o "$CACHE/lij.md" https://raw.githubusercontent.com/javadev/LeetCode-in-Java/main/README.md
+
 echo "sources in $CACHE"

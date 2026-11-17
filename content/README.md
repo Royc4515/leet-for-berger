@@ -2,15 +2,16 @@
 
 ## Scope
 
-The bank must cover every classic topic and every commonly asked company problem, with an easy on-ramp, in all common interview languages (Python, Java, C++, JavaScript; C# and Go as extras).
+The bank must cover every classic topic and every commonly asked company problem (including Israeli companies), with an easy on-ramp, in all common interview languages (Python, Java, C++, JavaScript; C# and Go as extras).
 
 | Set | Rule | Size |
 |---|---|---|
-| Ladders | One per topic, every concept covered, easy -> hard | 225 |
-| **Wave 1**, learning core | Ladders + Blind 75 + NeetCode 150 + easy classics (NeetCode Easy, or Easy asked by 8+ companies) | 356 |
-| **Wave 2**, company coverage | Asked by 15+ companies, or top 30 at one of the 20 companies with the most tagged problems | +196 |
-| Company versions | The family version a top company asks most (see Families) | +27 |
-| **Core bank** | Everything we author | **579** |
+| Ladders | One per topic, every core subtopic taught, easy -> hard | 226 |
+| **Wave 1**, learning core | Ladders + Blind 75 + NeetCode 150 + Top Interview 150 + easy classics (NeetCode Easy, or Easy asked by 8+ companies) | 419 |
+| **Wave 2**, company coverage | Asked by 15+ companies; top 30 at one of the 20 companies with the most tags; the family version a top company asks; top 30 of each Israeli company; Codility lessons | +291 |
+| **Core bank** | Everything we author | **710** |
+
+Every core problem is tagged with a **topic** (e.g. Trees), a **subtopic** (`concept`, e.g. BFS level order) and, where relevant, **secondary** topics it also touches (Two Sum IV is a tree problem that also uses two pointers). Subtopics come from the ladders, then `content/subtopics.json` (hand-assigned), then tag rules.
 
 Thresholds live in `content/selection.json`. Current numbers and coverage: `content/AUDIT.md`.
 
@@ -59,10 +60,12 @@ One record per problem, one record per line, sorted by `priority`:
 
 | Field | Meaning |
 |---|---|
-| `topic`, `concept` | Place in the network. NeetCode's pattern wins when present, otherwise the most specific LeetCode tag (rules in `build-index.mjs`). `concept` is null until a problem is selected for a ladder |
+| `topic`, `concept` | Topic and subtopic. Ladder, then `subtopics.json`, then NeetCode's pattern, then the most specific LeetCode tag. Required for every core problem |
+| `secondary` | Other `{topic, concept}` the problem touches, from its tags |
+| `platform`, `equivalent` | `leetcode` or another site (`codility`); for other sites, the LeetCode problem with the same task |
 | `rating` | 1-10 inside the band of `difficulty` (Easy 1-3, Medium 4-7, Hard 8-10). Positioned by `contestRating` when the problem appeared in a contest, otherwise the band middle |
 | `estMinutes` | Time budget for Mock OA and Interview |
-| `companies` | Per company: `frequency` (0-100, all time) and `recency`, the newest window it was asked in (`30d`, `3m`, `6m`, `older`) |
+| `companies` | Per company: `frequency` (0-100, all time) and `recency`, the newest window it was asked in (`30d`, `3m`, `6m`, `older`), or `reported` (from a candidate report, nominal frequency 50, with `source`) |
 | `priority` | 0-1: 50% how many companies ask it, 30% curated list membership, 20% share of companies asking it recently |
 | `ladderStep` | Position on its topic's ladder (0 = first), null when not selected |
 | `wave`, `core` | Core bank membership: `wave` 1 or 2 (null = index only), `core` lists why (`ladder`, `classic`, `easy-classic`, `company-common`, `company-version`) |
@@ -73,18 +76,22 @@ Content we write keeps the problem (same task, same constraints, same diversity)
 
 ## Sources
 
-| Source | Take | Allowed |
+| Source | What it gives | Where |
 |---|---|---|
-| LeetCode | Link, number, title, difficulty (via the datasets) | No direct scraping needed |
-| Blind 75 / NeetCode 150 / Grind 75 | Membership | Yes, lists of names |
-| Community company-tag datasets on GitHub | Company, frequency, recency | Yes, used in the index and Company Set mode |
-| Contest rating datasets | Numeric difficulty to seed `rating` | Yes, as a number |
-| Exercism problem-specifications (MIT) | Statements and canonical tests | Yes, with attribution |
-| Interview reports (Israeli companies, etc.) | Topic and difficulty signal | Manual, our own summary |
+| liquidslr/leetcode-company-wise-problems | Company tags with frequency and recency, 470 companies | `content/.cache/companies` |
+| snehasishroy/leetcode-companywise-interview-questions | Second tag snapshot, 661 companies (adds Wix, Amdocs, Navan, Mobileye...), problem numbers | `content/.cache/companies2` |
+| NeetCode site data | Blind 75, NeetCode 150, NeetCode All, hand-assigned patterns | `content/.cache/neetcode.json` |
+| zerotrac/leetcode_problem_rating | Contest-based difficulty | `content/.cache/ratings.txt` |
+| javadev/LeetCode-in-Java README | LeetCode's Top Interview 150 study plan | `content/.cache/lij.md` |
+| Codility public lessons | 47 OA-style training tasks (Codility is the OA platform of Check Point and others) | `content/external/codility.json` |
+| Candidate reports (Glassdoor, prep sites) | Questions for Israeli companies with no tag data: Check Point, CyberArk, Wiz, monday.com | `content/reports.json` |
+| Company groups | Israeli companies and Israeli R&D hubs | `content/companies.json` |
+
+Not usable yet: CodeSignal and HackerRank publish no per-company question data (their OA formats feed Mock OA instead); the Grind 169 list is only available as a rendered page.
 
 ## Families and versions
 
-`content/families.json` groups problems that share one solution idea, where each version changes one thing (the `twist`): sorted input, a circular array, parent pointers, k instead of 1. 79 families cover 222 problems.
+`content/families.json` groups problems that share one solution idea, where each version changes one thing (the `twist`): sorted input, a circular array, parent pointers, k instead of 1. 92 families cover 252 problems (13 of them pair a Codility task with its LeetCode equivalent).
 
 - The first member is canonical: the default for anyone not targeting a company.
 - `pickVersion(family, company, frequencyOf)` in `src/js/data/families.js` returns the version that company asks most. Meta, for example, gets Lowest Common Ancestor III, Basic Calculator II and Minimum Remove to Make Valid Parentheses where Google gets the originals.
@@ -94,7 +101,7 @@ Content we write keeps the problem (same task, same constraints, same diversity)
 
 What makes a family: same core technique, one stated twist. A shared name is not enough (Two Sum IV is a tree problem, Jump Game V is DP), so families are curated by hand, not generated.
 
-Source limit: company data comes from LeetCode tags only. Versions from other sites (HackerRank, CodeSignal) need another source.
+Codility tasks join the family of their LeetCode equivalent (e.g. Codility Fish sits with Asteroid Collision), so a learner targeting a Codility-based OA can be shown the Codility version.
 
 ## Learning network
 
@@ -157,8 +164,8 @@ graph TD
 
 | Tier | Topic | Easy | Medium | Hard | Concepts (in ladder order) |
 |---|---|---|---|---|---|
-| 0 | Arrays & Hashing | 4 | 5 | 2 | frequency-count, hash-set-membership, complement-lookup, group-by-key, encode-decode |
-| 0 | Math Basics | 3 | 4 | 3 | digit-manipulation, modular-arithmetic, gcd-lcm, prime-sieve, fast-power, combinatorics, geometry, game-theory |
+| 0 | Arrays & Hashing | 4 | 5 | 2 | frequency-count, hash-set-membership, complement-lookup, group-by-key, two-way-mapping, in-place-indexing, string-processing, array-simulation, encode-decode |
+| 0 | Math Basics | 3 | 4 | 3 | digit-manipulation, number-conversion, big-number-arithmetic, closed-form, modular-arithmetic, gcd-lcm, prime-sieve, fast-power, combinatorics, geometry, game-theory |
 | 0 | SQL | 4 | 5 | 3 | select-filter, joins, group-by-aggregation, subqueries, window-functions |
 | 1 | Two Pointers | 3 | 4 | 2 | opposite-ends, same-direction, partition-in-place, sort-then-scan |
 | 1 | Matrix | 2 | 4 | 1 | traversal-order, in-place-transform, in-place-marker, grid-simulation |
@@ -168,27 +175,27 @@ graph TD
 | 1 | Bit Manipulation | 3 | 3 | 1 | xor-tricks, masks-and-shifts, counting-bits, bitmask-subsets |
 | 1 | Recursion | 2 | 3 | 1 | base-and-step, divide-and-conquer, memoization-intro |
 | 2 | Sliding Window | 2 | 5 | 3 | fixed-window, variable-window, window-frequency-map, monotonic-deque |
-| 2 | Binary Search | 2 | 5 | 3 | classic-search, lower-upper-bound, rotated-array, search-on-answer, search-2d |
-| 2 | Linked List | 3 | 4 | 2 | dummy-node-traversal, reversal, fast-slow-cycle, merge-lists, cache-design |
-| 2 | Greedy | 2 | 5 | 3 | local-choice, exchange-argument, interval-scheduling, reach-extension |
-| 3 | Trees | 3 | 6 | 3 | dfs-traversal, bfs-level-order, bst-properties, path-problems, construct-serialize |
-| 3 | Backtracking | 1 | 5 | 3 | subsets, permutations, combinations-with-pruning, constraint-search |
-| 3 | 1D Dynamic Programming | 2 | 6 | 2 | linear-recurrence, take-or-skip, longest-increasing, knapsack-1d |
-| 3 | Data Structure Design | 1 | 5 | 3 | iterator-design, data-stream, randomized-set, time-keyed-store, composite-design |
+| 2 | Binary Search | 2 | 5 | 3 | classic-search, lower-upper-bound, peak-finding, rotated-array, search-on-answer, search-2d |
+| 2 | Linked List | 3 | 4 | 2 | dummy-node-traversal, reversal, fast-slow-cycle, merge-lists, list-restructuring, deep-copy, cache-design |
+| 2 | Greedy | 2 | 5 | 3 | local-choice, greedy-construction, exchange-argument, interval-scheduling, reach-extension |
+| 3 | Trees | 3 | 6 | 3 | dfs-traversal, bfs-level-order, bst-properties, path-problems, tree-dp, construct-serialize |
+| 3 | Backtracking | 2 | 5 | 3 | subsets, permutations, combinations-with-pruning, constraint-search |
+| 3 | 1D Dynamic Programming | 2 | 6 | 2 | linear-recurrence, take-or-skip, subarray-dp, longest-increasing, knapsack-1d, counting-dp |
+| 3 | Data Structure Design | 1 | 5 | 3 | hash-structure-design, iterator-design, data-stream, randomized-set, time-keyed-store, composite-design |
 | 3 | Advanced Strings | 2 | 3 | 3 | expand-around-center, prefix-function, rolling-hash, z-function |
-| 4 | Heap / Priority Queue | 1 | 4 | 3 | top-k, k-way-merge, two-heaps, scheduling |
+| 4 | Heap / Priority Queue | 1 | 4 | 3 | top-k, k-way-merge, greedy-with-heap, two-heaps, scheduling |
 | 4 | Tries | 1 | 2 | 2 | insert-search, prefix-counting, trie-guided-search |
-| 4 | Graphs | 1 | 6 | 3 | grid-traversal, adjacency-traversal, cycle-detection, topological-sort, bipartite |
+| 4 | Graphs | 1 | 6 | 3 | grid-traversal, adjacency-traversal, implicit-graph-bfs, cycle-detection, topological-sort, bipartite |
 | 4 | 2D Dynamic Programming | 1 | 5 | 4 | grid-paths, two-sequences, knapsack-2d, interval-dp, state-machine |
 | 5 | Union Find | 0 | 3 | 2 | connectivity, union-by-rank, offline-queries |
-| 5 | Advanced Graphs | 0 | 4 | 4 | dijkstra, bounded-hops-shortest-path, minimum-spanning-tree, dag-dp, zero-one-bfs |
+| 5 | Advanced Graphs | 0 | 4 | 4 | dijkstra, bounded-hops-shortest-path, minimum-spanning-tree, dag-dp, zero-one-bfs, eulerian-path |
 | 5 | Range Queries | 0 | 2 | 3 | fenwick-tree, segment-tree |
-| | **Total (225)** | **49** | **111** | **65** | |
+| | **Total (226)** | **50** | **111** | **65** | |
 
 ## Pipeline
 
-1. **Index** (done): 3,398 problems from 470 companies, NeetCode lists and contest ratings, mapped to `topic` + `rating`.
-2. **Select** (done): `content/selection.json` defines the core bank (579 with company versions), `content/ladders.json` holds 225 hand-picked problems, one ladder per topic, each with its concept, in learning order. Picked from the highest-priority candidates.
+1. **Index** (done): 3,516 problems (3,469 LeetCode + 47 Codility) from 678 companies, curated lists, contest ratings and candidate reports, each with topic, subtopic and rating.
+2. **Select** (done): `content/selection.json` defines the core bank (710), `content/ladders.json` holds 226 hand-picked problems, one ladder per topic, each with its concept, in learning order. Picked from the highest-priority candidates.
 3. **Audit**: `node scripts/content/audit.mjs` writes `content/AUDIT.md` (ladder fill, concept coverage, Blind 75 / NeetCode 150 coverage, top-company coverage, high-priority problems left out, gaps).
 4. **Author**: write the problem module with `/add-problem`.
 5. **Verify**: solutions in every language pass all 15 cases, then flip `status` to `verified`.

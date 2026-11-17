@@ -26,8 +26,8 @@ const TAG_RULES = [
   [['Flow Network'], 'advanced-graphs', null],
   [['Segment Tree'], 'range-queries', 'segment-tree'],
   [['Binary Indexed Tree'], 'range-queries', 'fenwick-tree'],
-  [['Range Minimum/Maximum Query'], 'range-queries', 'sparse-table'],
-  [['Sparse Table'], 'range-queries', 'sparse-table'],
+  [['Range Minimum/Maximum Query'], 'range-queries', null],
+  [['Sparse Table'], 'range-queries', null],
   [['Union-Find'], 'union-find', 'connectivity'],
   [['Trie'], 'tries', null],
   [['Knuth–Morris–Pratt Algorithm'], 'strings-advanced', 'prefix-function'],
@@ -149,6 +149,23 @@ const WINDOWS = [
 
 const EST_MINUTES = { Easy: 15, Medium: 25, Hard: 40 };
 
+/** Second company dataset (snehasishroy): lowercase-hyphen folder names, IDs and percentages. */
+const WINDOWS_2 = [
+  ['thirty-days.csv', '30d'],
+  ['three-months.csv', '3m'],
+  ['six-months.csv', '6m'],
+  ['more-than-six-months.csv', 'older'],
+];
+const RECENCY_ORDER = ['30d', '3m', '6m', 'older', 'reported'];
+
+/** A reported question has no measured frequency; this nominal value ranks it mid-pack. */
+const REPORTED_FREQUENCY = 50;
+
+/** Reasons that only add coverage; a problem selected for these alone is wave 2. */
+const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice'];
+
+const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
+
 /** Minimal RFC 4180 line parser: the CSVs quote the Topics column. */
 function parseCsvLine(line) {
   const out = [];
@@ -187,6 +204,16 @@ function ratingFor(difficulty, elo) {
   if (elo == null) return { Easy: 2, Medium: 5, Hard: 8 }[difficulty];
   const cuts = { Easy: [[1250, 1], [1400, 2], [Infinity, 3]], Medium: [[1500, 4], [1700, 5], [1900, 6], [Infinity, 7]], Hard: [[2000, 8], [2300, 9], [Infinity, 10]] }[difficulty];
   return cuts.find(([max]) => elo < max)[1];
+}
+
+/** Every topic the tags point at, most specific first, one entry per topic. */
+function classifyAll(tags) {
+  const set = new Set(tags);
+  const seen = new Map();
+  for (const [need, topic, concept] of TAG_RULES) {
+    if (need.every((t) => set.has(t)) && !seen.has(topic)) seen.set(topic, concept);
+  }
+  return [...seen].map(([topic, concept]) => ({ topic, concept }));
 }
 
 function classify(tags) {
@@ -231,6 +258,30 @@ async function main() {
     }
   }
 
+  // Merge the second company dataset: it adds companies and fills problem numbers.
+  const displayName = new Map(companyDirs.map((c) => [companyKey(c), c]));
+  const dirs2 = (await readdir(join(CACHE, 'companies2'), { withFileTypes: true })).filter((d) => d.isDirectory() && !d.name.startsWith('.'));
+  for (const dir of dirs2) {
+    const key = companyKey(dir.name);
+    if (!displayName.has(key)) displayName.set(key, dir.name.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
+    const company = displayName.get(key);
+    for (const row of await readCsv(join(CACHE, 'companies2', dir.name, 'all.csv'))) {
+      if (!row.URL) continue;
+      const p = ensure(slugOf(row.URL), { title: row.Title, difficulty: row.Difficulty });
+      p.number ??= Number(row.ID) || null;
+      const frequency = parseFloat(row['Frequency %']) || 0;
+      const entry = p.companies.get(company);
+      if (entry) entry.frequency = Math.max(entry.frequency, frequency);
+      else p.companies.set(company, { name: company, frequency, recency: 'older' });
+    }
+    for (const [file, label] of WINDOWS_2) {
+      for (const row of await readCsv(join(CACHE, 'companies2', dir.name, file))) {
+        const entry = problems.get(slugOf(row.URL ?? ''))?.companies.get(company);
+        if (entry && RECENCY_ORDER.indexOf(label) < RECENCY_ORDER.indexOf(entry.recency)) entry.recency = label;
+      }
+    }
+  }
+
   const neetcode = JSON.parse(await readFile(join(CACHE, 'neetcode.json'), 'utf8'));
   for (const n of neetcode) {
     const topic = NEETCODE_PATTERNS[n.pattern];
@@ -249,6 +300,56 @@ async function main() {
   for (const line of ratingLines) {
     const [rating, id, , , slug] = line.split('\t');
     if (slug) elo.set(slug, { rating: Number(rating), number: Number(id) });
+  }
+
+  // LeetCode's Top Interview 150 study plan, parsed from a public solutions index.
+  {
+    const byNumber = new Map();
+    const byTitle = new Map();
+    for (const p of problems.values()) {
+      const n = p.number ?? elo.get(p.slug)?.number;
+      if (n) byNumber.set(n, p);
+      byTitle.set(p.title.toLowerCase(), p);
+    }
+    const lines = (await readFile(join(CACHE, 'lij.md'), 'utf8')).split('\n');
+    let inPlan = false;
+    for (const line of lines) {
+      if (line.startsWith('### ')) inPlan = line.startsWith('### Top Interview 150');
+      const m = inPlan && line.match(/^\| (\d{4}) \|\[([^\]]+)\]/);
+      if (!m) continue;
+      const p = byNumber.get(Number(m[1])) ?? byTitle.get(m[2].toLowerCase());
+      if (!p) throw new Error(`Top Interview 150: ${m[2]} not in the index`);
+      if (!p.lists.includes('top-interview-150')) p.lists.push('top-interview-150');
+    }
+  }
+
+  // Other sites: facts and links only, placed in the network by hand.
+  const externalSites = ['codility'];
+  for (const site of externalSites) {
+    const ext = JSON.parse(await readFile(join(ROOT, `content/external/${site}.json`), 'utf8'));
+    for (const e of ext.problems) {
+      problems.set(e.slug, {
+        slug: e.slug, number: null, title: e.title, difficulty: e.difficulty, tags: [], lists: [`${site}-lessons`],
+        companies: new Map(), neetcodePattern: null, platform: site, url: e.url,
+        fixedTopic: e.topic, fixedConcept: e.concept, equivalent: e.equivalent,
+      });
+    }
+  }
+
+  // Candidate reports for companies with little or no tag data.
+  const { reports } = JSON.parse(await readFile(join(ROOT, 'content/reports.json'), 'utf8'));
+  for (const r of reports.filter((x) => x.slug)) {
+    const p = problems.get(r.slug);
+    if (!p) throw new Error(`reports.json: ${r.slug} is not in the index`);
+    if (!p.companies.has(r.company)) {
+      p.companies.set(r.company, { name: r.company, frequency: REPORTED_FREQUENCY, recency: 'reported', source: r.source });
+    }
+  }
+
+  // Hand-assigned topic/subtopic for core problems the ladders do not place.
+  const { subtopics } = JSON.parse(await readFile(join(ROOT, 'content/subtopics.json'), 'utf8'));
+  for (const slug of Object.keys(subtopics)) {
+    if (!problems.has(slug)) throw new Error(`subtopics.json: ${slug} is not in the index`);
   }
 
   // Hand-curated ladders override topic and concept from the heuristics above.
@@ -297,6 +398,17 @@ async function main() {
     }
   }
 
+  // Israeli companies: their most frequent problems join the bank even below the global thresholds.
+  const companyGroups = JSON.parse(await readFile(join(ROOT, 'content/companies.json'), 'utf8'));
+  const israeliTop = new Set();
+  for (const company of companyGroups.israeli) {
+    [...problems.values()]
+      .filter((p) => p.companies.has(company))
+      .sort((a, b) => b.companies.get(company).frequency - a.companies.get(company).frequency || a.slug.localeCompare(b.slug))
+      .slice(0, selection.wave2.israeliTopPerCompany)
+      .forEach((p) => israeliTop.add(p.slug));
+  }
+
   /** Why a problem is in the core bank; empty means it stays index-only. */
   const coreReasons = (p, ladder) => {
     const why = [];
@@ -308,6 +420,8 @@ async function main() {
     }
     if (p.companies.size >= wave2.minCompanies || companyTop.has(p.slug)) why.push('company-common');
     if (companyVersions.has(p.slug)) why.push('company-version');
+    if (israeliTop.has(p.slug)) why.push('israeli-company');
+    if (wave2.platformLists.some((l) => p.lists.includes(l))) why.push('platform-practice');
     return why;
   };
 
@@ -321,10 +435,20 @@ async function main() {
     const ladder = ladderOf.get(p.slug);
     // NeetCode files matrix problems (Spiral Matrix, Rotate Image) under "Math & Geometry".
     const neetcodeTopic = p.neetcodePattern === 'math-basics' && fromTags.topic === 'matrix' ? 'matrix' : p.neetcodePattern;
-    const topic = ladder?.topic ?? neetcodeTopic ?? fromTags.topic;
-    const concept = ladder?.concept ?? (topic === fromTags.topic ? fromTags.concept : null);
+    const [subTopic, subConcept] = subtopics[p.slug]?.split('/') ?? [];
+    const topic = ladder?.topic ?? subTopic ?? p.fixedTopic ?? neetcodeTopic ?? fromTags.topic;
+    const concept = ladder?.concept ?? subConcept ?? p.fixedConcept ?? (topic === fromTags.topic ? fromTags.concept : null);
+    // Secondary tags: the other topics a problem touches (Two Sum IV is also a tree problem).
+    const secondary = classifyAll(p.tags).filter(
+      (x) =>
+        x.topic !== topic &&
+        // Nearly every problem has an Array or Hash Table tag; that says nothing.
+        !(x.topic === 'arrays-hashing' && x.concept === null) &&
+        // DFS/BFS tags on tree and grid problems are traversal, not a graph topic.
+        !(x.topic === 'graphs' && x.concept === null && ['trees', 'matrix', 'backtracking'].includes(topic)),
+    );
     const companies = [...p.companies.values()].sort((a, b) => b.frequency - a.frequency);
-    const recentShare = companies.length ? companies.filter((c) => c.recency !== 'older').length / companies.length : 0;
+    const recentShare = companies.length ? companies.filter((c) => ['30d', '3m', '6m'].includes(c.recency)).length / companies.length : 0;
     // Priority: how widely asked, whether a curated list picked it, and how recently it is asked.
     const priority =
       0.5 * (Math.log1p(companies.length) / Math.log1p(maxCompanies)) +
@@ -333,7 +457,7 @@ async function main() {
     const [contentId, authored] = CONTENT_IDS[p.slug] ?? [null, null];
     const why = coreReasons(p, ladder);
     // Wave 2 is company coverage: problems in the bank only because companies ask them.
-    const wave = why.length === 0 ? null : why.some((r) => r !== 'company-common' && r !== 'company-version') ? 1 : 2;
+    const wave = why.length === 0 ? null : why.some((r) => !COVERAGE_REASONS.includes(r)) ? 1 : 2;
     const status = authored ?? (wave ? 'selected' : 'indexed');
     records.push({
       slug: p.slug,
@@ -344,9 +468,12 @@ async function main() {
       contestRating: contest ? Math.round(contest.rating) : null,
       topic,
       concept,
+      secondary,
       tags: p.tags,
       estMinutes: EST_MINUTES[p.difficulty],
-      url: `https://leetcode.com/problems/${p.slug}/`,
+      platform: p.platform ?? 'leetcode',
+      url: p.url ?? `https://leetcode.com/problems/${p.slug}/`,
+      equivalent: p.equivalent ?? null,
       lists: p.lists,
       companyCount: companies.length,
       companies,
@@ -378,7 +505,8 @@ async function main() {
 
   const byTopic = {};
   for (const r of records) byTopic[r.topic] = (byTopic[r.topic] ?? 0) + 1;
-  console.log(`${records.length} problems from ${companyDirs.length} companies -> ${OUT}`);
+  const companyCount = new Set(records.flatMap((r) => r.companies.map((c) => c.name))).size;
+  console.log(`${records.length} problems, ${companyCount} companies -> ${OUT}`);
   console.log(byTopic);
 }
 

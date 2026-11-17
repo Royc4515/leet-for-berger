@@ -169,6 +169,7 @@
   ["serialize-and-deserialize-binary-tree", "construct-serialize"]
  ],
  "backtracking": [
+  ["binary-watch", "subsets"],
   ["sum-of-all-subset-xor-totals", "subsets"],
   ["subsets", "subsets"],
   ["permutations", "permutations"],

@@ -19,14 +19,17 @@ Status legend: [x] done, [~] partial / placeholder, [ ] not started.
 
 ## Phase 1 - Content
 
-Scope: every classic topic and every commonly asked company problem, with an easy on-ramp, in all common interview languages (Python, Java, C++, JavaScript; C# and Go as extras). Core bank: 579 problems in two waves (including company-specific versions of 79 problem families), on a learning network of 26 topics with an Easy -> Hard ladder per topic (225 problems). See `content/README.md`.
+Scope: every classic topic and every commonly asked company problem, with an easy on-ramp, in all common interview languages (Python, Java, C++, JavaScript; C# and Go as extras). Core bank: 710 problems in two waves (company-specific versions of 92 problem families, Israeli companies, Codility lessons), on a learning network of 26 topics with an Easy -> Hard ladder per topic (225 problems). See `content/README.md`.
 
 - [x] Topic taxonomy: prerequisites, concepts per topic, ladder targets, practice modes (`src/js/data/taxonomy.js`)
 - [x] Problem index: 3,398 problems with topic, rating, company frequency and recency, priority (`content/index/problems.json`)
 - [x] Select per-topic ladders from the index and assign concepts (`content/ladders.json`)
 - [x] Review `content/AUDIT.md`: core bank of 552 (waves), Matrix topic, 0 audit gaps
 - [x] Problem families: 79 families, company version picking, company versions in the core bank (579)
-- [ ] Versions from other sites (HackerRank, CodeSignal): needs a data source
+- [x] More sources: second tag dataset, Top Interview 150, Codility lessons, Israeli companies (tags + candidate reports)
+- [x] Topic + subtopic for every core problem, secondary topic tags
+- [ ] CodeSignal / HackerRank question data: none public; revisit if a source appears
+- [ ] Original problems for reported company-specific tasks (monday.com notification system, users and teams)
 - [ ] Language-neutral problem format: typed signature spec, JSON tests, generated starter code and harness per language
 - [ ] Multi-language verifier in CI (Python, Java, C++, JavaScript)
 - [ ] SQL runner (e.g. sql.js) so the SQL topic can ship
