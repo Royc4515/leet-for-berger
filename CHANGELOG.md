@@ -13,6 +13,7 @@
 - `src/js/engine/structures.js`: tree and list helpers for problem references and generators.
 
 ### Fixed
+- Java verifier reused one `Solution` object for all 15 cases, so state left in instance fields leaked between cases (found with an imported Subsets solution). It now creates one per case, like LeetCode and the C++ and C# harnesses.
 - Uncaught "Canceled" errors when leaving a problem: Monaco cancels in-flight work on close, and its scripts loaded without CORS, so the errors were muted and impossible to handle. Monaco now loads with CORS, editors are disposed before their models, and only Monaco's exact cancellation error is ignored.
 - ADR 0002: PostgreSQL on Supabase as the runtime store, git as the content source of truth. `db/schema.sql` (18 tables, row level security: hidden test cases and solutions never reach clients, `reveal_solution()` marks a problem assisted). `scripts/db/export-sql.mjs` syncs git into the database without touching user data. `scripts/db/check-schema.sh` (`npm run check:db`, in CI) verifies all of it against a throwaway PostgreSQL with the real content.
 - Essential path: 131 problems, one per subtopic (the most asked, ladder problems first). Index records carry `essential`; the audit lists the path by topic. The rest of the bank is optional practice.
