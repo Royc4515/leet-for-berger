@@ -49,6 +49,45 @@ import largestConcat from './largest-concat/problem.js';
 import mergeRanges from './merge-ranges/problem.js';
 import meetingRoomMinimizer from './meeting-room-minimizer/problem.js';
 import smallerCount from './smaller-count/problem.js';
+import longestDistinctWindow from './longest-distinct-window/problem.js';
+import windowMaximums from './window-maximums/problem.js';
+import coveringWindow from './covering-window/problem.js';
+import vowelWindow from './vowel-window/problem.js';
+import rotatedSearch from './rotated-search/problem.js';
+import eatingSpeed from './eating-speed/problem.js';
+import mergedMedian from './merged-median/problem.js';
+import matrixSearch from './matrix-search/problem.js';
+import targetRange from './target-range/problem.js';
+import mountainPeak from './mountain-peak/problem.js';
+import islandCount from './island-count/problem.js';
+import courseCheck from './course-check/problem.js';
+import courseOrder from './course-order/problem.js';
+import wordMorph from './word-morph/problem.js';
+import lockSteps from './lock-steps/problem.js';
+import twoColorCheck from './two-color-check/problem.js';
+import extraLink from './extra-link/problem.js';
+import accountMerge from './account-merge/problem.js';
+import limitedPaths from './limited-paths/problem.js';
+import medianStream from './median-stream/problem.js';
+import kthHighest from './kth-highest/problem.js';
+import cooldownTasks from './cooldown-tasks/problem.js';
+import noAdjacentRepeat from './no-adjacent-repeat/problem.js';
+import rangeCover from './range-cover/problem.js';
+import gridWord from './grid-word/problem.js';
+import keypadWords from './keypad-words/problem.js';
+import subsetBuilder from './subset-builder/problem.js';
+import allOrderings from './all-orderings/problem.js';
+import bestRunSum from './best-run-sum/problem.js';
+import jumpReach from './jump-reach/problem.js';
+import overlapTrim from './overlap-trim/problem.js';
+import cookieMatch from './cookie-match/problem.js';
+import oneSwapMax from './one-swap-max/problem.js';
+import fewestCoins from './fewest-coins/problem.js';
+import streetHeist from './street-heist/problem.js';
+import stairPaths from './stair-paths/problem.js';
+import risingChain from './rising-chain/problem.js';
+import bestRunProduct from './best-run-product/problem.js';
+import goodStringCount from './good-string-count/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -75,7 +114,7 @@ function hydrate(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak, islandCount, courseCheck, courseOrder, wordMorph, lockSteps, twoColorCheck, extraLink, accountMerge, limitedPaths, medianStream, kthHighest, cooldownTasks, noAdjacentRepeat, rangeCover, gridWord, keypadWords, subsetBuilder, allOrderings, bestRunSum, jumpReach, overlapTrim, cookieMatch, oneSwapMax, fewestCoins, streetHeist, stairPaths, risingChain, bestRunProduct, goodStringCount].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
@@ -104,15 +143,9 @@ export async function loadSolution(problemId, lang) {
 /** @type {{id:string,title:string,difficulty:string,topics:string[],milestone:number}[]} */
 const planned = [
   { id: 'mirror-check', title: 'Mirror Check (Two Pointers)', difficulty: 'Easy', topics: ['arrays-strings'], milestone: 1 },
-  { id: 'longest-distinct-window', title: 'Longest Distinct Window', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 2 },
-  { id: 'rotated-search', title: 'Search in Rotated Array', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 2 },
-  { id: 'jump-reach', title: 'Jump Reach', difficulty: 'Medium', topics: ['greedy'], milestone: 2 },
   { id: 'tree-level-sums', title: 'Tree Level Sums', difficulty: 'Easy', topics: ['trees'], milestone: 3 },
   { id: 'lowest-shared-ancestor', title: 'Lowest Shared Ancestor', difficulty: 'Medium', topics: ['trees'], milestone: 3 },
-  { id: 'island-count', title: 'Island Count', difficulty: 'Medium', topics: ['graphs'], milestone: 3 },
   { id: 'k-closest-points', title: 'K Closest Points (Heap)', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 3 },
-  { id: 'subset-builder', title: 'Subset Builder (Backtracking)', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 3 },
-  { id: 'stair-paths', title: 'Stair Paths', difficulty: 'Easy', topics: ['dp'], milestone: 4 },
   { id: 'edit-distance-lite', title: 'Edit Distance Lite', difficulty: 'Hard', topics: ['dp'], milestone: 4 },
   { id: 'grid-min-path', title: 'Grid Minimum Path', difficulty: 'Medium', topics: ['dp'], milestone: 4 },
   { id: 'cheapest-route-k-stops', title: 'Cheapest Route Within K Stops', difficulty: 'Hard', topics: ['graphs'], milestone: 4 },

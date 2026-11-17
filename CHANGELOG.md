@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- Essential problems, wave 2, each with solutions in 8 languages, most adapted from imported open-source solutions:
+  - Sliding Window and Binary Search: Longest Distinct Window, Window Maximums, Covering Window, Vowel Window, Rotated Search, Eating Speed, Merged Median, Matrix Search, Target Range, Mountain Peak.
+  - Greedy and 1D DP: Best Run Sum, Jump Reach, Overlap Trim, Cookie Match, One Swap Max, Fewest Coins, Street Heist, Stair Paths, Rising Chain, Best Run Product, Good String Count.
+  - Graphs and Union-Find: Island Count, Course Check, Course Order, Word Morph, Lock Steps, Two Color Check, Extra Link, Account Merge, Limited Paths.
+  - Heap and Backtracking: Median Stream, Kth Highest, Cooldown Tasks, No Adjacent Repeat, Range Cover, Grid Word, Keypad Words, Subset Builder, All Orderings.
+  - 78 of the 131 essential problems are done. Answers that LeetCode returns as doubles (medians) are returned doubled as exact integers. Recursion depth is a deliberate pitfall in several graph and DP problems, stated in each statement.
 - Time limits in the 8-language verifier: every language must run all 15 cases within one case's `timeLimitMs`. The browser only enforced limits for JavaScript and Python, so a slow solution in another language passed CI. An O(n^2) C++ Pair Sum Target now fails (3.9 s against 2 s); all shipped solutions finish in under 1.2 s.
 - Essential problems, batches 2 to 5, each with solutions in 8 languages. Math Basics: Digit Palindrome, Roman Numeral Value, String Multiply, Prime Count, Power Mod, String GCD. Two Pointers and Stack: Rain Trap, Merge Sorted, Zeros To End, Zero Triplets, Bracket Check, Asteroid Collision, Warmer Days, Postfix Eval. Prefix Sum and Intervals: Product Except Self, Subarray Sum K, Region Sum, Range Bookings, Largest Concat, Merge Ranges, Meeting Room Minimizer, Smaller Count. Matrix, Bits and Recursion: Spiral Order, Rotate Grid, Zero Rows Cols, Lone Number, Bit Count, Add Without Plus, Circle Elimination, Grammar Symbol. Several limits are raised above LeetCode's so max-size tests separate the target complexity. 39 of the 131 essential problems are done; Power Mod stands in for Pow(x, n) as an exact integer variant.
 - Solution import pipeline: `npm run import:solutions` stages open-source solutions (doocs/leetcode, CC BY-SA 4.0; walkccc/LeetCode, MIT) for any indexed problem, deriving JavaScript from TypeScript when missing. For the 131 essential problems: Python 131, JavaScript 109, TypeScript 105, Java 126, C++ 126, Go 125, C# 54, C 16. Adapted files keep an attribution line; `THIRD_PARTY_NOTICES.md` lists the sources. Tests and statements are still written here, and every shipped file must pass the verifier.
@@ -13,6 +19,8 @@
 - `src/js/engine/structures.js`: tree and list helpers for problem references and generators.
 
 ### Fixed
+- Python names for signatures with acronyms: `lengthOfLIS` became `length_of_l_i_s`; an acronym is now one word (`length_of_lis`). No existing problem changes.
+- Java verifier reused one `Solution` object for all 15 cases, so state left in instance fields leaked between cases (found with an imported Subsets solution). It now creates one per case, like LeetCode and the C++ and C# harnesses.
 - Uncaught "Canceled" errors when leaving a problem: Monaco cancels in-flight work on close, and its scripts loaded without CORS, so the errors were muted and impossible to handle. Monaco now loads with CORS, editors are disposed before their models, and only Monaco's exact cancellation error is ignored.
 - ADR 0002: PostgreSQL on Supabase as the runtime store, git as the content source of truth. `db/schema.sql` (18 tables, row level security: hidden test cases and solutions never reach clients, `reveal_solution()` marks a problem assisted). `scripts/db/export-sql.mjs` syncs git into the database without touching user data. `scripts/db/check-schema.sh` (`npm run check:db`, in CI) verifies all of it against a throwaway PostgreSQL with the real content.
 - Essential path: 131 problems, one per subtopic (the most asked, ladder problems first). Index records carry `essential`; the audit lists the path by topic. The rest of the bank is optional practice.

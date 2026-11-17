@@ -19,9 +19,9 @@ public class Harness {
             runClass(entry, cases);
             return;
         }
-        Object solution = Class.forName("Solution").getDeclaredConstructor().newInstance();
+        Class<?> solutionClass = Class.forName("Solution");
         Method method = null;
-        for (Method m : solution.getClass().getDeclaredMethods()) if (m.getName().equals(entry)) method = m;
+        for (Method m : solutionClass.getDeclaredMethods()) if (m.getName().equals(entry)) method = m;
         if (method == null) throw new IllegalStateException("No method " + entry);
         method.setAccessible(true);
         PrintStream out = new PrintStream(new BufferedOutputStream(System.out), false, StandardCharsets.UTF_8);
@@ -30,6 +30,9 @@ public class Harness {
             Class<?>[] types = method.getParameterTypes();
             Object[] converted = new Object[types.length];
             for (int i = 0; i < types.length; i++) converted[i] = convert(args.get(i), types[i]);
+            // A fresh Solution per case, as on LeetCode: state left in instance fields by one case
+            // must not leak into the next (C++ and C# harnesses already do this).
+            Object solution = solutionClass.getDeclaredConstructor().newInstance();
             out.println(toJson(method.invoke(solution, converted), method.getReturnType()));
         }
         out.flush();

@@ -116,7 +116,9 @@ export function validateSignature(sig) {
   return errors.map((e) => e.replace(/^ param/, 'param'));
 }
 
-const snake = (s) => s.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+// An acronym stays one word (lengthOfLIS -> length_of_lis), while a single capital still starts
+// one (topKFrequent -> top_k_frequent).
+const snake = (s) => s.replace(/([a-z0-9])([A-Z])/g, '$1_$2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2').toLowerCase();
 const pascal = (s) => s[0].toUpperCase() + s.slice(1);
 const lowerFirst = (s) => s[0].toLowerCase() + s.slice(1);
 
