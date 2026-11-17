@@ -19,6 +19,14 @@ import topKFrequent from './top-k-frequent/problem.js';
 import longestStreak from './longest-streak/problem.js';
 import isomorphicStrings from './isomorphic-strings/problem.js';
 import ticketQueue from './ticket-queue/problem.js';
+import spiralOrder from './spiral-order/problem.js';
+import rotateGrid from './rotate-grid/problem.js';
+import zeroRowsCols from './zero-rows-cols/problem.js';
+import loneNumber from './lone-number/problem.js';
+import bitCount from './bit-count/problem.js';
+import addWithoutPlus from './add-without-plus/problem.js';
+import circleElimination from './circle-elimination/problem.js';
+import grammarSymbol from './grammar-symbol/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -45,7 +53,7 @@ function hydrate(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
