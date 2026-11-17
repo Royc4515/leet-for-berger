@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- Essential path complete: 131 of 131 problems, wave 3 (53 problems):
+  - Linked List, Design and Tries: Recent Cache, Merge Many Lists, Digit List Sum, Shift List, Versioned Store, Frequent Cache, Bucket Map, Hit Window, Prefix Tree, Board Words, Shared Prefix.
+  - Trees and 2D DP: Best Tree Path, Tree Codec, Tree Height, Kth In Order, Tree Heist, Edit Steps, Uphill Path, Balloon Pop, Coin Combos, Trade Cooldown.
+  - Advanced Graphs, Range Queries and Bitmask: Cheapest Route K Stops, Ticket Itinerary, Signal Spread, Point Wiring, Course Finish Time, Obstacle Clearing, Double Inversions, Skyline Outline, Visit All Nodes.
+  - Strings, Math and classics: Widest Palindrome, First Match Index, DNA Repeats, Prefix Score Sum, Justify Lines, String Codec, Doubled Array, Square Counter, Product Sign, Good Digit Strings, Stone Take Game, Anagram Arrangements, Life Step, Fibonacci Mod.
+  - Plus the SQL problems and the new-input-type problems listed below.
 - SQL problems (ADR 0003): sql.js 1.13.0 (SQLite in WebAssembly) runs queries in a worker, one fresh read-only database per case; CI verifies `solution.sql` with the same build (pinned devDependency). Results are judged as result sets, as a multiset unless the statement fixes the order. SQL problems offer only SQL. First five: Green Products, Address Lookup, Repeated Emails, Runner-up Salary, Triple Repeat.
 - Input types `ListNode@cycle` (`[values, pos]`, the function sees only the head), `RandomListNode` (`[[val, randomIndex|null], ...]`) and `NestedInteger[]` (nested arrays, LeetCode's interface), in starter code, the browser adapters and all 8 verifier harnesses. A copied `RandomListNode` list that reuses input nodes is a wrong answer in every language.
 - Judge modes (`judge` in `problem.js`, `comparatorFor` in `engine/harness.js`): `randomized-set` accepts any current member from `getRandom` and checks long runs for uniformity; insert and remove stay exact. The browser and the verifier use the same mode.

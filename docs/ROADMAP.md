@@ -38,7 +38,7 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 - [x] Signature types for linked lists and trees, class-based design problems (pilots: Reverse List, Level Order, Min Stack)
 - [x] Signature types for lists with random or cycle pointers and nested lists, judge mode for random answers (List Loop, Random Link Copy, Nested Flattener, Random Pool)
 - [ ] Signature types for graphs as node objects (Clone Graph)
-- [ ] Author the 131 essential problems (78 done: batches 1 to 9, plus Reverse List, Level Order, Min Stack). New problems start from imported open-source solutions (`npm run import:solutions`)
+- [x] Author the 131 essential problems: all 131 done, each verified (8 languages, or SQL). New problems start from imported open-source solutions (`npm run import:solutions`)
 - [ ] Complexity feedback: estimate a solution's growth by timing it on increasing input sizes; LLM explanation later with the backend
 - [x] SQL runner: sql.js (SQLite wasm) in a worker and in the CI verifier, ADR 0003; first 5 SQL problems
 - [ ] Author problems topic by topic, tier 0 first; 15 tests each, solutions in 3 languages
