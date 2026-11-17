@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- Solution import pipeline: `npm run import:solutions` stages open-source solutions (doocs/leetcode, CC BY-SA 4.0; walkccc/LeetCode, MIT) for any indexed problem, deriving JavaScript from TypeScript when missing. For the 131 essential problems: Python 131, JavaScript 109, TypeScript 105, Java 126, C++ 126, Go 125, C# 54, C 16. Adapted files keep an attribution line; `THIRD_PARTY_NOTICES.md` lists the sources. Tests and statements are still written here, and every shipped file must pass the verifier.
 - Essential problems, batch 1 (Arrays & Hashing), each with solutions in 8 languages: Pair Sum Target, Anagram Buckets, Top K Frequent, Longest Streak, Isomorphic Strings, Ticket Queue. Where several answers would be valid, the statement fixes one order so judging is exact. 9 of the 131 essential problems are done.
 - Verifier check that every test case passes exactly the signature's arguments (JavaScript silently ignores extra arguments; this caught a malformed hidden test).
 - Linked lists, binary trees and design problems in the problem format: `ListNode`, `ListNode[]` and `TreeNode` signature types (LeetCode JSON forms) and class signatures tested as operation sequences. Starter code, browser runtime (`src/js/engine/adapters.js`) and the 8-language verifier support all of them.

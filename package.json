@@ -10,7 +10,8 @@
     "test:e2e": "node e2e/smoke.mjs",
     "check": "npm test && npm run test:e2e",
     "check:db": "bash scripts/db/check-schema.sh",
-    "db:export": "node scripts/db/export-sql.mjs"
+    "db:export": "node scripts/db/export-sql.mjs",
+    "import:solutions": "node scripts/import/fetch-solutions.mjs"
   },
   "engines": {
     "node": ">=20"

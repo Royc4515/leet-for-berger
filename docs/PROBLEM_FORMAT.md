@@ -18,6 +18,18 @@ src/js/problems/<id>/
 
 Reference implementations: `src/js/problems/notify-recipients/` (arrays and strings), `reverse-list/` (linked list), `level-order/` (binary tree), `min-stack/` (design class).
 
+## Starting from imported solutions
+
+Do not write 8 solutions from scratch when an open-source one exists. `npm run import:solutions -- <leetcode-slug>...` (or `-- --essential`) stages candidates in `content/.cache/imports/<slug>/` (gitignored): doocs/leetcode first, walkccc/LeetCode as fallback, JavaScript transpiled from TypeScript when missing. `--coverage` only reports what is available. C# and C are often missing; translate them from the Java and C++ files.
+
+Staged files are raw material. To ship one:
+- adapt it to this problem's signature, names and output rules (fixed order, returning instead of mutating);
+- keep the first-line `Adapted from ...` attribution comment (license requirement, see `THIRD_PARTY_NOTICES.md`);
+- rewrite or drop comments so they are English, explain why, and contain no em dashes;
+- pass `tests/solutions.test.js`. The verifier, not the source, is what makes it shippable.
+
+The statement, tests, hints and `reference` are always written for this project.
+
 Starter code and per-language entry names are **generated** from the signature (`src/js/engine/codegen.js`); never write them by hand. Solutions are real files so the verifier can compile them and editors can highlight them; the app fetches one when the user clicks "Reveal Solution".
 
 ## Required fields in `problem.js`
