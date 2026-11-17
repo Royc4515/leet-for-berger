@@ -95,3 +95,10 @@ test('judge passes the case to the comparator and still redacts hidden cases', (
   assert.ok(judge(suite, raw).accepted);
   assert.ok(deepEqual(res.cases[1].expected, suite[1].expected));
 });
+
+test('comparatorFor prefers a comparator the problem supplies (SQL result sets) over its judge mode', () => {
+  const own = () => true;
+  assert.equal(comparatorFor({ compare: own, judge: 'randomized-set' }), own);
+  assert.equal(comparatorFor({}), JUDGE_MODES.exact);
+  assert.throws(() => comparatorFor({ judge: 'nope' }), /Unknown judge mode/);
+});
