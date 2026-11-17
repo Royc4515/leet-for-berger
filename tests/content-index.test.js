@@ -70,7 +70,7 @@ test('every classic and every easy classic is in the core bank', () => {
 
 test('wave 1 is the learning core, wave 2 is company coverage only', () => {
   for (const r of index.problems.filter((p) => p.wave !== null)) {
-    const learning = r.core.some((c) => c !== 'company-common');
+    const learning = r.core.some((c) => c !== 'company-common' && c !== 'company-version');
     assert.equal(r.wave, learning ? 1 : 2, r.slug);
   }
 });

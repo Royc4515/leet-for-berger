@@ -1,0 +1,385 @@
+{
+ "_doc": "Problem families: problems with the same core solution idea, where each version changes one thing (the twist). The first member is the canonical version. A learner targeting a company is shown the version that company asks most (see src/js/data/families.js).",
+ "families": [
+  {"id": "pair-target-sum", "title": "Pair with a target sum", "members": [
+    {"slug": "two-sum", "twist": "unsorted array, return indices"},
+    {"slug": "two-sum-ii-input-array-is-sorted", "twist": "sorted input, O(1) extra space"},
+    {"slug": "two-sum-iii-data-structure-design", "twist": "numbers arrive as a stream"},
+    {"slug": "two-sum-iv-input-is-a-bst", "twist": "values stored in a BST"}
+  ]},
+  {"id": "triplet-sum", "title": "k-sum after sorting", "members": [
+    {"slug": "3sum", "twist": "all unique triplets summing to 0"},
+    {"slug": "3sum-closest", "twist": "closest sum instead of exact"},
+    {"slug": "4sum", "twist": "four numbers, any target"},
+    {"slug": "3sum-smaller", "twist": "count triplets below a target"}
+  ]},
+  {"id": "stock-trading", "title": "Buy and sell stock", "members": [
+    {"slug": "best-time-to-buy-and-sell-stock", "twist": "one transaction"},
+    {"slug": "best-time-to-buy-and-sell-stock-ii", "twist": "unlimited transactions"},
+    {"slug": "best-time-to-buy-and-sell-stock-iii", "twist": "at most two transactions"},
+    {"slug": "best-time-to-buy-and-sell-stock-iv", "twist": "at most k transactions"},
+    {"slug": "best-time-to-buy-and-sell-stock-with-cooldown", "twist": "one-day cooldown after selling"},
+    {"slug": "best-time-to-buy-and-sell-stock-with-transaction-fee", "twist": "fee per transaction"}
+  ]},
+  {"id": "house-robber", "title": "No two adjacent picks", "members": [
+    {"slug": "house-robber", "twist": "houses in a line"},
+    {"slug": "house-robber-ii", "twist": "houses in a circle"},
+    {"slug": "house-robber-iii", "twist": "houses in a binary tree"}
+  ]},
+  {"id": "palindrome-check", "title": "Palindrome check", "members": [
+    {"slug": "valid-palindrome", "twist": "ignore non-alphanumerics"},
+    {"slug": "valid-palindrome-ii", "twist": "may delete one character"},
+    {"slug": "valid-palindrome-iii", "twist": "may delete k characters"}
+  ]},
+  {"id": "parentheses-validity", "title": "Balanced parentheses", "members": [
+    {"slug": "valid-parentheses", "twist": "three bracket types, valid or not"},
+    {"slug": "minimum-remove-to-make-valid-parentheses", "twist": "remove fewest to make valid, return string"},
+    {"slug": "minimum-add-to-make-parentheses-valid", "twist": "count insertions to make valid"},
+    {"slug": "valid-parenthesis-string", "twist": "'*' can be anything"}
+  ]},
+  {"id": "calculator", "title": "Expression calculator", "members": [
+    {"slug": "basic-calculator", "twist": "+, - and parentheses"},
+    {"slug": "basic-calculator-ii", "twist": "+, -, *, / without parentheses"},
+    {"slug": "basic-calculator-iii", "twist": "all four operators and parentheses"}
+  ]},
+  {"id": "lowest-common-ancestor", "title": "Lowest common ancestor", "members": [
+    {"slug": "lowest-common-ancestor-of-a-binary-tree", "twist": "binary tree, both nodes exist"},
+    {"slug": "lowest-common-ancestor-of-a-binary-search-tree", "twist": "BST ordering available"},
+    {"slug": "lowest-common-ancestor-of-a-binary-tree-iii", "twist": "nodes have parent pointers, no root"},
+    {"slug": "lowest-common-ancestor-of-a-binary-tree-ii", "twist": "nodes may be missing"},
+    {"slug": "lowest-common-ancestor-of-a-binary-tree-iv", "twist": "many target nodes"}
+  ]},
+  {"id": "vertical-order", "title": "Vertical order traversal", "members": [
+    {"slug": "vertical-order-traversal-of-a-binary-tree", "twist": "ties sorted by value"},
+    {"slug": "binary-tree-vertical-order-traversal", "twist": "ties kept in BFS order"}
+  ]},
+  {"id": "level-order", "title": "Level-by-level traversal", "members": [
+    {"slug": "binary-tree-level-order-traversal", "twist": "list each level"},
+    {"slug": "binary-tree-level-order-traversal-ii", "twist": "levels bottom-up"},
+    {"slug": "binary-tree-zigzag-level-order-traversal", "twist": "alternate direction per level"},
+    {"slug": "binary-tree-right-side-view", "twist": "last node of each level"},
+    {"slug": "average-of-levels-in-binary-tree", "twist": "average per level"},
+    {"slug": "maximum-level-sum-of-a-binary-tree", "twist": "level with the largest sum"}
+  ]},
+  {"id": "tree-depth", "title": "Tree depth", "members": [
+    {"slug": "maximum-depth-of-binary-tree", "twist": "deepest leaf"},
+    {"slug": "minimum-depth-of-binary-tree", "twist": "shallowest leaf"}
+  ]},
+  {"id": "tree-from-traversals", "title": "Rebuild a tree from traversals", "members": [
+    {"slug": "construct-binary-tree-from-preorder-and-inorder-traversal", "twist": "preorder + inorder"},
+    {"slug": "construct-binary-tree-from-inorder-and-postorder-traversal", "twist": "inorder + postorder"},
+    {"slug": "construct-binary-tree-from-preorder-and-postorder-traversal", "twist": "preorder + postorder, any valid tree"}
+  ]},
+  {"id": "tree-path-gain", "title": "Best path through a node", "members": [
+    {"slug": "binary-tree-maximum-path-sum", "twist": "weighted nodes, may be negative"},
+    {"slug": "diameter-of-binary-tree", "twist": "count edges"},
+    {"slug": "longest-univalue-path", "twist": "path of equal values"}
+  ]},
+  {"id": "tree-codec", "title": "Serialize a tree", "members": [
+    {"slug": "serialize-and-deserialize-binary-tree", "twist": "binary tree"},
+    {"slug": "serialize-and-deserialize-bst", "twist": "BST, compact encoding"},
+    {"slug": "serialize-and-deserialize-n-ary-tree", "twist": "N-ary tree"}
+  ]},
+  {"id": "tree-dfs-orders", "title": "Depth-first traversal orders", "members": [
+    {"slug": "binary-tree-inorder-traversal", "twist": "inorder"},
+    {"slug": "binary-tree-preorder-traversal", "twist": "preorder"},
+    {"slug": "binary-tree-postorder-traversal", "twist": "postorder"}
+  ]},
+  {"id": "root-to-leaf", "title": "Root-to-leaf paths", "members": [
+    {"slug": "path-sum", "twist": "does a path hit the target"},
+    {"slug": "path-sum-ii", "twist": "list all such paths"},
+    {"slug": "path-sum-iii", "twist": "paths may start anywhere downward"},
+    {"slug": "sum-root-to-leaf-numbers", "twist": "path digits form a number"}
+  ]},
+  {"id": "islands", "title": "Count or measure islands", "members": [
+    {"slug": "number-of-islands", "twist": "count islands"},
+    {"slug": "max-area-of-island", "twist": "largest island area"},
+    {"slug": "number-of-closed-islands", "twist": "islands not touching the border"},
+    {"slug": "number-of-distinct-islands", "twist": "count distinct shapes"},
+    {"slug": "count-sub-islands", "twist": "islands contained in another grid"}
+  ]},
+  {"id": "multi-source-bfs", "title": "Distance from many sources", "members": [
+    {"slug": "rotting-oranges", "twist": "minutes until all oranges rot"},
+    {"slug": "walls-and-gates", "twist": "distance to the nearest gate"},
+    {"slug": "01-matrix", "twist": "distance to the nearest 0"},
+    {"slug": "as-far-from-land-as-possible", "twist": "farthest water cell from land"}
+  ]},
+  {"id": "intervals-merge", "title": "Merge intervals", "members": [
+    {"slug": "merge-intervals", "twist": "merge all overlaps"},
+    {"slug": "insert-interval", "twist": "insert one into a sorted list"},
+    {"slug": "interval-list-intersections", "twist": "intersect two sorted lists"}
+  ]},
+  {"id": "meeting-rooms", "title": "Meeting rooms", "members": [
+    {"slug": "meeting-rooms", "twist": "can one person attend all"},
+    {"slug": "meeting-rooms-ii", "twist": "minimum rooms needed"},
+    {"slug": "meeting-rooms-iii", "twist": "which room hosts the most meetings"}
+  ]},
+  {"id": "course-schedule", "title": "Prerequisite ordering", "members": [
+    {"slug": "course-schedule", "twist": "can all courses be finished"},
+    {"slug": "course-schedule-ii", "twist": "return a valid order"},
+    {"slug": "course-schedule-iv", "twist": "answer is-prerequisite queries"}
+  ]},
+  {"id": "kth-largest", "title": "K-th largest", "members": [
+    {"slug": "kth-largest-element-in-an-array", "twist": "fixed array"},
+    {"slug": "kth-largest-element-in-a-stream", "twist": "values keep arriving"},
+    {"slug": "find-the-kth-largest-integer-in-the-array", "twist": "numbers given as strings"}
+  ]},
+  {"id": "top-k-frequent", "title": "Most frequent k", "members": [
+    {"slug": "top-k-frequent-elements", "twist": "numbers"},
+    {"slug": "top-k-frequent-words", "twist": "words, ties alphabetical"},
+    {"slug": "sort-characters-by-frequency", "twist": "sort all characters by count"}
+  ]},
+  {"id": "k-closest", "title": "K closest", "members": [
+    {"slug": "k-closest-points-to-origin", "twist": "2D points to the origin"},
+    {"slug": "find-k-closest-elements", "twist": "sorted 1D array to a value"}
+  ]},
+  {"id": "subarray-sum-target", "title": "Subarray sum with prefix sums", "members": [
+    {"slug": "subarray-sum-equals-k", "twist": "count subarrays summing to k"},
+    {"slug": "continuous-subarray-sum", "twist": "sum is a multiple of k, length 2+"},
+    {"slug": "subarray-sums-divisible-by-k", "twist": "count sums divisible by k"},
+    {"slug": "maximum-size-subarray-sum-equals-k", "twist": "longest subarray summing to k"},
+    {"slug": "contiguous-array", "twist": "equal number of 0s and 1s"}
+  ]},
+  {"id": "rotated-sorted-array", "title": "Rotated sorted array", "members": [
+    {"slug": "search-in-rotated-sorted-array", "twist": "find a target, distinct values"},
+    {"slug": "search-in-rotated-sorted-array-ii", "twist": "find a target, duplicates allowed"},
+    {"slug": "find-minimum-in-rotated-sorted-array", "twist": "find the minimum, distinct values"},
+    {"slug": "find-minimum-in-rotated-sorted-array-ii", "twist": "find the minimum, duplicates allowed"}
+  ]},
+  {"id": "binary-search-bounds", "title": "Binary search boundaries", "members": [
+    {"slug": "binary-search", "twist": "exact match"},
+    {"slug": "search-insert-position", "twist": "insertion point"},
+    {"slug": "find-first-and-last-position-of-element-in-sorted-array", "twist": "first and last occurrence"},
+    {"slug": "first-bad-version", "twist": "first true in a monotone predicate"}
+  ]},
+  {"id": "peak-finding", "title": "Find a peak", "members": [
+    {"slug": "find-peak-element", "twist": "any peak in an array"},
+    {"slug": "peak-index-in-a-mountain-array", "twist": "single peak, mountain shape"},
+    {"slug": "find-a-peak-element-ii", "twist": "peak in a 2D grid"}
+  ]},
+  {"id": "search-2d-matrix", "title": "Search a sorted matrix", "members": [
+    {"slug": "search-a-2d-matrix", "twist": "rows continue each other"},
+    {"slug": "search-a-2d-matrix-ii", "twist": "rows and columns sorted separately"}
+  ]},
+  {"id": "combination-sum", "title": "Combinations reaching a target", "members": [
+    {"slug": "combination-sum", "twist": "reuse allowed"},
+    {"slug": "combination-sum-ii", "twist": "each number once, duplicates in input"},
+    {"slug": "combination-sum-iii", "twist": "k numbers from 1 to 9"}
+  ]},
+  {"id": "permutations", "title": "Permutations", "members": [
+    {"slug": "permutations", "twist": "distinct values"},
+    {"slug": "permutations-ii", "twist": "duplicates in input"}
+  ]},
+  {"id": "subsets", "title": "Subsets", "members": [
+    {"slug": "subsets", "twist": "distinct values"},
+    {"slug": "subsets-ii", "twist": "duplicates in input"}
+  ]},
+  {"id": "word-search", "title": "Find words in a grid", "members": [
+    {"slug": "word-search", "twist": "one word"},
+    {"slug": "word-search-ii", "twist": "many words, trie"}
+  ]},
+  {"id": "word-break", "title": "Split into dictionary words", "members": [
+    {"slug": "word-break", "twist": "can it be split"},
+    {"slug": "word-break-ii", "twist": "list all splits"}
+  ]},
+  {"id": "word-ladder", "title": "Word transformation", "members": [
+    {"slug": "word-ladder", "twist": "length of the shortest chain"},
+    {"slug": "word-ladder-ii", "twist": "all shortest chains"}
+  ]},
+  {"id": "jump-game", "title": "Jump game", "members": [
+    {"slug": "jump-game", "twist": "can you reach the end"},
+    {"slug": "jump-game-ii", "twist": "fewest jumps"}
+  ]},
+  {"id": "reverse-list", "title": "Reverse a linked list", "members": [
+    {"slug": "reverse-linked-list", "twist": "whole list"},
+    {"slug": "reverse-linked-list-ii", "twist": "between two positions"},
+    {"slug": "reverse-nodes-in-k-group", "twist": "every k nodes"}
+  ]},
+  {"id": "cycle-detection-list", "title": "Cycle detection", "members": [
+    {"slug": "linked-list-cycle", "twist": "is there a cycle"},
+    {"slug": "linked-list-cycle-ii", "twist": "where the cycle starts"},
+    {"slug": "find-the-duplicate-number", "twist": "array as an implicit linked list"}
+  ]},
+  {"id": "dedupe-sorted-array", "title": "Remove duplicates in place", "members": [
+    {"slug": "remove-duplicates-from-sorted-array", "twist": "keep one copy"},
+    {"slug": "remove-duplicates-from-sorted-array-ii", "twist": "keep up to two copies"},
+    {"slug": "remove-element", "twist": "remove a given value"}
+  ]},
+  {"id": "dedupe-sorted-list", "title": "Remove duplicates from a sorted list", "members": [
+    {"slug": "remove-duplicates-from-sorted-list", "twist": "keep one copy"},
+    {"slug": "remove-duplicates-from-sorted-list-ii", "twist": "drop every duplicated value"}
+  ]},
+  {"id": "add-numbers-list", "title": "Add numbers stored as lists", "members": [
+    {"slug": "add-two-numbers", "twist": "digits in reverse order"},
+    {"slug": "add-two-numbers-ii", "twist": "digits in forward order"}
+  ]},
+  {"id": "merge-sorted", "title": "Merge sorted sequences", "members": [
+    {"slug": "merge-two-sorted-lists", "twist": "two linked lists"},
+    {"slug": "merge-k-sorted-lists", "twist": "k linked lists"},
+    {"slug": "merge-sorted-array", "twist": "two arrays, in place"}
+  ]},
+  {"id": "circular-buffer", "title": "Circular buffer", "members": [
+    {"slug": "design-circular-queue", "twist": "queue"},
+    {"slug": "design-circular-deque", "twist": "double-ended"}
+  ]},
+  {"id": "randomized-set", "title": "O(1) insert, delete, random", "members": [
+    {"slug": "insert-delete-getrandom-o1", "twist": "distinct values"},
+    {"slug": "insert-delete-getrandom-o1-duplicates-allowed", "twist": "duplicates allowed"}
+  ]},
+  {"id": "cache-eviction", "title": "Cache with eviction", "members": [
+    {"slug": "lru-cache", "twist": "evict least recently used"},
+    {"slug": "lfu-cache", "twist": "evict least frequently used"}
+  ]},
+  {"id": "grid-paths", "title": "Paths through a grid", "members": [
+    {"slug": "unique-paths", "twist": "count paths"},
+    {"slug": "unique-paths-ii", "twist": "with obstacles"},
+    {"slug": "minimum-path-sum", "twist": "cheapest path"},
+    {"slug": "minimum-falling-path-sum", "twist": "top to bottom, three moves"}
+  ]},
+  {"id": "coin-change", "title": "Coin change", "members": [
+    {"slug": "coin-change", "twist": "fewest coins"},
+    {"slug": "coin-change-ii", "twist": "number of combinations"}
+  ]},
+  {"id": "increasing-subsequence", "title": "Longest increasing subsequence", "members": [
+    {"slug": "longest-increasing-subsequence", "twist": "length"},
+    {"slug": "number-of-longest-increasing-subsequence", "twist": "how many longest"},
+    {"slug": "russian-doll-envelopes", "twist": "2D, nest envelopes"}
+  ]},
+  {"id": "palindromic-substrings", "title": "Palindromic substrings", "members": [
+    {"slug": "longest-palindromic-substring", "twist": "longest one"},
+    {"slug": "palindromic-substrings", "twist": "count all"}
+  ]},
+  {"id": "palindrome-partitioning", "title": "Palindrome partitioning", "members": [
+    {"slug": "palindrome-partitioning", "twist": "list all partitions"},
+    {"slug": "palindrome-partitioning-ii", "twist": "fewest cuts"}
+  ]},
+  {"id": "n-queens", "title": "N-Queens", "members": [
+    {"slug": "n-queens", "twist": "list boards"},
+    {"slug": "n-queens-ii", "twist": "count boards"}
+  ]},
+  {"id": "single-number", "title": "Find the unique number", "members": [
+    {"slug": "single-number", "twist": "others appear twice"},
+    {"slug": "single-number-ii", "twist": "others appear three times"},
+    {"slug": "single-number-iii", "twist": "two unique numbers"}
+  ]},
+  {"id": "majority-element", "title": "Majority element", "members": [
+    {"slug": "majority-element", "twist": "more than n/2"},
+    {"slug": "majority-element-ii", "twist": "more than n/3"}
+  ]},
+  {"id": "contains-duplicate", "title": "Duplicate detection", "members": [
+    {"slug": "contains-duplicate", "twist": "any duplicate"},
+    {"slug": "contains-duplicate-ii", "twist": "duplicate within distance k"},
+    {"slug": "contains-duplicate-iii", "twist": "near-duplicate within distance k"}
+  ]},
+  {"id": "next-greater", "title": "Next greater element", "members": [
+    {"slug": "next-greater-element-i", "twist": "lookup from a second array"},
+    {"slug": "next-greater-element-ii", "twist": "circular array"},
+    {"slug": "daily-temperatures", "twist": "distance to the next warmer day"}
+  ]},
+  {"id": "adjacent-duplicates", "title": "Remove adjacent duplicates", "members": [
+    {"slug": "remove-all-adjacent-duplicates-in-string", "twist": "pairs"},
+    {"slug": "remove-all-adjacent-duplicates-in-string-ii", "twist": "runs of k"}
+  ]},
+  {"id": "reverse-words", "title": "Reverse words", "members": [
+    {"slug": "reverse-words-in-a-string", "twist": "word order, trim spaces"},
+    {"slug": "reverse-words-in-a-string-ii", "twist": "word order, in place"},
+    {"slug": "reverse-words-in-a-string-iii", "twist": "letters inside each word"}
+  ]},
+  {"id": "spiral-matrix", "title": "Spiral matrix", "members": [
+    {"slug": "spiral-matrix", "twist": "read in spiral order"},
+    {"slug": "spiral-matrix-ii", "twist": "fill in spiral order"}
+  ]},
+  {"id": "roman-numerals", "title": "Roman numerals", "members": [
+    {"slug": "roman-to-integer", "twist": "parse"},
+    {"slug": "integer-to-roman", "twist": "format"}
+  ]},
+  {"id": "excel-columns", "title": "Spreadsheet column labels", "members": [
+    {"slug": "excel-sheet-column-title", "twist": "number to label"},
+    {"slug": "excel-sheet-column-number", "twist": "label to number"}
+  ]},
+  {"id": "consecutive-ones", "title": "Longest run of ones", "members": [
+    {"slug": "max-consecutive-ones", "twist": "no flips"},
+    {"slug": "max-consecutive-ones-ii", "twist": "one flip"},
+    {"slug": "max-consecutive-ones-iii", "twist": "k flips"}
+  ]},
+  {"id": "task-scheduler", "title": "Task scheduling with cooldown", "members": [
+    {"slug": "task-scheduler", "twist": "order is free"},
+    {"slug": "task-scheduler-ii", "twist": "order is fixed"}
+  ]},
+  {"id": "trapping-rain-water", "title": "Trapping rain water", "members": [
+    {"slug": "trapping-rain-water", "twist": "1D elevation"},
+    {"slug": "trapping-rain-water-ii", "twist": "2D height map"}
+  ]},
+  {"id": "string-compression", "title": "Run-length compression", "members": [
+    {"slug": "string-compression", "twist": "in place, counts as digits"},
+    {"slug": "string-compression-iii", "twist": "runs capped at 9"}
+  ]},
+  {"id": "nth-salary", "title": "Ranked salary queries", "members": [
+    {"slug": "second-highest-salary", "twist": "second highest overall"},
+    {"slug": "nth-highest-salary", "twist": "n-th highest overall"},
+    {"slug": "department-highest-salary", "twist": "highest per department"},
+    {"slug": "department-top-three-salaries", "twist": "top three per department"}
+  ]},
+  {"id": "duplicate-rows", "title": "Duplicate rows", "members": [
+    {"slug": "duplicate-emails", "twist": "find duplicates"},
+    {"slug": "delete-duplicate-emails", "twist": "delete duplicates"}
+  ]},
+  {"id": "range-sum-static", "title": "Static range sum", "members": [
+    {"slug": "range-sum-query-immutable", "twist": "1D"},
+    {"slug": "range-sum-query-2d-immutable", "twist": "2D"}
+  ]},
+  {"id": "range-sum-dynamic", "title": "Range sum with updates", "members": [
+    {"slug": "range-sum-query-mutable", "twist": "1D"},
+    {"slug": "range-sum-query-2d-mutable", "twist": "2D"}
+  ]},
+  {"id": "paint-house", "title": "Paint houses, no equal neighbors", "members": [
+    {"slug": "paint-house", "twist": "three colors"},
+    {"slug": "paint-house-ii", "twist": "k colors"}
+  ]},
+  {"id": "nested-weight-sum", "title": "Weighted nested list", "members": [
+    {"slug": "nested-list-weight-sum", "twist": "weight by depth"},
+    {"slug": "nested-list-weight-sum-ii", "twist": "weight by inverse depth"}
+  ]},
+  {"id": "word-distance", "title": "Shortest word distance", "members": [
+    {"slug": "shortest-word-distance", "twist": "one query"},
+    {"slug": "shortest-word-distance-ii", "twist": "many queries, preprocess"},
+    {"slug": "shortest-word-distance-iii", "twist": "the two words may be equal"}
+  ]},
+  {"id": "calendar-booking", "title": "Calendar booking", "members": [
+    {"slug": "my-calendar-i", "twist": "no double booking"},
+    {"slug": "my-calendar-ii", "twist": "no triple booking"},
+    {"slug": "my-calendar-iii", "twist": "report max overlap"}
+  ]},
+  {"id": "array-intersection", "title": "Intersection of two arrays", "members": [
+    {"slug": "intersection-of-two-arrays", "twist": "unique values"},
+    {"slug": "intersection-of-two-arrays-ii", "twist": "with multiplicity"}
+  ]},
+  {"id": "decode-ways", "title": "Decode digit strings", "members": [
+    {"slug": "decode-ways", "twist": "digits only"},
+    {"slug": "decode-ways-ii", "twist": "'*' wildcard"}
+  ]},
+  {"id": "longest-distinct-substring", "title": "Longest window with few distinct characters", "members": [
+    {"slug": "longest-substring-without-repeating-characters", "twist": "all characters distinct"},
+    {"slug": "longest-substring-with-at-most-two-distinct-characters", "twist": "at most 2 distinct"},
+    {"slug": "longest-substring-with-at-most-k-distinct-characters", "twist": "at most k distinct"},
+    {"slug": "fruit-into-baskets", "twist": "at most 2 distinct, array form"}
+  ]},
+  {"id": "anagram-window", "title": "Anagram inside a window", "members": [
+    {"slug": "minimum-window-substring", "twist": "shortest window containing all of t"},
+    {"slug": "permutation-in-string", "twist": "fixed-size window, any permutation"},
+    {"slug": "find-all-anagrams-in-a-string", "twist": "every anagram start index"}
+  ]},
+  {"id": "deep-copy", "title": "Deep copy with a node map", "members": [
+    {"slug": "clone-graph", "twist": "graph"},
+    {"slug": "copy-list-with-random-pointer", "twist": "list with random pointers"}
+  ]},
+  {"id": "sorted-to-bst", "title": "Build a balanced BST", "members": [
+    {"slug": "convert-sorted-array-to-binary-search-tree", "twist": "from a sorted array"},
+    {"slug": "convert-sorted-list-to-binary-search-tree", "twist": "from a sorted linked list"}
+  ]},
+  {"id": "middle-of-list", "title": "Middle of a linked list", "members": [
+    {"slug": "middle-of-the-linked-list", "twist": "return the middle"},
+    {"slug": "delete-the-middle-node-of-a-linked-list", "twist": "delete the middle"}
+  ]}
+ ]
+}

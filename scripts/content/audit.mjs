@@ -3,6 +3,7 @@
 // Usage: node scripts/content/audit.mjs
 import { readFile, writeFile } from 'node:fs/promises';
 import { TOPICS, ladderTotals } from '../../src/js/data/taxonomy.js';
+import { pickVersion, frequencyLookup } from '../../src/js/data/families.js';
 
 const ROOT = new URL('../../', import.meta.url).pathname;
 const { problems } = JSON.parse(await readFile(ROOT + 'content/index/problems.json', 'utf8'));
@@ -32,7 +33,7 @@ w('| Set | What it is | Easy / Medium / Hard | Total |');
 w('|---|---|---|---|');
 w(`| Ladders | Learning path, one ladder per topic, every concept covered | ${mix(ladder)} | ${ladder.length} |`);
 w(`| Wave 1 | Learning core: ladders + Blind 75 + NeetCode 150 + easy classics | ${mix(wave1)} | ${wave1.length} |`);
-w(`| Wave 2 | Company coverage: asked by ${selection.wave2.minCompanies}+ companies or top ${selection.wave2.topPerCompany} at a top-${selection.wave2.topCompanies} company | ${mix(wave2)} | ${wave2.length} |`);
+w(`| Wave 2 | Company coverage: asked by ${selection.wave2.minCompanies}+ companies, top ${selection.wave2.topPerCompany} at a top-${selection.wave2.topCompanies} company, or the family version a top company asks | ${mix(wave2)} | ${wave2.length} |`);
 w(`| **Core bank** | Everything we author (wave 1 + wave 2) | ${mix(core)} | **${core.length}** |`);
 w(`| Index | Everything known, available for later waves | ${mix(problems)} | ${problems.length} |`);
 w();
@@ -99,6 +100,39 @@ for (const [name, list] of topCompanies) {
   const l30 = top30.filter((p) => p.ladderStep !== null).length;
   if (c30 < 30) gaps.push(`${name}: ${30 - c30} of its top 30 problems are not in the core bank`);
   w(`| ${name} | ${list.length} | ${c30}/30 | ${c100}/${top100.length} (${pct(c100, top100.length)}) | ${l30}/30 |`);
+}
+w();
+
+const { families } = JSON.parse(await readFile(ROOT + 'content/families.json', 'utf8'));
+const lookup = frequencyLookup(problems);
+const bySlug = new Map(problems.map((p) => [p.slug, p]));
+const members = families.flatMap((f) => f.members);
+w('## Families and company versions');
+w();
+w(`${families.length} families group ${members.length} problems that share one solution idea. ${members.filter((m) => bySlug.get(m.slug).wave !== null).length} of those versions are in the core bank. A learner targeting a company is shown the version that company asks most.`);
+w();
+w('Families where a top company is shown a non-canonical version:');
+w();
+w('| Company | Own versions | Examples |');
+w('|---|---|---|');
+for (const [name] of topCompanies) {
+  const own = families
+    .map((f) => ({ f, pick: pickVersion(f, name, lookup) }))
+    .filter(({ f, pick }) => pick !== f.members[0].slug);
+  const examples = own.slice(0, 4).map(({ pick }) => bySlug.get(pick).title).join(', ');
+  w(`| ${name} | ${own.length} / ${families.length} | ${examples || '-'} |`);
+}
+w();
+const showcase = ['lowest-common-ancestor', 'vertical-order', 'calculator', 'palindrome-check', 'parentheses-validity', 'subarray-sum-target'];
+const five = topCompanies.slice(0, 5).map(([name]) => name);
+w('Sample: which version each company sees.');
+w();
+w(`| Family | ${five.join(' | ')} |`);
+w(`|---|${five.map(() => '---').join('|')}|`);
+for (const id of showcase) {
+  const f = families.find((x) => x.id === id);
+  if (!f) continue;
+  w(`| ${f.title} | ${five.map((c) => bySlug.get(pickVersion(f, c, lookup)).title).join(' | ')} |`);
 }
 w();
 

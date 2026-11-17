@@ -6,6 +6,7 @@
 import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { TOPICS, validateIndexRecord } from '../../src/js/data/taxonomy.js';
+import { validateFamilies, pickVersion } from '../../src/js/data/families.js';
 
 const ROOT = new URL('../../', import.meta.url).pathname;
 const CACHE = join(ROOT, 'content/.cache');
@@ -265,6 +266,7 @@ async function main() {
   // Core bank selection, driven by content/selection.json so thresholds are data, not code.
   const selection = JSON.parse(await readFile(join(ROOT, 'content/selection.json'), 'utf8'));
   const companyTop = new Set();
+  const topCompanyNames = [];
   {
     const byCompany = new Map();
     for (const p of problems.values()) {
@@ -274,12 +276,27 @@ async function main() {
       }
     }
     const { topCompanies, topPerCompany } = selection.wave2;
-    [...byCompany.values()]
-      .sort((a, b) => b.length - a.length)
-      .slice(0, topCompanies)
+    const ranked = [...byCompany.entries()].sort((a, b) => b[1].length - a[1].length).slice(0, topCompanies);
+    topCompanyNames.push(...ranked.map(([name]) => name));
+    ranked
+      .map(([, list]) => list)
       // Same tie-break as the audit, so "top N" means the same problems in both.
       .forEach((list) => list.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, topPerCompany).forEach(([slug]) => companyTop.add(slug)));
   }
+  // Families: the version each top company asks most becomes part of the bank, so a learner
+  // targeting that company can be shown it.
+  const { families } = JSON.parse(await readFile(join(ROOT, 'content/families.json'), 'utf8'));
+  const familyOf = new Map();
+  const companyVersions = new Set();
+  const freqOf = (slug, company) => problems.get(slug)?.companies.get(company)?.frequency ?? 0;
+  for (const f of families) {
+    for (const m of f.members) familyOf.set(m.slug, f.id);
+    for (const company of topCompanyNames) {
+      const pick = pickVersion(f, company, freqOf);
+      if (pick !== f.members[0].slug) companyVersions.add(pick);
+    }
+  }
+
   /** Why a problem is in the core bank; empty means it stays index-only. */
   const coreReasons = (p, ladder) => {
     const why = [];
@@ -290,6 +307,7 @@ async function main() {
       why.push('easy-classic');
     }
     if (p.companies.size >= wave2.minCompanies || companyTop.has(p.slug)) why.push('company-common');
+    if (companyVersions.has(p.slug)) why.push('company-version');
     return why;
   };
 
@@ -314,7 +332,8 @@ async function main() {
       0.2 * recentShare;
     const [contentId, authored] = CONTENT_IDS[p.slug] ?? [null, null];
     const why = coreReasons(p, ladder);
-    const wave = why.length === 0 ? null : why.some((r) => r !== 'company-common') ? 1 : 2;
+    // Wave 2 is company coverage: problems in the bank only because companies ask them.
+    const wave = why.length === 0 ? null : why.some((r) => r !== 'company-common' && r !== 'company-version') ? 1 : 2;
     const status = authored ?? (wave ? 'selected' : 'indexed');
     records.push({
       slug: p.slug,
@@ -335,13 +354,17 @@ async function main() {
       ladderStep: ladder ? ladder.step : null,
       wave,
       core: why,
+      family: familyOf.get(p.slug) ?? null,
       contentId,
       status,
     });
   }
   records.sort((a, b) => b.priority - a.priority || a.slug.localeCompare(b.slug));
 
-  const errors = records.flatMap((r) => validateIndexRecord(r, TOPICS));
+  const errors = [
+    ...records.flatMap((r) => validateIndexRecord(r, TOPICS)),
+    ...validateFamilies(families, new Map(records.map((r) => [r.slug, r]))),
+  ];
   if (errors.length) {
     console.error(errors.slice(0, 20).join('\n'));
     process.exit(1);

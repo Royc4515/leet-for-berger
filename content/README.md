@@ -9,7 +9,8 @@ The bank must cover every classic topic and every commonly asked company problem
 | Ladders | One per topic, every concept covered, easy -> hard | 225 |
 | **Wave 1**, learning core | Ladders + Blind 75 + NeetCode 150 + easy classics (NeetCode Easy, or Easy asked by 8+ companies) | 356 |
 | **Wave 2**, company coverage | Asked by 15+ companies, or top 30 at one of the 20 companies with the most tagged problems | +196 |
-| **Core bank** | Everything we author | **552** |
+| Company versions | The family version a top company asks most (see Families) | +27 |
+| **Core bank** | Everything we author | **579** |
 
 Thresholds live in `content/selection.json`. Current numbers and coverage: `content/AUDIT.md`.
 
@@ -64,7 +65,8 @@ One record per problem, one record per line, sorted by `priority`:
 | `companies` | Per company: `frequency` (0-100, all time) and `recency`, the newest window it was asked in (`30d`, `3m`, `6m`, `older`) |
 | `priority` | 0-1: 50% how many companies ask it, 30% curated list membership, 20% share of companies asking it recently |
 | `ladderStep` | Position on its topic's ladder (0 = first), null when not selected |
-| `wave`, `core` | Core bank membership: `wave` 1 or 2 (null = index only), `core` lists why (`ladder`, `classic`, `easy-classic`, `company-common`) |
+| `wave`, `core` | Core bank membership: `wave` 1 or 2 (null = index only), `core` lists why (`ladder`, `classic`, `easy-classic`, `company-common`, `company-version`) |
+| `family` | Family id from `content/families.json`, or null |
 | `contentId`, `status` | Link to `src/js/problems/<contentId>.js`. `indexed` -> `selected` -> `authored` -> `verified`; only `verified` ships |
 
 Content we write keeps the problem (same task, same constraints, same diversity) and rewrites the statement, examples and tests in our own words.
@@ -79,6 +81,20 @@ Content we write keeps the problem (same task, same constraints, same diversity)
 | Contest rating datasets | Numeric difficulty to seed `rating` | Yes, as a number |
 | Exercism problem-specifications (MIT) | Statements and canonical tests | Yes, with attribution |
 | Interview reports (Israeli companies, etc.) | Topic and difficulty signal | Manual, our own summary |
+
+## Families and versions
+
+`content/families.json` groups problems that share one solution idea, where each version changes one thing (the `twist`): sorted input, a circular array, parent pointers, k instead of 1. 79 families cover 222 problems.
+
+- The first member is canonical: the default for anyone not targeting a company.
+- `pickVersion(family, company, frequencyOf)` in `src/js/data/families.js` returns the version that company asks most. Meta, for example, gets Lowest Common Ancestor III, Basic Calculator II and Minimum Remove to Make Valid Parentheses where Google gets the originals.
+- Every version a top-20 company would be shown is pulled into the core bank (`core` reason `company-version`).
+- Ladders keep the member chosen for teaching. Version swapping applies where a company is the target: Company Set, Mock OA, Interview.
+- Each index record carries `family` (null when it has none).
+
+What makes a family: same core technique, one stated twist. A shared name is not enough (Two Sum IV is a tree problem, Jump Game V is DP), so families are curated by hand, not generated.
+
+Source limit: company data comes from LeetCode tags only. Versions from other sites (HackerRank, CodeSignal) need another source.
 
 ## Learning network
 
@@ -172,7 +188,7 @@ graph TD
 ## Pipeline
 
 1. **Index** (done): 3,398 problems from 470 companies, NeetCode lists and contest ratings, mapped to `topic` + `rating`.
-2. **Select** (done): `content/selection.json` defines the core bank (552), `content/ladders.json` holds 225 hand-picked problems, one ladder per topic, each with its concept, in learning order. Picked from the highest-priority candidates.
+2. **Select** (done): `content/selection.json` defines the core bank (579 with company versions), `content/ladders.json` holds 225 hand-picked problems, one ladder per topic, each with its concept, in learning order. Picked from the highest-priority candidates.
 3. **Audit**: `node scripts/content/audit.mjs` writes `content/AUDIT.md` (ladder fill, concept coverage, Blind 75 / NeetCode 150 coverage, top-company coverage, high-priority problems left out, gaps).
 4. **Author**: write the problem module with `/add-problem`.
 5. **Verify**: solutions in every language pass all 15 cases, then flip `status` to `verified`.
