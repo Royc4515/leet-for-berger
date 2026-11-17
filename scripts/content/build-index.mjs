@@ -177,13 +177,21 @@ const CONTENT_IDS = {
   'jump-game': ['jump-reach', null],
   'maximum-level-sum-of-a-binary-tree': ['tree-level-sums', null],
   'lowest-common-ancestor-of-a-binary-tree': ['lowest-shared-ancestor', null],
-  'number-of-islands': ['island-count', null],
+  'number-of-islands': ['island-count', 'verified'],
   'k-closest-points-to-origin': ['k-closest-points', null],
   subsets: ['subset-builder', null],
   'climbing-stairs': ['stair-paths', null],
   'edit-distance': ['edit-distance-lite', null],
   'minimum-path-sum': ['grid-min-path', null],
   'cheapest-flights-within-k-stops': ['cheapest-route-k-stops', null],
+  'course-schedule': ['course-check', 'verified'],
+  'course-schedule-ii': ['course-order', 'verified'],
+  'word-ladder': ['word-morph', 'verified'],
+  'open-the-lock': ['lock-steps', 'verified'],
+  'is-graph-bipartite': ['two-color-check', 'verified'],
+  'redundant-connection': ['extra-link', 'verified'],
+  'accounts-merge': ['account-merge', 'verified'],
+  'checking-existence-of-edge-length-limited-paths': ['limited-paths', 'verified'],
 };
 
 const WINDOWS = [
