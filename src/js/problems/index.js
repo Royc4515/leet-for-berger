@@ -6,8 +6,9 @@
  * show the full curriculum shape before every problem is authored.
  * To add a problem: see docs/PROBLEM_FORMAT.md or run the /add-problem Claude Code command.
  */
-import smallestBaseSegment from './smallest-base-segment.js';
-import notifyRecipients from './notify-recipients.js';
+import { LANGUAGES, LANGUAGE_IDS, entryName, starterCode } from '../engine/codegen.js';
+import smallestBaseSegment from './smallest-base-segment/problem.js';
+import notifyRecipients from './notify-recipients/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -19,7 +20,44 @@ export const TOPICS = [
 
 export const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
 
-const implemented = [smallestBaseSegment, notifyRecipients];
+/**
+ * Adds everything derived from a problem's neutral signature: per-language entry names and
+ * starter code. Solutions are files in <id>/solutions and load on demand (see loadSolution).
+ * @param {object} problem
+ */
+function hydrate(problem) {
+  return {
+    ...problem,
+    signatures: Object.fromEntries(LANGUAGE_IDS.map((l) => [l, { entry: entryName(l, problem.signature.name) }])),
+    starterCode: Object.fromEntries(LANGUAGE_IDS.map((l) => [l, starterCode(l, problem.signature)])),
+  };
+}
+
+const implemented = [smallestBaseSegment, notifyRecipients].map(hydrate);
+
+/**
+ * URL of a problem's solution file for a language.
+ * @param {string} problemId
+ * @param {string} lang
+ */
+export function solutionUrl(problemId, lang) {
+  const file = LANGUAGES.find((l) => l.id === lang)?.file;
+  if (!file) throw new Error(`Unknown language "${lang}"`);
+  return new URL(`./${problemId}/solutions/${file}`, import.meta.url).href;
+}
+
+/**
+ * Fetches the reference solution for "Reveal Solution". Solutions are separate files (not
+ * bundled into the module) so every language is a real, compilable file the verifier checks.
+ * @param {string} problemId
+ * @param {string} lang
+ * @returns {Promise<string>}
+ */
+export async function loadSolution(problemId, lang) {
+  const res = await fetch(solutionUrl(problemId, lang));
+  if (!res.ok) throw new Error(`No ${lang} solution for ${problemId} (${res.status})`);
+  return res.text();
+}
 
 /** @type {{id:string,title:string,difficulty:string,topics:string[],milestone:number}[]} */
 const planned = [

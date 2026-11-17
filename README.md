@@ -21,7 +21,7 @@ No install is needed to run the app; `npm install` only pulls Playwright for the
 | Workspace: description, Monaco (vs-dark), console, resizable splits | done |
 | 15-case harness: 5 detailed + 10 hidden, per-case time limit, verdicts | done |
 | JavaScript and Python execution in the browser (Web Worker, Pyodide) | done |
-| Java | editor only, server runner on the roadmap |
+| Languages | 8: Python, JavaScript, TypeScript, Java, C++, C, C#, Go. Starter code generated from a typed signature; every solution verified in CI. JS and Python run in the browser, the rest are editor-only until the server runner |
 | Problem bank, filters, progress (solved, streak, accuracy) | done |
 | Learning Path, 4 milestones | done |
 | Interview Simulator (45 min, lockdown, report) | done |
@@ -38,13 +38,14 @@ Given a non-empty string `s`, return the shortest `t` such that `s` is `t` repea
 
 `CLAUDE.md` is the operating manual: commands, architecture map, invariants, conventions and definition of done. Project commands:
 
-- `/add-problem <id>`: author a problem end-to-end with tests
+- `/add-problem <id>`: author a problem end-to-end with tests and solutions in 8 languages
 - `/verify`: full check before committing
 
 ## Docs
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Problem format](docs/PROBLEM_FORMAT.md)
+- [Content: index, ladders, families, audit](content/README.md)
 - [Roadmap](docs/ROADMAP.md)
 - [ADR 0001: no build step](docs/adr/0001-no-build-step.md)
 

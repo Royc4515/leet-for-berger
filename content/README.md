@@ -2,7 +2,7 @@
 
 ## Scope
 
-The bank must cover every classic topic and every commonly asked company problem (including Israeli companies), with an easy on-ramp, in all common interview languages (Python, Java, C++, JavaScript; C# and Go as extras).
+The bank must cover every classic topic and every commonly asked company problem (including Israeli companies), with an easy on-ramp, in the 8 common interview languages (Python, JavaScript, TypeScript, Java, C++, C, C#, Go).
 
 | Set | Rule | Size |
 |---|---|---|
@@ -11,7 +11,9 @@ The bank must cover every classic topic and every commonly asked company problem
 | **Wave 2**, company coverage | Asked by 15+ companies; top 30 at one of the 20 companies with the most tags; the family version a top company asks; top 30 of each Israeli company; Codility lessons | +291 |
 | **Core bank** | Everything we author | **711 entries = 596 distinct problems** |
 
-**Distinct problems** is the number that counts: all versions of one family are one problem (a company's variant, a Codility version), so 711 entries are 596 distinct problems (203 Easy / 281 Medium / 112 Hard). `distinctProblems()` in `src/js/data/families.js` computes it; `content/AUDIT.md` reports it first.
+**The path is 131 problems**, one per subtopic (the most asked, ladder problems first), marked `essential` in the index. Finishing it means every pattern has been solved once; everything else is optional practice.
+
+**Distinct problems** is the size of the whole bank: all versions of one family are one problem (a company's variant, a Codility version), so 711 entries are 596 distinct problems (203 Easy / 281 Medium / 112 Hard). `distinctProblems()` in `src/js/data/families.js` computes it; `content/AUDIT.md` reports it first.
 
 Every core problem is tagged with a **topic** (e.g. Trees), a **subtopic** (`concept`, e.g. BFS level order) and, where relevant, **secondary** topics it also touches (Two Sum IV is a tree problem that also uses two pointers). Subtopics come from the ladders, then `content/subtopics.json` (hand-assigned), then tag rules.
 
@@ -70,6 +72,7 @@ One record per problem, one record per line, sorted by `priority`:
 | `companies` | Per company: `frequency` (0-100, all time) and `recency`, the newest window it was asked in (`30d`, `3m`, `6m`, `older`), or `reported` (from a candidate report, nominal frequency 50, with `source`) |
 | `priority` | 0-1: 50% how many companies ask it, 30% curated list membership, 20% share of companies asking it recently |
 | `ladderStep` | Position on its topic's ladder (0 = first), null when not selected |
+| `essential` | `{ tier, order }` when the problem is on the 131-problem path, else null |
 | `wave`, `core` | Core bank membership: `wave` 1 or 2 (null = index only), `core` lists why (`ladder`, `classic`, `easy-classic`, `company-common`, `company-version`) |
 | `family` | Family id from `content/families.json`, or null |
 | `contentId`, `status` | Link to `src/js/problems/<contentId>.js`. `indexed` -> `selected` -> `authored` -> `verified`; only `verified` ships |

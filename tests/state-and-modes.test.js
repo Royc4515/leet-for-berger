@@ -5,7 +5,7 @@ import { emptyState, recordSubmission, computeStreak, stats, dayKey, load } from
 import { createSession, recordAttempt, recordTabSwitch, finish, analytics, remainingMs, formatClock } from '../src/js/modes/interview.js';
 import { createBot } from '../src/js/modes/battle.js';
 import { ScriptedMentor } from '../src/js/mentor/mentor.js';
-import problem from '../src/js/problems/smallest-base-segment.js';
+import problem from '../src/js/problems/smallest-base-segment/problem.js';
 
 const day = (s) => new Date(`${s}T12:00:00`);
 

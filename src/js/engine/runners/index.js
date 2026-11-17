@@ -4,10 +4,13 @@
  * and a worker (or a remote runner with the same run() contract).
  */
 import { WorkerRunner } from './worker-runner.js';
+import { LANGUAGES } from '../codegen.js';
+
+export { LANGUAGES };
 
 const workerUrl = (file) => new URL(`../workers/${file}`, import.meta.url).href;
 
-/** Java needs a JVM; in-browser options are too heavy for v1, so execution is server-side (roadmap). */
+/** Languages that cannot run in the browser report an honest "not supported" per case until the server runner exists. */
 class UnsupportedRunner {
   constructor(message) {
     this.message = message;
@@ -20,19 +23,16 @@ class UnsupportedRunner {
   }
 }
 
-export const LANGUAGES = [
-  { id: 'javascript', label: 'JavaScript', monaco: 'javascript', executable: true },
-  { id: 'python', label: 'Python 3', monaco: 'python', executable: true },
-  { id: 'java', label: 'Java 17', monaco: 'java', executable: false },
-];
-
 const runners = {
   javascript: new WorkerRunner({ workerUrl: workerUrl('js-worker.js') }),
   python: new WorkerRunner({ workerUrl: workerUrl('py-worker.js'), persistent: true, waitForReady: true }),
-  java: new UnsupportedRunner(
-    'Java execution needs the server-side runner (see docs/ROADMAP.md, Phase 2). Editor support only for now.',
-  ),
 };
+// Compiled and typed languages need the server-side runner (ROADMAP Phase 2): editor only today.
+for (const l of LANGUAGES.filter((x) => !x.executable)) {
+  runners[l.id] = new UnsupportedRunner(
+    `${l.label} execution needs the server-side runner (see docs/ROADMAP.md, Phase 2). Editor support only for now.`,
+  );
+}
 
 /** @param {string} language */
 export function getRunner(language) {

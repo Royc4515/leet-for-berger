@@ -80,3 +80,16 @@ test('validateIndexRecord rejects a ladder problem without a concept', () => {
   const rec = { slug: 'x', title: 'X', topic: 'stack', concept: null, difficulty: 'Medium', rating: 5, estMinutes: 25, status: 'selected', priority: 0.5, ladderStep: 0, wave: 1 };
   assert.ok(validateIndexRecord(rec, TOPICS).some((e) => e.includes('needs a concept')));
 });
+
+test('essential path has exactly one core problem per subtopic', () => {
+  const essentials = index.problems.filter((r) => r.essential);
+  const subtopics = TOPICS.reduce((n, t) => n + t.concepts.length, 0);
+  assert.equal(essentials.length, subtopics);
+  const seen = new Set();
+  for (const r of essentials) {
+    assert.notEqual(r.wave, null, `${r.slug} is essential but not in the core bank`);
+    const key = `${r.topic}/${r.concept}`;
+    assert.ok(!seen.has(key), `two essentials for ${key}`);
+    seen.add(key);
+  }
+});

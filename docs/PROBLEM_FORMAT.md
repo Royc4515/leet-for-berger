@@ -1,32 +1,64 @@
 # Problem format
 
-One file per problem: `src/js/problems/<id>.js`, default export = problem object. Reference implementation: `smallest-base-segment.js`.
+One folder per problem, written once and verified in all 8 interview languages:
 
-## Required fields
+```
+src/js/problems/<id>/
+  problem.js          statement, typed signature, tests (reference + seeded generators), hints
+  solutions/
+    solution.py       Python 3
+    solution.js       JavaScript
+    solution.ts       TypeScript
+    Solution.java     Java
+    solution.cpp      C++17
+    solution.c        C
+    Solution.cs       C#
+    solution.go       Go
+```
+
+Reference implementation: `src/js/problems/notify-recipients/`.
+
+Starter code and per-language entry names are **generated** from the signature (`src/js/engine/codegen.js`); never write them by hand. Solutions are real files so the verifier can compile them and editors can highlight them; the app fetches one when the user clicks "Reveal Solution".
+
+## Required fields in `problem.js`
 
 | Field | Type | Notes |
 |---|---|---|
-| `id` | string | kebab-case, equals file name |
+| `id` | string | kebab-case, equals the folder name |
 | `title` | string | |
 | `difficulty` | `'Easy' \| 'Medium' \| 'Hard'` | |
 | `topics` | string[] | ids from `TOPICS` in `problems/index.js` |
 | `patterns` | string[] | free text tags shown in the header |
-| `milestone` | 1-4 | learning path placement |
+| `milestone` | 1-4 | learning path placement (v0.1 UI) |
 | `timeLimitMs` | number | **per case** wall clock |
 | `argNames` | string[] | used to print `s = "..."` in the console |
 | `statementHtml` | string | trusted author HTML only |
 | `constraints` | string[] | |
 | `examples` | `{input, output, explanation?}[]` | usually the first 2-3 visible tests |
 | `hints` | string[] | Socratic ladder for the mentor, 3-5 items, questions not answers |
-| `signatures` | `{ [lang]: { entry } }` | function name per language |
-| `starterCode` | `{ javascript, python, java }` | |
-| `solutions` | `{ javascript, python, java }` | optimal, commented with WHY |
+| `signature` | `{ name, params: {name, type}[], returns }` | neutral types, see below |
 | `visibleTests` | exactly 5 `{args, expected}` | detailed feedback |
 | `hiddenTests` | exactly 10 `{args, expected}` | pass/fail only |
 | `parseCustomInput(raw)` | fn | returns `{ok:true,args}` or `{ok:false,error}`; enforce constraints |
 | `solveReference(args)` | fn | computes expected for custom input |
 
 Also export the JS `reference` function so tests can import it.
+
+## Signature types
+
+`int`, `long`, `double`, `bool`, `string`, and arrays of them up to two dimensions (`int[]`, `string[][]`). Names are camelCase; each language gets its own convention (`notify_recipients` in Python, `NotifyRecipients` in C#).
+
+| Neutral | Python | Java | C++ | C | C# | Go | TS / JS |
+|---|---|---|---|---|---|---|---|
+| `int` | int | int | int | int | int | int | number |
+| `long` | int | long | long long | long long | long | int64 | number |
+| `string` | str | String | string | char* | string | string | string |
+| `int[]` | list[int] | int[] | vector&lt;int&gt;& | int* + size | int[] | []int | number[] |
+| `int[][]` | list[list[int]] | int[][] | vector&lt;vector&lt;int&gt;&gt;& | int** + size + col sizes | int[][] | [][]int | number[][] |
+
+C follows LeetCode conventions: array params carry explicit sizes, array returns use `int* returnSize` (and `int** returnColumnSizes` for 2D) and must be `malloc`ed.
+
+Not supported yet: linked lists, trees, graphs as node objects, and class-based design problems. Add them to the codegen and harnesses before authoring problems that need them.
 
 ## Test design checklist
 
@@ -39,9 +71,11 @@ Hidden tests must target the classic wrong answers, not just "more of the same":
 - [ ] generated inputs use `mulberry32(seed)`, never `Math.random()`
 - [ ] every `expected` computed by `reference`, and `reference` verified against a brute force in `tests/`
 
-## Registering
+## Registering and verifying
 
-1. Import it in `src/js/problems/index.js` and add to `implemented`.
+1. Import it in `src/js/problems/index.js` and add it to the `implemented` list.
 2. Remove its `planned` entry if one exists.
 3. Add `tests/<id>.test.js`: reference vs brute force on random inputs, visible expectations agree with reference, parser accepts/rejects correctly.
-4. `npm run check`. `tests/solutions.test.js` runs the shipped JavaScript, Python and Java solutions against all 15 cases (Python and Java where `python3` / `javac` exist; CI has both). Java solutions run through `scripts/verify/Harness.java`, which supports `int`, `long`, `double`, `boolean`, `String`, `char`, arrays of these and `List` parameters.
+4. `npm run check`. `tests/solutions.test.js` compiles and runs all 8 solutions against the 15 cases and checks that the generated starter code compiles in every language. Locally a missing toolchain skips that language; CI sets `REQUIRE_ALL_LANGUAGES=1` and installs all of them, so nothing ships unverified.
+
+Harnesses live in `scripts/verify/`: `harnesses.mjs` generates a test program per language from the signature (C, C++, Go and C# read a flat token stream, the others JSON), `Harness.java` runs Java by reflection.

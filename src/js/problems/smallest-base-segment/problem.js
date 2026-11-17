@@ -8,7 +8,7 @@
  * harness, the UI and the unit tests can stay problem-agnostic.
  */
 
-import { mulberry32 } from '../engine/rng.js';
+import { mulberry32 } from '../../engine/rng.js';
 
 /**
  * Reference O(n) solution via the KMP prefix function.
@@ -100,89 +100,12 @@ export const problem = {
     'With the prefix function pi, the smallest period is n - pi[n-1]. When does that period actually tile the whole string?',
   ],
 
-  signatures: {
-    javascript: { entry: 'smallestBaseSegment' },
-    python: { entry: 'smallest_base_segment' },
-    java: { entry: 'smallestBaseSegment', className: 'Solution' },
-  },
-
-  starterCode: {
-    javascript: `/**
- * @param {string} s
- * @return {string}
- */
-function smallestBaseSegment(s) {
-  // Your code here
-}
-`,
-    python: `def smallest_base_segment(s: str) -> str:
-    # Your code here
-    pass
-`,
-    java: `class Solution {
-    public String smallestBaseSegment(String s) {
-        // Your code here
-        return "";
-    }
-}
-`,
-  },
-
-  solutions: {
-    javascript: `/**
- * O(n) time, O(n) space - KMP prefix function.
- * @param {string} s
- * @return {string}
- */
-function smallestBaseSegment(s) {
-  const n = s.length;
-  const pi = new Array(n).fill(0);
-  for (let i = 1; i < n; i++) {
-    let k = pi[i - 1];
-    // Fall back through shorter borders until the next char can extend one.
-    while (k > 0 && s[i] !== s[k]) k = pi[k - 1];
-    if (s[i] === s[k]) k++;
-    pi[i] = k;
-  }
-  const period = n - pi[n - 1];
-  // A period only builds s from whole copies when it divides n ("ababa" -> itself).
-  return n % period === 0 ? s.slice(0, period) : s;
-}
-`,
-    python: `def smallest_base_segment(s: str) -> str:
-    # O(n) time, O(n) space - KMP prefix function.
-    n = len(s)
-    pi = [0] * n
-    for i in range(1, n):
-        k = pi[i - 1]
-        # Fall back through shorter borders until the next char can extend one.
-        while k > 0 and s[i] != s[k]:
-            k = pi[k - 1]
-        if s[i] == s[k]:
-            k += 1
-        pi[i] = k
-    period = n - pi[-1]
-    # A period only builds s from whole copies when it divides n ("ababa" -> itself).
-    return s[:period] if n % period == 0 else s
-`,
-    java: `class Solution {
-    // O(n) time, O(n) space - KMP prefix function.
-    public String smallestBaseSegment(String s) {
-        int n = s.length();
-        int[] pi = new int[n];
-        for (int i = 1; i < n; i++) {
-            int k = pi[i - 1];
-            // Fall back through shorter borders until the next char can extend one.
-            while (k > 0 && s.charAt(i) != s.charAt(k)) k = pi[k - 1];
-            if (s.charAt(i) == s.charAt(k)) k++;
-            pi[i] = k;
-        }
-        int period = n - pi[n - 1];
-        // A period only builds s from whole copies when it divides n ("ababa" -> itself).
-        return n % period == 0 ? s.substring(0, period) : s;
-    }
-}
-`,
+  // Neutral signature: starter code and harnesses for all 8 languages are generated from it
+  // (src/js/engine/codegen.js). Solutions live in ./solutions, one file per language.
+  signature: {
+    name: 'smallestBaseSegment',
+    params: [{ name: 's', type: 'string' }],
+    returns: 'string',
   },
 
   /** Exactly 5 visible tests (detailed feedback). */

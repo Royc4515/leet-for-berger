@@ -489,6 +489,18 @@ async function main() {
   }
   records.sort((a, b) => b.priority - a.priority || a.slug.localeCompare(b.slug));
 
+  // Essential path: one problem per subtopic, the most asked. Ladder problems are curated for
+  // teaching, so they win over the rest of the core bank; records are already priority-sorted.
+  for (const t of TOPICS) {
+    t.concepts.forEach((concept, i) => {
+      const inSubtopic = records.filter((r) => r.wave !== null && r.topic === t.id && r.concept === concept);
+      const pick = inSubtopic.find((r) => r.ladderStep !== null) ?? inSubtopic[0];
+      if (!pick) throw new Error(`no core problem for subtopic ${t.id}/${concept}`);
+      pick.essential = { tier: t.tier, order: i };
+    });
+  }
+  for (const r of records) r.essential ??= null;
+
   const errors = [
     ...records.flatMap((r) => validateIndexRecord(r, TOPICS)),
     ...validateFamilies(families, new Map(records.map((r) => [r.slug, r]))),

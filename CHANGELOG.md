@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 ### Added
+- Essential path: 131 problems, one per subtopic (the most asked, ladder problems first). Index records carry `essential`; the audit lists the path by topic. The rest of the bank is optional practice.
+- Eight interview languages: Python, JavaScript, TypeScript, Java, C++, C, C#, Go. Problems declare one neutral typed `signature`; `src/js/engine/codegen.js` generates entry names and starter code for every language (C in LeetCode style).
+- Problem folders: `src/js/problems/<id>/problem.js` plus `solutions/` with one real file per language. "Reveal Solution" fetches the file.
+- 8-language verifier: `tests/solutions.test.js` compiles and runs every solution against the 15 cases and checks the generated starter code compiles. Harnesses in `scripts/verify/harnesses.mjs`; C, C++, Go and C# read a flat token stream. CI installs Java, Go, .NET and TypeScript and sets `REQUIRE_ALL_LANGUAGES=1` so no language is skipped.
 - Problem: Notify Recipients (original, from reported monday.com tasks): resolve user and group targets to a sorted, deduplicated recipient list. Hidden tests punish re-expanding a repeated group, scanning all users per request, and sorting ids as text.
 - Solution verifier: `tests/solutions.test.js` runs every problem's shipped JavaScript, Python and Java solution against all 15 cases; Java through `scripts/verify/Harness.java`. Smallest Base Segment's Python and Java solutions are now verified too.
 - Distinct problem count: `distinctProblems()` collapses family versions; the core bank's 711 entries are 596 distinct problems. Reported first in `content/AUDIT.md`.

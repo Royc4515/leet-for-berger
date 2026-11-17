@@ -32,6 +32,16 @@ const slugMap = new Map(problems.map((p) => [p.slug, p]));
 const units = distinctProblems(familyList, problems);
 const unitReps = units.map((u) => slugMap.get(u.representative));
 const extraVersions = core.length - units.length;
+const essentials = problems.filter((p) => p.essential);
+w('## Essential path');
+w();
+w(`**${essentials.length} problems**, one per subtopic (${mix(essentials)} Easy / Medium / Hard). This is the learning path: finishing it means every pattern has been solved once. Everything else in the bank is optional practice, by topic or by company.`);
+w();
+for (const t of TOPICS) {
+  const list = essentials.filter((p) => p.topic === t.id).sort((a, b) => a.essential.order - b.essential.order);
+  w(`- **${t.title}**: ${list.map((p) => `${p.title} (${p.difficulty[0]})`).join(' · ')}`);
+}
+w();
 w('## Distinct problems');
 w();
 w(`**${units.length} distinct problems** (${mix(unitReps)} Easy / Medium / Hard). The core bank holds ${core.length} entries because ${extraVersions} of them are extra versions of a problem already counted (same solution idea, one twist: a company's variant, a Codility version).`);

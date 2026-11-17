@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mulberry32 } from '../src/js/engine/rng.js';
-import problem, { reference } from '../src/js/problems/notify-recipients.js';
+import problem, { reference } from '../src/js/problems/notify-recipients/problem.js';
 
 // Brute force: scan every user for every request. Independent of the indexed reference.
 function brute(users, requests) {
