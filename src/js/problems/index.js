@@ -49,6 +49,16 @@ import largestConcat from './largest-concat/problem.js';
 import mergeRanges from './merge-ranges/problem.js';
 import meetingRoomMinimizer from './meeting-room-minimizer/problem.js';
 import smallerCount from './smaller-count/problem.js';
+import longestDistinctWindow from './longest-distinct-window/problem.js';
+import windowMaximums from './window-maximums/problem.js';
+import coveringWindow from './covering-window/problem.js';
+import vowelWindow from './vowel-window/problem.js';
+import rotatedSearch from './rotated-search/problem.js';
+import eatingSpeed from './eating-speed/problem.js';
+import mergedMedian from './merged-median/problem.js';
+import matrixSearch from './matrix-search/problem.js';
+import targetRange from './target-range/problem.js';
+import mountainPeak from './mountain-peak/problem.js';
 
 export const TOPICS = [
   { id: 'arrays-strings', label: 'Arrays / Strings' },
@@ -75,7 +85,7 @@ function hydrate(problem) {
   };
 }
 
-const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount].map(hydrate);
+const implemented = [smallestBaseSegment, notifyRecipients, reverseList, levelOrder, minStack, pairSumTarget, anagramBuckets, topKFrequent, longestStreak, isomorphicStrings, ticketQueue, digitPalindrome, romanNumeralValue, stringMultiply, primeCount, powerMod, stringGcd, spiralOrder, rotateGrid, zeroRowsCols, loneNumber, bitCount, addWithoutPlus, circleElimination, grammarSymbol, rainTrap, mergeSorted, zerosToEnd, zeroTriplets, bracketCheck, asteroidCollision, warmerDays, postfixEval, productExceptSelf, subarraySumK, regionSum, rangeBookings, largestConcat, mergeRanges, meetingRoomMinimizer, smallerCount, longestDistinctWindow, windowMaximums, coveringWindow, vowelWindow, rotatedSearch, eatingSpeed, mergedMedian, matrixSearch, targetRange, mountainPeak].map(hydrate);
 
 /**
  * URL of a problem's solution file for a language.
@@ -104,8 +114,6 @@ export async function loadSolution(problemId, lang) {
 /** @type {{id:string,title:string,difficulty:string,topics:string[],milestone:number}[]} */
 const planned = [
   { id: 'mirror-check', title: 'Mirror Check (Two Pointers)', difficulty: 'Easy', topics: ['arrays-strings'], milestone: 1 },
-  { id: 'longest-distinct-window', title: 'Longest Distinct Window', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 2 },
-  { id: 'rotated-search', title: 'Search in Rotated Array', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 2 },
   { id: 'jump-reach', title: 'Jump Reach', difficulty: 'Medium', topics: ['greedy'], milestone: 2 },
   { id: 'tree-level-sums', title: 'Tree Level Sums', difficulty: 'Easy', topics: ['trees'], milestone: 3 },
   { id: 'lowest-shared-ancestor', title: 'Lowest Shared Ancestor', difficulty: 'Medium', topics: ['trees'], milestone: 3 },
