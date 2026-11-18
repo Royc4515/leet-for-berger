@@ -750,6 +750,36 @@ body.resizing-y * {
   color: var(--muted);
   font: 12.5px var(--mono);
 }
+/* Growth estimate under an Accepted submission (ADR 0004). */
+.growth {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  font: 12.5px var(--mono);
+  color: var(--text-2);
+}
+.growth-pending {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+.growth-matches {
+  border-left-color: var(--ok);
+}
+.growth-slower-than-target {
+  border-left-color: var(--warn);
+}
+.growth-head {
+  color: var(--text);
+}
+.growth-note {
+  margin-top: 3px;
+  color: var(--muted);
+  font-family: var(--font);
+}
 .section-label {
   margin: 12px 0 6px;
   color: var(--muted);

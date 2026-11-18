@@ -83,6 +83,27 @@ export function renderResult(el, result, { kind, argNames, elapsedMs }) {
   );
 }
 
+/**
+ * Growth estimate line under an Accepted submission's verdict (docs/adr/0004-complexity-feedback.md).
+ * Starts as a "timing" note and is replaced by the estimate. Plain text inside the console's live
+ * region, so screen readers hear the result once it lands.
+ * @param {HTMLElement} el the console body holding a rendered result
+ * @returns {{ show: (text: { headline: string, note: string }, verdict: string) => void, remove: () => void }}
+ */
+export function renderGrowthLine(el) {
+  const box = h('div.growth.growth-pending', {}, h('span.spinner', { 'aria-hidden': 'true' }), ' Growth estimate: timing your code on larger inputs...');
+  const head = el.querySelector('.result-head');
+  if (head) head.after(box);
+  else el.append(box);
+  return {
+    show({ headline, note }, verdict) {
+      box.className = `growth growth-${verdict.replace(/\s+/g, '-')}`;
+      mount(box, h('div.growth-head', {}, headline), h('div.growth-note', {}, note));
+    },
+    remove: () => box.remove(),
+  };
+}
+
 function showCase(el, c, argNames) {
   const rows = [
     ['Input', c.args.map((a, i) => `${argNames[i] ?? `arg${i}`} = ${preview(a)}`).join('\n')],

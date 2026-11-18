@@ -15,8 +15,9 @@
 import { h, mount, trustedHtml, toast, confirmDialog, difficultyBadge } from '../dom.js';
 import { attachResizer } from '../resizer.js';
 import { createEditor } from '../editor.js';
-import { renderIdle, renderPending, renderResult, renderError } from '../results.js';
+import { renderIdle, renderPending, renderResult, renderError, renderGrowthLine } from '../results.js';
 import { buildSuite, judge, comparatorFor } from '../../engine/harness.js';
+import { estimateGrowth, describeGrowth } from '../../engine/growth.js';
 import { getRunner } from '../../engine/runners/index.js';
 import { recordSubmission, markRevealed } from '../../state/progress.js';
 import { loadDraft, saveDraft, clearDraft } from '../../state/drafts.js';
@@ -219,9 +220,61 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     toast('Solution loaded. Read it, then try to rewrite it from memory.', 'info');
   });
 
+  /* ---------- Growth estimate (docs/adr/0004-complexity-feedback.md) ---------- */
+  let growthRun = null;
+
+  /** Cancels a growth measurement in flight and waits until its runner is free again. */
+  async function stopGrowth() {
+    const run = growthRun;
+    growthRun = null;
+    if (!run) return;
+    run.stopped = true;
+    run.runner.cancelGrowth();
+    await run.done;
+  }
+
+  /**
+   * After an Accepted submit, times the same code on growing inputs and adds one line to the
+   * console. Starts after the verdict has painted and never changes it.
+   */
+  function startGrowth(code, lang) {
+    const runner = getRunner(lang);
+    const line = renderGrowthLine(consoleBody);
+    const run = { runner, stopped: false, done: null };
+    run.done = (async () => {
+      // Two frames: the verdict is on screen before any timing work starts.
+      await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
+      if (run.stopped || disposed) return;
+      const res = await runner.measureGrowth({
+        code,
+        entry: problem.signatures[lang].entry,
+        adapter: problem.adapters?.[lang] ?? null,
+        growth: problem.growth,
+        // Python runs about 50x slower, so fewer calls per size keep it inside the same budget.
+        reps: lang === 'python' ? 3 : 5,
+      });
+      if (run.stopped || disposed || res.cancelled) return;
+      if (res.error) {
+        const first = String(res.error).split('\n').find((l) => l.trim()) ?? 'error';
+        line.show({ headline: 'Growth estimate: unavailable (the code failed on a larger generated input).', note: first }, 'inconclusive');
+        return;
+      }
+      const est = estimateGrowth(res.samples, problem.growth.target);
+      line.show(describeGrowth(est, problem.growth), est.verdict);
+    })().catch((err) => {
+      if (!run.stopped && !disposed) line.show({ headline: 'Growth estimate: unavailable.', note: err.message }, 'inconclusive');
+    });
+    growthRun = run;
+  }
+  cleanups.push(() => {
+    stopGrowth();
+  });
+
   /* ---------- Execution ---------- */
   async function execute(kind) {
     if (running || !editor) return;
+    await stopGrowth();
+    if (running) return;
     let customArgs;
     if (kind === 'run' && customToggle.checked && customInput.value.trim()) {
       const parsed = problem.parseCustomInput(customInput.value);
@@ -240,8 +293,9 @@ export function renderWorkspace(root, { problem, store, session = null }) {
 
     try {
       const suite = buildSuite(problem, { customArgs });
+      const code = editor.getValue();
       const raw = await getRunner(language).run({
-        code: editor.getValue(),
+        code,
         entry: problem.signatures[language].entry,
         adapter: problem.adapters?.[language] ?? null,
         cases: suite.map(({ id, args }) => ({ id, args })),
@@ -260,6 +314,9 @@ export function renderWorkspace(root, { problem, store, session = null }) {
         toast(result.accepted ? 'Accepted. Nice work.' : `${result.verdict}: ${result.passed}/15`, result.accepted ? 'success' : 'error');
       }
       session?.onResult({ kind, result, problemId: problem.id });
+      // Practice only: in interview and battle the clock is running, and timing would compete for the CPU.
+      const timeable = language === 'javascript' || language === 'python';
+      if (kind === 'submit' && result.accepted && problem.growth && timeable && !session) startGrowth(code, language);
     } catch (err) {
       renderError(consoleBody, `Internal error: ${err.message}`);
     } finally {

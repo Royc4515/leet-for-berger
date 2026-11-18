@@ -188,3 +188,35 @@ test('NestedInteger[] exposes the LeetCode interface (JavaScript)', () => {
 test('NestedInteger[] exposes the LeetCode interface (Python)', { skip: !hasPython && 'python3 not installed' }, () => {
   assert.deepEqual(runPy(iterSig, pyIter, iterCases), iterExpected);
 });
+
+// Growth timing (ADR 0004) converts input before the clock: __lfb_prepare builds the objects,
+// __lfb_call runs only the user's function on them.
+const sumTreeSig = { name: 'sumTree', params: [{ name: 'root', type: 'TreeNode' }, { name: 'k', type: 'int' }], returns: 'int' };
+
+test('growth split: prepare builds the objects, call runs only the user code (JavaScript)', () => {
+  const ad = adapterFor('javascript', sumTreeSig);
+  assert.deepEqual(ad.growth, { prepare: '__lfb_prepare', call: '__lfb_call' });
+  const code = 'function sumTree(root, k) { return root ? root.val * k + sumTree(root.left, k) + sumTree(root.right, k) : 0; }';
+  const [prepare, call] = new Function(`${ad.before}${code}${ad.after}\nreturn [${ad.growth.prepare}, ${ad.growth.call}];`)();
+  const prepared = prepare([1, 2, 3, null, 4], 2);
+  assert.equal(prepared[0].left.right.val, 4);
+  assert.equal(call(prepared), 20);
+  // Design classes and TypeScript time the whole entry: no split.
+  assert.equal(adapterFor('javascript', { kind: 'class', name: 'C', constructor: { params: [] }, methods: [] }).growth, undefined);
+  assert.equal(adapterFor('typescript', sumTreeSig).growth, undefined);
+});
+
+test('growth split: prepare builds the objects, call runs only the user code (Python)', { skip: !hasPython && 'python3 not installed' }, () => {
+  const ad = adapterFor('python', sumTreeSig);
+  assert.deepEqual(ad.growth, { prepare: '__lfb_prepare', call: '__lfb_call' });
+  const code = 'def sum_tree(root, k):\n    return root.val * k + sum_tree(root.left, k) + sum_tree(root.right, k) if root else 0\n';
+  const main = `ns = {}
+for part in (${JSON.stringify(ad.before)}, ${JSON.stringify(code)}, ${JSON.stringify(ad.after)}):
+    exec(part, ns)
+p = ns['__lfb_prepare']([1, 2, 3, None, 4], 2)
+print(p[0].left.right.val, ns['__lfb_call'](p))
+`;
+  const r = spawnSync('python3', ['-I', '-c', main], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(r.stdout.trim(), '4 20');
+});
