@@ -68,7 +68,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Prefix Sum', 'Hash Map'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['nums', 'k'],
 

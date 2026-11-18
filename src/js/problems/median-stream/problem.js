@@ -162,7 +162,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Design', 'Heap', 'Two Heaps'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['operations', 'arguments'],
 

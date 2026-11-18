@@ -70,7 +70,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Sliding Window', 'Monotonic Deque'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['nums', 'k'],
 

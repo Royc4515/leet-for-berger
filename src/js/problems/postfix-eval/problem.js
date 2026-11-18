@@ -125,7 +125,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Stack', 'Expression Evaluation'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['tokens'],
 

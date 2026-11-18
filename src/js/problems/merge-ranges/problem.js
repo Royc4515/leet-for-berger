@@ -88,7 +88,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Sorting', 'Intervals', 'Sweep'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['intervals'],
 

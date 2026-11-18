@@ -55,7 +55,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['dp'],
   patterns: ['Math', 'Game Theory'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['n'],
 

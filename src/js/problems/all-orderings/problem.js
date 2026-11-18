@@ -86,7 +86,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Backtracking'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['nums'],
 

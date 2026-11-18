@@ -4,6 +4,8 @@
  *
  *   POST    /v1/execute/{java|cpp|c|csharp|go}   forwards the body to the VM's gate
  *   GET     /v1/health                           liveness of this Worker only (no VM call)
+ *   GET     /v1/health?deep=1                    end to end: asks the gate (through the tunnel) for
+ *                                                Piston's runtimes; used by .github/workflows/runner-health.yml
  *   OPTIONS any                                  CORS preflight
  *
  * Checks here, before anything reaches the VM: path and method, CORS origin allowlist, per-IP rate
@@ -119,7 +121,26 @@ export function createWorker({ fetchImpl = (...a) => fetch(...a), fallbackLimite
       if (request.method === 'OPTIONS') {
         return cors ? new Response(null, { status: 204, headers: cors }) : json(403, { error: 'Origin not allowed' });
       }
-      if (url.pathname === '/v1/health' && request.method === 'GET') return json(200, { ok: true }, cors ?? {});
+      if (url.pathname === '/v1/health' && request.method === 'GET') {
+        if (url.searchParams.get('deep') !== '1') return json(200, { ok: true }, cors ?? {});
+        // Rate limited like a run: a deep check costs the VM a Piston request.
+        const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+        let limiter = env.RUN_LIMITER;
+        if (!limiter) limiter = memoryLimiter ??= new MemoryLimiter({ limit: Number(env.RATE_LIMIT ?? DEFAULT_RATE) });
+        if (!(await limiter.limit({ key: ip })).success) return json(429, { error: 'Too many requests' }, { ...(cors ?? {}), 'Retry-After': '60' });
+        if (!env.RUNNER_SECRET || !(env.GATE || env.GATE_URL)) return json(503, { ok: false, error: 'Runner not configured' }, cors ?? {});
+        const target = `${env.GATE ? 'http://gate' : String(env.GATE_URL ?? '').replace(/\/+$/, '')}/v1/health`;
+        try {
+          const init = { method: 'GET', headers: { 'X-LFB-Secret': env.RUNNER_SECRET } };
+          const r = env.GATE ? await env.GATE.fetch(target, init) : await fetchImpl(target, init);
+          const gate = await r.json().catch(() => ({ error: 'Bad gate response' }));
+          // Only what a monitor needs; the gate's own fields are public facts (runtimes, queue length).
+          const out = { ok: r.ok && gate.ok === true, worker: true, gate: { status: r.status, runtimes: gate.runtimes ?? [], active: gate.active ?? null, queued: gate.queued ?? null, error: gate.error ?? null } };
+          return json(out.ok ? 200 : 503, out, { 'Cache-Control': 'no-store', ...(cors ?? {}) });
+        } catch {
+          return json(502, { ok: false, worker: true, error: 'Code server unreachable' }, cors ?? {});
+        }
+      }
 
       const m = /^\/v1\/execute\/([a-z]+)$/.exec(url.pathname);
       if (!m) return json(404, { error: 'Not found' }, cors ?? {});

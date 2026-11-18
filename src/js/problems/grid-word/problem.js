@@ -136,7 +136,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Backtracking', 'DFS', 'Matrix'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['board', 'word'],
 

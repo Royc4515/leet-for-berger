@@ -90,7 +90,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Hash Map', 'Frequency Count', 'Bucket Sort'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['nums', 'k'],
 

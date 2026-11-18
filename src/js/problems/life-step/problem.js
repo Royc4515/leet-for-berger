@@ -85,7 +85,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Matrix', 'Simulation', 'In-Place Encoding'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['board'],
 

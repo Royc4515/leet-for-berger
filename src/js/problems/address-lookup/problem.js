@@ -115,7 +115,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['sql'],
   patterns: ['LEFT JOIN', 'NULL handling'],
-  milestone: 1,
   timeLimitMs: 2000,
 
   statementHtml: `

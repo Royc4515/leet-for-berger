@@ -119,7 +119,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['graphs'],
   patterns: ['Eulerian Path', "Hierholzer's Algorithm", 'Iterative DFS'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['tickets'],
 

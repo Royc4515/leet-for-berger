@@ -124,7 +124,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['graphs'],
   patterns: ['Union-Find', 'Cycle Detection'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['edges'],
 

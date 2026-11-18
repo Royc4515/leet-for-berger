@@ -68,7 +68,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['dp'],
   patterns: ['Dynamic Programming', 'Binary Search', 'Patience Sorting'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['nums'],
 

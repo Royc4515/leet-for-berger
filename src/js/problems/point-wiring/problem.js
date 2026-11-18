@@ -103,7 +103,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['graphs'],
   patterns: ['Minimum Spanning Tree', "Prim's Algorithm", 'Dense Graph'],
-  milestone: 2,
   timeLimitMs: 4000,
   argNames: ['points'],
 

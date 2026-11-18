@@ -79,7 +79,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['Hash Map', 'Bijection'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['s', 't'],
 

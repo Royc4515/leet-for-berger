@@ -105,7 +105,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Sweep Line', 'Heap', 'Lazy Deletion'],
-  milestone: 2,
   timeLimitMs: 4000,
   argNames: ['buildings'],
 

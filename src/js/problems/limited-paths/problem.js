@@ -139,7 +139,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['graphs'],
   patterns: ['Union-Find', 'Offline Queries', 'Sorting'],
-  milestone: 2,
   timeLimitMs: 4000,
   argNames: ['n', 'edgeList', 'queries'],
 

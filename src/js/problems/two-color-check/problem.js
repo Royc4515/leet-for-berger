@@ -133,7 +133,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['graphs'],
   patterns: ['BFS', 'Graph Coloring', 'Bipartite'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['graph'],
 

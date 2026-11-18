@@ -106,7 +106,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Prefix Product', 'Prefix Sum'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['nums'],
 

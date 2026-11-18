@@ -103,7 +103,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['graphs'],
   patterns: ['BFS', 'Implicit Graph'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['deadends', 'target'],
 

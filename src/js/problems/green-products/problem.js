@@ -81,7 +81,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['sql'],
   patterns: ['SELECT', 'WHERE'],
-  milestone: 1,
   timeLimitMs: 2000,
 
   statementHtml: `

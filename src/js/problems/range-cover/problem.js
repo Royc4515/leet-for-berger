@@ -87,7 +87,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Heap', 'Sliding Window', 'K-way Merge'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['nums'],
 

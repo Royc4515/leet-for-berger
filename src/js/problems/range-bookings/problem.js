@@ -80,7 +80,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Difference Array', 'Prefix Sum'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['bookings', 'n'],
 

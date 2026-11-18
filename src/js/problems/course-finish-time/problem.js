@@ -133,7 +133,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['graphs', 'dp'],
   patterns: ['Topological Sort', 'DAG Longest Path', 'Dynamic Programming'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['n', 'relations', 'time'],
 

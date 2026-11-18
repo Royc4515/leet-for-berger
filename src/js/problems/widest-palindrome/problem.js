@@ -90,7 +90,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings', 'dp'],
   patterns: ['Two Pointers', 'Expand Around Center', 'Dynamic Programming'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['s'],
 

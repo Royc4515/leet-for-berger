@@ -64,7 +64,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Linked List', 'Two Pointers'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['head', 'k'],
 

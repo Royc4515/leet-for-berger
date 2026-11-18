@@ -104,7 +104,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Simulation', 'Greedy', 'String Building'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['words', 'maxWidth'],
 

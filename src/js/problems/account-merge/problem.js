@@ -146,7 +146,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['graphs'],
   patterns: ['Union-Find', 'Hash Map', 'Sorting'],
-  milestone: 2,
   timeLimitMs: 4000,
   argNames: ['accounts'],
 

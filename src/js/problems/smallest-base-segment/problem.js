@@ -69,7 +69,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['String Periodicity', 'KMP Prefix Function'],
-  milestone: 1,
   timeLimitMs: 4000,
   argNames: ['s'],
 

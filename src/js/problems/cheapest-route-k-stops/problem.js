@@ -122,7 +122,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['graphs'],
   patterns: ['Bellman-Ford', 'Shortest Path', 'Bounded Hops'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['n', 'flights', 'src', 'dst', 'k'],
 

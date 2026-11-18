@@ -160,6 +160,7 @@ sudo docker compose logs -f gate             # one line per run: language, time,
 sudo docker compose --profile tunnel restart # restart everything
 ```
 
+- **Monitoring**: `.github/workflows/runner-health.yml` calls the Worker's `/v1/health?deep=1` every 6 hours, which asks the gate on the VM for Piston's runtimes. A failed run (GitHub emails you) means the VM, the tunnel or Piston is down; recover with the steps above or a new VM and `sudo ./setup.sh tunnel`. Check by hand: `node scripts/runner-health.mjs`. After changing the Worker, redeploy it (`cd deploy/cloudflare-worker && npx wrangler deploy`); until then the check only warns.
 - **Rotate the secret**: `sudo rm secrets/gate.env && sudo ./setup.sh`, then `npx wrangler secret put RUNNER_SECRET` with the new value.
 - **Update the runtimes or Piston**: change the pinned versions in the repo (packages, Dockerfile, gate `RUNTIMES`, `tests/runner-deploy.test.js` keeps them consistent), pull on the VM, `sudo ./setup.sh`.
 - **Free tier limits**: 100,000 Worker requests per day (failures until 00:00 UTC past that, never a bill); 2 OCPUs and 12 GB on the VM, two jobs at a time.

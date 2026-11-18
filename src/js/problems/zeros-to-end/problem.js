@@ -61,7 +61,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['Two Pointers', 'In-place Compaction'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['nums'],
 

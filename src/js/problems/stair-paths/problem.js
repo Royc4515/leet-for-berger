@@ -40,7 +40,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['dp'],
   patterns: ['Dynamic Programming', 'Fibonacci', 'Modular Arithmetic'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['n'],
 

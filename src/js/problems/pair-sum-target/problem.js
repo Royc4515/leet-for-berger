@@ -77,7 +77,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['Hash Map', 'Complement Lookup'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['nums', 'target'],
 

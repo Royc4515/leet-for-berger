@@ -61,7 +61,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Linked List', 'Hash Map', 'Deep Copy'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['head'],
 

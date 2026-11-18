@@ -89,7 +89,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Matrix', 'In-Place Markers'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['matrix'],
 

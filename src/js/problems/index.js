@@ -220,13 +220,13 @@ export async function loadSolution(problemId, lang) {
   return res.text();
 }
 
-/** @type {{id:string,title:string,difficulty:string,topics:string[],milestone:number}[]} */
+/** @type {{id:string,title:string,difficulty:string,topics:string[]}[]} */
 const planned = [
-  { id: 'mirror-check', title: 'Mirror Check (Two Pointers)', difficulty: 'Easy', topics: ['arrays-strings'], milestone: 1 },
-  { id: 'tree-level-sums', title: 'Tree Level Sums', difficulty: 'Easy', topics: ['trees'], milestone: 3 },
-  { id: 'lowest-shared-ancestor', title: 'Lowest Shared Ancestor', difficulty: 'Medium', topics: ['trees'], milestone: 3 },
-  { id: 'k-closest-points', title: 'K Closest Points (Heap)', difficulty: 'Medium', topics: ['arrays-strings'], milestone: 3 },
-  { id: 'grid-min-path', title: 'Grid Minimum Path', difficulty: 'Medium', topics: ['dp'], milestone: 4 },
+  { id: 'mirror-check', title: 'Mirror Check (Two Pointers)', difficulty: 'Easy', topics: ['arrays-strings'] },
+  { id: 'tree-level-sums', title: 'Tree Level Sums', difficulty: 'Easy', topics: ['trees'] },
+  { id: 'lowest-shared-ancestor', title: 'Lowest Shared Ancestor', difficulty: 'Medium', topics: ['trees'] },
+  { id: 'k-closest-points', title: 'K Closest Points (Heap)', difficulty: 'Medium', topics: ['arrays-strings'] },
+  { id: 'grid-min-path', title: 'Grid Minimum Path', difficulty: 'Medium', topics: ['dp'] },
 ];
 
 const byId = new Map(implemented.map((p) => [p.id, p]));
@@ -238,7 +238,6 @@ export const catalog = [
     title: p.title,
     difficulty: p.difficulty,
     topics: p.topics,
-    milestone: p.milestone,
     status: 'available',
   })),
   ...planned.map((p) => ({ ...p, status: 'planned' })),

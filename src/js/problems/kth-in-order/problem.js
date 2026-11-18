@@ -109,7 +109,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['trees'],
   patterns: ['Binary Search Tree', 'In-order Traversal', 'Stack'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['root', 'k'],
 

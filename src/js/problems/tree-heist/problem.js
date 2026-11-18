@@ -115,7 +115,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['trees', 'dp'],
   patterns: ['Tree DP', 'Depth-First Search', 'Post-order'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['root'],
 

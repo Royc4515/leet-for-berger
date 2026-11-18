@@ -88,7 +88,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['String Matching', 'KMP', 'Z-function'],
-  milestone: 1,
   timeLimitMs: 3000,
   argNames: ['haystack', 'needle'],
 

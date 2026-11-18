@@ -158,7 +158,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Design', 'Hash Map', 'Doubly Linked List'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['operations', 'arguments'],
 

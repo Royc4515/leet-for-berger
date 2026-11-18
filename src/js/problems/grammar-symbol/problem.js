@@ -61,7 +61,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Recursion', 'Divide and Conquer', 'Bit Manipulation'],
-  milestone: 1,
   timeLimitMs: 1000,
   argNames: ['n', 'k'],
 

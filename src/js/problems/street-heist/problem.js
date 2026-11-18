@@ -63,7 +63,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['dp'],
   patterns: ['Dynamic Programming'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['nums'],
 

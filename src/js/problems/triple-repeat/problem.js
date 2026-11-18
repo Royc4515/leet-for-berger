@@ -101,7 +101,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['sql'],
   patterns: ['Self Join', 'Window Functions'],
-  milestone: 2,
   timeLimitMs: 2000,
 
   statementHtml: `

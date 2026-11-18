@@ -70,7 +70,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['dp'],
   patterns: ['Dynamic Programming', 'Iteration', 'Math'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['n'],
 

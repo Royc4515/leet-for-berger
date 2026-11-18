@@ -88,7 +88,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['trees'],
   patterns: ['Depth-First Search', 'Recursion'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['root'],
 

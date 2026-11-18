@@ -153,7 +153,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Design', 'Hash Map', 'Counting'],
-  milestone: 2,
   timeLimitMs: 4000,
   argNames: ['operations', 'arguments'],
 

@@ -134,7 +134,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Hash Map Index', 'Deduplication'],
-  milestone: 1,
   timeLimitMs: 4000,
   argNames: ['users', 'requests'],
 

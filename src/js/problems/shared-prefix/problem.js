@@ -76,7 +76,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['String', 'Vertical Scan'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['strs'],
 

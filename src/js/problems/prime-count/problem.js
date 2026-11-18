@@ -57,7 +57,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Math', 'Sieve'],
-  milestone: 1,
   timeLimitMs: 3000,
   argNames: ['n'],
 
