@@ -68,7 +68,7 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [x] Mock OA: timer, 2-3 problems by difficulty, report at the end (PR #13)
 - [x] Daily problem and "weak spots" practice from history (PR #14)
 - [x] Solution walkthrough unlocked after solving, and submission history per problem (PR #15)
-- [ ] More robust growth measurement, so one slow size doesn't skew it
+- [x] More robust growth measurement, so one slow size doesn't skew it (PR #16)
 
 ### Stage B: small maintenance
 - [ ] Remove the legacy `milestone` field from problem files and the catalog (no longer read by any view)

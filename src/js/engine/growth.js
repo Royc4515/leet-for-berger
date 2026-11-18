@@ -51,6 +51,12 @@ export const GROWTH_DEFAULTS = {
   // one size; a real change of growth bends several, which one drop cannot hide.
   outlierMinSizes: 5,
   outlierResidual: 0.5,
+  // With exactly 4 sizes (common: the run stops before slow sizes) an outlier may still be dropped,
+  // but only an interior one (a slow last size can be real growth setting in, a slow first size is
+  // call overhead the window already discounts) and only when the other 3 lie on a line this tight.
+  // Measured need: one slow middle size turned an honest linear run into "timings too noisy".
+  interiorOutlierSizes: 4,
+  interiorRestRms: 0.1,
   // The slope is judged on the largest `window` timeable sizes. Small sizes carry call overhead
   // (a linear term under a quadratic one), which bends the low end of the curve; growth is about
   // the large end. Measured: a splice-based quadratic read 1.54, 2.1, 2.05 per doubling.
@@ -192,14 +198,23 @@ export function estimateGrowth(samples, target, opts = {}) {
 
   const toXY = (pts) => pts.map((p) => ({ x: Math.log2(p.n), y: Math.log2(p.ms) }));
   let fit = null;
-  if (measurable.length >= o.outlierMinSizes) {
-    const first = fitLine(toXY(measurable));
-    const resid = measurable.map((p) => Math.abs(Math.log2(p.ms) - (first.intercept + first.slope * Math.log2(p.n))));
-    const worst = resid.indexOf(Math.max(...resid));
+  const interiorOnly = measurable.length >= o.interiorOutlierSizes && measurable.length < o.outlierMinSizes;
+  if (measurable.length >= o.outlierMinSizes || interiorOnly) {
+    // Judge each candidate against the line through the OTHER sizes: a least-squares line through
+    // all of them is pulled toward the outlier, which hides it among 4 points.
+    let worst = -1;
+    let worstResid = 0;
+    let worstRest = Infinity;
+    measurable.forEach((p, i) => {
+      if (interiorOnly && (i === 0 || i === measurable.length - 1)) return;
+      const rest = fitLine(toXY(measurable.filter((_, j) => j !== i)));
+      const r = Math.abs(Math.log2(p.ms) - (rest.intercept + rest.slope * Math.log2(p.n)));
+      if (r > worstResid) [worst, worstResid, worstRest] = [i, r, rest.rms];
+    });
     // The drop must leave a tight fit (within 10%, and the outlier 4x further out than the rest
     // scatter): otherwise the data is just noisy, and dropping its worst point would fake a line.
-    const restRms = fitLine(toXY(measurable.filter((_, i) => i !== worst))).rms;
-    if (resid[worst] > o.outlierResidual && restRms <= 0.15 && 4 * restRms < resid[worst]) [dropped] = measurable.splice(worst, 1);
+    const restLimit = interiorOnly ? o.interiorRestRms : 0.15;
+    if (worst >= 0 && worstResid > o.outlierResidual && worstRest <= restLimit && 4 * worstRest < worstResid) [dropped] = measurable.splice(worst, 1);
   }
   const win = measurable.slice(-o.window);
   const span = win.length ? win[win.length - 1].n / win[0].n : 0;

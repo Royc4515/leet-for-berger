@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Changed
+- Growth estimate: one slow (or fast) middle size no longer spoils a 4-size measurement. With exactly 4 sizes, an interior outlier is dropped when the other 3 fit tightly; the first and last sizes are never dropped there (a slow last size can be real growth). Outliers are now judged against the line through the other sizes. A linear solution with one slow middle size read "timings too noisy" before and reads "matches" now; a slow last size, a real bend and noise everywhere still do not match (ADR 0004 amended).
 - Learning Path is the essential path: 131 problems in 6 tiers and 26 topics in prerequisite order, easy to hard inside each topic, with progress per tier and topic, the subtopic of each problem, and a Next up button to the first unsolved problem. Replaces the 4 temporary milestones (`src/js/data/curriculum.js` removed, and the dashboard's milestone column with it). Data: `src/js/data/essential-path.json`, built by `scripts/content/build-meta.mjs`.
 - First Match Index is Medium (was Easy): with our limits it needs KMP.
 
