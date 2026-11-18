@@ -18,7 +18,7 @@ export function mountAccountMenu(host, account) {
       const menu = h('div.account-menu', { hidden: true, role: 'menu' },
         h('button.btn.btn-secondary.btn-sm', { type: 'button', role: 'menuitem', onClick: () => account.signIn('google') }, 'Continue with Google'),
         h('button.btn.btn-secondary.btn-sm', { type: 'button', role: 'menuitem', onClick: () => account.signIn('github') }, 'Continue with GitHub'),
-        h('p.hint-text', {}, 'Signing in syncs your progress across devices.'),
+        h('p.hint-text', {}, 'Signing in syncs your progress across devices. ', h('a', { href: 'privacy.html' }, 'Privacy Policy')),
         s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null,
       );
       const toggle = h('button.btn.btn-ghost.btn-sm', { type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false' }, 'Sign in');

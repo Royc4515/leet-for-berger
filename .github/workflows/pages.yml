@@ -26,7 +26,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir _site
-          cp index.html _site/
+          cp index.html privacy.html _site/
           cp -r src _site/
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5

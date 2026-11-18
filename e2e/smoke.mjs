@@ -599,6 +599,16 @@ try {
     await acct.close();
   });
 
+  await check('privacy policy: linked from the home page, loads, lists what is stored and how to delete it', async () => {
+    await page.goto(`${BASE}#/`);
+    await page.click('footer.site-links a:has-text("Privacy Policy")');
+    await page.waitForSelector('article.legal h1');
+    await expectText('article.legal', /Deleting your data/);
+    await expectText('article.legal', /IP address/);
+    await shot('20-privacy');
+    await page.goto(`${BASE}#/`);
+  });
+
   await check('unknown route shows not found', async () => {
     await page.goto(`${BASE}#/nope`);
     await expectText('.page', /Not found/);

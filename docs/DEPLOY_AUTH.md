@@ -33,8 +33,9 @@ The callback address for both providers is `https://<project-ref>.supabase.co/au
 **Google**
 
 1. https://console.cloud.google.com/projectcreate : create a project (any name).
-2. https://console.cloud.google.com/auth/branding : fill the consent screen (app name, your email),
-   audience **External**, then **Publish app** so anyone can sign in.
+2. https://console.cloud.google.com/auth/branding : fill the consent screen (app name, your email,
+   **Privacy policy link** `https://royc4515.github.io/leet-for-berger/privacy.html`, which Google
+   requires before publishing), audience **External**, then **Publish app** so anyone can sign in.
 3. https://console.cloud.google.com/auth/clients : **Create client**, type **Web application**,
    **Authorized redirect URIs**: the callback address above. Copy the client ID and secret.
 4. Supabase: **Authentication > Sign In / Providers > Google**: enable, paste both, save.

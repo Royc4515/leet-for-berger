@@ -1665,3 +1665,26 @@ body.resizing-y * {
 .account-menu[hidden] {
   display: none;
 }
+
+/* ---------- Static pages (privacy) ---------- */
+.legal {
+  line-height: 1.6;
+}
+.legal h2 {
+  font-size: 17px;
+  margin: 24px 0 8px;
+}
+.legal ul {
+  padding-left: 20px;
+}
+.legal a {
+  color: var(--info);
+}
+.site-links {
+  margin: 28px 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.site-links a {
+  color: var(--muted);
+}
