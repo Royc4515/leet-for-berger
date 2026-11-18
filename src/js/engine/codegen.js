@@ -35,7 +35,7 @@ export const LANGUAGES = [
   { id: 'python', label: 'Python 3', monaco: 'python', file: 'solution.py', executable: true },
   { id: 'javascript', label: 'JavaScript', monaco: 'javascript', file: 'solution.js', executable: true },
   { id: 'typescript', label: 'TypeScript', monaco: 'typescript', file: 'solution.ts', executable: true },
-  { id: 'java', label: 'Java 17', monaco: 'java', file: 'Solution.java', executable: false },
+  { id: 'java', label: 'Java 21', monaco: 'java', file: 'Solution.java', executable: false },
   { id: 'cpp', label: 'C++17', monaco: 'cpp', file: 'solution.cpp', executable: false },
   { id: 'c', label: 'C', monaco: 'c', file: 'solution.c', executable: false },
   { id: 'csharp', label: 'C#', monaco: 'csharp', file: 'Solution.cs', executable: false },

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Must stay the compile command of buildProgram('csharp') in src/js/engine/programs/build.js
+# (tests/runner-deploy.test.js checks it). The project file comes with the request.
+dotnet build -c Release -o out --nologo -v q

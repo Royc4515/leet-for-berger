@@ -1,0 +1,34 @@
+# Leet-For-Berger runner proxy (docs/adr/0005-remote-runner.md, docs/DEPLOY_RUNNER.md).
+# Placeholders are in CAPITALS. No secrets here: RUNNER_SECRET (and the optional TURNSTILE_SECRET)
+# are set with `npx wrangler secret put`, which stores them encrypted at Cloudflare.
+name = "lfb-runner"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+# Serves at https://lfb-runner.YOUR-SUBDOMAIN.workers.dev: no domain needed.
+workers_dev = true
+
+[vars]
+# The site's origins, comma separated: GitHub Pages and the local dev server.
+ALLOWED_ORIGINS = "https://YOUR-GITHUB-USER.github.io,http://localhost:5173"
+# 16 MiB: the largest submit is about 12 MB of test input before gzip, about 3 MB after.
+MAX_BODY_BYTES = "16777216"
+# Only used when the RUN_LIMITER binding below is removed (per-isolate fallback).
+RATE_LIMIT = "20"
+
+# Preferred path to the VM: a Workers VPC service bound to the Cloudflare Tunnel that cloudflared
+# runs on the VM. The VM keeps every inbound port closed and no domain is needed.
+# Create it with: npx wrangler vpc service create lfb-gate --type http --http-port 8080 --ipv4 127.0.0.1 --tunnel-id TUNNEL_ID
+[[vpc_services]]
+binding = "GATE"
+service_id = "VPC_SERVICE_ID"
+
+# Fallback path (no Tunnel): remove [[vpc_services]] above and set the gate's public HTTPS URL.
+# GATE_URL = "https://YOUR-NAME.duckdns.org"
+
+# 20 runs per minute per IP, counted per Cloudflare location (free plan).
+[[ratelimits]]
+name = "RUN_LIMITER"
+namespace_id = "1001"
+[ratelimits.simple]
+limit = 20
+period = 60

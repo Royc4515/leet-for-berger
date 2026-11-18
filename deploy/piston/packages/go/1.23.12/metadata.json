@@ -1,0 +1,6 @@
+{
+    "language": "go",
+    "version": "1.23.12",
+    "aliases": ["golang"],
+    "limit_overrides": { "max_process_count": 256 }
+}

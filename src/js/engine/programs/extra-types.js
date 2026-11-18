@@ -9,8 +9,8 @@
 // the program prints one of COPY_MARKERS (the same strings as the JS and Python adapters), so a
 // solution that returns the original nodes, or points a random pointer outside its copy, gets a
 // wrong answer whatever its values look like.
-import { parseType, typesUsed, usesStruct } from '../../src/js/engine/codegen.js';
-import { COPY_MARKERS } from '../../src/js/engine/adapters.js';
+import { parseType, typesUsed, usesStruct } from '../codegen.js';
+import { COPY_MARKERS } from '../adapters.js';
 
 const SHARED = JSON.stringify(COPY_MARKERS.sharedNode);
 const OUTSIDE = JSON.stringify(COPY_MARKERS.outsideRandom);

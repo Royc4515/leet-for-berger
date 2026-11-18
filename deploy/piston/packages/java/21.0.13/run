@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# $1 is the first file's name (Piston's convention); the request's args follow (the entry name).
+# Must stay the run command of buildProgram('java') (tests/runner-deploy.test.js checks it).
+# The gate sends the cases as the file .stdin: Piston destroys the stdin pipe right after
+# writing, which loses inputs larger than the pipe buffer.
+shift
+exec java -Xss64m -cp . Harness "$@" < .stdin

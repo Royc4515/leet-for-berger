@@ -54,10 +54,13 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 - [x] ADR 0002: PostgreSQL on Supabase, schema (`db/schema.sql`), git -> database sync (`scripts/db/export-sql.mjs`), verified by `scripts/db/check-schema.sh` in CI
 - [ ] Create the Supabase project, apply the schema, run the sync from CI on merge to main
 
-- [ ] Execution service (e.g. Judge0 self-hosted or containerized runners) with the same `run()` contract
-- [ ] Java execution
+- [x] Execution service with the same `run()` contract: self-hosted Piston on an Oracle Always Free Arm VM behind a Cloudflare Worker, $0 (ADR 0005). Code, Worker, VM kit and deploy guide done (`docs/DEPLOY_RUNNER.md`)
+- [ ] Create the Oracle and Cloudflare accounts, run `deploy/piston/setup.sh`, deploy the Worker, set the URL in `src/js/config.js` (owner steps in `docs/DEPLOY_RUNNER.md`)
+- [x] Java, C++, C, C# and Go execution in practice mode via the remote runner (judged in the browser; versions match CI: Java 21, .NET 8, Go 1.23; GCC 12 for C11 and C++17)
+- [ ] Remote languages in interview and battle (needs server-side judging, Phase 3)
+- [ ] Growth estimates for the remote languages (server-side timing)
 - [ ] Hidden tests and solutions served from the server only; real "secure reveal"
-- [ ] Rate limiting and resource caps per submission
+- [x] Rate limiting and resource caps per submission (remote runner: per-IP limit in the Worker, time, memory, process and output caps in the gate and Piston)
 
 ## Phase 3 - Accounts and live features
 

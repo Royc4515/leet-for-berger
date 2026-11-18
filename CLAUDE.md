@@ -31,10 +31,14 @@ src/js/engine/             PURE judging logic + execution
   runners/worker-runner.js generic Web Worker runner, per-case watchdog
   runners/ts-runner.js     TypeScript: compile (injected compiler), then run as JS
   typescript.js            TS compiler options (LeetCode's flags), ambient types, diagnostics format
+  runners/remote-runner.js Java, C++, C, C#, Go on the server (ADR 0005); judged in the page
+  programs/                native test programs per language, shared by the CI verifier and the remote runner
+    build.js, extra-types.js, output.js (case protocol), java/Harness.java + structure classes
   workers/js-worker.js     executes user JS (and transpiled TS)
   workers/py-worker.js     executes user Python via Pyodide (persistent worker)
   workers/sql-worker.js    executes user SQL via sql.js (SQLite wasm); sql-core.js is shared with the verifier
   sql.js                   SQL problems: schema validation, starter, result-set judging (ADR 0003)
+src/js/config.js          public site config: remote runner URL (empty = editor-only), Turnstile site key
 src/js/problems/<id>/      problem.js + solutions/ (8 language files, or solution.sql); index.js = catalog, hydrate, loadSolution
 src/js/state/              progress (pure reducers + localStorage), drafts
 src/js/modes/              interview.js, battle.js (pure session logic)
@@ -44,13 +48,15 @@ src/js/data/taxonomy.js    learning network: 26 topics, 131 subtopics, ladders, 
 src/js/data/families.js    problem families, pickVersion per company, distinctProblems
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md)
 scripts/content/           fetch sources, build index, audit
-scripts/verify/            per-language test harnesses for the solution verifier
+scripts/verify/            verifier helpers (harnesses.mjs re-exports engine/programs; sql, growth)
+deploy/cloudflare-worker/  Worker in front of the runner: CORS, rate limit, size caps, secret (wrangler.toml)
+deploy/piston/             VM kit: Piston image, runtime packages, gate, compose, setup.sh, smoke.mjs, dev/
 db/schema.sql              PostgreSQL schema (ADR 0002); scripts/db/ = git -> database sync + checks
 src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler (Monaco's TS service), resizer, results console
 src/js/ui/views/           dashboard, workspace, path, modes (hub, interview, battle)
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test
-docs/                      ARCHITECTURE, PROBLEM_FORMAT, ROADMAP, adr/
+docs/                      ARCHITECTURE, PROBLEM_FORMAT, ROADMAP, DEPLOY_RUNNER, adr/
 ```
 
 Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
@@ -97,7 +103,9 @@ Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/
 
 ## Known limits (do not "fix" by faking)
 
-- Only JavaScript, TypeScript, Python and SQL (SQLite dialect, not LeetCode's MySQL) run in the browser. TypeScript is type-checked and transpiled by Monaco's TypeScript service (no extra download), then runs as JavaScript; a type error is a Compile Error, as on LeetCode (`engine/typescript.js`). With Monaco unavailable (textarea fallback) TypeScript cannot compile and the verdict says so. Java, C++, C, C# and Go are editor-only and the verdict says so honestly. Their solutions are still verified in CI (`tests/solutions.test.js`). Real fix is the server runner (ROADMAP Phase 2).
+- Only JavaScript, TypeScript, Python and SQL (SQLite dialect, not LeetCode's MySQL) run in the browser. TypeScript is type-checked and transpiled by Monaco's TypeScript service (no extra download), then runs as JavaScript; a type error is a Compile Error, as on LeetCode (`engine/typescript.js`). With Monaco unavailable (textarea fallback) TypeScript cannot compile and the verdict says so.
+- Java, C++, C, C# and Go run on the remote runner (ADR 0005, `docs/DEPLOY_RUNNER.md`) once `src/js/config.js` has its URL, in practice mode only; unset, they are editor-only and the verdict says so honestly. Interview and battle keep them editor-only (scored sessions need server judging, Phase 3). All solutions are verified in CI (`tests/solutions.test.js`) with the same programs the remote runner sends.
+- The remote runner is a free Oracle VM behind a free Cloudflare Worker: 100,000 requests per day, two jobs at a time, and Oracle may reclaim an idle Always Free VM (ADR 0005). When it is down the page says so; never fake a verdict.
 - "Reveal Solution" is gated by a confirm dialog and marks the problem as assisted, but solutions ship in the client bundle. True secrecy needs the server (Phase 2).
 - Battle is bot-only. Peer battles need server-side judging so clients cannot fake progress (Phase 3).
 - AI Mentor runs on a scripted hint ladder. The LLM provider needs a backend proxy (Phase 3). The system prompt already lives in `src/js/mentor/mentor.js`.

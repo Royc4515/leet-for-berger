@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Must stay the compile commands of buildProgram('c') and buildProgram('cpp') in
+# src/js/engine/programs/build.js (tests/runner-deploy.test.js checks them).
+case "${PISTON_LANGUAGE}" in
+  c) gcc -O2 -std=c11 -o main main.c -lm ;;
+  c++) g++ -O2 -std=c++17 -o main main.cpp ;;
+  *) echo "unknown language ${PISTON_LANGUAGE}" >&2; exit 1 ;;
+esac

@@ -18,7 +18,7 @@ import { createEditor } from '../editor.js';
 import { renderIdle, renderPending, renderResult, renderError, renderGrowthLine } from '../results.js';
 import { buildSuite, judge, comparatorFor } from '../../engine/harness.js';
 import { estimateGrowth, describeGrowth } from '../../engine/growth.js';
-import { getRunner } from '../../engine/runners/index.js';
+import { getRunner, isRemote } from '../../engine/runners/index.js';
 import { recordSubmission, markRevealed } from '../../state/progress.js';
 import { loadDraft, saveDraft, clearDraft } from '../../state/drafts.js';
 import { TOPICS, loadSolution } from '../../problems/index.js';
@@ -51,6 +51,8 @@ export function renderWorkspace(root, { problem, store, session = null }) {
   let lastResult = null;
   let disposed = false;
   const allowAssist = session ? session.allowAssist : true;
+  // Java, C++, C, C# and Go run on the remote runner when one is configured, in practice mode only.
+  const onServer = (lang) => !session && isRemote(lang);
 
   // Sessions keep code in memory so an interview never opens on a solution typed (or revealed) in practice.
   const drafts = session?.drafts
@@ -113,11 +115,16 @@ export function renderWorkspace(root, { problem, store, session = null }) {
   const langSelect = h(
     'select.select',
     { 'aria-label': 'Language' },
-    languages.map((l) => h('option', { value: l.id, selected: l.id === language }, l.label + (l.executable ? '' : ' (editor only)'))),
+    languages.map((l) => h('option', { value: l.id, selected: l.id === language }, l.label + (l.executable || onServer(l.id) ? '' : ' (editor only)'))),
   );
   const runBtn = h('button.btn.btn-secondary', { type: 'button', title: "Run Code (Ctrl+')" }, 'Run Code');
   const submitBtn = h('button.btn.btn-primary', { type: 'button', title: 'Submit (Ctrl+Enter)' }, 'Submit');
   const revealBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, title: allowAssist ? 'Load the optimal solution' : 'Disabled in this mode' }, 'Reveal Solution');
+  const runnerNote = h('span.runner-note', { title: 'Compiled and run on the code server; judged in your browser' }, 'Runs on the server');
+  const showRunnerNote = () => {
+    runnerNote.hidden = !onServer(language);
+  };
+  showRunnerNote();
   const resetBtn = h('button.btn.btn-ghost.btn-icon', { type: 'button', title: 'Reset to starter code', 'aria-label': 'Reset to starter code' }, '↺');
   const mentorBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, 'aria-pressed': 'false', title: allowAssist ? 'Socratic hints' : 'Disabled in this mode' }, 'AI Mentor');
 
@@ -129,7 +136,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
   const right = h(
     'section.pane.pane-right',
     { 'aria-label': 'Code editor and console' },
-    h('div.toolbar', {}, langSelect, resetBtn, h('div.toolbar-spacer'), mentorBtn, revealBtn, runBtn, submitBtn),
+    h('div.toolbar', {}, langSelect, resetBtn, runnerNote, h('div.toolbar-spacer'), mentorBtn, revealBtn, runBtn, submitBtn),
     h('div.editor-split', {}, editorHost, rowHandle, h('div.console', {}, h('div.console-title', {}, 'Execution Console'), consoleBody)),
   );
   const editorSplit = right.querySelector('.editor-split');
@@ -189,6 +196,8 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     editor?.setValue(codeFor(language));
     // Pyodide takes seconds to boot; start it now rather than on the first Run.
     if (language === 'python') getRunner('python').warmUp()?.catch(() => {});
+    if (onServer(language)) getRunner(language).warmUp()?.catch(() => {});
+    showRunnerNote();
   });
   if (language === 'python' || language === 'sql') getRunner(language).warmUp()?.catch(() => {});
 
@@ -294,8 +303,9 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     try {
       const suite = buildSuite(problem, { customArgs });
       const code = editor.getValue();
-      const raw = await getRunner(language).run({
+      const raw = await getRunner(language, { session: Boolean(session) }).run({
         code,
+        signature: problem.signature,
         entry: problem.signatures[language].entry,
         adapter: problem.adapters?.[language] ?? null,
         cases: suite.map(({ id, args }) => ({ id, args })),
@@ -308,7 +318,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       lastResult = result;
       renderResult(consoleBody, result, { kind, argNames: problem.argNames, elapsedMs: performance.now() - started });
 
-      const executable = languages.find((l) => l.id === language).executable;
+      const executable = languages.find((l) => l.id === language).executable || onServer(language);
       if (kind === 'submit' && executable) {
         store.update((s) => recordSubmission(s, { problemId: problem.id, accepted: result.accepted }));
         toast(result.accepted ? 'Accepted. Nice work.' : `${result.verdict}: ${result.passed}/15`, result.accepted ? 'success' : 'error');
@@ -319,7 +329,9 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       const timeable = language === 'javascript' || language === 'typescript' || language === 'python';
       if (kind === 'submit' && result.accepted && problem.growth && timeable && !session) startGrowth(code, language);
     } catch (err) {
-      renderError(consoleBody, `Internal error: ${err.message}`);
+      if (disposed) return;
+      // No verdict to show (server unreachable or busy): say so plainly, nothing is recorded.
+      renderError(consoleBody, err.remote ? err.message : `Internal error: ${err.message}`);
     } finally {
       running = false;
       runBtn.disabled = submitBtn.disabled = false;
@@ -331,6 +343,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
 
   return () => {
     disposed = true;
+    if (running && onServer(language)) getRunner(language).cancel();
     if (editor) drafts.save(language, editor.getValue());
     cleanups.forEach((fn) => fn());
   };

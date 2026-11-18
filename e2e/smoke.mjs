@@ -9,6 +9,8 @@
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { startServer } from '../scripts/serve.mjs';
+import { startFakeRunner } from './fake-runner.mjs';
+import { availableProblems } from '../src/js/problems/index.js';
 
 const args = new Set(process.argv.slice(2));
 const skipPython = args.has('--no-python');
@@ -173,6 +175,50 @@ try {
     await page.waitForSelector('.stat-value');
     const solved = await page.locator('.stat-value').first().textContent();
     if (solved.trim() !== '1') throw new Error(`solved = ${solved}`);
+  });
+
+  // Remote runner (ADR 0005): with a runner URL configured, Java compiles on the server and is judged
+  // in the page. A local fake stands in for the Worker (real javac when a JDK is installed).
+  await check('remote runner: Java reveal + submit is Accepted through a runner endpoint', async () => {
+    const problem = availableProblems().find((p) => p.id === 'pair-sum-target');
+    const fake = await startFakeRunner(PORT + 100, { origin: `http://localhost:${PORT}`, reference: (a) => problem.solveReference(a) });
+    // Its own context: the runner URL is read when the page loads, and progress stays separate.
+    const remote = await browser.newPage({ viewport: { width: 1440, height: 900 } }).catch((err) => {
+      fake.close();
+      throw err;
+    });
+    remote.on('console', (m) => m.type() === 'error' && errors.push(`console (remote page, step ${step}): ${m.text()}`));
+    remote.on('pageerror', (e) => errors.push(`pageerror (remote page, step ${step}): ${e.message}`));
+    try {
+      await remote.addInitScript((url) => {
+        window.LFB_REMOTE_RUNNER_URL = url;
+      }, `http://localhost:${PORT + 100}`);
+      await remote.goto(`${BASE}#/problem/pair-sum-target`);
+      await remote.waitForSelector('.monaco-editor', { timeout: 30000 });
+      const label = await remote.locator('.toolbar select option[value="java"]').textContent();
+      if (/editor only/.test(label)) throw new Error(`Java still editor-only: ${label}`);
+      await remote.selectOption('.toolbar select', 'java');
+      if (!(await remote.locator('.runner-note').isVisible())) throw new Error('no "Runs on the server" note');
+      await remote.click('button:has-text("Reveal Solution")');
+      await remote.click('dialog.modal button:has-text("Reveal")');
+      await remote.click('button:has-text("Submit")');
+      await remote.waitForFunction(() => /Accepted/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 60000 });
+      await remote.waitForFunction(() => /15 \/ 15/.test(document.querySelector('.result-head')?.textContent ?? ''));
+      const req = fake.requests[0];
+      if (req.path !== '/v1/execute/java') throw new Error(`request path ${req.path}`);
+      if (!req.body.files.some((f) => f.name === 'Harness.java')) throw new Error('Harness.java not sent');
+      if (/expected/.test(JSON.stringify(req.body))) throw new Error('an expected value was sent');
+      console.log(`  # ${fake.real ? 'compiled and ran with the local JDK' : 'no JDK here: answered with the reference solution'}; request ${req.encoding ?? 'identity'}`);
+      if (fake.real) {
+        await remote.evaluate(() => window.monaco.editor.getModels()[0].setValue('class Solution { int pairSum(int[] a) { return } }'));
+        await remote.click('button:has-text("Run Code")');
+        await remote.waitForFunction(() => /Compile error/.test(document.querySelector('.case-detail')?.textContent ?? ''), null, { timeout: 60000 });
+      }
+      if (shotsDir) await remote.screenshot({ path: `${shotsDir}/13-remote-java.png` });
+    } finally {
+      await remote.close();
+      fake.close();
+    }
   });
 
   // Linked lists, trees and design classes run through engine/adapters.js in the browser workers.
