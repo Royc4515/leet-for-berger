@@ -1379,3 +1379,85 @@ body.resizing-y * {
     grid-template-columns: 70px 1fr 48px;
   }
 }
+
+/* ---------- Problem context: companies, complexity, family ---------- */
+.problem-context {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 16px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  font-size: 13px;
+}
+.problem-context:empty {
+  display: none;
+}
+.context-label {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.company-il {
+  border: 1px solid var(--accent);
+}
+.il-mark {
+  margin-left: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.btn-link {
+  background: none;
+  border: 0;
+  padding: 0 2px;
+  color: var(--info);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.btn-link:hover {
+  text-decoration: underline;
+}
+.btn-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.complexity-body {
+  display: grid;
+  gap: 4px;
+  color: var(--text-2);
+}
+.family-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.family-version {
+  padding: 6px 8px;
+  border-left: 2px solid var(--border);
+}
+.family-version.is-self {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+}
+.family-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.family-twist {
+  color: var(--text-2);
+}
+.family-companies {
+  color: var(--muted);
+  font-size: 12px;
+}
+/* don't touch / the display rules above would otherwise override [hidden] and show the spoiler */
+.problem-context [hidden] {
+  display: none;
+}

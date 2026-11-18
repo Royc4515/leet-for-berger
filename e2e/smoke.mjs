@@ -19,7 +19,7 @@ const PORT = 5199;
 const BASE = `http://localhost:${PORT}/`;
 
 const server = await startServer(PORT);
-const browser = await chromium.launch({ channel: process.env.PW_CHANNEL || undefined });
+const browser = await chromium.launch({ channel: process.env.PW_CHANNEL || undefined, executablePath: process.env.PW_EXECUTABLE || undefined });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 // src/js/config.js points at the live runner; the smoke test must not depend on it or spend its
 // free quota, so the main page runs with the runner unset (editor-only), as a fork without one would.
@@ -273,6 +273,20 @@ try {
   });
 
   // Growth estimate (ADR 0004): after an Accepted JS submit, the console adds one estimate line.
+  await check('problem context: companies, complexity behind a toggle, family versions with links', async () => {
+    await page.goto(`${BASE}#/problem/course-check`);
+    await page.waitForSelector('.problem-context .company-tag', { timeout: 15000 });
+    await expectText('.problem-context .context-label', /Asked at \d+ compan/);
+    if (!(await page.locator('.complexity-body').isHidden())) throw new Error('complexity should be hidden before a solve');
+    await page.click('.problem-context button:has-text("Show")');
+    await expectText('.complexity-body', /Best known for LeetCode \d+: O\(/);
+    await expectText('.family-version.is-self', /This version/);
+    await page.click('.family-list a.problem-link[href="#/problem/course-order"]');
+    await page.waitForSelector('.family-version.is-self', { timeout: 15000 });
+    await expectText('.problem-title', /Course Order/);
+    await shot('14-problem-context');
+  });
+
   const growthHeadline = async () => {
     await page.waitForFunction(() => document.querySelector('.growth-head')?.textContent.startsWith('Growth estimate:'), null, { timeout: 30000 });
     return page.locator('.growth-head').textContent();
