@@ -154,6 +154,19 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). A complete tree: the
+  // widest shape for its size, so a queue that shifts from the front of an array pays for it.
+  // The timed call includes building the tree from JSON, which is linear too.
+  growth: {
+    target: 'n',
+    n: 'number of nodes',
+    sizes: [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      return [Array.from({ length: n }, () => Math.floor(rnd() * 2001) - 1000)];
+    },
+  },
 };
 
 export default problem;

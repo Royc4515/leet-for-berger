@@ -127,6 +127,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Temperatures never
+  // rise, so no day has an answer: scanning ahead from every day costs n^2 / 2, while the stack
+  // just keeps every day.
+  growth: {
+    target: 'n',
+    n: 'temperatures.length',
+    sizes: [4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => [randomTemps(seed, n, MIN_T, MAX_T).sort((a, b) => b - a)],
+  },
 };
 
 export default problem;

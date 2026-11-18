@@ -138,6 +138,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). One run of n
+  // consecutive values, shuffled: walking up from every value instead of only from run starts
+  // costs n^2 / 2, and a set lookup per value is all the target allows.
+  growth: {
+    target: 'n',
+    n: 'nums.length',
+    sizes: [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000],
+    input: (n, seed) => [runPlusNoise(seed, n, -Math.floor(n / 2), 0)],
+  },
 };
 
 export default problem;

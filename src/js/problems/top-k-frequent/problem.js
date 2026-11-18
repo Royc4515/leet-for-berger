@@ -36,6 +36,28 @@ function randomNums(seed, n, spread) {
 
 const distinct = (nums) => new Set(nums).size;
 
+/**
+ * About n / 2 distinct values in [-LIMIT, LIMIT], each 1 to 3 times, shuffled; k is half of them.
+ * For the growth estimate: the distinct count grows with n, up to n = 4 * 10^4.
+ */
+function halfDistinct(seed, n) {
+  const rnd = mulberry32(seed);
+  const pool = Array.from({ length: 2 * LIMIT + 1 }, (_, i) => i - LIMIT);
+  const nums = [];
+  for (let i = 0; nums.length < n; i++) {
+    // Partial Fisher-Yates: pool[i] becomes a fresh random value not used before.
+    const j = i + Math.floor(rnd() * (pool.length - i));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+    const times = 1 + Math.floor(rnd() * 3);
+    for (let t = 0; t < times && nums.length < n; t++) nums.push(pool[i]);
+  }
+  for (let i = nums.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [nums[i], nums[j]] = [nums[j], nums[i]];
+  }
+  return [nums, Math.max(1, Math.floor(distinct(nums) / 2))];
+}
+
 const visible = [
   { args: [[1, 1, 1, 2, 2, 3], 2], expected: [1, 2], note: '1 appears three times, 2 twice.' },
   { args: [[1], 1], expected: [1], note: 'A single value.' },
@@ -138,6 +160,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). About n / 2 distinct
+  // values, so the distinct count grows with n and counting each value with a full scan shows up
+  // as quadratic. Values stay within +-10^4, which caps n at about 4 * 10^4.
+  growth: {
+    target: 'n log n',
+    n: 'nums.length',
+    sizes: [1250, 2500, 5000, 10000, 20000, 40000],
+    input: (n, seed) => halfDistinct(seed, n),
+  },
 };
 
 export default problem;

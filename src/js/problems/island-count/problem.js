@@ -166,6 +166,20 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). n counts cells of a
+  // square grid. Density 0.45 is below the percolation threshold, so there are many small
+  // islands: rescanning the grid per island is quadratic, and no island is deep enough to break a
+  // recursive flood fill (the hidden tests already check that).
+  growth: {
+    target: 'n',
+    n: 'rows * cols',
+    sizes: [16384, 32768, 65536, 131072, 262144, 524288, 1048576],
+    input: (n, seed) => {
+      const side = Math.round(Math.sqrt(n));
+      return [randomGrid(seed, side, side, 0.45)];
+    },
+  },
 };
 
 export default problem;
