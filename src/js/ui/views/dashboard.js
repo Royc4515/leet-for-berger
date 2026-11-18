@@ -3,12 +3,61 @@
  */
 import { h, mount, difficultyBadge } from '../dom.js';
 import { catalog, TOPICS, DIFFICULTIES } from '../../problems/index.js';
-import { stats } from '../../state/progress.js';
+import { stats, dayKey } from '../../state/progress.js';
+import { getProblem } from '../../problems/index.js';
+import { dailyProblem, dailyCandidates, weakSpots } from '../../data/recommend.js';
+import { loadPath } from './path.js';
 
 export function renderDashboard(root, { store }) {
   const filters = { difficulty: 'All', topic: 'all', query: '' };
   const tableBody = h('tbody');
   const statsRow = h('div.stats-row');
+  const today = h('div.today-row', { 'aria-label': 'Practice today' });
+  let path = null;
+
+  function renderToday() {
+    if (!path) return;
+    const state = store.get();
+    const dailyId = dailyProblem(dailyCandidates(path), dayKey());
+    const daily = dailyId ? getProblem(dailyId) : null;
+    const dailyDone = daily && state.problems[daily.id]?.status === 'solved';
+    const spots = weakSpots(path, state.problems);
+    const reason = (s) =>
+      [s.unsolved ? `${s.unsolved} attempted, not solved` : null, s.assisted ? `${s.assisted} solved with the solution revealed` : null, s.failedSubmits ? `${s.failedSubmits} rejected ${s.failedSubmits === 1 ? 'submit' : 'submits'}` : null]
+        .filter(Boolean)
+        .join(', ');
+    mount(
+      today,
+      daily
+        ? h(
+            'section.today-card',
+            { 'aria-labelledby': 'daily-title' },
+            h('div.today-kicker', { id: 'daily-title' }, 'Problem of the day'),
+            h('div.today-main', {}, h('a.problem-link', { href: `#/problem/${daily.id}` }, daily.title), difficultyBadge(daily.difficulty), dailyDone ? h('span.tag.tag-live', {}, 'Solved') : null),
+            h('div.hint-text', {}, 'The same problem for everyone today. A new one at midnight.'),
+          )
+        : null,
+      h(
+        'section.today-card',
+        { 'aria-labelledby': 'weak-title' },
+        h('div.today-kicker', { id: 'weak-title' }, 'Weak spots'),
+        spots.length
+          ? h(
+              'ul.weak-list',
+              {},
+              spots.map((s) =>
+                h(
+                  'li',
+                  {},
+                  h('div', {}, h('strong', {}, s.title), h('div.hint-text', {}, reason(s))),
+                  s.next ? h('a.btn.btn-secondary.btn-sm', { href: `#/problem/${s.next}` }, 'Practice') : h('span.hint-text', {}, 'Every problem here is solved'),
+                ),
+              ),
+            )
+          : h('p.hint-text', {}, 'None yet. Topics show up here when you miss submits, leave a problem unsolved or reveal a solution.'),
+      ),
+    );
+  }
 
   const statCard = (label, value, sub) => h('div.stat-card', {}, h('div.stat-label', {}, label), h('div.stat-value', {}, value), sub ? h('div.stat-sub', {}, sub) : null);
 
@@ -85,6 +134,7 @@ export function renderDashboard(root, { store }) {
       {},
       h('header.page-head', {}, h('h1', {}, 'Problem Bank'), h('p.page-sub', {}, 'Practice by topic and difficulty. Every submission runs 15 tests: 5 detailed, 10 hidden.')),
       statsRow,
+      today,
       h(
         'div.filters',
         {},
@@ -106,9 +156,19 @@ export function renderDashboard(root, { store }) {
   );
   renderStats();
   renderRows();
+  let disposed = false;
+  loadPath().then((p) => {
+    if (disposed || !p) return;
+    path = p;
+    renderToday();
+  });
   const unsub = store.subscribe(() => {
     renderStats();
     renderRows();
+    renderToday();
   });
-  return () => unsub();
+  return () => {
+    disposed = true;
+    unsub();
+  };
 }

@@ -9,8 +9,11 @@ import { TOPICS } from '../../data/taxonomy.js';
 
 let pathPromise = null;
 
-/** @returns {Promise<import('../../data/learning-path.js').PathTier[]|null>} */
-function loadPath() {
+/**
+ * The essential path, fetched once and shared by the path page and the dashboard.
+ * @returns {Promise<import('../../data/learning-path.js').PathTier[]|null>}
+ */
+export function loadPath() {
   pathPromise ??= fetch(new URL('../../data/essential-path.json', import.meta.url))
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null);
