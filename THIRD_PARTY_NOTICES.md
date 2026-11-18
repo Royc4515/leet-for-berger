@@ -8,6 +8,7 @@ file and license. Statements, tests, hints and references are written for this p
 |---|---|---|
 | [doocs/leetcode](https://github.com/doocs/leetcode) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | Solutions in Python, Java, C++, Go, TypeScript, JavaScript, C#, C |
 | [walkccc/LeetCode](https://github.com/walkccc/LeetCode) | [MIT](https://github.com/walkccc/LeetCode/blob/main/LICENSE) | Python, Java and C++ solutions where doocs has none |
+| [kamyu104/LeetCode-Solutions](https://github.com/kamyu104/LeetCode-Solutions) | [MIT](https://github.com/kamyu104/LeetCode-Solutions/blob/master/LICENSE.md) | Best known complexity per problem (`content/index/complexity.json`) |
 
 Adapted files carry the same license as their source: files marked `doocs/leetcode` are
 available under CC BY-SA 4.0 (changes: renamed to this project's signatures, adjusted to its
