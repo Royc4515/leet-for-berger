@@ -287,6 +287,25 @@ try {
     await shot('14-problem-context');
   });
 
+  await check('practice by company: search, Israeli filter, company page with practice links', async () => {
+    await page.click('nav a[data-nav="companies"]');
+    await page.waitForSelector('.company-card', { timeout: 15000 });
+    await page.check('#israeli-only');
+    await page.fill('input[aria-label="Search companies"]', 'wix');
+    await page.waitForFunction(() => document.querySelectorAll('.company-card').length === 1);
+    await shot('15-companies');
+    await page.click('.company-card');
+    await expectText('.page-head h1', /Wix/);
+    await expectText('.page-head .page-sub', /can be practiced here/);
+    await page.check('#on-site-only');
+    const missing = await page.locator('.problem-table tbody .tag-muted:has-text("Not on the site yet")').count();
+    if (missing) throw new Error('on-site filter still shows problems that are not on the site');
+    await shot('16-company-wix');
+    await page.click('.problem-table tbody a.problem-link >> nth=0');
+    await page.waitForSelector('.problem-context .company-tag', { timeout: 15000 });
+    await expectText('.problem-context', /Wix/);
+  });
+
   const growthHeadline = async () => {
     await page.waitForFunction(() => document.querySelector('.growth-head')?.textContent.startsWith('Growth estimate:'), null, { timeout: 30000 });
     return page.locator('.growth-head').textContent();

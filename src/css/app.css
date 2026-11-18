@@ -1461,3 +1461,51 @@ body.resizing-y * {
 .problem-context [hidden] {
   display: none;
 }
+
+/* ---------- Practice by company ---------- */
+.company-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+.company-card {
+  display: block;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--text);
+  text-decoration: none;
+}
+.company-card:hover,
+.company-card:focus-visible {
+  border-color: var(--accent);
+}
+.company-card-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.company-card-sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+.back-link {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: var(--info);
+  font-size: 13px;
+}
+.freq-bar {
+  display: inline-block;
+  width: 60px;
+  height: 6px;
+  margin-right: 8px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent) var(--freq), var(--panel-3) var(--freq));
+  vertical-align: middle;
+}
+.freq-text {
+  color: var(--muted);
+  font-size: 12px;
+}

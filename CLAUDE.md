@@ -47,6 +47,7 @@ src/js/data/curriculum.js  4 learning-path milestones (v0.1 UI)
 src/js/data/taxonomy.js    learning network: 26 topics, 131 subtopics, ladders, validators
 src/js/data/families.js    problem families, pickVersion per company, distinctProblems
 src/js/data/problem-meta.js companies, best known complexity, family per shipped problem (-> problem-meta.json, scripts/content/build-meta.mjs)
+src/js/data/company-sets.js practice by company: per-company problem lists, one row per family (-> company-sets.json, same script)
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md)
 scripts/content/           fetch sources, build index, audit
 scripts/verify/            verifier helpers (harnesses.mjs re-exports engine/programs; sql, growth)
@@ -54,7 +55,7 @@ deploy/cloudflare-worker/  Worker in front of the runner: CORS, rate limit, size
 deploy/piston/             VM kit: Piston image, runtime packages, gate, compose, setup.sh, smoke.mjs, dev/
 db/schema.sql              PostgreSQL schema (ADR 0002); scripts/db/ = git -> database sync + checks
 src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler (Monaco's TS service), resizer, results console
-src/js/ui/views/           dashboard, workspace, path, modes (hub, interview, battle)
+src/js/ui/views/           dashboard, workspace, path, companies, modes (hub, interview, battle)
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test
 docs/                      ARCHITECTURE, PROBLEM_FORMAT, ROADMAP, DEPLOY_RUNNER, adr/
