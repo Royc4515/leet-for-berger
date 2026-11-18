@@ -23,6 +23,7 @@ import { recordSubmission, markRevealed } from '../../state/progress.js';
 import { loadDraft, saveDraft, clearDraft } from '../../state/drafts.js';
 import { TOPICS, loadSolution, getProblem } from '../../problems/index.js';
 import { createProblemContext } from '../problem-context.js';
+import { createProblemExtras } from '../problem-extras.js';
 import { createMentorPanel } from '../mentor-panel.js';
 
 const LANG_KEY = 'lfb:lang';
@@ -85,6 +86,26 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     showComplexity: allowAssist,
     showFamily: !session,
   });
+  // Practice only: a walkthrough or past code would defeat a timed session.
+  const extras = session
+    ? null
+    : createProblemExtras({
+        problem,
+        store,
+        getLanguage: () => language,
+        languageLabel: (id) => languages.find((l) => l.id === id)?.label ?? id,
+        loadSolution,
+        onLoadCode: (lang, code) => {
+          if (!editor) return;
+          if (lang !== language && languages.some((l) => l.id === lang)) {
+            langSelect.value = lang;
+            langSelect.dispatchEvent(new Event('change'));
+          }
+          editor.setValue(code);
+          toast('Code loaded from your history. Ctrl+Z restores what you had.', 'info');
+        },
+      });
+  if (extras) cleanups.push(extras.dispose);
 
   const left = h(
     'section.pane.pane-left',
@@ -109,6 +130,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     ),
     h('h2.block-title', {}, 'Constraints'),
     h('ul.constraints', {}, problem.constraints.map((c) => h('li', {}, h('code', {}, c)))),
+    extras?.el ?? null,
     h(
       'div.custom-card',
       {},
@@ -342,7 +364,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
 
       const executable = languages.find((l) => l.id === language).executable || onServer(language);
       if (kind === 'submit' && executable) {
-        store.update((s) => recordSubmission(s, { problemId: problem.id, accepted: result.accepted }));
+        store.update((s) => recordSubmission(s, { problemId: problem.id, accepted: result.accepted, detail: { language, verdict: result.verdict, passed: result.passed, total: result.total, code } }));
         toast(result.accepted ? 'Accepted. Nice work.' : `${result.verdict}: ${result.passed}/15`, result.accepted ? 'success' : 'error');
       }
       session?.onResult({ kind, result, problemId: problem.id });

@@ -20,12 +20,22 @@ export function dayKey(date = new Date()) {
   return `${y}-${m}-${d}`;
 }
 
+/** Submissions kept per problem, newest first. Each keeps its code, so the cap protects the 5 MB localStorage quota. */
+export const HISTORY_LIMIT = 10;
+/** Code longer than this is not kept in history (the verdict still is). */
+export const HISTORY_CODE_LIMIT = 20000;
+
 /**
- * Record a submission verdict.
- * @param {ReturnType<typeof emptyState>} state
- * @param {{ problemId: string, accepted: boolean, revealed?: boolean, now?: Date }} sub
+ * @typedef {{ at: string, language: string, verdict: string, passed: number, total: number, code: string|null }} SubmissionRecord
  */
-export function recordSubmission(state, { problemId, accepted, revealed = false, now = new Date() }) {
+
+/**
+ * Record a submission verdict, and when `detail` is given, a history entry for the problem.
+ * @param {ReturnType<typeof emptyState>} state
+ * @param {{ problemId: string, accepted: boolean, revealed?: boolean, now?: Date,
+ *   detail?: { language: string, verdict: string, passed: number, total: number, code: string } }} sub
+ */
+export function recordSubmission(state, { problemId, accepted, revealed = false, now = new Date(), detail = null }) {
   const prev = state.problems[problemId] ?? { status: 'attempted', submissions: 0, accepted: 0, revealed: false };
   const entry = {
     ...prev,
@@ -34,6 +44,18 @@ export function recordSubmission(state, { problemId, accepted, revealed = false,
     revealed: prev.revealed || revealed,
     status: prev.status === 'solved' || accepted ? 'solved' : 'attempted',
   };
+  if (detail) {
+    /** @type {SubmissionRecord} */
+    const record = {
+      at: now.toISOString(),
+      language: detail.language,
+      verdict: detail.verdict,
+      passed: detail.passed,
+      total: detail.total,
+      code: detail.code.length <= HISTORY_CODE_LIMIT ? detail.code : null,
+    };
+    entry.history = [record, ...(prev.history ?? [])].slice(0, HISTORY_LIMIT);
+  }
   const today = dayKey(now);
   const activeDays = accepted && !state.activeDays.includes(today) ? [...state.activeDays, today].sort() : state.activeDays;
   return {
