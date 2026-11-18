@@ -29,4 +29,11 @@ fi
 # Public solutions index whose README lists LeetCode's Top Interview 150 study plan.
 curl -sSfL -o "$CACHE/lij.md" https://raw.githubusercontent.com/javadev/LeetCode-in-Java/main/README.md
 
+# Best known time and space complexity per problem (MIT). Tables by problem number;
+# scripts/content/complexity.mjs turns them into content/index/complexity.json.
+mkdir -p "$CACHE/kamyu104"
+for f in README.md 0001-1000.md 1001-2000.md 2001-3000.md; do
+  curl -sSfL -o "$CACHE/kamyu104/$f" "https://raw.githubusercontent.com/kamyu104/LeetCode-Solutions/master/$f"
+done
+
 echo "sources in $CACHE"

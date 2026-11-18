@@ -59,7 +59,7 @@ e2e/smoke.mjs              Playwright smoke test
 docs/                      ARCHITECTURE, PROBLEM_FORMAT, ROADMAP, DEPLOY_RUNNER, adr/
 ```
 
-Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
+Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR). Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
 
 ## Invariants (breaking any of these is a bug, not a style choice)
 
