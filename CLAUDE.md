@@ -41,7 +41,7 @@ src/js/engine/             PURE judging logic + execution
 src/js/config.js          public site config: remote runner URL (empty = editor-only), Turnstile site key
 src/js/problems/<id>/      problem.js + solutions/ (8 language files, or solution.sql); index.js = catalog, hydrate, loadSolution
 src/js/state/              progress (pure reducers + localStorage), drafts
-src/js/modes/              interview.js, battle.js (pure session logic)
+src/js/modes/              interview.js, battle.js, mock-oa.js (pure session logic and OA problem picking)
 src/js/mentor/             mentor providers (scripted today, remote later)
 src/js/data/taxonomy.js    learning network: 26 topics, 131 subtopics, ladders, validators
 src/js/data/families.js    problem families, pickVersion per company, distinctProblems

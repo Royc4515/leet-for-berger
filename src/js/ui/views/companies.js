@@ -10,8 +10,11 @@ const RECENCY_LABEL = { '30d': 'Last 30 days', '3m': 'Last 3 months', '6m': 'Las
 
 let setsPromise = null;
 
-/** @returns {Promise<import('../../data/company-sets.js').CompanySets|null>} */
-function loadSets() {
+/**
+ * Company data, fetched once and shared by the companies pages and the mock OA setup.
+ * @returns {Promise<import('../../data/company-sets.js').CompanySets|null>}
+ */
+export function loadSets() {
   setsPromise ??= fetch(new URL('../../data/company-sets.json', import.meta.url))
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null);

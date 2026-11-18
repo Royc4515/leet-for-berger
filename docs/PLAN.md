@@ -65,7 +65,7 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [x] Practice-by-company view, with search and an Israeli-companies filter (PR #11)
 - [x] Problem families on each problem: all versions of the same idea are marked as related, and each version clearly shows which companies asked that form and what changed from the base version (the twist). Serves both company practice and re-practicing a problem in a different wording (PR #10)
 - [x] Learning paths from the topic map (26 topics), replacing the 4 temporary milestones (PR #12)
-- [ ] Mock OA: timer, 2-3 problems by difficulty, report at the end
+- [x] Mock OA: timer, 2-3 problems by difficulty, report at the end (PR #13)
 - [ ] Daily problem and "weak spots" practice from history
 - [ ] Solution explanation unlocked after solving, and submission history per problem
 - [ ] More robust growth measurement, so one slow size doesn't skew it
