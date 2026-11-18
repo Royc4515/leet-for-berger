@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+export GOROOT=$PWD/go
+export PATH=$PWD/go/bin:$PATH
+export LFB_GOCACHE_SEED=$PWD/gocache
+export GOCACHE=/tmp/gocache
+export GOPATH=/tmp/gopath
+export GOTOOLCHAIN=local
+export GOFLAGS=-buildvcs=false

@@ -1,0 +1,6 @@
+{
+    "language": "java",
+    "version": "21.0.13",
+    "aliases": [],
+    "limit_overrides": { "max_process_count": 256 }
+}
