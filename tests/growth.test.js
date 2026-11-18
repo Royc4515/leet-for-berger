@@ -11,6 +11,7 @@ import {
   fitLine,
   median,
   shouldMeasureNext,
+  shouldRetryGrowth,
   describeGrowth,
   validateGrowth,
   growthSeed,
@@ -296,4 +297,17 @@ test('linear code whose per-item cost creeps up with the heap still reads as lin
   // Cache misses: cost per item rises about 30% per doubling at the top, as measured for Map-heavy code.
   const est = estimateGrowth(synth({ model: (n) => n * (n > 32000 ? (n / 32000) ** 0.35 : 1), topMs: 80 }), 'n');
   assert.equal(est.verdict, 'matches');
+});
+
+test('shouldRetryGrowth: one more pass only for transient inconclusive reasons that fit the budget', () => {
+  assert.equal(shouldRetryGrowth({ verdict: 'inconclusive', reason: 'too close to call' }, 1500, 5000), true);
+  assert.equal(shouldRetryGrowth({ verdict: 'inconclusive', reason: 'timings too noisy' }, 2500, 5000), true);
+  // Over half the budget already spent: a second pass at the same pace would overrun it.
+  assert.equal(shouldRetryGrowth({ verdict: 'inconclusive', reason: 'too close to call' }, 2600, 5000), false);
+  // These would repeat on a second pass.
+  assert.equal(shouldRetryGrowth({ verdict: 'inconclusive', reason: 'times too small to measure' }, 100, 5000), false);
+  assert.equal(shouldRetryGrowth({ verdict: 'inconclusive', reason: 'a larger input hit the time cap' }, 100, 5000), false);
+  // A decided verdict is never re-measured.
+  assert.equal(shouldRetryGrowth({ verdict: 'matches', reason: null }, 100, 5000), false);
+  assert.equal(shouldRetryGrowth({ verdict: 'slower than target', reason: null }, 100, 5000), false);
 });

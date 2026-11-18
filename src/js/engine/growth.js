@@ -272,6 +272,23 @@ export function shouldMeasureNext({ done, nextN, elapsedMs, budgetMs, slowMs, re
   return predicted < slowMs && elapsedMs + predicted * reps <= budgetMs;
 }
 
+/**
+ * Whether a finished measurement deserves one more pass. A single size can run uniformly slow for
+ * a while (a JIT tier change or deoptimization in progress), which bends the fitted line and makes
+ * an honest estimator answer "too close to call" or "timings too noisy"; a fresh pass usually does
+ * not hit the same transient. Other inconclusive reasons (timeouts, too-small times) would repeat.
+ * @param {{ verdict: string, reason: string|null }} est  the first estimate
+ * @param {number} elapsedMs  wall time the first pass took
+ * @param {number} budgetMs   total budget for the whole growth run
+ * @returns {boolean}
+ */
+export function shouldRetryGrowth(est, elapsedMs, budgetMs) {
+  if (est.verdict !== 'inconclusive') return false;
+  if (est.reason !== 'too close to call' && est.reason !== 'timings too noisy') return false;
+  // Only when the retry fits the remaining budget at the same pace.
+  return elapsedMs * 2 <= budgetMs;
+}
+
 /** Words for a bucket as the console shows it. */
 export const BUCKET_LABEL = {
   sublinear: 'below linear (about constant or log n)',

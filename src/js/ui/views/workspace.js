@@ -17,7 +17,7 @@ import { attachResizer } from '../resizer.js';
 import { createEditor } from '../editor.js';
 import { renderIdle, renderPending, renderResult, renderError, renderGrowthLine } from '../results.js';
 import { buildSuite, judge, comparatorFor } from '../../engine/harness.js';
-import { estimateGrowth, describeGrowth } from '../../engine/growth.js';
+import { estimateGrowth, describeGrowth, shouldRetryGrowth } from '../../engine/growth.js';
 import { getRunner, isRemote } from '../../engine/runners/index.js';
 import { recordSubmission, markRevealed } from '../../state/progress.js';
 import { loadDraft, saveDraft, clearDraft } from '../../state/drafts.js';
@@ -254,21 +254,33 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       // Two frames: the verdict is on screen before any timing work starts.
       await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
       if (run.stopped || disposed) return;
-      const res = await runner.measureGrowth({
-        code,
-        entry: problem.signatures[lang].entry,
-        adapter: problem.adapters?.[lang] ?? null,
-        growth: problem.growth,
-        // Python runs about 50x slower, so fewer calls per size keep it inside the same budget.
-        reps: lang === 'python' ? 3 : 5,
-      });
-      if (run.stopped || disposed || res.cancelled) return;
-      if (res.error) {
-        const first = String(res.error).split('\n').find((l) => l.trim()) ?? 'error';
-        line.show({ headline: 'Growth estimate: unavailable (the code failed on a larger generated input).', note: first }, 'inconclusive');
-        return;
+      const BUDGET_MS = 5000;
+      const measure = (budgetMs) =>
+        runner.measureGrowth({
+          code,
+          entry: problem.signatures[lang].entry,
+          adapter: problem.adapters?.[lang] ?? null,
+          growth: problem.growth,
+          // Python runs about 50x slower, so fewer calls per size keep it inside the same budget.
+          reps: lang === 'python' ? 3 : 5,
+          budgetMs,
+        });
+      const started = performance.now();
+      let res = await measure(BUDGET_MS);
+      let est = null;
+      for (let pass = 0; pass < 2; pass++) {
+        if (run.stopped || disposed || res.cancelled) return;
+        if (res.error) {
+          const first = String(res.error).split('\n').find((l) => l.trim()) ?? 'error';
+          line.show({ headline: 'Growth estimate: unavailable (the code failed on a larger generated input).', note: first }, 'inconclusive');
+          return;
+        }
+        est = estimateGrowth(res.samples, problem.growth.target);
+        const elapsed = performance.now() - started;
+        // A transient JIT state can make one size uniformly slow; one fresh pass, in budget, settles it.
+        if (pass > 0 || !shouldRetryGrowth(est, elapsed, BUDGET_MS)) break;
+        res = await measure(BUDGET_MS - elapsed);
       }
-      const est = estimateGrowth(res.samples, problem.growth.target);
       line.show(describeGrowth(est, problem.growth), est.verdict);
     })().catch((err) => {
       if (!run.stopped && !disposed) line.show({ headline: 'Growth estimate: unavailable.', note: err.message }, 'inconclusive');

@@ -37,6 +37,7 @@
 - The native program builder moved from `scripts/verify/` to `src/js/engine/programs/` (browser-safe; `scripts/verify/harnesses.mjs` re-exports it) with the Java harness files, so the verifier and the remote runner build byte-identical programs (`tests/programs.test.js`).
 
 ### Fixed
+- Growth estimate: a size that runs uniformly slow for a while (a JIT tier change) could leave the estimate "too close to call". The browser now re-measures once when the first pass is inconclusive for a transient reason and the retry fits the 5 s budget (`shouldRetryGrowth`). The e2e quadratic example shifts elements in JavaScript instead of a native `splice`, so it is quadratic beyond doubt.
 - CI hit its 15-minute limit: verifying 133 problems in 8 languages one after another takes over 30 minutes. Solutions now verify in one parallel job per language (`VERIFY_LANGUAGES`), and `tests/ci.test.js` fails if the matrix misses a language. Toolchain probes run once instead of once per problem.
 - Database sync ran out of memory at 133 problems: `scripts/db/export-sql.mjs` built the whole script (about 370 MB, mostly test data) as one string. It now streams batched inserts and waits on a full pipe.
 - Python names for signatures with acronyms: `lengthOfLIS` became `length_of_l_i_s`; an acronym is now one word (`length_of_lis`). No existing problem changes.

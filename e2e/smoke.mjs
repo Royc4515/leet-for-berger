@@ -299,7 +299,10 @@ try {
     await page.selectOption('.toolbar select', 'javascript');
   });
 
-  await check('growth estimate: an Accepted quadratic Median Stream (sorted array + splice) is slower than target', async () => {
+  // The insert shifts elements one by one in JavaScript. A native splice is a memmove so fast that
+  // its quadratic term barely dominates at these sizes, and on a noisy CI runner the estimator then
+  // (correctly) answers "inconclusive"; this keeps the example unambiguously quadratic.
+  await check('growth estimate: an Accepted quadratic Median Stream (sorted array, shifting inserts) is slower than target', async () => {
     await page.goto(`${BASE}#/problem/median-stream`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class MedianFinder')));
@@ -308,7 +311,10 @@ try {
   addNum(num) {
     let lo = 0, hi = this.a.length;
     while (lo < hi) { const mid = (lo + hi) >> 1; if (this.a[mid] < num) lo = mid + 1; else hi = mid; }
-    this.a.splice(lo, 0, num);
+    const a = this.a;
+    a.push(num);
+    for (let i = a.length - 1; i > lo; i--) a[i] = a[i - 1];
+    a[lo] = num;
   }
   findMedian() { const a = this.a, m = a.length >> 1; return a.length % 2 ? 2 * a[m] : a[m - 1] + a[m]; }
 }`);
