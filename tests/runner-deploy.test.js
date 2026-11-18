@@ -105,3 +105,14 @@ test('.NET runs with W^X off so it fits isolate\'s file-size limit', () => {
   const env = readFileSync(new URL('../deploy/piston/packages/dotnet/8.0.428/environment', import.meta.url), 'utf8');
   assert.match(env, /^export DOTNET_EnableWriteXorExecute=0$/m);
 });
+
+// .NET 8.0.42x keeps named mutexes in $XDG_RUNTIME_DIR (else $HOME/.dotnet). Piston's job users have
+// neither, so without these every C# compile failed on 'NuGet-Migrations' on the live VM.
+test('.NET compile and run give the job its own HOME and XDG_RUNTIME_DIR', () => {
+  for (const f of ['compile', 'run']) {
+    const s = readFileSync(new URL(`../deploy/piston/packages/dotnet/8.0.428/${f}`, import.meta.url), 'utf8');
+    assert.match(s, /XDG_RUNTIME_DIR="\$PWD\/\.run"/, f);
+    assert.match(s, /HOME="\$PWD\/\.home"/, f);
+    assert.match(s, /mkdir -p -m 700 "\$XDG_RUNTIME_DIR"/, f);
+  }
+});
