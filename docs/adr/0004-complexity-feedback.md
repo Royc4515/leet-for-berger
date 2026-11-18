@@ -38,7 +38,8 @@ Until now the only complexity check was a time budget: max-size hidden tests mak
 ## Evidence
 
 - Synthetic (tests/growth.test.js, 400 runs per case, +-30% noise per call, 5 calls per size): zero wrong verdicts. Linear and n log n against a linear target: no "slower"; quadratic against linear: no "matches", at least 80% "slower". At 50% noise still zero wrong verdicts, about half inconclusive. Constant overhead never makes quadratic code match linear. Random times are never called slower.
-- Node, 4 consecutive verifier runs (40 measurements): all 10 pilots `matches`, one needed a retry. Shipped slopes: 0.9 to 1.3 for linear and n log n targets, 1.94 to 1.98 for Zero Triplets (n^2). Negative control: 1.99 to 2.04. The measuring part takes about 20 s for the pilot; loading the catalog adds about 25 s that every test file pays.
+- Node, verifier alone (5 runs, 50 measurements): all 10 pilots `matches`, one needed a retry. Shipped slopes: 0.9 to 1.3 for linear and n log n targets, 1.94 to 1.98 for Zero Triplets (n^2). Negative control: 1.99 to 2.04. Measuring takes about 22 s for the pilot; loading the catalog adds about 25 s that every test file pays.
+- Node under load (`npm test` with 2 to 8 languages verifying in parallel): one failure in the first full run, Zero Triplets, whose n = 1000 read 3x slow in all three attempts (a JIT artifact, not noise). Its ladder now goes to 16000 so the top-4 window starts at 2000; the next loaded run passed with no retry.
 - Chromium (Playwright): all 10 pilots `matches` in JavaScript and in Python (Pyodide); the splice-based Median Stream (Accepted, quadratic) read `slower than target` 8 of 8 times. Each estimate takes 0.4 to 5 s after the verdict.
 
 ## Alternatives considered
