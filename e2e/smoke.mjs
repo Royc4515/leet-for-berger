@@ -190,6 +190,63 @@ try {
     await expectText('.result-head', /15 \/ 15/);
   });
 
+  // Growth estimate (ADR 0004): after an Accepted JS submit, the console adds one estimate line.
+  const growthHeadline = async () => {
+    await page.waitForFunction(() => document.querySelector('.growth-head')?.textContent.startsWith('Growth estimate:'), null, { timeout: 30000 });
+    return page.locator('.growth-head').textContent();
+  };
+  await check('growth estimate: a linear Pair Sum Target gets a growth line and is not called slower', async () => {
+    await page.goto(`${BASE}#/problem/pair-sum-target`);
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('function pairSum')));
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 30000);
+    const text = await growthHeadline();
+    console.log(`  # ${text}`);
+    // Timing noise may make it inconclusive; an honest linear solution must never be flagged.
+    if (!/target n\b/.test(text) || /slower than target/.test(text)) throw new Error(text);
+    await shot('11-growth-linear');
+  });
+
+  await check('growth estimate: an Accepted quadratic Median Stream (sorted array + splice) is slower than target', async () => {
+    await page.goto(`${BASE}#/problem/median-stream`);
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class MedianFinder')));
+    await setCode(`class MedianFinder {
+  constructor() { this.a = []; }
+  addNum(num) {
+    let lo = 0, hi = this.a.length;
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (this.a[mid] < num) lo = mid + 1; else hi = mid; }
+    this.a.splice(lo, 0, num);
+  }
+  findMedian() { const a = this.a, m = a.length >> 1; return a.length % 2 ? 2 * a[m] : a[m - 1] + a[m]; }
+}`);
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 30000);
+    const text = await growthHeadline();
+    console.log(`  # ${text}`);
+    if (!/slower than target/.test(text)) throw new Error(text);
+    await shot('12-growth-quadratic');
+  });
+
+  if (!skipPython) {
+    await check('growth estimate: Python Pair Sum Target gets an estimate through Pyodide', async () => {
+      await page.goto(`${BASE}#/problem/pair-sum-target`);
+      await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+      await page.selectOption('.toolbar select', 'python');
+      await page.click('button:has-text("Reveal Solution")');
+      await page.click('dialog.modal button:has-text("Reveal")');
+      await page.click('button:has-text("Submit")');
+      await expectText('.result-head', /Accepted/, 90000);
+      const text = await growthHeadline();
+      console.log(`  # ${text}`);
+      if (/unavailable|slower than target/.test(text)) throw new Error(text);
+      await page.selectOption('.toolbar select', 'javascript');
+    });
+  }
+
   if (!skipPython) {
     await check('linked list problem (Reverse List): Python reveal + submit is Accepted', async () => {
       await page.goto(`${BASE}#/problem/reverse-list`);

@@ -54,6 +54,7 @@ Starter code and per-language entry names are **generated** from the signature (
 | `parseCustomInput(raw)` | fn | returns `{ok:true,args}` or `{ok:false,error}`; enforce constraints |
 | `solveReference(args)` | fn | computes expected for custom input |
 | `judge` | string, optional | judge mode when exact equality cannot judge the answer (see Judge modes); default `'exact'` |
+| `growth` | object, optional | growth estimate after Accepted (see Growth estimate); algorithm problems only |
 
 Also export the JS `reference` function so tests can import it.
 
@@ -157,6 +158,49 @@ By default a case passes when the output equals `expected` exactly (`deepEqual`,
 | `randomized-set` | Random Pool | design class with `insert(val) -> bool`, `remove(val) -> bool`, `getRandom() -> int`. insert and remove must equal `expected`; `expected` holds `null` at `getRandom` positions, and the mode replays the calls to check each pick is a current member. Every run of picks on an unchanged set with at least 100 expected picks per member must also look uniform: each member's count within 6.5 binomial standard deviations of the mean (a fair picker fails a submission by chance less than once in 10^8) |
 
 A new mode needs unit tests in `tests/judge-modes.test.js`, including a check that a correct solution passes every shipped case repeatedly.
+
+## Growth estimate
+
+After an Accepted submit in JavaScript or Python, the workspace times the code on growing inputs and says whether its growth matches the problem's target ([ADR 0004](adr/0004-complexity-feedback.md)). A problem opts in with `growth`:
+
+```js
+growth: {
+  target: 'n',                 // '1', 'log n', 'n', 'n log n', 'n^2', 'n^2 log n', 'n^3', '2^n'
+  n: 'nums.length',            // what n counts, shown in the console note
+  sizes: [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000],
+  input: (n, seed) => uniquePair(seed, n, n - 2, n - 1), // full argument list
+  // inconclusiveOk: true,     // only if CI cannot measure it reliably; say why in a comment
+},
+```
+
+Pilot problems: Pair Sum Target, Longest Streak, Top K Frequent, Zero Triplets (`n^2`), Warmer Days, Subarray Sum K, Island Count (grid, n = cells), Level Order (TreeNode), Median Stream (design, n = calls), Rising Chain (`n log n`).
+
+The estimate is coarse: `n` and `n log n` both read as linear, `n^2` and `n^2 log n` as quadratic. Pick the target from the statement's "Target complexity" line.
+
+### Writing a good generator
+
+- **Deterministic.** Use `mulberry32(seed)` only; the runner passes `growthSeed(n)`. Never `Math.random()`.
+- **Worst case for the target, no early exits.** The answer must not be found early: put the pair at the end (Pair Sum Target), make no triplet sum to zero (Zero Triplets: odd values only), make no day warmer (Warmer Days: non-increasing). A generator that lets a solution stop early measures the early exit, not the algorithm.
+- **Bounded output.** Keep the output small or linear. If the answer can grow faster than the work (all triplets), the output dominates the timing.
+- **Shaped to expose the naive solution.** Whatever makes the classic wrong approach quadratic should grow with n: distinct values that grow with n for Top K Frequent, one shuffled run for Longest Streak, many small islands for Island Count.
+- **Values inside the constraints; length may exceed them.** A linear pass needs about 10^6 elements to take measurable milliseconds, so sizes can pass the statement's n limit. Values, value ranges and structural rules (one valid pair, rows of equal length) must still hold: the verifier checks that the shipped solution agrees with `solveReference` on the smallest growth input. If the value range caps n (Top K Frequent: about 2 * 10^4 distinct values), stop the sizes there.
+- **Cheap to build.** `input` runs on the main thread in the browser and counts against the 5 s budget: no sorting-heavy or quadratic generators, no BST insertion for 10^6 nodes (Level Order uses a complete tree).
+- **n for grids and designs.** A grid takes n cells (`side = round(sqrt(n))`); a design takes an operation sequence of about n calls.
+
+### Choosing sizes
+
+- A doubling ladder, strictly ascending, at least 4 sizes spanning at least 8x. Start low enough that a naive solution one class above the target still gets 3 or 4 sizes before it is stopped at about 1 s per call (Zero Triplets starts at 250 so a cubic solution is measured), and end where the shipped JavaScript solution takes roughly 5 to 200 ms.
+- Only sizes whose median takes at least 1 ms count, and the slope is read on the largest 4 of them.
+- Measure with the verifier while you tune: `VERIFY_LANGUAGES=javascript node --test tests/growth-solutions.test.js` prints each size's median and the slope.
+
+### Checklist for adding `growth` to a problem
+
+1. Read the statement's "Target complexity" and pick the `target` string; write `n` as the user would name it.
+2. Write `input(n, seed)` from the guidelines above, reusing the problem's own seeded generators; add a comment saying why the input is a worst case.
+3. Choose `sizes` (doubling, 5 to 200 ms for the shipped JS solution at the top).
+4. Run `VERIFY_LANGUAGES=javascript node --test tests/growth-solutions.test.js`: spec valid, input deterministic and judged like a real case, shipped solution `matches`. If it reads inconclusive, look at the printed medians: a dip or jump at one size is JIT or GC noise (rerun), a curve that bends up at the top is memory growth (lower the top size), times under 1 ms need larger sizes.
+5. Optional but recommended: time a deliberately naive solution and confirm it reads `slower than target`.
+6. `npm test` and, if the problem is in the e2e test, `npm run test:e2e`.
 
 ## Test design checklist
 
