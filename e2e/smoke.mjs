@@ -141,6 +141,26 @@ try {
     });
   }
 
+  // TypeScript is type-checked and transpiled by Monaco's TypeScript service, then runs as JavaScript.
+  await check('TypeScript: reveal + submit is Accepted 15/15 on a function problem', async () => {
+    await page.selectOption('.toolbar select', 'typescript');
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 60000);
+    await expectText('.result-head', /15 \/ 15/);
+  });
+
+  await check('TypeScript: a type error is a Compile Error with LeetCode-style diagnostics', async () => {
+    await setCode('function smallestBaseSegment(s: string): string {\n  const n: number = s;\n  return s;\n}\n');
+    await page.click('button:has-text("Run Code")');
+    await expectText('.result-head', /Compile Error/, 30000);
+    await expectText('.case-detail', /Line 2: Char 9: error TS2322: Type 'string' is not assignable to type 'number'/);
+    await expectText('.case-detail', /type error is a Compile Error/);
+    await shot('13-ts-compile-error');
+    await page.selectOption('.toolbar select', 'javascript');
+  });
+
   await check('Java is editor-only with an honest verdict', async () => {
     await page.selectOption('.toolbar select', 'java');
     await page.click('button:has-text("Run Code")');
@@ -165,6 +185,17 @@ try {
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 30000);
     await expectText('.result-head', /15 \/ 15/);
+  });
+
+  await check('design problem (Min Stack): TypeScript reveal + submit is Accepted through the JavaScript adapter', async () => {
+    await page.selectOption('.toolbar select', 'typescript');
+    await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class MinStack') && m.getValue().includes(': number')));
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 60000);
+    await expectText('.result-head', /15 \/ 15/);
+    await page.selectOption('.toolbar select', 'javascript');
   });
 
   // RandomListNode (copy checked by node identity) and the randomized-set judge mode, in the browser.
@@ -208,6 +239,18 @@ try {
     // Timing noise may make it inconclusive; an honest linear solution must never be flagged.
     if (!/target n\b/.test(text) || /slower than target/.test(text)) throw new Error(text);
     await shot('11-growth-linear');
+  });
+
+  await check('growth estimate: TypeScript Pair Sum Target is timed as its transpiled JavaScript', async () => {
+    await page.selectOption('.toolbar select', 'typescript');
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 60000);
+    const text = await growthHeadline();
+    console.log(`  # ${text}`);
+    if (/unavailable|slower than target/.test(text)) throw new Error(text);
+    await page.selectOption('.toolbar select', 'javascript');
   });
 
   await check('growth estimate: an Accepted quadratic Median Stream (sorted array + splice) is slower than target', async () => {
@@ -328,6 +371,24 @@ try {
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     await shot('10-mobile');
     await page.setViewportSize({ width: 1440, height: 900 });
+  });
+
+  // Its own page: the blocked CDN request is logged as a failed resource, which is the point here.
+  await check('without Monaco, TypeScript reports honestly that it needs the editor and nothing crashes', async () => {
+    const offline = await browser.newPage();
+    const offlineErrors = [];
+    offline.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && offlineErrors.push(m.text()));
+    offline.on('pageerror', (e) => offlineErrors.push(e.message));
+    await offline.route(/monaco-editor@/, (route) => route.abort());
+    await offline.goto(`${BASE}#/problem/smallest-base-segment`);
+    await offline.waitForSelector('textarea.fallback-editor', { timeout: 30000 });
+    await offline.selectOption('.toolbar select', 'typescript');
+    await offline.click('button:has-text("Run Code")');
+    await offline.waitForFunction(() => /Language Not Supported Yet/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 15000 });
+    await offline.waitForFunction(() => /could not load/.test(document.querySelector('.case-detail')?.textContent ?? ''));
+    await offline.selectOption('.toolbar select', 'javascript');
+    await offline.close();
+    if (offlineErrors.length) throw new Error(offlineErrors.join(' | '));
   });
 
   await check('unknown route shows not found', async () => {

@@ -53,5 +53,5 @@ Until now the only complexity check was a time budget: max-size hidden tests mak
 
 - Sizes go beyond the statement's limits when needed (a linear pass needs about 10^6 elements to take measurable milliseconds); values stay within the value constraints. A solution that relies on the length limit (a fixed-size buffer) gets "unavailable", not a wrong verdict.
 - The estimate is an estimate. It can be inconclusive on a busy machine; it never upgrades n log n to n or the reverse.
-- TypeScript, Java, C++, C, C# and Go get no estimate in the browser; they will with the server runner (ROADMAP Phase 2), which can reuse the estimator unchanged.
+- TypeScript gets the JavaScript estimate: it is timed as its transpiled JavaScript in the same worker. Java, C++, C, C# and Go get no estimate in the browser; they will with the server runner (ROADMAP Phase 2), which can reuse the estimator unchanged.
 - Adding `growth` to a problem needs no engine change: see the checklist in docs/PROBLEM_FORMAT.md.

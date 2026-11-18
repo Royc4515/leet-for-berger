@@ -27,13 +27,14 @@ export const STRUCT_TYPES = ['ListNode', 'TreeNode', 'RandomListNode', 'NestedIn
 const inputOnly = (t) => Boolean(t.cycle) || t.base === 'NestedInteger';
 
 /**
- * The eight interview languages. `executable` means it runs in the browser today; the rest are
- * editor-only until the server runner exists (ROADMAP Phase 2).
+ * The eight interview languages. `executable` means it runs in the browser today (TypeScript as
+ * transpiled JavaScript, engine/typescript.js); the rest are editor-only until the server runner
+ * exists (ROADMAP Phase 2).
  */
 export const LANGUAGES = [
   { id: 'python', label: 'Python 3', monaco: 'python', file: 'solution.py', executable: true },
   { id: 'javascript', label: 'JavaScript', monaco: 'javascript', file: 'solution.js', executable: true },
-  { id: 'typescript', label: 'TypeScript', monaco: 'typescript', file: 'solution.ts', executable: false },
+  { id: 'typescript', label: 'TypeScript', monaco: 'typescript', file: 'solution.ts', executable: true },
   { id: 'java', label: 'Java 17', monaco: 'java', file: 'Solution.java', executable: false },
   { id: 'cpp', label: 'C++17', monaco: 'cpp', file: 'solution.cpp', executable: false },
   { id: 'c', label: 'C', monaco: 'c', file: 'solution.c', executable: false },

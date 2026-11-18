@@ -21,7 +21,7 @@ No install is needed to run the app; `npm install` only pulls Playwright for the
 | Workspace: description, Monaco (vs-dark), console, resizable splits | done |
 | 15-case harness: 5 detailed + 10 hidden, per-case time limit, verdicts | done |
 | JavaScript and Python execution in the browser (Web Worker, Pyodide) | done |
-| Languages | 8: Python, JavaScript, TypeScript, Java, C++, C, C#, Go. Starter code generated from a typed signature; every solution verified in CI. JS and Python run in the browser, the rest are editor-only until the server runner |
+| Languages | 8: Python, JavaScript, TypeScript, Java, C++, C, C#, Go. Starter code generated from a typed signature; every solution verified in CI. JavaScript, TypeScript and Python run in the browser, the rest are editor-only until the server runner |
 | Problem bank, filters, progress (solved, streak, accuracy) | done |
 | Learning Path, 4 milestones | done |
 | Interview Simulator (45 min, lockdown, report) | done |

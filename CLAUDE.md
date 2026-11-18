@@ -29,7 +29,9 @@ src/js/engine/             PURE judging logic + execution
   structures.js            tree/list helpers for problem references and generators
   runners/index.js         language -> runner registry
   runners/worker-runner.js generic Web Worker runner, per-case watchdog
-  workers/js-worker.js     executes user JS
+  runners/ts-runner.js     TypeScript: compile (injected compiler), then run as JS
+  typescript.js            TS compiler options (LeetCode's flags), ambient types, diagnostics format
+  workers/js-worker.js     executes user JS (and transpiled TS)
   workers/py-worker.js     executes user Python via Pyodide (persistent worker)
   workers/sql-worker.js    executes user SQL via sql.js (SQLite wasm); sql-core.js is shared with the verifier
   sql.js                   SQL problems: schema validation, starter, result-set judging (ADR 0003)
@@ -44,7 +46,7 @@ content/                   problem index, ladders, families, sources, AUDIT.md (
 scripts/content/           fetch sources, build index, audit
 scripts/verify/            per-language test harnesses for the solution verifier
 db/schema.sql              PostgreSQL schema (ADR 0002); scripts/db/ = git -> database sync + checks
-src/js/ui/                 dom helpers, editor (Monaco + fallback), resizer, results console
+src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler (Monaco's TS service), resizer, results console
 src/js/ui/views/           dashboard, workspace, path, modes (hub, interview, battle)
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test
@@ -95,7 +97,7 @@ Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/
 
 ## Known limits (do not "fix" by faking)
 
-- Only JavaScript, Python and SQL (SQLite dialect, not LeetCode's MySQL) run in the browser. TypeScript, Java, C++, C, C# and Go are editor-only and the verdict says so honestly. Their solutions are still verified in CI (`tests/solutions.test.js`). Real fix is the server runner (ROADMAP Phase 2).
+- Only JavaScript, TypeScript, Python and SQL (SQLite dialect, not LeetCode's MySQL) run in the browser. TypeScript is type-checked and transpiled by Monaco's TypeScript service (no extra download), then runs as JavaScript; a type error is a Compile Error, as on LeetCode (`engine/typescript.js`). With Monaco unavailable (textarea fallback) TypeScript cannot compile and the verdict says so. Java, C++, C, C# and Go are editor-only and the verdict says so honestly. Their solutions are still verified in CI (`tests/solutions.test.js`). Real fix is the server runner (ROADMAP Phase 2).
 - "Reveal Solution" is gated by a confirm dialog and marks the problem as assisted, but solutions ship in the client bundle. True secrecy needs the server (Phase 2).
 - Battle is bot-only. Peer battles need server-side judging so clients cannot fake progress (Phase 3).
 - AI Mentor runs on a scripted hint ladder. The LLM provider needs a backend proxy (Phase 3). The system prompt already lives in `src/js/mentor/mentor.js`.

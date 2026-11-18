@@ -4,6 +4,7 @@
  * and a worker (or a remote runner with the same run() contract).
  */
 import { WorkerRunner } from './worker-runner.js';
+import { TypeScriptRunner } from './ts-runner.js';
 import { LANGUAGES } from '../codegen.js';
 
 export { LANGUAGES };
@@ -29,6 +30,12 @@ const runners = {
   python: new WorkerRunner({ workerUrl: workerUrl('py-worker.js'), persistent: true, waitForReady: true }),
   // SQL problems only (docs/adr/0003-sql-problems.md): sql.js boots once, each case gets a fresh database.
   sql: new WorkerRunner({ workerUrl: workerUrl('sql-worker.js'), persistent: true, waitForReady: true }),
+  // Type-checked and transpiled by the editor's TypeScript service, then run as JavaScript (engine/typescript.js).
+  // Imported lazily so this registry never pulls Monaco code into a context without a page.
+  typescript: new TypeScriptRunner({
+    js: new WorkerRunner({ workerUrl: workerUrl('js-worker.js') }),
+    loadCompiler: () => import('../../ui/ts-compiler.js').then((m) => m.loadTypeScriptCompiler()),
+  }),
 };
 // Compiled and typed languages need the server-side runner (ROADMAP Phase 2): editor only today.
 for (const l of LANGUAGES.filter((x) => !x.executable)) {

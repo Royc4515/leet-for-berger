@@ -315,7 +315,8 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       }
       session?.onResult({ kind, result, problemId: problem.id });
       // Practice only: in interview and battle the clock is running, and timing would compete for the CPU.
-      const timeable = language === 'javascript' || language === 'python';
+      // TypeScript times its transpiled JavaScript in the same worker.
+      const timeable = language === 'javascript' || language === 'typescript' || language === 'python';
       if (kind === 'submit' && result.accepted && problem.growth && timeable && !session) startGrowth(code, language);
     } catch (err) {
       renderError(consoleBody, `Internal error: ${err.message}`);
