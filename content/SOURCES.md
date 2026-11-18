@@ -24,6 +24,7 @@ Rebuild everything:
 bash scripts/content/fetch-sources.sh
 node scripts/content/build-index.mjs
 node scripts/content/complexity.mjs
+node scripts/content/build-meta.mjs   # problem page context -> src/js/data/problem-meta.json
 node scripts/content/audit.mjs
 ```
 

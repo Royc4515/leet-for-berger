@@ -14,7 +14,7 @@ Read this file fully before any task. Then read the docs it points to for the ar
 | `npm run check` | Both. Run before every commit |
 | `npm run check:db` | Schema + git -> database sync against a throwaway PostgreSQL (needs PostgreSQL binaries) |
 
-Local e2e on a machine with Chrome but no Playwright browsers: `PW_CHANNEL=chrome npm run test:e2e`. Skip the slow Pyodide download: `node e2e/smoke.mjs --no-python`. Screenshots: `--shots=/tmp/shots`.
+Local e2e on a machine with Chrome but no Playwright browsers: `PW_CHANNEL=chrome npm run test:e2e`, or `PW_EXECUTABLE=/path/to/chrome`. Skip the slow Pyodide download: `node e2e/smoke.mjs --no-python`. Screenshots: `--shots=/tmp/shots`.
 
 ## Architecture map
 
@@ -46,6 +46,7 @@ src/js/mentor/             mentor providers (scripted today, remote later)
 src/js/data/curriculum.js  4 learning-path milestones (v0.1 UI)
 src/js/data/taxonomy.js    learning network: 26 topics, 131 subtopics, ladders, validators
 src/js/data/families.js    problem families, pickVersion per company, distinctProblems
+src/js/data/problem-meta.js companies, best known complexity, family per shipped problem (-> problem-meta.json, scripts/content/build-meta.mjs)
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md)
 scripts/content/           fetch sources, build index, audit
 scripts/verify/            verifier helpers (harnesses.mjs re-exports engine/programs; sql, growth)

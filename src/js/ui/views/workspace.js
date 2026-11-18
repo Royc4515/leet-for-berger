@@ -21,7 +21,8 @@ import { estimateGrowth, describeGrowth, shouldRetryGrowth } from '../../engine/
 import { getRunner, isRemote } from '../../engine/runners/index.js';
 import { recordSubmission, markRevealed } from '../../state/progress.js';
 import { loadDraft, saveDraft, clearDraft } from '../../state/drafts.js';
-import { TOPICS, loadSolution } from '../../problems/index.js';
+import { TOPICS, loadSolution, getProblem } from '../../problems/index.js';
+import { createProblemContext } from '../problem-context.js';
 import { createMentorPanel } from '../mentor-panel.js';
 
 const LANG_KEY = 'lfb:lang';
@@ -76,6 +77,14 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     'aria-label': 'Custom test input',
   });
   const topicLabels = problem.topics.map((t) => TOPICS.find((x) => x.id === t)?.label ?? t);
+  // Sessions keep companies but drop complexity (a hint) and family links (they leave the session).
+  const context = createProblemContext({
+    problem,
+    progress: store.get().problems[problem.id],
+    titleOf: (id) => getProblem(id)?.title ?? null,
+    showComplexity: allowAssist,
+    showFamily: !session,
+  });
 
   const left = h(
     'section.pane.pane-left',
@@ -87,6 +96,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       h('h1.problem-title', {}, problem.title),
       h('div.problem-tags', {}, difficultyBadge(problem.difficulty), topicLabels.map((t) => h('span.tag', {}, t)), problem.patterns.map((p) => h('span.tag.tag-muted', {}, p))),
     ),
+    context.el,
     trustedHtml('div.statement', problem.statementHtml),
     h('h2.block-title', {}, 'Examples'),
     problem.examples.map((ex, i) =>

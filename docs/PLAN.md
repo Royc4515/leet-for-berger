@@ -60,10 +60,10 @@ Until stage C there is no backend with users: progress lives in localStorage, an
 Recommended order: practice experience first (stage A), since all the content exists and runs; only the way to practice it is missing. Each item closes with a PR that passes CI and waits for the owner's approval to merge.
 
 ### Stage A: practice experience (next)
-- [ ] Company tags on every problem: name, frequency, recency, Israeli companies marked
-- [ ] Complexity on every problem: our target, and separately "best known" from kamyu104 with attribution
+- [x] Company tags on every problem: name, frequency, recency, Israeli companies marked (PR #10)
+- [x] Complexity on every problem: our target, and separately "best known" from kamyu104 with attribution, behind a toggle until solved (PR #10)
 - [ ] Practice-by-company view, with search and an Israeli-companies filter
-- [ ] Problem families on each problem: all versions of the same idea are marked as related, and each version clearly shows which companies asked that form and what changed from the base version (the twist). Serves both company practice and re-practicing a problem in a different wording
+- [x] Problem families on each problem: all versions of the same idea are marked as related, and each version clearly shows which companies asked that form and what changed from the base version (the twist). Serves both company practice and re-practicing a problem in a different wording (PR #10)
 - [ ] Learning paths from the topic map (26 topics), replacing the 4 temporary milestones
 - [ ] Mock OA: timer, 2-3 problems by difficulty, report at the end
 - [ ] Daily problem and "weak spots" practice from history
@@ -105,6 +105,15 @@ Every decision that changes direction goes here, newest first. Detailed technica
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-18 | Stage A starts with the problem page: company tags, complexity, and the family view. Then practice by company, learning paths, mock OA, daily and weak spots | The data already exists and needs no backend; the problem page is what every later mode links to |
+| 2026-11-18 | Sign-in and GitHub sync come after stage A, in stage C | Stage A needs no backend; sync has little to save until there is more to practice |
+| 2026-11-18 | GitHub sync is opt-in once, then automatic on every Accepted. Assisted problems (solution revealed) are not synced automatically; the user can push one by hand, and its README says "assisted" | One setup click, no friction after; the portfolio stays honest |
+| 2026-11-18 | Show both complexities: our target, and "best known (LeetCode version)" from kamyu104. Before the first Accepted both sit behind a "Show" toggle | Complexity is a hint; the user decides when to see it |
+| 2026-11-18 | The rest of the bank is written by overall company frequency, with Israeli companies boosted (the existing wave rules in `content/selection.json`) | Most interview value per problem written; matches the waves already defined |
+| 2026-11-18 | Oracle stays on Free Tier. The stage B health check alerts on downtime, and the documented rebuild takes about 20 minutes | Pay As You Go needs a card on file and can bill by mistake; $0 is a principle |
+| 2026-11-18 | AI mentor stays on the scripted hint ladder until stage C; then a provider with a hard monthly cap | An LLM needs the backend proxy anyway, and a cap keeps the cost bounded |
+| 2026-11-18 | first-match-index moves from Easy to Medium | With our limits it needs KMP, which is Medium material |
+| 2026-11-18 | grid-word keeps its hard case; the stage B browser-Python check confirms it fits the time limit, and only then is the limit revisited | The case tests the pruning the problem is about; change the limit on evidence, not a guess |
 | 2026-11-18 | The plan lives in the repo, in English (`docs/PLAN.md`) | Fewer tokens per read and write; updated in the same PR as the work |
 | 2026-11-18 | User management with Google sign-in, and solution sync to a personal GitHub repo (stage C) | Progress that isn't lost, and a portfolio visible to employers. Supabase Auth is already in the plan (ADR 0002) and free |
 | 2026-11-18 | Problems with the same idea are marked as a family; each version shows the companies that asked it and what changed from the base | Company practice, and re-practicing a problem in a different wording |
@@ -122,16 +131,7 @@ Every decision that changes direction goes here, newest first. Detailed technica
 
 ## Open decisions
 
-Tick when decided, and move the decision to the log.
-
-- [ ] GitHub sync: automatic on every Accepted, or only on click? And what about problems where the solution was revealed (marked "assisted")?
-- [ ] Stage A: start with mock OA, practice by company, or learning paths?
-- [ ] Show users the external "best known" complexity too, or only our target?
-- [ ] Order for writing the rest of the bank: by companies you care about (which?), by topic, or by overall frequency?
-- [ ] Oracle: stay on Free Tier and rebuild if the VM is reclaimed, or upgrade to Pay As You Go (still $0 within the free allowance)?
-- [ ] AI mentor: provider and budget, or keep the existing hint ladder?
-- [ ] Move first-match-index from Easy to Medium? With our limits it needs KMP.
-- [ ] Keep the hard case in grid-word (Medium), which will likely fail in browser Python without pruning?
+Tick when decided, and move the decision to the log. None open right now.
 
 ## Risks
 
