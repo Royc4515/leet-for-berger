@@ -48,6 +48,7 @@ Starter code and per-language entry names are **generated** from the signature (
 | `constraints` | string[] | |
 | `examples` | `{input, output, explanation?}[]` | usually the first 2-3 visible tests |
 | `hints` | string[] | Socratic ladder for the mentor, 3-5 items, questions not answers |
+| `explanationHtml` | string, optional | Our own prose shown on top of the walkthrough after a solve: the idea, why it works, the common pitfall. Author-written HTML, same rules as `statementHtml` |
 | `signature` | `{ name, params: {name, type}[], returns }` | neutral types, see below |
 | `visibleTests` | exactly 5 `{args, expected}` | detailed feedback |
 | `hiddenTests` | exactly 10 `{args, expected}` | pass/fail only |

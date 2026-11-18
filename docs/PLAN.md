@@ -67,7 +67,7 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [x] Learning paths from the topic map (26 topics), replacing the 4 temporary milestones (PR #12)
 - [x] Mock OA: timer, 2-3 problems by difficulty, report at the end (PR #13)
 - [x] Daily problem and "weak spots" practice from history (PR #14)
-- [ ] Solution explanation unlocked after solving, and submission history per problem
+- [x] Solution walkthrough unlocked after solving, and submission history per problem (PR #15)
 - [ ] More robust growth measurement, so one slow size doesn't skew it
 
 ### Stage B: small maintenance
@@ -86,6 +86,7 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [ ] Real-time battle against a person, judged on the server
 
 ### Stage D: content expansion
+- [ ] Write `explanationHtml` (our own prose: the idea, why it works, the pitfall) for the 131 essential problems; the walkthrough shows it on top once present
 - [ ] Growth measurement for all problems (target filled automatically, input generators gradually)
 - [ ] Graphs as objects (Clone Graph) and numbers above 2^53
 - [ ] Data for the 4 missing Israeli companies: Payoneer, Playtika, AppsFlyer, Gong

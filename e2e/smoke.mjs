@@ -89,6 +89,26 @@ try {
     await shot('03-accepted');
   });
 
+  await check('walkthrough unlocks after the solve; submission history lists the submit with its code', async () => {
+    await page.click('details.walkthrough summary');
+    await expectText('.walkthrough-body', /Reasoning, step by step/);
+    await page.click('.walkthrough-body button:has-text("Show the verified solution")');
+    await page.waitForSelector('.walkthrough-body pre.solution-code code');
+    await page.click('details.history summary');
+    await expectText('details.history summary', /Submissions \(\d+\)/);
+    await expectText('.history-list li:first-child .history-verdict', /^Accepted$/);
+    // A long solution line must scroll inside its box, never widen the description pane.
+    const overflow = await page.evaluate(() => {
+      const pane = document.querySelector('.pane-left');
+      return pane.scrollWidth - pane.clientWidth;
+    });
+    if (overflow > 1) throw new Error(`description pane overflows sideways by ${overflow}px`);
+    await shot('18-walkthrough-history');
+    await setCode('// replaced');
+    await page.click('.history-list li:first-child button:has-text("Load code")');
+    await page.waitForFunction(() => !window.monaco.editor.getModels()[0].getValue().includes('// replaced'));
+  });
+
   await check('custom input runs as Case 1 with reference expected value', async () => {
     await page.fill('#custom-input', 'xyzxyz');
     await page.click('button:has-text("Run Code")');
