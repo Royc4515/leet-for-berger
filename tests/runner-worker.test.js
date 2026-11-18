@@ -151,9 +151,12 @@ test('misconfigured or unreachable gate: 503 or 502, never a hang', async () => 
   assert.equal((await worker.fetch(post(), env({ GATE_URL: undefined }))).status, 503);
 });
 
-test('wrangler.toml holds placeholders and no secrets', () => {
+// The file now holds the live deployment's public values (origin, VPC service id); secrets never.
+test('wrangler.toml holds only public values: https origins, a VPC service id, no secrets', () => {
   const toml = readFileSync(new URL('../deploy/cloudflare-worker/wrangler.toml', import.meta.url), 'utf8');
   assert.doesNotMatch(toml, /RUNNER_SECRET\s*=|TURNSTILE_SECRET\s*=/);
-  assert.match(toml, /YOUR-GITHUB-USER/);
+  const origins = toml.match(/^ALLOWED_ORIGINS = "(.*)"$/m)[1].split(',');
+  for (const o of origins) assert.match(o, /^(https:\/\/[a-z0-9.-]+|http:\/\/localhost:\d+)$/, o);
+  assert.match(toml, /^service_id = "([0-9a-f-]{36}|VPC_SERVICE_ID)"$/m);
   assert.match(toml, /\[\[ratelimits\]\]/);
 });

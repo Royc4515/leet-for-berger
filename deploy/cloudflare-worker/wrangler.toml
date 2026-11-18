@@ -9,7 +9,7 @@ workers_dev = true
 
 [vars]
 # The site's origins, comma separated: GitHub Pages and the local dev server.
-ALLOWED_ORIGINS = "https://YOUR-GITHUB-USER.github.io,http://localhost:5173"
+ALLOWED_ORIGINS = "https://royc4515.github.io,http://localhost:5173"
 # 16 MiB: the largest submit is about 12 MB of test input before gzip, about 3 MB after.
 MAX_BODY_BYTES = "16777216"
 # Only used when the RUN_LIMITER binding below is removed (per-isolate fallback).
@@ -20,7 +20,7 @@ RATE_LIMIT = "20"
 # Create it with: npx wrangler vpc service create lfb-gate --type http --http-port 8080 --ipv4 127.0.0.1 --tunnel-id TUNNEL_ID
 [[vpc_services]]
 binding = "GATE"
-service_id = "VPC_SERVICE_ID"
+service_id = "01a1eebc-80b5-7d12-97b4-ffe8dec4d90e"
 
 # Fallback path (no Tunnel): remove [[vpc_services]] above and set the gate's public HTTPS URL.
 # GATE_URL = "https://YOUR-NAME.duckdns.org"
