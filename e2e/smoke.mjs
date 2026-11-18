@@ -449,6 +449,27 @@ try {
     await shot('06-modes');
   });
 
+  await check('mock OA: hard format from one company, 3 problems, lockdown, report', async () => {
+    await page.goto(`${BASE}#/interview`);
+    await page.click('.chip-group[aria-label="Format"] button:has-text("Hard OA")');
+    await page.waitForFunction(() => !document.querySelector('select[aria-label="Company"]').disabled);
+    await page.selectOption('select[aria-label="Company"]', 'google');
+    await expectText('.setup-card', /2 Medium \+ 1 Hard, 90 minutes/);
+    await expectText('.setup-card', /asked at Google/);
+    await shot('06-oa-setup');
+    await page.click('button:has-text("Start interview")');
+    await page.waitForSelector('.session-banner.interview');
+    await expectText('.session-banner .clock', /^(90:00|89:5\d)$/);
+    const tabs = await page.locator('.problem-switcher button').count();
+    if (tabs !== 3) throw new Error(`expected 3 problems, got ${tabs}`);
+    if (await page.locator('.complexity-body').count()) throw new Error('complexity shown during a timed session');
+    await page.click('button:has-text("End interview")');
+    await page.click('dialog.modal button:has-text("End interview")');
+    await page.waitForSelector('.score-ring');
+    await page.click('button:has-text("New interview")');
+    await page.waitForSelector('.chip-group[aria-label="Format"]');
+  });
+
   await check('interview: lockdown hides nav, reveal disabled, end produces report', async () => {
     await page.goto(`${BASE}#/interview`);
     await page.click('button:has-text("Start interview")');

@@ -6,6 +6,9 @@ import { renderWorkspace } from './workspace.js';
 import { availableProblems, getProblem } from '../../problems/index.js';
 import * as Interview from '../../modes/interview.js';
 import { createBot, BOT_LEVELS } from '../../modes/battle.js';
+import { OA_FORMATS, pickOaProblems } from '../../modes/mock-oa.js';
+import { expandRows } from '../../data/company-sets.js';
+import { loadSets } from './companies.js';
 
 /* ======================= Hub ======================= */
 
@@ -23,10 +26,10 @@ export function renderModesHub(root) {
         'div.mode-grid',
         {},
         card(
-          'Interview Simulator',
+          'Mock OA and Interview',
           'Live',
-          '45 minutes, up to 2 problems, locked-down UI: no navigation, no reveal, no mentor. Tab switches are logged. Ends with a scored performance report.',
-          h('a.btn.btn-primary', { href: '#/interview' }, 'Set up interview'),
+          'A phone screen, an online assessment or a hard OA, optionally drawn from one company\'s problems. Timed, locked-down UI: no navigation, no reveal, no mentor. Tab switches are logged. Ends with a scored report.',
+          h('a.btn.btn-primary', { href: '#/interview' }, 'Set up a session'),
         ),
         card(
           '1v1 Battle',
@@ -53,18 +56,84 @@ let interview = null;
 let interviewDrafts = null; // survives route changes with the session, reset on a new interview
 
 export function renderInterview(root, { store }) {
-  if (!interview) return renderInterviewSetup(root);
+  if (!interview) return renderInterviewSetup(root, { store });
   if (interview.endedAt) return renderInterviewReport(root);
   return renderInterviewActive(root, { store });
 }
 
-function renderInterviewSetup(root) {
-  const problems = availableProblems().slice(0, 2);
+/** Problems a timed session can use: anything with a browser language (SQL problems are their own track). */
+const oaEligible = () => availableProblems().filter((p) => p.languages.some((l) => l.executable && l.id !== 'sql'));
+
+/** Companies with enough on-site problems to fill a mock OA. */
+const MIN_COMPANY_PROBLEMS = 3;
+
+function renderInterviewSetup(root, { store }) {
+  const eligible = oaEligible();
+  const eligibleIds = new Set(eligible.map((p) => p.id));
+  let format = OA_FORMATS[1];
+  let companyIds = null; // null = any company
+  const companyOf = new Map();
+
+  const formatGroup = h(
+    'div.chip-group',
+    { role: 'group', 'aria-label': 'Format' },
+    OA_FORMATS.map((f) =>
+      h(
+        'button.chip',
+        {
+          type: 'button',
+          'aria-pressed': String(f === format),
+          onClick: (e) => {
+            format = f;
+            formatGroup.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+            e.currentTarget.setAttribute('aria-pressed', 'true');
+            describe();
+          },
+        },
+        f.label,
+      ),
+    ),
+  );
+  const company = h('select.select', { 'aria-label': 'Company', disabled: true }, h('option', { value: '' }, 'Any company'));
+  company.addEventListener('change', () => {
+    companyIds = company.value ? companyOf.get(company.value) : null;
+    describe();
+  });
+  loadSets().then((sets) => {
+    if (!sets) return;
+    for (const c of sets.companies) {
+      const ids = [...new Set(expandRows(sets, c).map((r) => r.practice?.contentId).filter((id) => id && eligibleIds.has(id)))];
+      if (ids.length >= MIN_COMPANY_PROBLEMS) companyOf.set(c.slug, ids);
+    }
+    for (const c of sets.companies) if (companyOf.has(c.slug)) company.append(h('option', { value: c.slug }, `${c.name}${c.israeli ? ' (IL)' : ''} - ${companyOf.get(c.slug).length} problems`));
+    company.disabled = false;
+  });
+
+  const summary = h('div.setup-card-rows');
+  const describe = () => {
+    const pool = companyIds ? eligible.filter((p) => companyIds.includes(p.id)) : eligible;
+    mount(
+      summary,
+      h('div.setup-row', {}, h('span', {}, 'Duration'), h('strong', {}, `${format.minutes}:00`)),
+      h('div.setup-row', {}, h('span', {}, 'Problems'), h('strong', {}, format.note)),
+      h('div.setup-row', {}, h('span', {}, 'Drawn from'), h('strong', {}, `${pool.length} problems${companyIds ? ` asked at ${company.selectedOptions[0].textContent.split(' - ')[0]}` : ''}, unsolved first`)),
+    );
+  };
+  describe();
+
   const start = h('button.btn.btn-primary.btn-lg', { type: 'button' }, 'Start interview');
   start.addEventListener('click', () => {
-    interview = Interview.createSession({ problemIds: problems.map((p) => p.id) });
+    const solvedIds = new Set(Object.entries(store.get().problems).filter(([, p]) => p.status === 'solved').map(([id]) => id));
+    const candidates = (companyIds ? eligible.filter((p) => companyIds.includes(p.id)) : eligible).map((p) => ({ id: p.id, difficulty: p.difficulty }));
+    // The clock seeds the pick so every OA differs; the pick itself is pure and tested.
+    const problemIds = pickOaProblems({ candidates, format, seed: Date.now() & 0x7fffffff, solved: solvedIds });
+    if (!problemIds.length) {
+      toast('No problems available for this setup.', 'warn');
+      return;
+    }
+    interview = Interview.createSession({ problemIds, durationMs: format.minutes * 60 * 1000 });
     interviewDrafts = new Map();
-    interview.activeProblemId = problems[0].id;
+    interview.activeProblemId = problemIds[0];
     window.dispatchEvent(new HashChangeEvent('hashchange')); // re-render current route
   });
 
@@ -73,18 +142,22 @@ function renderInterviewSetup(root) {
     h(
       'div.page.page-narrow',
       {},
-      h('header.page-head', {}, h('h1', {}, 'Interview Simulator'), h('p.page-sub', {}, 'Treat it like the real thing.')),
+      h('header.page-head', {}, h('h1', {}, 'Mock OA and Interview'), h('p.page-sub', {}, 'Treat it like the real thing. The problems stay hidden until the clock starts.')),
       h(
         'div.setup-card',
         {},
-        h('div.setup-row', {}, h('span', {}, 'Duration'), h('strong', {}, '45:00')),
-        h('div.setup-row', {}, h('span', {}, 'Problems'), h('strong', {}, problems.map((p) => p.title).join(', '))),
-        problems.length < 2 ? h('p.hint-text', {}, 'The bank has 1 available problem right now; the 2-problem format activates automatically when a second one ships.') : null,
+        h('h3', {}, 'Format'),
+        formatGroup,
+        h('h3', {}, 'Company'),
+        company,
+        h('p.hint-text', {}, 'Optional. Draws from the problems that company asks, on the site.'),
+        summary,
         h('h3', {}, 'Rules'),
         h(
           'ul.rules',
           {},
-          h('li', {}, 'Navigation, Reveal Solution and the AI Mentor are locked.'),
+          h('li', {}, 'Navigation, Reveal Solution, the AI Mentor and complexity hints are locked.'),
+          h('li', {}, 'JavaScript, TypeScript and Python run; Java, C++, C, C# and Go are editor-only in timed sessions.'),
           h('li', {}, 'Switching tabs or windows is logged and costs integrity points.'),
           h('li', {}, 'Only your best run per problem counts; accepted submissions earn a speed bonus.'),
           h('li', {}, 'When the clock hits 00:00 the session ends and the report opens.'),
