@@ -10,6 +10,7 @@ import { h, mount } from './ui/dom.js';
 import { renderDashboard } from './ui/views/dashboard.js';
 import { renderWorkspace } from './ui/views/workspace.js';
 import { renderPath } from './ui/views/path.js';
+import { renderCompanies, renderCompany } from './ui/views/companies.js';
 import { renderModesHub, renderInterview, renderBattle } from './ui/views/modes.js';
 
 const store = createStore();
@@ -21,6 +22,8 @@ const routes = [
   [/^#?\/?$/, (root) => renderDashboard(root, { store }), 'problems'],
   [/^#\/problem\/([\w-]+)$/, (root, [, id]) => renderProblem(root, id), 'problems'],
   [/^#\/path$/, (root) => renderPath(root, { store }), 'path'],
+  [/^#\/companies$/, (root) => renderCompanies(root, { store }), 'companies'],
+  [/^#\/companies\/([\w-]+)$/, (root, [, slug]) => renderCompany(root, { store, slug }), 'companies'],
   [/^#\/modes$/, (root) => renderModesHub(root), 'modes'],
   [/^#\/interview$/, (root) => renderInterview(root, { store }), 'modes'],
   [/^#\/battle$/, (root) => renderBattle(root, { store }), 'modes'],

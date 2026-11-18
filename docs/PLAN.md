@@ -62,7 +62,7 @@ Recommended order: practice experience first (stage A), since all the content ex
 ### Stage A: practice experience (next)
 - [x] Company tags on every problem: name, frequency, recency, Israeli companies marked (PR #10)
 - [x] Complexity on every problem: our target, and separately "best known" from kamyu104 with attribution, behind a toggle until solved (PR #10)
-- [ ] Practice-by-company view, with search and an Israeli-companies filter
+- [x] Practice-by-company view, with search and an Israeli-companies filter (PR #11)
 - [x] Problem families on each problem: all versions of the same idea are marked as related, and each version clearly shows which companies asked that form and what changed from the base version (the twist). Serves both company practice and re-practicing a problem in a different wording (PR #10)
 - [ ] Learning paths from the topic map (26 topics), replacing the 4 temporary milestones
 - [ ] Mock OA: timer, 2-3 problems by difficulty, report at the end
