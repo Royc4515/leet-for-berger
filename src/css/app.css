@@ -821,6 +821,7 @@ body.resizing-y * {
 }
 .st-fail .dot,
 .st-error .dot,
+.st-compile-error .dot,
 .st-timeout .dot {
   background: var(--bad);
 }
@@ -839,6 +840,7 @@ body.resizing-y * {
 }
 .case-status.st-fail,
 .case-status.st-error,
+.case-status.st-compile-error,
 .case-status.st-timeout {
   color: var(--bad);
 }
