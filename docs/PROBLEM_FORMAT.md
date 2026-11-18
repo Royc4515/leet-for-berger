@@ -92,7 +92,7 @@ A test is a sequence of calls: `args` is `[operations, argumentLists]` with `ope
 
 ### How structures and classes run
 
-`src/js/engine/adapters.js` generates source placed before and after the user's code for JavaScript, TypeScript and Python. It provides ListNode and TreeNode, converts JSON to objects and back, and dispatches design operations. The browser workers and the CI verifier run the same adapter. C, C++, Go, C# and Java harnesses in `scripts/verify/` do the same natively.
+`src/js/engine/adapters.js` generates source placed before and after the user's code for JavaScript, TypeScript and Python. It provides ListNode and TreeNode, converts JSON to objects and back, and dispatches design operations. The browser workers and the CI verifier run the same adapter. C, C++, Go, C# and Java harnesses in `src/js/engine/programs/` do the same natively; the CI verifier and the remote runner (ADR 0005) use the same programs.
 
 | Neutral | Python | Java | C++ | C | C# | Go | TS / JS |
 |---|---|---|---|---|---|---|---|
@@ -104,7 +104,7 @@ A test is a sequence of calls: `args` is `[operations, argumentLists]` with `ope
 
 C follows LeetCode conventions: array params carry explicit sizes, array returns use `int* returnSize` (and `int** returnColumnSizes` for 2D) and must be `malloc`ed.
 
-The types beyond `ListNode` and `TreeNode` are emitted only for a signature that uses them: the source adapters (`adapters.js`) and the native harness code (`scripts/verify/extra-types.mjs`, which `harnesses.mjs` calls; Java has `RandomListNode.java` and `NestedInteger.java`). Native harnesses read them as tokens: `ListNode@cycle` as `<n> values <pos>`, `RandomListNode` as `<n>` then `<val> <random>` per node (`-1` = null), `NestedInteger[]` as `<n>` then `i <val>` or `l` and a nested list per item.
+The types beyond `ListNode` and `TreeNode` are emitted only for a signature that uses them: the source adapters (`adapters.js`) and the native harness code (`src/js/engine/programs/extra-types.js`, which `build.js` calls; Java has `programs/java/RandomListNode.java` and `NestedInteger.java`). Native harnesses read them as tokens: `ListNode@cycle` as `<n> values <pos>`, `RandomListNode` as `<n>` then `<val> <random>` per node (`-1` = null), `NestedInteger[]` as `<n>` then `i <val>` or `l` and a nested list per item.
 
 **Copies.** A correct copy of a `RandomListNode` list serializes to its input, so equality alone cannot catch a solution that returns the original. Every harness remembers the input nodes by identity and, when the returned list reuses one (as a node or as a `random` target) or a `random` pointer leaves the returned list, outputs a marker string instead of the list (`COPY_MARKERS` in `adapters.js`, same text in every language). The marker never equals an expected list, so the case is a wrong answer and a visible case shows why.
 
@@ -220,4 +220,4 @@ Hidden tests must target the classic wrong answers, not just "more of the same":
 3. Add `tests/<id>.test.js`: reference vs brute force on random inputs, visible expectations agree with reference, parser accepts/rejects correctly.
 4. `npm run check`. `tests/solutions.test.js` compiles and runs all 8 solutions against the 15 cases and checks that the generated starter code compiles in every language. It also times each language's run (process startup included) and fails it if all 15 cases take longer than one case's `timeLimitMs`, so max-size tests must actually separate the target complexity from a naive one. `LFB_TIME_FACTOR` scales the budget on a slow machine (0 disables it); `LFB_TIMINGS=<file>` records the times. `VERIFY_LANGUAGES=java,go` (or `sql`, or `none`) limits which solutions run; CI runs one job per language. Locally a missing toolchain skips that language; CI sets `REQUIRE_ALL_LANGUAGES=1` and installs all of them, so nothing ships unverified.
 
-Harnesses live in `scripts/verify/`: `harnesses.mjs` generates a test program per language from the signature (C, C++, Go and C# read a flat token stream, the others JSON), `Harness.java` runs Java by reflection.
+Harnesses live in `src/js/engine/programs/` (browser-safe, shared with the remote runner, ADR 0005): `build.js` generates a test program per language from the signature (C, C++, Go and C# read a flat token stream, the others JSON), `java/Harness.java` runs Java by reflection. Java, C, C++, Go and C# programs follow the case protocol in `output.js`: a mark on stderr before each case and each result on its own line behind a mark on stdout, flushed per case, so the user's prints, a crash and a timeout are attributed to the right case. `scripts/verify/harnesses.mjs` re-exports them for the verifier.

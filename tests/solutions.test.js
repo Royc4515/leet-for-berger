@@ -9,13 +9,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { appendFileSync, mkdtempSync, writeFileSync, copyFileSync, readFileSync, existsSync } from 'node:fs';
+import { appendFileSync, mkdtempSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { availableProblems } from '../src/js/problems/index.js';
 import { buildSuite, comparatorFor } from '../src/js/engine/harness.js';
 import { LANGUAGES, validateSignature } from '../src/js/engine/codegen.js';
-import { buildHarness, encodeCases } from '../scripts/verify/harnesses.mjs';
+import { buildHarness, buildProgram, programStdin, splitOutput, NATIVE_LANGUAGES, JAVA_SUPPORT_FILES } from '../scripts/verify/harnesses.mjs';
 import { isSql, validateSqlProblem } from '../src/js/engine/sql.js';
 import { sqlEngineAvailable, loadSqlEngine, runSqlCases } from '../scripts/verify/sql.mjs';
 
@@ -47,8 +47,10 @@ const TOOLCHAIN = {
   csharp: once(() => works('dotnet', ['--version'])),
 };
 
-const JAVA_HARNESS = join(ROOT, 'scripts/verify/Harness.java');
+// The same Java files the browser's remote runner fetches (src/js/engine/programs/java/).
+const JAVA_SUPPORT = Object.fromEntries(JAVA_SUPPORT_FILES.map((f) => [f, readFileSync(join(ROOT, 'src/js/engine/programs/java', f), 'utf8')]));
 const run = (cmd, args, opts) => execFileSync(cmd, args, { maxBuffer: 1 << 28, encoding: 'utf8', ...opts });
+const quiet = { ...process.env, DOTNET_CLI_TELEMETRY_OPTOUT: '1', DOTNET_NOLOGO: '1' };
 
 /** Wall time of the most recent run (compile excluded), read by the time-limit check. */
 let lastRunMs = 0;
@@ -57,33 +59,28 @@ let lastRunMs = 0;
 function execute(lang, problem, cases, { source, compileOnly = false } = {}) {
   const solution = source ?? readFileSync(join(ROOT, 'src/js/problems', problem.id, 'solutions', LANGUAGES.find((l) => l.id === lang).file), 'utf8');
   const dir = mkdtempSync(join(tmpdir(), `lfb-${lang}-`));
-  const opts = lang === 'csharp' ? { dotnetMajor: dotnetVersion() } : undefined;
-  const h = buildHarness(lang, problem.signature, solution, opts);
+  const native = NATIVE_LANGUAGES.includes(lang);
+  // Native languages: the exact program the remote runner sends (src/js/engine/programs/build.js).
+  const h = native
+    ? buildProgram(lang, problem.signature, solution, { javaSupport: JAVA_SUPPORT, dotnetMajor: lang === 'csharp' ? dotnetVersion() : undefined })
+    : buildHarness(lang, problem.signature, solution);
   for (const [name, content] of Object.entries(h.files)) writeFileSync(join(dir, name), content);
-  let out;
-  if (lang === 'java') {
-    copyFileSync(JAVA_HARNESS, join(dir, 'Harness.java'));
-    // The structure classes are always compiled in: the harness refers to them, as do solutions.
-    const structs = ['ListNode.java', 'TreeNode.java', 'RandomListNode.java', 'NestedInteger.java'];
-    for (const f of structs) copyFileSync(join(ROOT, 'scripts/verify', f), join(dir, f));
-    run('javac', ['-d', dir, ...['Solution.java', 'Harness.java', ...structs].map((f) => join(dir, f))], { stdio: 'pipe' });
-    if (compileOnly) return [];
-    const t0 = performance.now();
-    out = run('java', ['-Xss64m', '-cp', dir, 'Harness', problem.signature.name], { input: JSON.stringify(cases) });
-    lastRunMs = performance.now() - t0;
-  } else {
-    if (h.compile) {
-      const [cmd, ...args] = h.compile;
-      run(cmd === 'tsc' ? TSC : cmd, args, { cwd: dir, stdio: 'pipe', env: { ...process.env, DOTNET_CLI_TELEMETRY_OPTOUT: '1', DOTNET_NOLOGO: '1' } });
-    }
-    if (compileOnly) return [];
-    const [cmd, ...args] = h.run;
-    const input = h.input === 'json' ? JSON.stringify(cases) : encodeCases(cases, problem.signature);
-    const t0 = performance.now();
-    out = run(cmd, args, { cwd: dir, input });
-    lastRunMs = performance.now() - t0;
+  if (h.compile) {
+    const [cmd, ...args] = h.compile;
+    run(cmd === 'tsc' ? TSC : cmd, args, { cwd: dir, stdio: 'pipe', env: quiet });
   }
-  return out.trim().split('\n').map((l) => JSON.parse(l));
+  if (compileOnly) return [];
+  const [cmd, ...args] = h.run;
+  const input = native ? programStdin(h, cases, problem.signature) : JSON.stringify(cases);
+  const t0 = performance.now();
+  const r = spawnSync(cmd, args, { cwd: dir, input, maxBuffer: 1 << 28, encoding: 'utf8' });
+  lastRunMs = performance.now() - t0;
+  if (r.error) throw r.error;
+  if (r.status !== 0) throw new Error(`${lang} exited with ${r.status ?? r.signal}: ${r.stderr.slice(-2000)}`);
+  if (!native) return r.stdout.trim().split('\n').map((l) => JSON.parse(l));
+  const out = splitOutput(r.stdout, r.stderr);
+  assert.equal(out.started, cases.length, `${lang}: ${out.started} cases started, expected ${cases.length}`);
+  return out.results.map((l) => JSON.parse(l));
 }
 
 // SQL problems ship one solution, solution.sql, run by the same sql.js build and case runner as
