@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
 # Must stay the compile command of buildProgram('csharp') in src/js/engine/programs/build.js
 # (tests/runner-deploy.test.js checks it). The project file comes with the request.
+# don't touch / every directory .NET writes is private to this job. Piston runs each job as a
+# different user, and a shared /tmp/.dotnet (named-mutex files, CLI home, NuGet cache) created by
+# the first job is unreadable to the next: "cannot open the device or file: 'NuGet-Migrations'".
+export TMPDIR="$PWD/.tmp" DOTNET_CLI_HOME="$PWD/.home" NUGET_PACKAGES="$PWD/.nuget"
+mkdir -p "$TMPDIR" "$DOTNET_CLI_HOME" "$NUGET_PACKAGES"
 dotnet build -c Release -o out --nologo -v q
