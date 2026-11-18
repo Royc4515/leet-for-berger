@@ -98,3 +98,10 @@ test('the gate and Piston listen on loopback only', () => {
   assert.match(compose, /PISTON_DISABLE_NETWORKING: "true"/);
   assert.doesNotMatch(compose, /^\s+ports:/m, 'host networking: no published ports');
 });
+
+// Without this every dotnet process dies with SIGXFSZ under isolate's file-size limit on the Arm
+// VM (seen in the first real deploy); the local stand-in has no such limit, so only this test guards it.
+test('.NET runs with W^X off so it fits isolate\'s file-size limit', () => {
+  const env = readFileSync(new URL('../deploy/piston/packages/dotnet/8.0.428/environment', import.meta.url), 'utf8');
+  assert.match(env, /^export DOTNET_EnableWriteXorExecute=0$/m);
+});

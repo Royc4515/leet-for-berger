@@ -14,3 +14,7 @@ export MSBUILDDISABLENODEREUSE=1
 export UseSharedCompilation=false
 export NuGetAudit=false
 export NUGET_PACKAGES=/tmp/nuget
+# don't touch / W^X makes the runtime double-map code through a shared file it sizes far past
+# isolate's per-file limit (RLIMIT_FSIZE), so every dotnet process died with SIGXFSZ ("File size
+# limit exceeded") under the real sandbox on the Arm VM. Off costs a little startup time only.
+export DOTNET_EnableWriteXorExecute=0
