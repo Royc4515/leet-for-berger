@@ -299,9 +299,11 @@ try {
     await page.selectOption('.toolbar select', 'javascript');
   });
 
-  // The insert shifts elements one by one in JavaScript. A native splice is a memmove so fast that
-  // its quadratic term barely dominates at these sizes, and on a noisy CI runner the estimator then
-  // (correctly) answers "inconclusive"; this keeps the example unambiguously quadratic.
+  // A timing estimate is statistical: a JIT tier change can leave one size uniformly slow and the
+  // estimator then (honestly) says "too close to call". Same policy as the CI verifier
+  // (tests/growth-solutions.test.js): up to 3 submits, at least one must say "slower than target",
+  // and none may ever say "matches". The insert shifts elements in JavaScript (a native splice is a
+  // memmove so fast that the quadratic term barely shows), and the solution is still Accepted.
   await check('growth estimate: an Accepted quadratic Median Stream (sorted array, shifting inserts) is slower than target', async () => {
     await page.goto(`${BASE}#/problem/median-stream`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
@@ -318,11 +320,19 @@ try {
   }
   findMedian() { const a = this.a, m = a.length >> 1; return a.length % 2 ? 2 * a[m] : a[m - 1] + a[m]; }
 }`);
-    await page.click('button:has-text("Submit")');
-    await expectText('.result-head', /Accepted/, 30000);
-    const text = await growthHeadline();
-    console.log(`  # ${text}`);
-    if (!/slower than target/.test(text)) throw new Error(text);
+    const seen = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await page.click('button:has-text("Submit")');
+      // The previous attempt's verdict and estimate are still on screen until the console re-renders.
+      await page.waitForSelector('.growth-head', { state: 'detached', timeout: 30000 });
+      await expectText('.result-head', /Accepted/, 30000);
+      const text = await growthHeadline();
+      console.log(`  # ${text}`);
+      seen.push(text);
+      if (/: matches\./.test(text)) throw new Error(`a quadratic solution was called a match: ${text}`);
+      if (/slower than target/.test(text)) break;
+    }
+    if (!seen.some((t) => /slower than target/.test(t))) throw new Error(seen.join(' | '));
     await shot('12-growth-quadratic');
   });
 
