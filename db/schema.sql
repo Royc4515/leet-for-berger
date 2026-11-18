@@ -178,6 +178,17 @@ create table submissions (
 );
 create index submissions_user_idx on submissions (user_id, created_at desc);
 
+-- Practice progress as the browser keeps it (state/progress.js), synced across a user's devices
+-- (ADR 0006). Client-reported, so only the user can fake it, and only for themselves: nothing
+-- shared or scored reads it. The judge-written tables below stay the trusted record.
+create table user_state (
+  user_id     uuid primary key references auth.users on delete cascade,
+  state       jsonb not null,
+  updated_at  timestamptz not null default now(),
+  -- localStorage holds about 5 MB; a row is one user's whole practice history, capped well below.
+  constraint user_state_size check (pg_column_size(state) < 2000000)
+);
+
 create table solves (
   user_id            uuid not null references profiles on delete cascade,
   problem_slug       text not null references problem_content,
@@ -206,6 +217,7 @@ alter table solutions enable row level security;
 alter table profiles enable row level security;
 alter table submissions enable row level security;
 alter table solves enable row level security;
+alter table user_state enable row level security;
 
 -- Catalog and content are public to read; only the sync job (service role) writes them.
 create policy read_all on topics for select using (true);
@@ -229,6 +241,7 @@ create policy read_visible on test_cases for select using (visible);
 create policy own_profile on profiles for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy own_submissions on submissions for select using (user_id = auth.uid());
 create policy own_solves on solves for select using (user_id = auth.uid());
+create policy own_state on user_state for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- "Reveal Solution": the only client path to a solution. Marks the problem assisted, then returns
 -- the code. security definer so it can read the solutions table that clients cannot.

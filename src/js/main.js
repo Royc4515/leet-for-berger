@@ -5,6 +5,8 @@
  * config: a refresh on any route still serves index.html.
  */
 import { createStore, stats } from './state/progress.js';
+import { createAccount } from './auth/account.js';
+import { mountAccountMenu } from './ui/account-menu.js';
 import { getProblem } from './problems/index.js';
 import { h, mount } from './ui/dom.js';
 import { renderDashboard } from './ui/views/dashboard.js';
@@ -80,3 +82,8 @@ store.subscribe(renderStreak);
 renderStreak();
 window.addEventListener('hashchange', route);
 route();
+
+// Accounts are optional and inert without a Supabase project in config.js (ADR 0006).
+const account = createAccount({ store });
+mountAccountMenu(document.getElementById('account'), account);
+account.start();

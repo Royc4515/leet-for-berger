@@ -569,6 +569,36 @@ try {
     await page.waitForSelector('.problem-title');
   });
 
+  await check('accounts: hidden without config; with a project, Sign in offers Google and GitHub, a session shows the user', async () => {
+    if (await page.locator('#account button').count()) throw new Error('sign-in shown although accounts are not configured');
+    // A separate page (and storage) so the stubbed account never touches the main page's progress.
+    const acct = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    acct.on('pageerror', (e) => errors.push(`account page: ${e.message}`));
+    // A stub stands in for supabase-js: no network, and the test decides whether a session exists.
+    const stub = (signedIn) => `export function createClient() {
+      const user = ${signedIn ? "{ id: 'u1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } }" : 'null'};
+      const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async () => ({ error: null }) };
+      return { auth: { getSession: async () => ({ data: { session: user ? { user } : null } }), onAuthStateChange: () => ({}), signInWithOAuth: async () => ({}), signOut: async () => ({}) }, from: () => chain };
+    }`;
+    let signedIn = false;
+    await acct.route('**/@supabase/supabase-js@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: stub(signedIn) }));
+    await acct.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = 'https://example.supabase.co';
+      window.LFB_SUPABASE_ANON_KEY = 'public-anon-key';
+    });
+    await acct.goto(`${BASE}#/`);
+    await acct.click('#account button:has-text("Sign in")');
+    await acct.waitForSelector('.account-menu button:has-text("Continue with Google")');
+    await acct.waitForSelector('.account-menu button:has-text("Continue with GitHub")');
+    if (shotsDir) await acct.screenshot({ path: `${shotsDir}/19-sign-in.png` });
+    signedIn = true;
+    await acct.reload();
+    await acct.waitForSelector('#account .account-name:has-text("Ada")');
+    await acct.waitForSelector('#account button:has-text("Sign out")');
+    await acct.close();
+  });
+
   await check('unknown route shows not found', async () => {
     await page.goto(`${BASE}#/nope`);
     await expectText('.page', /Not found/);

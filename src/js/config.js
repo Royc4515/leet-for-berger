@@ -27,3 +27,26 @@ export function remoteRunnerConfig(scope = globalThis) {
   const turnstileSiteKey = String(scope.LFB_TURNSTILE_SITE_KEY ?? REMOTE_RUNNER.turnstileSiteKey ?? '').trim();
   return { url, turnstileSiteKey };
 }
+
+/**
+ * Accounts and synced progress (docs/adr/0006-accounts-and-sync.md, owner steps in
+ * docs/DEPLOY_AUTH.md). Supabase's project URL and its anon key are public by design: Row Level
+ * Security, not the key, keeps each user's data private. Empty means no sign-in button; progress
+ * stays in this browser only.
+ */
+export const AUTH = {
+  supabaseUrl: '',
+  supabaseAnonKey: '',
+};
+
+/**
+ * Effective auth settings; `window.LFB_SUPABASE_URL` and `window.LFB_SUPABASE_ANON_KEY` override
+ * this file (tests, forks).
+ * @param {object} [scope]
+ * @returns {{ supabaseUrl: string, supabaseAnonKey: string, enabled: boolean }}
+ */
+export function authConfig(scope = globalThis) {
+  const supabaseUrl = String(scope.LFB_SUPABASE_URL ?? AUTH.supabaseUrl ?? '').trim().replace(/\/+$/, '');
+  const supabaseAnonKey = String(scope.LFB_SUPABASE_ANON_KEY ?? AUTH.supabaseAnonKey ?? '').trim();
+  return { supabaseUrl, supabaseAnonKey, enabled: Boolean(supabaseUrl && supabaseAnonKey) };
+}
