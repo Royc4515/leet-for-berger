@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- Complexity feedback (ADR 0004): after an Accepted submit in JavaScript or Python, the console adds a growth estimate, e.g. "Growth estimate: about linear (n or n log n) (target n log n): matches." The code is timed in its worker on growing generated inputs (the call alone, input conversion excluded), within a 5 s budget, after the verdict has rendered; it stops before slow sizes and is cancelled on navigation. The estimator (`src/js/engine/growth.js`, pure) fits a log-log slope on the largest sizes and reports coarse buckets (sublinear, linear, quadratic, cubic, exponential) or "inconclusive" when the data cannot support one. Problems opt in with a `growth` field (target, what n counts, sizes, seeded generator). Pilot: Pair Sum Target, Longest Streak, Top K Frequent, Zero Triplets, Warmer Days, Subarray Sum K, Island Count, Level Order, Median Stream, Rising Chain. `tests/growth-solutions.test.js` checks each generator and that the shipped JavaScript solution matches its target; a quadratic Pair Sum Target must read "slower than target".
 - Essential path complete: 131 of 131 problems, wave 3 (53 problems):
   - Linked List, Design and Tries: Recent Cache, Merge Many Lists, Digit List Sum, Shift List, Versioned Store, Frequent Cache, Bucket Map, Hit Window, Prefix Tree, Board Words, Shared Prefix.
   - Trees and 2D DP: Best Tree Path, Tree Codec, Tree Height, Kth In Order, Tree Heist, Edit Steps, Uphill Path, Balloon Pop, Coin Combos, Trade Cooldown.

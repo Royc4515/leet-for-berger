@@ -21,6 +21,7 @@ class UnsupportedRunner {
   async run({ cases }) {
     return cases.map((c) => ({ id: c.id, state: 'unsupported', error: this.message }));
   }
+  cancelGrowth() {}
 }
 
 const runners = {

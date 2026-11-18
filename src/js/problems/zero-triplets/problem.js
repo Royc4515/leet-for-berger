@@ -49,6 +49,12 @@ function randomValues(seed, n, range) {
   return Array.from({ length: n }, () => Math.floor(rnd() * (2 * range + 1)) - range);
 }
 
+/** Odd values in [-MAX_V, MAX_V]: three odd numbers never sum to 0. */
+function oddValues(seed, n) {
+  const rnd = mulberry32(seed);
+  return Array.from({ length: n }, () => 2 * Math.floor(rnd() * MAX_V) - MAX_V + 1);
+}
+
 const visible = [
   { args: [[-1, 0, 1, 2, -1, -4]], expected: [[-1, -1, 2], [-1, 0, 1]], note: 'Each triplet is ascending; triplets are in lexicographic order.' },
   { args: [[0, 1, 1]], expected: [], note: 'No triple sums to zero.' },
@@ -144,6 +150,18 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Only odd values, so no
+  // triplet sums to 0: the two pointers sweep every pair without finding anything, and the output
+  // stays empty instead of growing like n^3 and drowning the search time. It starts at 250 so a
+  // cubic solution still gets 3 sizes; it goes to 16000 (about 0.5 s) because n = 1000 read 3x
+  // slow in a loaded CI process (JIT), and the slope is judged on the top 4 sizes.
+  growth: {
+    target: 'n^2',
+    n: 'nums.length',
+    sizes: [250, 500, 1000, 2000, 4000, 8000, 16000],
+    input: (n, seed) => [oddValues(seed, n)],
+  },
 };
 
 export default problem;

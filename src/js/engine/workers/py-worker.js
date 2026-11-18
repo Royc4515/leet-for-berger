@@ -38,8 +38,83 @@ pyodideReady = boot().then(
   },
 );
 
+/*
+ * Growth timing, same protocol as js-worker.js (growth-load / growth-time). The JS -> Python
+ * conversion and the adapter's prepare step run before the clock starts; only the call is timed.
+ */
+let growth = null;
+
+function dropGrowth() {
+  if (!growth) return;
+  growth.call.destroy();
+  if (growth.prepare) growth.prepare.destroy();
+  growth = null;
+}
+
+async function loadGrowth({ code, entry, adapter }) {
+  let py;
+  try {
+    py = await pyodideReady;
+  } catch {
+    return;
+  }
+  dropGrowth();
+  try {
+    py.globals.set('__lfb_code', code);
+    py.globals.set('__lfb_before', adapter ? adapter.before : '');
+    py.globals.set('__lfb_after', adapter ? adapter.after : '');
+    py.runPython('__lfb_gns = {}\nexec(__lfb_before, __lfb_gns)\nexec(__lfb_code, __lfb_gns)\nexec(__lfb_after, __lfb_gns)');
+    const ns = py.globals.get('__lfb_gns');
+    const g = adapter && adapter.growth;
+    const call = ns.get(g ? g.call : adapter ? adapter.entry : entry);
+    const prepare = g ? ns.get(g.prepare) : null;
+    ns.destroy();
+    if (!call) throw new Error(`Function "${entry}" was not found.`);
+    growth = { py, call, prepare };
+    self.postMessage({ type: 'growth-ready' });
+  } catch (err) {
+    self.postMessage({ type: 'fatal', error: cleanTrace(err) });
+  }
+}
+
+function timeGrowth({ n, args, reps, warmupMs, slowMs }) {
+  const { py, call, prepare } = growth;
+  const timeOnce = () => {
+    const pyArgs = args.map((a) => (typeof a === 'object' && a !== null ? py.toPy(a) : a));
+    let prepared = null;
+    try {
+      // With an adapter, __lfb_call takes the prepared list; without, the function takes the args.
+      prepared = prepare ? prepare(...pyArgs) : null;
+      const started = performance.now();
+      const result = prepared ? call(prepared) : call(...pyArgs);
+      const ms = performance.now() - started;
+      if (result instanceof py.ffi.PyProxy) result.destroy();
+      return ms;
+    } finally {
+      pyArgs.forEach((a) => a && typeof a.destroy === 'function' && a.destroy());
+      if (prepared) prepared.destroy();
+    }
+  };
+  stdoutBuffer = '';
+  try {
+    const warmStart = performance.now();
+    for (let i = 0; warmupMs > 0 && i < 20 && (i < 1 || performance.now() - warmStart < warmupMs); i++) timeOnce();
+    for (let r = 0; r < reps; r++) {
+      const ms = timeOnce();
+      self.postMessage({ type: 'growth-sample', n, ms });
+      if (ms >= slowMs) break;
+    }
+  } catch (err) {
+    self.postMessage({ type: 'growth-error', n, error: cleanTrace(err) });
+  }
+  stdoutBuffer = ''; // printed output of timing runs is discarded
+  self.postMessage({ type: 'growth-done', n });
+}
+
 self.onmessage = async (event) => {
   const { type, code, entry, cases, adapter } = event.data || {};
+  if (type === 'growth-load') return loadGrowth(event.data);
+  if (type === 'growth-time') return timeGrowth(event.data);
   if (type !== 'run') return;
 
   let py;

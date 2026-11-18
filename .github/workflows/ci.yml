@@ -73,3 +73,9 @@ jobs:
           VERIFY_LANGUAGES: ${{ matrix.lang }}
           # A missing toolchain fails the job instead of silently skipping the language.
           REQUIRE_ALL_LANGUAGES: '1'
+      # Growth targets (ADR 0004): timed after the solutions, on its own, so nothing runs beside it.
+      - if: matrix.lang == 'javascript'
+        name: Verify growth targets (JavaScript timing)
+        run: node --test tests/growth-solutions.test.js
+        env:
+          VERIFY_LANGUAGES: javascript

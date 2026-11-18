@@ -4,7 +4,10 @@
  * Test cases are plain JSON: a linked list is [1,2,3], a tree is level order with nulls, a design
  * problem is [operations, argumentLists]. User code works with real ListNode / TreeNode objects and
  * class instances. An adapter bridges the two: it is source text placed before and after the user's
- * code, and it defines `__lfb_entry(...jsonArgs) -> jsonResult`. ListNode@cycle, RandomListNode and
+ * code, and it defines `__lfb_entry(...jsonArgs) -> jsonResult`. For function signatures the JavaScript
+ * and Python adapters also define `__lfb_prepare` (JSON args to objects) and `__lfb_call` (the
+ * user's function on prepared args), named in `adapter.growth`, so growth timing can leave the
+ * conversion out of the clock. ListNode@cycle, RandomListNode and
  * NestedInteger (see codegen.js) are emitted only for signatures that use them.
  *
  * The same adapter runs in the browser workers and in the CI verifier, so both judge the same way.
@@ -257,6 +260,17 @@ ${cases}
   return ${jsOut(sig.returns, 'r')};
 }
 `;
+    // Growth timing (engine/growth.js) converts the input before the clock starts: building 10^5
+    // tree nodes costs more than a BFS over them and would hide the user's own growth.
+    if (!ts) {
+      after += `function __lfb_prepare(...args) { return [${sig.params.map((p, i) => jsIn(p.type, `args[${i}]`)).join(', ')}]; }
+function __lfb_call(prepared) {
+  if (!__lfb_user) ${missing};
+  return __lfb_user(...prepared);
+}
+`;
+      return { before, after, entry: '__lfb_entry', growth: { prepare: '__lfb_prepare', call: '__lfb_call' } };
+    }
   }
   return { before, after, entry: '__lfb_entry' };
 }
@@ -388,7 +402,17 @@ def __lfb_entry(*args):
         ${missing}
     r = globals()[${JSON.stringify(name)}](${sig.params.map((p, i) => pyIn(p.type, `args[${i}]`)).join(', ')})
     return ${pyOut(sig.returns, 'r')}
+
+def __lfb_prepare(*args):
+    return [${sig.params.map((p, i) => pyIn(p.type, `args[${i}]`)).join(', ')}]
+
+def __lfb_call(prepared):
+    if ${JSON.stringify(name)} not in globals():
+        ${missing}
+    return globals()[${JSON.stringify(name)}](*prepared)
 `;
+    // Growth timing converts the input first, as in the JavaScript adapter.
+    return { before: PY_PRELUDE + PY_CONVERT + pyExtras(sig), after, entry: '__lfb_entry', growth: { prepare: '__lfb_prepare', call: '__lfb_call' } };
   }
   return { before: PY_PRELUDE + PY_CONVERT + pyExtras(sig), after, entry: '__lfb_entry' };
 }

@@ -37,6 +37,8 @@ A global budget makes the verdict ambiguous (which case hung?). Re-arming after 
 | SQL | `sql-worker.js` (sql.js 1.13.0) | persistent, recreated after a kill | SQL problems only; fresh read-only SQLite database per case, results judged as result sets (ADR 0003) |
 | Java | `UnsupportedRunner` | n/a | honest "not supported yet" verdict |
 
+After an Accepted submit, the same JavaScript and Python workers also time the code on growing inputs (`measureGrowth`, protocol in `js-worker.js`; ADR 0004). The estimator is the pure `engine/growth.js`.
+
 Adding a language = a worker (or remote runner) implementing the protocol in `worker-runner.js` + an entry in `runners/index.js` + starter code and solution in each problem.
 
 ## State
