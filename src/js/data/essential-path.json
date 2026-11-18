@@ -1,0 +1,925 @@
+[
+ {
+  "tier": 0,
+  "title": "Vocabulary",
+  "topics": [
+   {
+    "id": "arrays-hashing",
+    "title": "Arrays & Hashing",
+    "prereqs": [],
+    "problems": [
+     {
+      "id": "pair-sum-target",
+      "concept": "complement-lookup",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "isomorphic-strings",
+      "concept": "two-way-mapping",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "doubled-array",
+      "concept": "in-place-indexing",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "ticket-queue",
+      "concept": "array-simulation",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "top-k-frequent",
+      "concept": "frequency-count",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "longest-streak",
+      "concept": "hash-set-membership",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "anagram-buckets",
+      "concept": "group-by-key",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "string-codec",
+      "concept": "encode-decode",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "justify-lines",
+      "concept": "string-processing",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "math-basics",
+    "title": "Math Basics",
+    "prereqs": [],
+    "problems": [
+     {
+      "id": "digit-palindrome",
+      "concept": "digit-manipulation",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "roman-numeral-value",
+      "concept": "number-conversion",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "product-sign",
+      "concept": "closed-form",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "string-gcd",
+      "concept": "gcd-lcm",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "stone-take-game",
+      "concept": "game-theory",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "string-multiply",
+      "concept": "big-number-arithmetic",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "good-digit-strings",
+      "concept": "modular-arithmetic",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "prime-count",
+      "concept": "prime-sieve",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "power-mod",
+      "concept": "fast-power",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "square-counter",
+      "concept": "geometry",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "anagram-arrangements",
+      "concept": "combinatorics",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "sql",
+    "title": "SQL",
+    "prereqs": [],
+    "problems": [
+     {
+      "id": "green-products",
+      "concept": "select-filter",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "address-lookup",
+      "concept": "joins",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "repeated-emails",
+      "concept": "group-by-aggregation",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "runner-up-salary",
+      "concept": "subqueries",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "triple-repeat",
+      "concept": "window-functions",
+      "difficulty": "Medium"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "tier": 1,
+  "title": "First patterns",
+  "topics": [
+   {
+    "id": "two-pointers",
+    "title": "Two Pointers",
+    "prereqs": [
+     "arrays-hashing"
+    ],
+    "problems": [
+     {
+      "id": "merge-sorted",
+      "concept": "same-direction",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "zeros-to-end",
+      "concept": "partition-in-place",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "zero-triplets",
+      "concept": "sort-then-scan",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "rain-trap",
+      "concept": "opposite-ends",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "matrix",
+    "title": "Matrix",
+    "prereqs": [
+     "arrays-hashing"
+    ],
+    "problems": [
+     {
+      "id": "spiral-order",
+      "concept": "traversal-order",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "rotate-grid",
+      "concept": "in-place-transform",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "zero-rows-cols",
+      "concept": "in-place-marker",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "life-step",
+      "concept": "grid-simulation",
+      "difficulty": "Medium"
+     }
+    ]
+   },
+   {
+    "id": "stack",
+    "title": "Stack",
+    "prereqs": [
+     "arrays-hashing"
+    ],
+    "problems": [
+     {
+      "id": "bracket-check",
+      "concept": "matching-brackets",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "asteroid-collision",
+      "concept": "simulation",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "min-stack",
+      "concept": "auxiliary-stack-design",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "warmer-days",
+      "concept": "monotonic-stack",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "postfix-eval",
+      "concept": "expression-evaluation",
+      "difficulty": "Medium"
+     }
+    ]
+   },
+   {
+    "id": "prefix-sum",
+    "title": "Prefix Sum",
+    "prereqs": [
+     "arrays-hashing"
+    ],
+    "problems": [
+     {
+      "id": "product-except-self",
+      "concept": "prefix-1d",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "subarray-sum-k",
+      "concept": "prefix-plus-hashmap",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "region-sum",
+      "concept": "prefix-2d",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "range-bookings",
+      "concept": "difference-array",
+      "difficulty": "Medium"
+     }
+    ]
+   },
+   {
+    "id": "sorting-intervals",
+    "title": "Sorting & Intervals",
+    "prereqs": [
+     "arrays-hashing"
+    ],
+    "problems": [
+     {
+      "id": "smaller-count",
+      "concept": "counting-bucket-sort",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "largest-concat",
+      "concept": "custom-comparator",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "merge-ranges",
+      "concept": "merge-intervals",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "meeting-room-minimizer",
+      "concept": "sweep-line",
+      "difficulty": "Medium"
+     }
+    ]
+   },
+   {
+    "id": "bit-manipulation",
+    "title": "Bit Manipulation",
+    "prereqs": [
+     "math-basics"
+    ],
+    "problems": [
+     {
+      "id": "lone-number",
+      "concept": "xor-tricks",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "bit-count",
+      "concept": "counting-bits",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "add-without-plus",
+      "concept": "masks-and-shifts",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "visit-all-nodes",
+      "concept": "bitmask-subsets",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "recursion",
+    "title": "Recursion",
+    "prereqs": [
+     "arrays-hashing"
+    ],
+    "problems": [
+     {
+      "id": "fibonacci-mod",
+      "concept": "memoization-intro",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "circle-elimination",
+      "concept": "base-and-step",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "grammar-symbol",
+      "concept": "divide-and-conquer",
+      "difficulty": "Medium"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "tier": 2,
+  "title": "Patterns built on patterns",
+  "topics": [
+   {
+    "id": "sliding-window",
+    "title": "Sliding Window",
+    "prereqs": [
+     "two-pointers"
+    ],
+    "problems": [
+     {
+      "id": "vowel-window",
+      "concept": "fixed-window",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "longest-distinct-window",
+      "concept": "variable-window",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "covering-window",
+      "concept": "window-frequency-map",
+      "difficulty": "Hard"
+     },
+     {
+      "id": "window-maximums",
+      "concept": "monotonic-deque",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "binary-search",
+    "title": "Binary Search",
+    "prereqs": [
+     "two-pointers"
+    ],
+    "problems": [
+     {
+      "id": "target-range",
+      "concept": "lower-upper-bound",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "mountain-peak",
+      "concept": "peak-finding",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "rotated-search",
+      "concept": "rotated-array",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "eating-speed",
+      "concept": "search-on-answer",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "matrix-search",
+      "concept": "search-2d",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "merged-median",
+      "concept": "classic-search",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "linked-list",
+    "title": "Linked List",
+    "prereqs": [
+     "two-pointers"
+    ],
+    "problems": [
+     {
+      "id": "reverse-list",
+      "concept": "reversal",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "list-loop",
+      "concept": "fast-slow-cycle",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "digit-list-sum",
+      "concept": "dummy-node-traversal",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "shift-list",
+      "concept": "list-restructuring",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "random-link-copy",
+      "concept": "deep-copy",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "recent-cache",
+      "concept": "cache-design",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "merge-many-lists",
+      "concept": "merge-lists",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "greedy",
+    "title": "Greedy",
+    "prereqs": [
+     "sorting-intervals"
+    ],
+    "problems": [
+     {
+      "id": "cookie-match",
+      "concept": "exchange-argument",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "best-run-sum",
+      "concept": "local-choice",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "one-swap-max",
+      "concept": "greedy-construction",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "overlap-trim",
+      "concept": "interval-scheduling",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "jump-reach",
+      "concept": "reach-extension",
+      "difficulty": "Medium"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "tier": 3,
+  "title": "Core data structures",
+  "topics": [
+   {
+    "id": "trees",
+    "title": "Trees",
+    "prereqs": [
+     "recursion",
+     "linked-list"
+    ],
+    "problems": [
+     {
+      "id": "tree-height",
+      "concept": "dfs-traversal",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "level-order",
+      "concept": "bfs-level-order",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "kth-in-order",
+      "concept": "bst-properties",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "tree-heist",
+      "concept": "tree-dp",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "best-tree-path",
+      "concept": "path-problems",
+      "difficulty": "Hard"
+     },
+     {
+      "id": "tree-codec",
+      "concept": "construct-serialize",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "backtracking",
+    "title": "Backtracking",
+    "prereqs": [
+     "recursion"
+    ],
+    "problems": [
+     {
+      "id": "subset-builder",
+      "concept": "subsets",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "all-orderings",
+      "concept": "permutations",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "keypad-words",
+      "concept": "combinations-with-pruning",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "grid-word",
+      "concept": "constraint-search",
+      "difficulty": "Medium"
+     }
+    ]
+   },
+   {
+    "id": "dp-1d",
+    "title": "1D Dynamic Programming",
+    "prereqs": [
+     "recursion"
+    ],
+    "problems": [
+     {
+      "id": "stair-paths",
+      "concept": "linear-recurrence",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "street-heist",
+      "concept": "take-or-skip",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "best-run-product",
+      "concept": "subarray-dp",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "rising-chain",
+      "concept": "longest-increasing",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "fewest-coins",
+      "concept": "knapsack-1d",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "good-string-count",
+      "concept": "counting-dp",
+      "difficulty": "Medium"
+     }
+    ]
+   },
+   {
+    "id": "design",
+    "title": "Data Structure Design",
+    "prereqs": [
+     "linked-list",
+     "stack"
+    ],
+    "problems": [
+     {
+      "id": "bucket-map",
+      "concept": "hash-structure-design",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "nested-flatten",
+      "concept": "iterator-design",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "hit-window",
+      "concept": "data-stream",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "random-pool",
+      "concept": "randomized-set",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "versioned-store",
+      "concept": "time-keyed-store",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "frequent-cache",
+      "concept": "composite-design",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "strings-advanced",
+    "title": "Advanced Strings",
+    "prereqs": [
+     "sliding-window"
+    ],
+    "problems": [
+     {
+      "id": "first-match-index",
+      "concept": "prefix-function",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "widest-palindrome",
+      "concept": "expand-around-center",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "dna-repeats",
+      "concept": "rolling-hash",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "prefix-score-sum",
+      "concept": "z-function",
+      "difficulty": "Hard"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "tier": 4,
+  "title": "Structures on structures",
+  "topics": [
+   {
+    "id": "heap",
+    "title": "Heap / Priority Queue",
+    "prereqs": [
+     "trees"
+    ],
+    "problems": [
+     {
+      "id": "kth-highest",
+      "concept": "top-k",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "no-adjacent-repeat",
+      "concept": "greedy-with-heap",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "cooldown-tasks",
+      "concept": "scheduling",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "range-cover",
+      "concept": "k-way-merge",
+      "difficulty": "Hard"
+     },
+     {
+      "id": "median-stream",
+      "concept": "two-heaps",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "tries",
+    "title": "Tries",
+    "prereqs": [
+     "trees"
+    ],
+    "problems": [
+     {
+      "id": "shared-prefix",
+      "concept": "prefix-counting",
+      "difficulty": "Easy"
+     },
+     {
+      "id": "prefix-tree",
+      "concept": "insert-search",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "board-words",
+      "concept": "trie-guided-search",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "graphs",
+    "title": "Graphs",
+    "prereqs": [
+     "trees"
+    ],
+    "problems": [
+     {
+      "id": "island-count",
+      "concept": "grid-traversal",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "lock-steps",
+      "concept": "implicit-graph-bfs",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "course-check",
+      "concept": "cycle-detection",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "course-order",
+      "concept": "topological-sort",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "two-color-check",
+      "concept": "bipartite",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "word-morph",
+      "concept": "adjacency-traversal",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "dp-2d",
+    "title": "2D Dynamic Programming",
+    "prereqs": [
+     "dp-1d"
+    ],
+    "problems": [
+     {
+      "id": "edit-steps",
+      "concept": "two-sequences",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "coin-combos",
+      "concept": "knapsack-2d",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "trade-cooldown",
+      "concept": "state-machine",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "uphill-path",
+      "concept": "grid-paths",
+      "difficulty": "Hard"
+     },
+     {
+      "id": "balloon-pop",
+      "concept": "interval-dp",
+      "difficulty": "Hard"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "tier": 5,
+  "title": "Advanced",
+  "topics": [
+   {
+    "id": "union-find",
+    "title": "Union Find",
+    "prereqs": [
+     "graphs"
+    ],
+    "problems": [
+     {
+      "id": "account-merge",
+      "concept": "connectivity",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "extra-link",
+      "concept": "union-by-rank",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "limited-paths",
+      "concept": "offline-queries",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "advanced-graphs",
+    "title": "Advanced Graphs",
+    "prereqs": [
+     "graphs",
+     "heap"
+    ],
+    "problems": [
+     {
+      "id": "signal-spread",
+      "concept": "dijkstra",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "cheapest-route-k-stops",
+      "concept": "bounded-hops-shortest-path",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "point-wiring",
+      "concept": "minimum-spanning-tree",
+      "difficulty": "Medium"
+     },
+     {
+      "id": "course-finish-time",
+      "concept": "dag-dp",
+      "difficulty": "Hard"
+     },
+     {
+      "id": "obstacle-clearing",
+      "concept": "zero-one-bfs",
+      "difficulty": "Hard"
+     },
+     {
+      "id": "ticket-itinerary",
+      "concept": "eulerian-path",
+      "difficulty": "Hard"
+     }
+    ]
+   },
+   {
+    "id": "range-queries",
+    "title": "Range Queries",
+    "prereqs": [
+     "prefix-sum",
+     "trees"
+    ],
+    "problems": [
+     {
+      "id": "double-inversions",
+      "concept": "fenwick-tree",
+      "difficulty": "Hard"
+     },
+     {
+      "id": "skyline-outline",
+      "concept": "segment-tree",
+      "difficulty": "Hard"
+     }
+    ]
+   }
+  ]
+ }
+]

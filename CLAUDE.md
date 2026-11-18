@@ -43,11 +43,11 @@ src/js/problems/<id>/      problem.js + solutions/ (8 language files, or solutio
 src/js/state/              progress (pure reducers + localStorage), drafts
 src/js/modes/              interview.js, battle.js (pure session logic)
 src/js/mentor/             mentor providers (scripted today, remote later)
-src/js/data/curriculum.js  4 learning-path milestones (v0.1 UI)
 src/js/data/taxonomy.js    learning network: 26 topics, 131 subtopics, ladders, validators
 src/js/data/families.js    problem families, pickVersion per company, distinctProblems
 src/js/data/problem-meta.js companies, best known complexity, family per shipped problem (-> problem-meta.json, scripts/content/build-meta.mjs)
 src/js/data/company-sets.js practice by company: per-company problem lists, one row per family (-> company-sets.json, same script)
+src/js/data/learning-path.js essential path: 131 problems by tier and topic, easy to hard (-> essential-path.json, same script)
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md)
 scripts/content/           fetch sources, build index, audit
 scripts/verify/            verifier helpers (harnesses.mjs re-exports engine/programs; sql, growth)

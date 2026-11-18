@@ -985,103 +985,6 @@ body.resizing-y * {
 }
 
 /* ---------- Learning path ---------- */
-.path {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  position: relative;
-}
-.path::before {
-  content: '';
-  position: absolute;
-  left: 17px;
-  top: 18px;
-  bottom: 18px;
-  width: 2px;
-  background: var(--border);
-}
-.milestone {
-  position: relative;
-  display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: 18px;
-  margin-bottom: 18px;
-}
-.milestone-marker {
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid var(--border-strong);
-  background: var(--panel);
-  font: 700 14px var(--mono);
-  color: var(--muted);
-}
-.milestone.current .milestone-marker {
-  border-color: var(--accent);
-  color: var(--accent);
-  box-shadow: 0 0 0 6px var(--accent-soft);
-}
-.milestone.complete .milestone-marker {
-  background: var(--ok);
-  border-color: var(--ok);
-  color: #06140c;
-}
-.milestone-card {
-  padding: 18px 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--panel);
-}
-.milestone.current .milestone-card {
-  border-color: rgba(245, 166, 35, 0.45);
-}
-.milestone-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-.milestone-top h2 {
-  margin: 2px 0 4px;
-  font-size: 18px;
-}
-.milestone-kicker {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--accent);
-}
-.milestone-pct {
-  font: 700 20px var(--mono);
-  color: var(--text-2);
-}
-.milestone-summary {
-  margin: 0 0 12px;
-  color: var(--text-2);
-}
-.milestone-meta {
-  margin: 6px 0 10px;
-  color: var(--muted);
-  font-size: 12px;
-}
-.outcomes {
-  margin: 10px 0;
-  padding-left: 18px;
-  color: var(--text-2);
-}
-.milestone-problems {
-  list-style: none;
-  padding: 10px 0 0;
-  margin: 0;
-  border-top: 1px solid var(--border);
-}
-.milestone-problems li {
-  display: flex;
-  align-items: center;
-  padding: 5px 0;
-}
 .progress {
   height: 6px;
   border-radius: 999px;
@@ -1508,4 +1411,93 @@ body.resizing-y * {
 .freq-text {
   color: var(--muted);
   font-size: 12px;
+}
+
+/* ---------- Learning path ---------- */
+.path-summary {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+}
+.path-summary-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.path-tier {
+  margin-bottom: 22px;
+}
+.path-tier-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 17px;
+  margin: 0 0 10px;
+}
+.path-count {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.path-topics {
+  display: grid;
+  gap: 8px;
+}
+.path-topic {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  padding: 10px 12px;
+}
+.path-topic.current {
+  border-color: var(--accent);
+}
+.path-topic summary {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  cursor: pointer;
+}
+.path-topic summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.path-topic-title {
+  font-weight: 600;
+}
+.path-topic.complete .path-topic-title::after {
+  content: ' \2713';
+  color: var(--ok);
+}
+.path-topic .progress {
+  margin: 8px 0;
+}
+.path-problems {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.path-problems li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.path-problems li.is-next {
+  background: var(--accent-soft);
+}
+.path-concept {
+  color: var(--muted);
+  font-size: 12px;
+  flex: 1;
 }

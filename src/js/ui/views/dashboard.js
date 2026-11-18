@@ -34,7 +34,7 @@ export function renderDashboard(root, { store }) {
         (!q || p.title.toLowerCase().includes(q)),
     );
     if (!rows.length) {
-      mount(tableBody, h('tr', {}, h('td.empty', { colspan: 5 }, 'No problems match these filters.')));
+      mount(tableBody, h('tr', {}, h('td.empty', { colspan: 4 }, 'No problems match these filters.')));
       return;
     }
     mount(
@@ -51,7 +51,6 @@ export function renderDashboard(root, { store }) {
           h('td', {}, title, available ? null : h('span.tag.tag-muted', {}, 'Coming soon')),
           h('td', {}, difficultyBadge(p.difficulty)),
           h('td', {}, p.topics.map((t) => h('span.tag', {}, TOPICS.find((x) => x.id === t)?.label ?? t))),
-          h('td.num', {}, `M${p.milestone}`),
         );
       }),
     );
@@ -99,7 +98,7 @@ export function renderDashboard(root, { store }) {
         h(
           'table.problem-table',
           {},
-          h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, ''), h('th', { scope: 'col' }, 'Title'), h('th', { scope: 'col' }, 'Difficulty'), h('th', { scope: 'col' }, 'Topics'), h('th.num', { scope: 'col' }, 'Path'))),
+          h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, ''), h('th', { scope: 'col' }, 'Title'), h('th', { scope: 'col' }, 'Difficulty'), h('th', { scope: 'col' }, 'Topics'))),
           tableBody,
         ),
       ),

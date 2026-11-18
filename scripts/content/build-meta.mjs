@@ -2,7 +2,8 @@
 /**
  * Writes src/js/data/problem-meta.json (companies, best known complexity and family versions
  * for every shipped problem, see src/js/data/problem-meta.js) and src/js/data/company-sets.json
- * (practice by company, see src/js/data/company-sets.js).
+ * (practice by company, see src/js/data/company-sets.js) and src/js/data/essential-path.json (the
+ * learning path, see src/js/data/learning-path.js).
  *
  * Usage: node scripts/content/build-meta.mjs   (after build-index.mjs and complexity.mjs)
  */
@@ -12,6 +13,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildProblemMeta } from '../../src/js/data/problem-meta.js';
 import { buildCompanySets } from '../../src/js/data/company-sets.js';
+import { buildPath } from '../../src/js/data/learning-path.js';
+import { TOPICS } from '../../src/js/data/taxonomy.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
@@ -37,3 +40,7 @@ const setsBody = [
 ].join('\n');
 writeFileSync(join(ROOT, 'src/js/data/company-sets.json'), setsBody + '\n');
 console.log(`${sets.companies.length} companies, ${sets.problems.length} problems -> src/js/data/company-sets.json`);
+
+const path = buildPath(records, TOPICS);
+writeFileSync(join(ROOT, 'src/js/data/essential-path.json'), JSON.stringify(path, null, 1) + '\n');
+console.log(`${path.reduce((n, t) => n + t.topics.reduce((m, tp) => m + tp.problems.length, 0), 0)} essential problems in ${path.length} tiers -> src/js/data/essential-path.json`);
