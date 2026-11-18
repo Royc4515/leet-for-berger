@@ -426,12 +426,20 @@ try {
     await shot('05-sql-accepted');
   });
 
-  await check('learning path shows 4 milestones', async () => {
+  await check('learning path: 6 tiers, 131 problems, solved count and a Next up link', async () => {
     await page.click('a[data-nav="path"]');
-    await page.waitForSelector('.milestone');
-    const n = await page.locator('.milestone').count();
-    if (n !== 4) throw new Error(`got ${n} milestones`);
+    await page.waitForSelector('.path-tier');
+    const tiers = await page.locator('.path-tier').count();
+    if (tiers !== 6) throw new Error(`got ${tiers} tiers`);
+    const problems = await page.locator('.path-problems li').count();
+    if (problems !== 131) throw new Error(`got ${problems} path problems`);
+    // Earlier steps solved problems on the path, so progress must be above zero.
+    await expectText('.path-summary', /[1-9]\d* \/ 131 solved/);
+    const next = await page.locator('.path-summary a.btn').getAttribute('href');
     await shot('05-path');
+    await page.click('.path-summary a.btn');
+    await page.waitForFunction((h) => location.hash === h, next);
+    await page.waitForSelector('.problem-title');
   });
 
   await check('modes hub lists 3 modes', async () => {

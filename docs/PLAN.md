@@ -64,13 +64,14 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [x] Complexity on every problem: our target, and separately "best known" from kamyu104 with attribution, behind a toggle until solved (PR #10)
 - [x] Practice-by-company view, with search and an Israeli-companies filter (PR #11)
 - [x] Problem families on each problem: all versions of the same idea are marked as related, and each version clearly shows which companies asked that form and what changed from the base version (the twist). Serves both company practice and re-practicing a problem in a different wording (PR #10)
-- [ ] Learning paths from the topic map (26 topics), replacing the 4 temporary milestones
+- [x] Learning paths from the topic map (26 topics), replacing the 4 temporary milestones (PR #12)
 - [ ] Mock OA: timer, 2-3 problems by difficulty, report at the end
 - [ ] Daily problem and "weak spots" practice from history
 - [ ] Solution explanation unlocked after solving, and submission history per problem
 - [ ] More robust growth measurement, so one slow size doesn't skew it
 
 ### Stage B: small maintenance
+- [ ] Remove the legacy `milestone` field from problem files and the catalog (no longer read by any view)
 - [ ] Automatic runner health check and an alert when it's down
 - [ ] Redeploy the Worker so disabling preview URLs takes effect
 - [ ] Browser Python check on the new input types

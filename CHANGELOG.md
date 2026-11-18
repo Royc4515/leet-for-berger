@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Changed
+- Learning Path is the essential path: 131 problems in 6 tiers and 26 topics in prerequisite order, easy to hard inside each topic, with progress per tier and topic, the subtopic of each problem, and a Next up button to the first unsolved problem. Replaces the 4 temporary milestones (`src/js/data/curriculum.js` removed, and the dashboard's milestone column with it). Data: `src/js/data/essential-path.json`, built by `scripts/content/build-meta.mjs`.
 - First Match Index is Medium (was Easy): with our limits it needs KMP.
 
 ### Added
