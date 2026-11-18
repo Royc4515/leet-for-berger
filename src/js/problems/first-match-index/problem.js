@@ -85,7 +85,7 @@ const hiddenArgs = [
 export const problem = {
   id: 'first-match-index',
   title: 'First Match Index',
-  difficulty: 'Easy',
+  difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['String Matching', 'KMP', 'Z-function'],
   milestone: 1,

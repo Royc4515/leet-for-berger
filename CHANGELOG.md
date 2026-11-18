@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- First Match Index is Medium (was Easy): with our limits it needs KMP.
+
 ### Added
 - `docs/PLAN.md`: the living work plan (stages, decision log, open decisions, risks), moved into the repo in English.
 - `content/SOURCES.md`: every external source (company tags, ratings, lists, complexity, solutions), its license, what we take and how to refresh it. `fetch-sources.sh` now also downloads the kamyu104 tables, and `scripts/content/complexity.mjs` extracts best known time and space per problem into `content/index/complexity.json` (4115 problems, all 131 essential covered; MIT, attributed).
