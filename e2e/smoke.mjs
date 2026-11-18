@@ -9,6 +9,8 @@
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { startServer } from '../scripts/serve.mjs';
+import { startFakeRunner } from './fake-runner.mjs';
+import { availableProblems } from '../src/js/problems/index.js';
 
 const args = new Set(process.argv.slice(2));
 const skipPython = args.has('--no-python');
@@ -19,6 +21,11 @@ const BASE = `http://localhost:${PORT}/`;
 const server = await startServer(PORT);
 const browser = await chromium.launch({ channel: process.env.PW_CHANNEL || undefined });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+// src/js/config.js points at the live runner; the smoke test must not depend on it or spend its
+// free quota, so the main page runs with the runner unset (editor-only), as a fork without one would.
+await page.addInitScript(() => {
+  window.LFB_REMOTE_RUNNER_URL = '';
+});
 const errors = [];
 page.on('console', (m) => m.type() === 'error' && errors.push(`console (during step ${step}): ${m.text()}`));
 page.on('pageerror', (e) => errors.push(`pageerror (during step ${step}): ${e.message}${process.env.E2E_STACKS ? '\n' + e.stack : ''}`));
@@ -141,6 +148,26 @@ try {
     });
   }
 
+  // TypeScript is type-checked and transpiled by Monaco's TypeScript service, then runs as JavaScript.
+  await check('TypeScript: reveal + submit is Accepted 15/15 on a function problem', async () => {
+    await page.selectOption('.toolbar select', 'typescript');
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 60000);
+    await expectText('.result-head', /15 \/ 15/);
+  });
+
+  await check('TypeScript: a type error is a Compile Error with LeetCode-style diagnostics', async () => {
+    await setCode('function smallestBaseSegment(s: string): string {\n  const n: number = s;\n  return s;\n}\n');
+    await page.click('button:has-text("Run Code")');
+    await expectText('.result-head', /Compile Error/, 30000);
+    await expectText('.case-detail', /Line 2: Char 9: error TS2322: Type 'string' is not assignable to type 'number'/);
+    await expectText('.case-detail', /type error is a Compile Error/);
+    await shot('13-ts-compile-error');
+    await page.selectOption('.toolbar select', 'javascript');
+  });
+
   await check('Java is editor-only with an honest verdict', async () => {
     await page.selectOption('.toolbar select', 'java');
     await page.click('button:has-text("Run Code")');
@@ -155,6 +182,50 @@ try {
     if (solved.trim() !== '1') throw new Error(`solved = ${solved}`);
   });
 
+  // Remote runner (ADR 0005): with a runner URL configured, Java compiles on the server and is judged
+  // in the page. A local fake stands in for the Worker (real javac when a JDK is installed).
+  await check('remote runner: Java reveal + submit is Accepted through a runner endpoint', async () => {
+    const problem = availableProblems().find((p) => p.id === 'pair-sum-target');
+    const fake = await startFakeRunner(PORT + 100, { origin: `http://localhost:${PORT}`, reference: (a) => problem.solveReference(a) });
+    // Its own context: the runner URL is read when the page loads, and progress stays separate.
+    const remote = await browser.newPage({ viewport: { width: 1440, height: 900 } }).catch((err) => {
+      fake.close();
+      throw err;
+    });
+    remote.on('console', (m) => m.type() === 'error' && errors.push(`console (remote page, step ${step}): ${m.text()}`));
+    remote.on('pageerror', (e) => errors.push(`pageerror (remote page, step ${step}): ${e.message}`));
+    try {
+      await remote.addInitScript((url) => {
+        window.LFB_REMOTE_RUNNER_URL = url;
+      }, `http://localhost:${PORT + 100}`);
+      await remote.goto(`${BASE}#/problem/pair-sum-target`);
+      await remote.waitForSelector('.monaco-editor', { timeout: 30000 });
+      const label = await remote.locator('.toolbar select option[value="java"]').textContent();
+      if (/editor only/.test(label)) throw new Error(`Java still editor-only: ${label}`);
+      await remote.selectOption('.toolbar select', 'java');
+      if (!(await remote.locator('.runner-note').isVisible())) throw new Error('no "Runs on the server" note');
+      await remote.click('button:has-text("Reveal Solution")');
+      await remote.click('dialog.modal button:has-text("Reveal")');
+      await remote.click('button:has-text("Submit")');
+      await remote.waitForFunction(() => /Accepted/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 60000 });
+      await remote.waitForFunction(() => /15 \/ 15/.test(document.querySelector('.result-head')?.textContent ?? ''));
+      const req = fake.requests[0];
+      if (req.path !== '/v1/execute/java') throw new Error(`request path ${req.path}`);
+      if (!req.body.files.some((f) => f.name === 'Harness.java')) throw new Error('Harness.java not sent');
+      if (/expected/.test(JSON.stringify(req.body))) throw new Error('an expected value was sent');
+      console.log(`  # ${fake.real ? 'compiled and ran with the local JDK' : 'no JDK here: answered with the reference solution'}; request ${req.encoding ?? 'identity'}`);
+      if (fake.real) {
+        await remote.evaluate(() => window.monaco.editor.getModels()[0].setValue('class Solution { int pairSum(int[] a) { return } }'));
+        await remote.click('button:has-text("Run Code")');
+        await remote.waitForFunction(() => /Compile error/.test(document.querySelector('.case-detail')?.textContent ?? ''), null, { timeout: 60000 });
+      }
+      if (shotsDir) await remote.screenshot({ path: `${shotsDir}/13-remote-java.png` });
+    } finally {
+      await remote.close();
+      fake.close();
+    }
+  });
+
   // Linked lists, trees and design classes run through engine/adapters.js in the browser workers.
   await check('design problem (Min Stack): JS reveal + submit is Accepted through the adapter', async () => {
     await page.goto(`${BASE}#/problem/min-stack`);
@@ -165,6 +236,17 @@ try {
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 30000);
     await expectText('.result-head', /15 \/ 15/);
+  });
+
+  await check('design problem (Min Stack): TypeScript reveal + submit is Accepted through the JavaScript adapter', async () => {
+    await page.selectOption('.toolbar select', 'typescript');
+    await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class MinStack') && m.getValue().includes(': number')));
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 60000);
+    await expectText('.result-head', /15 \/ 15/);
+    await page.selectOption('.toolbar select', 'javascript');
   });
 
   // RandomListNode (copy checked by node identity) and the randomized-set judge mode, in the browser.
@@ -210,7 +292,24 @@ try {
     await shot('11-growth-linear');
   });
 
-  await check('growth estimate: an Accepted quadratic Median Stream (sorted array + splice) is slower than target', async () => {
+  await check('growth estimate: TypeScript Pair Sum Target is timed as its transpiled JavaScript', async () => {
+    await page.selectOption('.toolbar select', 'typescript');
+    await page.click('button:has-text("Reveal Solution")');
+    await page.click('dialog.modal button:has-text("Reveal")');
+    await page.click('button:has-text("Submit")');
+    await expectText('.result-head', /Accepted/, 60000);
+    const text = await growthHeadline();
+    console.log(`  # ${text}`);
+    if (/unavailable|slower than target/.test(text)) throw new Error(text);
+    await page.selectOption('.toolbar select', 'javascript');
+  });
+
+  // A timing estimate is statistical: a JIT tier change can leave one size uniformly slow and the
+  // estimator then (honestly) says "too close to call". Same policy as the CI verifier
+  // (tests/growth-solutions.test.js): up to 3 submits, at least one must say "slower than target",
+  // and none may ever say "matches". The insert shifts elements in JavaScript (a native splice is a
+  // memmove so fast that the quadratic term barely shows), and the solution is still Accepted.
+  await check('growth estimate: an Accepted quadratic Median Stream (sorted array, shifting inserts) is slower than target', async () => {
     await page.goto(`${BASE}#/problem/median-stream`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class MedianFinder')));
@@ -219,15 +318,26 @@ try {
   addNum(num) {
     let lo = 0, hi = this.a.length;
     while (lo < hi) { const mid = (lo + hi) >> 1; if (this.a[mid] < num) lo = mid + 1; else hi = mid; }
-    this.a.splice(lo, 0, num);
+    const a = this.a;
+    a.push(num);
+    for (let i = a.length - 1; i > lo; i--) a[i] = a[i - 1];
+    a[lo] = num;
   }
   findMedian() { const a = this.a, m = a.length >> 1; return a.length % 2 ? 2 * a[m] : a[m - 1] + a[m]; }
 }`);
-    await page.click('button:has-text("Submit")');
-    await expectText('.result-head', /Accepted/, 30000);
-    const text = await growthHeadline();
-    console.log(`  # ${text}`);
-    if (!/slower than target/.test(text)) throw new Error(text);
+    const seen = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await page.click('button:has-text("Submit")');
+      // The previous attempt's verdict and estimate are still on screen until the console re-renders.
+      await page.waitForSelector('.growth-head', { state: 'detached', timeout: 30000 });
+      await expectText('.result-head', /Accepted/, 30000);
+      const text = await growthHeadline();
+      console.log(`  # ${text}`);
+      seen.push(text);
+      if (/: matches\./.test(text)) throw new Error(`a quadratic solution was called a match: ${text}`);
+      if (/slower than target/.test(text)) break;
+    }
+    if (!seen.some((t) => /slower than target/.test(t))) throw new Error(seen.join(' | '));
     await shot('12-growth-quadratic');
   });
 
@@ -328,6 +438,24 @@ try {
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     await shot('10-mobile');
     await page.setViewportSize({ width: 1440, height: 900 });
+  });
+
+  // Its own page: the blocked CDN request is logged as a failed resource, which is the point here.
+  await check('without Monaco, TypeScript reports honestly that it needs the editor and nothing crashes', async () => {
+    const offline = await browser.newPage();
+    const offlineErrors = [];
+    offline.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && offlineErrors.push(m.text()));
+    offline.on('pageerror', (e) => offlineErrors.push(e.message));
+    await offline.route(/monaco-editor@/, (route) => route.abort());
+    await offline.goto(`${BASE}#/problem/smallest-base-segment`);
+    await offline.waitForSelector('textarea.fallback-editor', { timeout: 30000 });
+    await offline.selectOption('.toolbar select', 'typescript');
+    await offline.click('button:has-text("Run Code")');
+    await offline.waitForFunction(() => /Language Not Supported Yet/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 15000 });
+    await offline.waitForFunction(() => /could not load/.test(document.querySelector('.case-detail')?.textContent ?? ''));
+    await offline.selectOption('.toolbar select', 'javascript');
+    await offline.close();
+    if (offlineErrors.length) throw new Error(offlineErrors.join(' | '));
   });
 
   await check('unknown route shows not found', async () => {

@@ -167,7 +167,8 @@ function hydrate(problem) {
     signatures: Object.fromEntries(LANGUAGE_IDS.map((l) => [l, { entry: entryName(l, problem.signature.name) }])),
     starterCode: Object.fromEntries(LANGUAGE_IDS.map((l) => [l, starterCode(l, problem.signature)])),
     // Browser-executable languages get a JSON <-> objects adapter when the signature needs one.
-    adapters: { javascript: adapterFor('javascript', problem.signature), python: adapterFor('python', problem.signature) },
+    // TypeScript runs as transpiled JavaScript (engine/typescript.js), so it takes the JavaScript one.
+    adapters: { javascript: adapterFor('javascript', problem.signature), typescript: adapterFor('javascript', problem.signature), python: adapterFor('python', problem.signature) },
   };
 }
 

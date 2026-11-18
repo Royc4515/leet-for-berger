@@ -1,0 +1,25 @@
+# Fallback path only (profile "public"): HTTPS for the gate when no Cloudflare Tunnel is used.
+# LFB_HOSTNAME is a free DuckDNS name pointing at the VM, e.g. lfb-runner.duckdns.org.
+# Caddy gets a Let's Encrypt certificate through the TLS-ALPN challenge, so only port 443 is open.
+{
+	admin off
+}
+
+{$LFB_HOSTNAME} {
+	tls {
+		issuer acme {
+			disable_http_challenge
+		}
+	}
+	request_body {
+		max_size 16MB
+	}
+	# The gate checks the shared secret; anything but the two API paths is refused here.
+	@api path /v1/execute/* /v1/health
+	handle @api {
+		reverse_proxy 127.0.0.1:8080
+	}
+	handle {
+		respond 404
+	}
+}

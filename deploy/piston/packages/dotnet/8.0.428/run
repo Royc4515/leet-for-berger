@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# $1 is the first file's name (Piston's convention). Must stay the run command of buildProgram
+# (tests/runner-deploy.test.js checks it). The gate sends the cases as the file .stdin: Piston
+# destroys the stdin pipe right after writing, which loses inputs larger than the pipe buffer.
+# don't touch / every directory .NET writes is private to this job. Piston runs each job as a
+# numeric user with no passwd entry and no home. Since 8.0.42x (a security fix) named mutexes live
+# in $XDG_RUNTIME_DIR, else $HOME/.dotnet; with neither usable, NuGet's first-run mutex fails:
+# "cannot open the device or file specified: 'NuGet-Migrations'". Reproduced as uid 60001.
+export HOME="$PWD/.home" XDG_RUNTIME_DIR="$PWD/.run" TMPDIR="$PWD/.tmp"
+export DOTNET_CLI_HOME="$HOME" NUGET_PACKAGES="$PWD/.nuget"
+mkdir -p "$HOME" "$TMPDIR" "$NUGET_PACKAGES"
+mkdir -p -m 700 "$XDG_RUNTIME_DIR"
+shift
+exec dotnet out/Harness.dll "$@" < .stdin

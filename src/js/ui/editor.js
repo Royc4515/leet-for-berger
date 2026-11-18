@@ -6,10 +6,26 @@
  * fall back to a textarea that implements the same tiny interface.
  */
 
+import { TS_COMPILER_OPTIONS, AMBIENT_TYPES } from '../engine/typescript.js';
+
 // don't touch / pinned: Monaco's AMD paths and worker layout change between majors.
 const MONACO_VERSION = '0.52.2';
 const MONACO_BASE = `https://cdn.jsdelivr.net/npm/monaco-editor@${MONACO_VERSION}/min`;
 const LOAD_TIMEOUT_MS = 12000;
+
+/**
+ * One TypeScript configuration for the editor's squiggles and the judge (ui/ts-compiler.js), so
+ * the editor underlines what a Submit would reject. Set before any model exists: changing it
+ * later restarts the TypeScript worker under a live editor.
+ * @param {any} monaco
+ */
+function configureTypeScript(monaco) {
+  const ts = monaco.languages?.typescript;
+  if (!ts) return;
+  // allowNonTsExtensions: Monaco's own default, needed for models without a .ts file name.
+  ts.typescriptDefaults.setCompilerOptions({ ...TS_COMPILER_OPTIONS, allowNonTsExtensions: true });
+  ts.typescriptDefaults.addExtraLib(AMBIENT_TYPES, 'file:///lfb-globals.d.ts');
+}
 
 let monacoPromise = null;
 
@@ -89,6 +105,7 @@ export function loadMonaco() {
         ['vs/editor/editor.main'],
         () => {
           clearTimeout(timer);
+          configureTypeScript(window.monaco);
           resolve(window.monaco);
         },
         () => {

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# The package directory is read-only in the sandbox; start from a copy of the warmed cache.
+cp -r "$LFB_GOCACHE_SEED" "$GOCACHE" 2>/dev/null || true
+# Must stay the compile command of buildProgram('go') in src/js/engine/programs/build.js
+# (tests/runner-deploy.test.js checks it).
+go build -o main solution.go harness.go

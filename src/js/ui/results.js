@@ -8,6 +8,7 @@ const STATUS_LABEL = {
   pass: 'Passed',
   fail: 'Wrong Answer',
   error: 'Runtime Error',
+  'compile-error': 'Compile Error',
   timeout: 'Time Limit',
   skipped: 'Not Run',
   unsupported: 'Unsupported',
@@ -109,7 +110,7 @@ function showCase(el, c, argNames) {
     ['Input', c.args.map((a, i) => `${argNames[i] ?? `arg${i}`} = ${preview(a)}`).join('\n')],
     ['Expected', preview(c.expected)],
   ];
-  if (c.status !== 'skipped' && c.status !== 'unsupported' && c.status !== 'timeout') rows.push(['Actual', preview(c.actual)]);
+  if (!['skipped', 'unsupported', 'timeout', 'compile-error'].includes(c.status)) rows.push(['Actual', preview(c.actual)]);
   if (c.error) rows.push(['Error', c.error]);
   if (c.status === 'timeout') rows.push(['Error', 'Exceeded the time limit. Check your complexity against the constraints.']);
   if (c.stdout) rows.push(['Stdout', c.stdout.trimEnd()]);

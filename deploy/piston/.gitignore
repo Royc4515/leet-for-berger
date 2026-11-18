@@ -1,0 +1,3 @@
+# Created on the VM by setup.sh: secrets (mode 600) and installed runtimes. Never commit them.
+secrets/
+data/

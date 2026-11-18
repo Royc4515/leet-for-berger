@@ -61,6 +61,16 @@ test('judge verdicts: wrong answer, timeout, runtime error', () => {
   assert.equal(judge(suite, suite.map((c) => (c.id === 1 ? { id: 1, state: 'error', error: 'x' } : ok(c)))).verdict, 'Runtime Error');
 });
 
+test('judge: a compile error on every case is a Compile Error, and hidden cases still hide the message', () => {
+  const suite = buildSuite(problem);
+  const res = judge(suite, suite.map((c) => ({ id: c.id, state: 'compile-error', error: 'Line 1: Char 1: error TS2322: nope' })));
+  assert.equal(res.verdict, 'Compile Error');
+  assert.equal(res.passed, 0);
+  assert.ok(res.cases.every((c) => c.status === 'compile-error'));
+  assert.match(res.cases.find((c) => c.visible).error, /TS2322/);
+  assert.ok(res.cases.filter((c) => !c.visible).every((c) => !('error' in c)));
+});
+
 test('custom input parser accepts JSON and bare text, rejects bad input', () => {
   assert.deepEqual(problem.parseCustomInput('"abab"'), { ok: true, args: ['abab'] });
   assert.deepEqual(problem.parseCustomInput('  abab \n'), { ok: true, args: ['abab'] });

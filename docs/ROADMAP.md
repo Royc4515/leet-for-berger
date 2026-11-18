@@ -9,6 +9,7 @@ Status legend: [x] done, [~] partial / placeholder, [ ] not started.
 - [x] Custom test input (Run only, validated, reference-computed expected)
 - [x] Run Code / Submit / Reveal Solution (confirm + "assisted" flag)
 - [x] JavaScript execution (Web Worker), Python execution (Pyodide), Java editor-only
+- [x] TypeScript execution: Monaco's TypeScript service type-checks and transpiles, the JavaScript worker runs it; type errors are a Compile Error, as on LeetCode
 - [x] Problem bank with difficulty / topic / search filters, planned problems visible
 - [x] Progress: solved, streak, accuracy, submissions (localStorage)
 - [x] Learning Path: 4 milestones, progress derived from solves
@@ -39,7 +40,7 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 - [x] Signature types for lists with random or cycle pointers and nested lists, judge mode for random answers (List Loop, Random Link Copy, Nested Flattener, Random Pool)
 - [ ] Signature types for graphs as node objects (Clone Graph)
 - [x] Author the 131 essential problems: all 131 done, each verified (8 languages, or SQL). New problems start from imported open-source solutions (`npm run import:solutions`)
-- [~] Complexity feedback: after Accepted (JavaScript, Python), time the code on growing inputs and compare the growth to the target (ADR 0004); 10 pilot problems declare `growth`, CI checks their targets. Next: `growth` for the remaining algorithm problems (checklist in docs/PROBLEM_FORMAT.md), other languages with the server runner, LLM explanation with the backend
+- [~] Complexity feedback: after Accepted (JavaScript, TypeScript, Python), time the code on growing inputs and compare the growth to the target (ADR 0004); 10 pilot problems declare `growth`, CI checks their targets. Next: `growth` for the remaining algorithm problems (checklist in docs/PROBLEM_FORMAT.md), other languages with the server runner, LLM explanation with the backend
 - [x] SQL runner: sql.js (SQLite wasm) in a worker and in the CI verifier, ADR 0003; first 5 SQL problems
 - [ ] Author problems topic by topic, tier 0 first; 15 tests each, solutions in 3 languages
 - [ ] Replace the 4 hand-picked milestones with paths derived from the taxonomy
@@ -53,10 +54,13 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 - [x] ADR 0002: PostgreSQL on Supabase, schema (`db/schema.sql`), git -> database sync (`scripts/db/export-sql.mjs`), verified by `scripts/db/check-schema.sh` in CI
 - [ ] Create the Supabase project, apply the schema, run the sync from CI on merge to main
 
-- [ ] Execution service (e.g. Judge0 self-hosted or containerized runners) with the same `run()` contract
-- [ ] Java execution
+- [x] Execution service with the same `run()` contract: self-hosted Piston on an Oracle Always Free Arm VM behind a Cloudflare Worker, $0 (ADR 0005). Code, Worker, VM kit and deploy guide done (`docs/DEPLOY_RUNNER.md`)
+- [ ] Create the Oracle and Cloudflare accounts, run `deploy/piston/setup.sh`, deploy the Worker, set the URL in `src/js/config.js` (owner steps in `docs/DEPLOY_RUNNER.md`)
+- [x] Java, C++, C, C# and Go execution in practice mode via the remote runner (judged in the browser; versions match CI: Java 21, .NET 8, Go 1.23; GCC 12 for C11 and C++17)
+- [ ] Remote languages in interview and battle (needs server-side judging, Phase 3)
+- [ ] Growth estimates for the remote languages (server-side timing)
 - [ ] Hidden tests and solutions served from the server only; real "secure reveal"
-- [ ] Rate limiting and resource caps per submission
+- [x] Rate limiting and resource caps per submission (remote runner: per-IP limit in the Worker, time, memory, process and output caps in the gate and Piston)
 
 ## Phase 3 - Accounts and live features
 

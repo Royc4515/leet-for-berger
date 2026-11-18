@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+export DOTNET_ROOT=$PWD
+export PATH=$PWD:$PATH
+# Jobs have no network: no first-run banner, telemetry, workload update checks or NuGet audit (each
+# would try the network), and no build servers left running. HOME, temp and the NuGet cache are set
+# per job in compile and run (this file is evaluated once at install, in the package directory).
+export DOTNET_NOLOGO=1
+export DOTNET_CLI_TELEMETRY_OPTOUT=1
+export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+export DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE=1
+export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+export DOTNET_CLI_USE_MSBUILD_SERVER=0
+export MSBUILDDISABLENODEREUSE=1
+export UseSharedCompilation=false
+export NuGetAudit=false
+# don't touch / W^X makes the runtime double-map code through a shared file it sizes far past
+# isolate's per-file limit (RLIMIT_FSIZE), so every dotnet process died with SIGXFSZ ("File size
+# limit exceeded") under the real sandbox on the Arm VM. Off costs a little startup time only.
+export DOTNET_EnableWriteXorExecute=0
+# The runtime's diagnostics IPC creates a socket under the temp directory for every process; jobs
+# never attach a debugger, and one fewer shared file under /tmp.
+export DOTNET_EnableDiagnostics=0

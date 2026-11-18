@@ -4,14 +4,45 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
- * Runs a Java solution on JSON test cases and prints one JSON result per line.
- * Used by tests/solutions.test.js to verify the Java solution every problem ships.
+ * Runs a Java solution on JSON test cases and prints one JSON result per case, in the case
+ * protocol of src/js/engine/programs/output.js (CASE_MARK on stderr before each case, each result
+ * on its own line behind RESULT_MARK, flushed per case).
+ * Used by tests/solutions.test.js to verify the Java solution every problem ships, and by the
+ * remote runner (docs/adr/0005-remote-runner.md), so both run exactly this file.
  *   java Harness <method>  < cases.json   function problems: cases are [[arg1, arg2, ...], ...]
  *   java Harness <Class>   < cases.json   design problems: cases are [[ops, argLists], ...]
  * ListNode and TreeNode arrive as JSON arrays ([1,2,3]; level order with nulls) and leave the same way.
  */
 public class Harness {
+    // Keep equal to CASE_MARK and RESULT_MARK in output.js (tests/programs.test.js checks it).
+    static final String CASE_MARK = "\n\u001e\n";
+    static final String RESULT_MARK = "\n\u001e";
+
     public static void main(String[] argv) throws Exception {
+        try {
+            run(argv);
+        } catch (InvocationTargetException e) {
+            // The user's exception, without the reflection frames around it.
+            e.getCause().printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    static void beginCase() {
+        System.err.print(CASE_MARK);
+        System.err.flush();
+    }
+
+    // System.out is flushed first so the user's own prints during the case stay before the result.
+    static void endCase(PrintStream out, String json) {
+        System.out.flush();
+        out.print(RESULT_MARK);
+        out.print(json);
+        out.print('\n');
+        out.flush();
+    }
+
+    static void run(String[] argv) throws Exception {
         String entry = argv[0];
         String input = new String(System.in.readAllBytes(), StandardCharsets.UTF_8);
         List<?> cases = (List<?>) new Json(input).parse();
@@ -26,14 +57,14 @@ public class Harness {
         method.setAccessible(true);
         PrintStream out = new PrintStream(new BufferedOutputStream(System.out), false, StandardCharsets.UTF_8);
         for (Object c : cases) {
+            beginCase();
             List<?> args = (List<?>) c;
             Object[] converted = convertAll(args, method.getParameterTypes(), method.getGenericParameterTypes());
             // A fresh Solution per case, as on LeetCode: state left in instance fields by one case
             // must not leak into the next (C++ and C# harnesses already do this).
             Object solution = solutionClass.getDeclaredConstructor().newInstance();
-            out.println(toJson(method.invoke(solution, converted), method.getReturnType()));
+            endCase(out, toJson(method.invoke(solution, converted), method.getReturnType()));
         }
-        out.flush();
     }
 
     // Design problems: construct with ops[0]'s arguments, then call each method by name.
@@ -42,6 +73,7 @@ public class Harness {
         Map<String, Method> methods = new HashMap<>();
         PrintStream out = new PrintStream(new BufferedOutputStream(System.out), false, StandardCharsets.UTF_8);
         for (Object c : cases) {
+            beginCase();
             List<?> ops = (List<?>) ((List<?>) c).get(0);
             List<?> args = (List<?>) ((List<?>) c).get(1);
             StringBuilder sb = new StringBuilder("[");
@@ -71,9 +103,8 @@ public class Harness {
                 Object r = m.invoke(obj, convertAll(a, m.getParameterTypes(), m.getGenericParameterTypes()));
                 sb.append(m.getReturnType() == void.class ? "null" : toJson(r, m.getReturnType()));
             }
-            out.println(sb.append(']'));
+            endCase(out, sb.append(']').toString());
         }
-        out.flush();
     }
 
     static Object[] convertAll(List<?> args, Class<?>[] types, Type[] generics) {

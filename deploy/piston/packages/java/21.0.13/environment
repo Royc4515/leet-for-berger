@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+export PATH=$PWD/bin:$PATH
+# Inside the sandbox the JVM cannot read the job's cgroup limit and would size its heap from the
+# VM's 12 GB, then be killed by the 1.5 GB limit instead of throwing OutOfMemoryError.
+export JDK_JAVA_OPTIONS="-XX:MaxRAM=1500m -XX:MaxRAMPercentage=70 -XX:+UseSerialGC"

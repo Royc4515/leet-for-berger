@@ -35,11 +35,26 @@ A global budget makes the verdict ambiguous (which case hung?). Re-arming after 
 | JavaScript | `js-worker.js` | fresh worker per run | clean globals every run; boot is ~ms |
 | Python | `py-worker.js` (Pyodide 0.27.2) | persistent, recreated after a kill | boot is seconds, so it warms up when Python is selected; watchdog starts only after `ready` |
 | SQL | `sql-worker.js` (sql.js 1.13.0) | persistent, recreated after a kill | SQL problems only; fresh read-only SQLite database per case, results judged as result sets (ADR 0003) |
-| Java | `UnsupportedRunner` | n/a | honest "not supported yet" verdict |
+| TypeScript | `TypeScriptRunner` -> `js-worker.js` | fresh worker per run | type-checked and transpiled by Monaco's TypeScript service, then run as JavaScript with the JavaScript adapter (see below) |
+| Java, C++, C, C#, Go | `RemoteRunner` when `src/js/config.js` has a URL, else `UnsupportedRunner` | one HTTP request per run | practice mode only; compiled and run by Piston on a free VM behind a Cloudflare Worker, judged in the page (ADR 0005) |
 
-After an Accepted submit, the same JavaScript and Python workers also time the code on growing inputs (`measureGrowth`, protocol in `js-worker.js`; ADR 0004). The estimator is the pure `engine/growth.js`.
+### TypeScript
+
+TypeScript reuses the compiler Monaco already loads for the editor (its TypeScript language-service worker, TypeScript 5.4.5 in Monaco 0.52.2), so it costs no extra download. `ui/ts-compiler.js` puts the code in a throwaway model, reads its syntactic and semantic diagnostics, and asks for the emitted JavaScript; `engine/runners/ts-runner.js` runs that JavaScript in `js-worker.js` with the JavaScript adapter (`problem.adapters.typescript` is the JavaScript one). The runner gets the compiler injected, so it stays free of Monaco and is unit-tested with a fake.
+
+- **Type errors.** A type error is a **Compile Error** (new verdict) and nothing runs, as on LeetCode. The flags are LeetCode's (`--strict false --alwaysStrict --strictBindCallApply --strictFunctionTypes`, support.leetcode.com "What are the environments for the programming languages?"), target ES2022 because Monaco's TypeScript has no ES2024. So an implicit `any` is fine, a wrong type is not. The editor uses the same options (`configureTypeScript` in `ui/editor.js`), so its squiggles show what a Submit rejects.
+- **Line numbers.** The code is checked as a module: `export {};` is appended after it, never prepended, so diagnostic lines are the editor's lines. Being a module also keeps it from clashing with the editor's own model, a global script with the same declarations. Diagnostics are printed LeetCode-style: `Line 2: Char 9: error TS2322: ...`. Runtime errors show the message only, as for JavaScript.
+- **Ambient types.** `ListNode`, `TreeNode`, `RandomListNode` and `NestedInteger` are declared to the checker as an extra lib (`AMBIENT_TYPES`, mirroring the TypeScript prelude in `engine/adapters.js`); the JavaScript adapter defines them at run time.
+- **No Monaco.** With the textarea fallback there is no compiler: every case is "Language Not Supported Yet" with a message that TypeScript needs the editor to load. No other transpiler is downloaded.
+- **Verification.** CI's TypeScript job also runs `tests/typescript.test.js`: every TypeScript solution must type-check with these options and ambient types, and its transpiled output must pass the 15 cases through the JavaScript adapter, the path the browser takes (the tsc harness checks the other path).
+
+After an Accepted submit, the same JavaScript and Python workers (TypeScript through its transpiled JavaScript) also time the code on growing inputs (`measureGrowth`, protocol in `js-worker.js`; ADR 0004). The estimator is the pure `engine/growth.js`.
 
 Adding a language = a worker (or remote runner) implementing the protocol in `worker-runner.js` + an entry in `runners/index.js` + starter code and solution in each problem.
+
+### Remote runner (ADR 0005)
+
+`RemoteRunner.run()` keeps the worker contract: it builds the language's test program with `engine/programs/build.js` (the exact program CI compiles), posts it with the 15 cases' args as stdin (gzip, no expected values) to the Cloudflare Worker, and maps Piston's `{compile, run}` answer to one RawResult per case with `mapResponse()`. The native programs mark each case on stderr and each result on stdout (`programs/output.js`), so a crash or a timeout is attributed to the case that caused it and the user's prints appear per case. Server unreachable, busy or rate limited throws `RemoteUnavailableError`: the console shows one line and nothing is recorded. Inside interview and battle, `getRunner(lang, { session: true })` returns the editor-only runner. Deployment: `docs/DEPLOY_RUNNER.md`.
 
 ## State
 
@@ -67,4 +82,5 @@ Monaco 0.52.2 from jsDelivr via the AMD loader. Cross-origin language workers ar
 
 - User code: sandboxed in Web Workers (no DOM, killable). Not a security boundary against a determined user reading the bundle, and does not need to be: it is their own browser.
 - Hidden tests and solutions are in the bundle. Fine for practice, not for hiring-grade assessment. Phase 2 moves judging and solutions server-side.
+- Remote runner (ADR 0005): untrusted code runs in Piston's isolate sandbox on a single-purpose VM with no network for jobs; the VM opens no inbound port (Cloudflare Tunnel); a shared secret known only to the Worker and the VM's gate; the page holds only the Worker's public URL.
 - All user-facing strings render as text nodes.

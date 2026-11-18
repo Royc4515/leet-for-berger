@@ -1,0 +1,95 @@
+# Leet-For-Berger code runner on one VM (docs/adr/0005-remote-runner.md, docs/DEPLOY_RUNNER.md).
+#
+#   piston       Piston API + isolate sandbox, listening on 127.0.0.1:2000 only
+#   gate         checks the Worker's shared secret, validates, pins runtimes and limits; 127.0.0.1:8080
+#   cloudflared  (profile "tunnel", preferred) outbound-only tunnel to Cloudflare: no inbound port
+#   caddy        (profile "public", fallback) HTTPS on :443 for a free DuckDNS hostname
+#
+# Every service uses the host network so the loopback addresses above are the VM's own: nothing
+# listens on a public interface unless the "public" profile is started. Secrets live in ./secrets
+# (created by setup.sh, mode 600, never committed).
+name: lfb-runner
+
+# Bounded logs: the gate writes one line per run.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  piston:
+    build: .
+    image: lfb-piston:de2b365
+    restart: unless-stopped
+    logging: *logging
+    # isolate needs to create cgroups and namespaces for each job.
+    privileged: true
+    network_mode: host
+    environment:
+      PISTON_BIND_ADDRESS: 127.0.0.1:2000
+      PISTON_LOG_LEVEL: INFO
+      # Jobs get no network: isolate gives each one an empty network namespace.
+      PISTON_DISABLE_NETWORKING: "true"
+      # 2 OCPUs: two jobs at a time, the gate queues the rest.
+      PISTON_MAX_CONCURRENT_JOBS: "2"
+      PISTON_MAX_PROCESS_COUNT: "128"
+      PISTON_MAX_OPEN_FILES: "2048"
+      PISTON_MAX_FILE_SIZE: "100000000"
+      # Results of 15 cases reach about 5 MB for the largest problems.
+      PISTON_OUTPUT_MAX_SIZE: "16000000"
+      PISTON_COMPILE_TIMEOUT: "30000"
+      PISTON_COMPILE_CPU_TIME: "60000"
+      PISTON_RUN_TIMEOUT: "12000"
+      PISTON_RUN_CPU_TIME: "12000"
+      PISTON_COMPILE_MEMORY_LIMIT: "2000000000"
+      PISTON_RUN_MEMORY_LIMIT: "1500000000"
+    volumes:
+      - ./data/packages:/piston/packages
+      - ./packages:/lfb/packages:ro
+      - ./install-packages.sh:/lfb/install-packages.sh:ro
+    tmpfs:
+      - /tmp:exec
+
+  gate:
+    image: node:22.21.1-bookworm-slim@sha256:25b3eb23a00590b7499f2a2ce939322727fcce1b15fdd69754fcd09536a3ae2c
+    restart: unless-stopped
+    logging: *logging
+    network_mode: host
+    user: node
+    read_only: true
+    environment:
+      GATE_LISTEN: 127.0.0.1:8080
+      PISTON_URL: http://127.0.0.1:2000
+      GATE_MAX_ACTIVE: "2"
+      GATE_MAX_QUEUE: "8"
+    env_file: ./secrets/gate.env
+    volumes:
+      - ./gate:/gate:ro
+    command: ["node", "/gate/gate.mjs"]
+    depends_on:
+      - piston
+
+  cloudflared:
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:2025.11.1@sha256:89ee50efb1e9cb2ae30281a8a404fed95eb8f02f0a972617526f8c5b417acae2
+    restart: unless-stopped
+    logging: *logging
+    network_mode: host
+    env_file: ./secrets/tunnel.env
+    command: ["tunnel", "--no-autoupdate", "run"]
+    depends_on:
+      - gate
+
+  caddy:
+    profiles: ["public"]
+    image: caddy:2.8.4-alpine@sha256:af32e97399febea808609119bb21544d0265c58a02836576e32a2d082c262c17
+    restart: unless-stopped
+    logging: *logging
+    network_mode: host
+    env_file: ./secrets/public.env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy:/data
+    depends_on:
+      - gate

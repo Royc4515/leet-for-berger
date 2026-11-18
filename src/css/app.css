@@ -640,6 +640,24 @@ body.resizing-y * {
 .toolbar-spacer {
   flex: 1;
 }
+/* Remote runner (ADR 0005): the selected language compiles on the code server. */
+.runner-note {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.runner-note[hidden] {
+  display: none;
+}
+.turnstile-host {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 60;
+}
 .editor-split {
   display: grid;
   grid-template-rows: var(--editor-size, 62%) 6px minmax(0, 1fr);
@@ -821,6 +839,7 @@ body.resizing-y * {
 }
 .st-fail .dot,
 .st-error .dot,
+.st-compile-error .dot,
 .st-timeout .dot {
   background: var(--bad);
 }
@@ -839,6 +858,7 @@ body.resizing-y * {
 }
 .case-status.st-fail,
 .case-status.st-error,
+.case-status.st-compile-error,
 .case-status.st-timeout {
   color: var(--bad);
 }

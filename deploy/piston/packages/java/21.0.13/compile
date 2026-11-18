@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Piston passes the request's file names in order. Must stay the compile command of
+# buildProgram('java') in src/js/engine/programs/build.js (tests/runner-deploy.test.js checks it).
+javac -d . "$@"

@@ -77,7 +77,7 @@ function canonical(v) {
 /**
  * @typedef {Object} RawResult  what a runner reports per case
  * @property {number} id
- * @property {'ok'|'error'|'timeout'|'skipped'|'unsupported'} state
+ * @property {'ok'|'error'|'compile-error'|'timeout'|'skipped'|'unsupported'} state
  * @property {unknown} [actual]
  * @property {string} [error]
  * @property {string} [stdout]
@@ -100,6 +100,7 @@ export function judge(suite, raw, compare = deepEqual) {
     if (r.state === 'ok') status = compare(r.actual, tc.expected, tc) ? 'pass' : 'fail';
     else if (r.state === 'timeout') status = 'timeout';
     else if (r.state === 'error') status = 'error';
+    else if (r.state === 'compile-error') status = 'compile-error';
     else if (r.state === 'unsupported') status = 'unsupported';
     else status = 'skipped';
 
@@ -127,6 +128,8 @@ function verdictFor(cases, firstFailure) {
       return 'Time Limit Exceeded';
     case 'error':
       return 'Runtime Error';
+    case 'compile-error':
+      return 'Compile Error';
     case 'skipped':
       return 'Not Executed';
     default:
