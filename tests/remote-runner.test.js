@@ -7,7 +7,7 @@ import { gunzipSync } from 'node:zlib';
 import { RemoteRunner, mapResponse, mapCompilerMessage, REMOTE_LANGUAGES } from '../src/js/engine/runners/remote-runner.js';
 import { buildProgram, programStdin } from '../src/js/engine/programs/build.js';
 import { RESULT_MARK, CASE_MARK } from '../src/js/engine/programs/output.js';
-import { remoteRunnerConfig } from '../src/js/config.js';
+import { remoteRunnerConfig, REMOTE_RUNNER } from '../src/js/config.js';
 import { buildSuite, judge } from '../src/js/engine/harness.js';
 import { availableProblems } from '../src/js/problems/index.js';
 
@@ -35,9 +35,13 @@ function fakeRunner(language, answer, opts = {}) {
 
 const bodyOf = (init) => JSON.parse(init.headers['Content-Encoding'] === 'gzip' ? gunzipSync(init.body).toString('utf8') : init.body);
 
-test('config: unset means no remote runner; window overrides the file', () => {
-  assert.equal(remoteRunnerConfig({}).url, '');
+test('config: the file sets the runner; a window override replaces it, and empty turns it off', () => {
+  // The file points at the live Worker; it must be an https URL (no secrets, invariant 10).
+  assert.match(remoteRunnerConfig({}).url, /^https:\/\/[a-z0-9.-]+$/);
+  assert.equal(remoteRunnerConfig({}).url, REMOTE_RUNNER.url.replace(/\/+$/, ''));
   assert.equal(remoteRunnerConfig({ LFB_REMOTE_RUNNER_URL: ' https://w.example/// ' }).url, 'https://w.example');
+  // The smoke test relies on this to stay off the live runner.
+  assert.equal(remoteRunnerConfig({ LFB_REMOTE_RUNNER_URL: '' }).url, '');
 });
 
 test('request: path per language, gzip JSON body with files, stdin and args, never expected values', async () => {

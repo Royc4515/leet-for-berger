@@ -21,6 +21,11 @@ const BASE = `http://localhost:${PORT}/`;
 const server = await startServer(PORT);
 const browser = await chromium.launch({ channel: process.env.PW_CHANNEL || undefined });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+// src/js/config.js points at the live runner; the smoke test must not depend on it or spend its
+// free quota, so the main page runs with the runner unset (editor-only), as a fork without one would.
+await page.addInitScript(() => {
+  window.LFB_REMOTE_RUNNER_URL = '';
+});
 const errors = [];
 page.on('console', (m) => m.type() === 'error' && errors.push(`console (during step ${step}): ${m.text()}`));
 page.on('pageerror', (e) => errors.push(`pageerror (during step ${step}): ${e.message}${process.env.E2E_STACKS ? '\n' + e.stack : ''}`));

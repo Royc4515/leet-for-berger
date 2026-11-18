@@ -10,7 +10,7 @@
  * stay editor-only with the honest "not supported yet" verdict.
  */
 export const REMOTE_RUNNER = {
-  url: '',
+  url: 'https://lfb-runner.roy-lfb.workers.dev',
   // Cloudflare Turnstile site key (public). Set only when the Worker has TURNSTILE_SECRET.
   turnstileSiteKey: '',
 };

@@ -6,6 +6,8 @@ main = "src/index.js"
 compatibility_date = "2026-11-01"
 # Serves at https://lfb-runner.YOUR-SUBDOMAIN.workers.dev: no domain needed.
 workers_dev = true
+# Preview URLs would expose every uploaded version at its own address; only the deployed one serves.
+preview_urls = false
 
 [vars]
 # The site's origins, comma separated: GitHub Pages and the local dev server.
