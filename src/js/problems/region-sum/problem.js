@@ -173,6 +173,27 @@ export const problem = {
     'How can an extra row and column of zeros remove the special cases at row 0 and column 0?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>In the constructor, build a prefix table <code>p</code> with one extra row and column of zeros,
+    where <code>p[r + 1][c + 1]</code> is the sum of the block from <code>(0, 0)</code> to <code>(r,
+    c)</code>. Every query is then four lookups.</p>
+    <h4>Why it works</h4>
+    <p>The rectangle is the block up to <code>(row2, col2)</code>, minus the strip above
+    <code>row1</code>, minus the strip left of <code>col1</code>. Those two strips overlap in the block
+    above and to the left of <code>(row1, col1)</code>, which was subtracted twice, so it is added back
+    once. The table is built with the same rule: the cell, plus the block above, plus the block to the
+    left, minus their overlap.</p>
+    <h4>Complexity</h4>
+    <p>O(rows * cols) time and space to build. O(1) per <code>sumRegion</code>. Summing the cells of
+    each query costs up to 4 * 10^4 additions per call, about 4 * 10^9 over 10^5 queries.</p>
+    <h4>Pitfall</h4>
+    <p>Off-by-one with the padded table. The query reads <code>p[row2 + 1][col2 + 1]</code> and
+    <code>p[row1][col1]</code>, not <code>p[row2][col2]</code>. Without the padding, rectangles that
+    touch row 0 or column 0 need separate cases, and those are easy to get wrong.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

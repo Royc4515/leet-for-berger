@@ -144,6 +144,28 @@ export const problem = {
     'What goes wrong in your gap arithmetic when a line has only one word?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Pack greedily: keep adding words while the line's width with single gaps stays within
+    <code>maxWidth</code>. Then lay out the line. A normal line splits the leftover spaces over its
+    gaps, giving the first <code>remainder</code> gaps one extra space. The last line and one-word
+    lines are joined with single spaces and padded on the right.</p>
+    <h4>Why it works</h4>
+    <p>With <code>gaps = words - 1</code> and <code>spaces = maxWidth - letters</code>, division gives
+    a base width <code>w = spaces / gaps</code> and <code>m = spaces % gaps</code> leftovers. Handing
+    those leftovers to the leftmost <code>m</code> gaps keeps every gap within one space of the
+    others and puts the larger ones on the left, and the total adds up to exactly
+    <code>maxWidth</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(total output characters) time, each word is placed once and each space written once. O(1)
+    extra space beyond the output.</p>
+    <h4>Pitfall</h4>
+    <p>A line with a single word has zero gaps, so the division by <code>gaps</code> fails. It must take
+    the left-aligned path, just like the last line. Forgetting to pad the last line to full width is
+    the other frequent mistake.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'justifyText',

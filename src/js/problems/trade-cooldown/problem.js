@@ -111,6 +111,27 @@ export const problem = {
     'You only ever look one day back. How many numbers do you need to keep?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>At the end of each day you are in one of three states: <code>hold</code> (own a share),
+    <code>sold</code> (sold today) or <code>rest</code> (no share, free to buy tomorrow). Track the best
+    profit for each state, day by day.</p>
+    <h4>Why it works</h4>
+    <p>The transitions follow the rules exactly. <code>hold</code> keeps yesterday's share or buys today
+    from <code>rest</code>, never from <code>sold</code>, which enforces the rest day.
+    <code>sold</code> is yesterday's <code>hold</code> plus today's price. <code>rest</code> is the better
+    of yesterday's <code>rest</code> and <code>sold</code>. Every legal trading plan follows one path
+    through these states, so the best values cover all of them. The answer is the better of
+    <code>sold</code> and <code>rest</code> on the last day.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time and O(1) space: three numbers updated per day. A DP that tries every previous sale day
+    is O(n^2), too slow at 10^5 days.</p>
+    <h4>Pitfall</h4>
+    <p>Summing every rising step is the answer without a rest day and is too high here. Update all
+    three states from the previous day's values at once, not one after another.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'maxProfit',

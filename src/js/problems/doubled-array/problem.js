@@ -89,6 +89,26 @@ export const problem = {
     'If you append to nums while looping over it, when does your loop stop?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The answer is <code>nums</code> twice in a row, so build a new array of length <code>2n</code>
+    where position <code>i</code> and position <code>i + n</code> both receive <code>nums[i]</code>.
+    In Python that is simply <code>nums + nums</code>.</p>
+    <h4>Why it works</h4>
+    <p>The first half covers indices <code>0</code> to <code>n - 1</code> and the second half covers
+    <code>n</code> to <code>2n - 1</code>. Each index <code>i</code> of the input fills exactly one slot in
+    each half, so every slot of the result is written once and matches the definition
+    <code>ans[i] == ans[i + n] == nums[i]</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time, each element is copied twice. O(n) extra space for the output of length
+    <code>2n</code>, which the problem requires anyway.</p>
+    <h4>Pitfall</h4>
+    <p>Appending to <code>nums</code> while looping over it. In a language whose loop re-reads the
+    length on every step, the loop chases its own tail and never ends, and the input is mutated
+    even when it does stop. Allocate the result once instead.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'doubleArray',

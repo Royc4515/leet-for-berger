@@ -115,6 +115,26 @@ export const problem = {
     'What is the largest possible total for n = 10^5, and which type can hold it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The score of the suffix at <code>i</code> is <code>z[i]</code> of the Z-function, the longest
+    common prefix of <code>s</code> and <code>s[i..]</code>. Compute every <code>z</code> value in
+    linear time and add them, plus <code>n</code> for the whole string.</p>
+    <h4>Why it works</h4>
+    <p>Keep <code>[l, r]</code>, the rightmost segment known to equal a prefix of <code>s</code>.
+    For <code>i</code> inside it, <code>s[i..r]</code> equals <code>s[i - l..r - l]</code>, so
+    <code>z[i]</code> starts at <code>min(r - i + 1, z[i - l])</code>, and characters are compared
+    only past <code>r</code>. Each successful comparison moves <code>r</code> right.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time and O(n) space, since <code>r</code> never moves left. Comparing every suffix with
+    <code>s</code> directly is O(n^2), about 5 * 10^9 steps on one repeated letter.</p>
+    <h4>Pitfall</h4>
+    <p>On a single repeated letter the total is n(n + 1) / 2, about 5 * 10^9 at n = 10^5, which
+    overflows a 32-bit integer. Sum in 64 bits. Also count the whole string: the suffix at 0 scores
+    <code>n</code>, while <code>z[0]</code> is left at 0.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'prefixScoreSum',

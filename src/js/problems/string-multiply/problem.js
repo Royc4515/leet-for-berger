@@ -104,6 +104,27 @@ export const problem = {
     'What should happen to leading zeros, and what if one input is "0"?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Do long multiplication into an array <code>pos</code> of <code>m + n</code> digits. The product
+    of digit <code>i</code> of <code>num1</code> and digit <code>j</code> of <code>num2</code> belongs
+    at position <code>i + j + 1</code>, counting from the most significant end, and carries move one
+    position left.</p>
+    <h4>Why it works</h4>
+    <p>Digit <code>i</code> carries weight 10^(m-1-i) and digit <code>j</code> weight 10^(n-1-j), so
+    their product has weight 10^(m+n-2-i-j), which is slot <code>i + j + 1</code> in an array of length
+    <code>m + n</code>. For each <code>i</code>, the inner loop runs right to left, keeps each slot a
+    single digit and pushes the overflow into the carry, and the final carry lands at slot
+    <code>i</code>. The product of an m-digit and an n-digit number has at most <code>m + n</code>
+    digits, so nothing is lost.</p>
+    <h4>Complexity</h4>
+    <p>O(m * n) time, one step per pair of digits. O(m + n) space for the result.</p>
+    <h4>Pitfall</h4>
+    <p>Leading zeros. The top slot can be <code>0</code> and must be dropped, and when either input is
+    <code>"0"</code> the product would be all zeros, so return <code>"0"</code> directly.</p>
+  `,
+
   signature: {
     name: 'multiply',
     params: [

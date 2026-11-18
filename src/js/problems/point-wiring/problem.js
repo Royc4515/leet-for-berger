@@ -135,6 +135,26 @@ export const problem = {
     'With every pair a possible wire, do you need to build the list of wires at all?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The cheapest wiring is a minimum spanning tree of the complete graph with Manhattan distances.
+    Grow it with Prim's algorithm, keeping for every outside point the cheapest wire into the tree, and
+    never build the edge list at all.</p>
+    <h4>Why it works</h4>
+    <p>At every step, the cheapest wire leaving the current tree belongs to some minimum spanning tree
+    (the cut property), so adding that point is safe. After it joins, an outside point's best wire can
+    only get cheaper through the new point, so one pass updates every <code>best</code> value. After
+    <code>n - 1</code> additions all points are connected.</p>
+    <h4>Complexity</h4>
+    <p>O(n^2) time: <code>n</code> steps, each scanning the outside points once. O(n) space. Kruskal must
+    sort about 5 * 10^5 edges, and a Prim that rescans tree edges to pick each point is O(n^3).</p>
+    <h4>Pitfall</h4>
+    <p>Use Manhattan distance <code>|x1 - x2| + |y1 - y2|</code>, not Euclidean. Chaining each point to its
+    nearest unvisited neighbor builds a path, not a minimum tree. A single point needs no wire, so the
+    answer is <code>0</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'minCostConnectPoints',

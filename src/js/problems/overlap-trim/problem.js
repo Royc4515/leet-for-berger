@@ -102,6 +102,26 @@ export const problem = {
     'After sorting by end time, what is the only thing you need to remember about the intervals you kept?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Deleting the fewest intervals is the same as keeping the most that do not overlap. Sort by
+    end, then keep every interval that starts at or after the end of the last one kept. The answer
+    is the total minus the number kept.</p>
+    <h4>Why it works</h4>
+    <p>Among intervals that could come first, the one that ends earliest leaves the most room for
+    everything after it. Any optimal selection can swap its first interval for that one and stay
+    valid, and the same argument repeats on what remains, so the greedy keeps as many as any
+    other choice.</p>
+    <h4>Complexity</h4>
+    <p>O(n log n) time for the sort, then one linear pass. O(n) space for the sorted copy. A DP over
+    all earlier compatible intervals is correct but O(n^2).</p>
+    <h4>Pitfall</h4>
+    <p>Sorting by start and keeping the first interval fails: one long early interval can block many
+    short ones. Also compare with <code>&gt;=</code>, since intervals that only touch at an
+    endpoint do not overlap.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'eraseOverlapIntervals',

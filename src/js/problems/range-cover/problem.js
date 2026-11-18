@@ -123,6 +123,27 @@ export const problem = {
     'Alternatively: if all values were merged into one sorted line with list labels, what window are you looking for?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Merge every value with the index of its list into one sorted sequence. The answer is the
+    narrowest window of that sequence holding at least one value from each of the <code>k</code>
+    lists, found with two pointers.</p>
+    <h4>Why it works</h4>
+    <p>An optimal range can always shrink until both ends are values that occur, so it is a window
+    of the merged order. For each right end <code>b</code>, shrink from the left while all
+    <code>k</code> lists are still covered; the last covered window is the narrowest that ends at
+    <code>b</code>. A count per list says when coverage breaks.</p>
+    <h4>Complexity</h4>
+    <p>O(N log N) time for the sort and O(N) for the window, O(N + k) space, with N up to 175,000.
+    Checking each candidate start against every list is O(N * k). A min-heap holding one pointer per
+    list reaches O(N log k).</p>
+    <h4>Pitfall</h4>
+    <p>Ties go to the smaller start. Since <code>b</code> only grows, a later window of equal width
+    starts later, so replace the answer only when the width is strictly smaller. Updating on
+    <code>&lt;=</code> returns the wrong range.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'smallestRange',

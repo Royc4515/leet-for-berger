@@ -117,6 +117,28 @@ export const problem = {
     'Once the fixed value is positive, can any later triplet still sum to zero?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Sort the array. Fix the smallest value <code>a[i]</code>, then look for pairs after it that sum
+    to <code>-a[i]</code> with two pointers <code>lo</code> and <code>hi</code> closing in from both
+    ends. Skip equal neighbours so each distinct triplet is reported once.</p>
+    <h4>Why it works</h4>
+    <p>In a sorted range, a sum that is too small can only grow by moving <code>lo</code> right, and one
+    that is too large can only shrink by moving <code>hi</code> left, so no valid pair is skipped. The
+    fixed value and the pair come out in ascending order and <code>i</code> increases, so the triplets
+    appear already sorted lexicographically. Once <code>a[i] &gt; 0</code>, all three values are
+    positive and the loop stops.</p>
+    <h4>Complexity</h4>
+    <p>O(n^2) time: n fixed values, each with a linear two-pointer scan; the O(n log n) sort is smaller.
+    O(n) space for the sorted copy, plus the output. Trying every triple is O(n^3), about 4.5 * 10^9 at
+    n = 3000.</p>
+    <h4>Pitfall</h4>
+    <p>Duplicates. Skipping repeats of the fixed value but not of <code>lo</code> and <code>hi</code>
+    after a match (or the reverse) prints the same triplet several times, for example on an array of
+    zeros. In JavaScript, <code>sort()</code> without a comparator orders numbers as strings.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'threeSum',

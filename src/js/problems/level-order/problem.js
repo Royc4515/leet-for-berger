@@ -118,6 +118,25 @@ export const problem = {
     'If you used recursion instead, what extra information would every call need to carry?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Breadth-first search, one level at a time. Start with the root as the current level, record
+    its values, then build the next level from the children, left before right, and repeat until a
+    level is empty.</p>
+    <h4>Why it works</h4>
+    <p>The queue (or current-level array) holds exactly the nodes of one depth when a round starts,
+    in left-to-right order. Appending each node's left child before its right child keeps the next
+    level in left-to-right order too, so each round produces one correct group.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: every node is enqueued and read once. O(w) extra space for the widest level w,
+    besides the output itself.</p>
+    <h4>Pitfall</h4>
+    <p>The level boundaries. A single queue without noting its size at the start of each round mixes
+    two depths into one group. Read the length first, or build the next level as a separate list.
+    An empty tree returns <code>[]</code>, not <code>[[]]</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it
   // (src/js/engine/codegen.js). Solutions live in ./solutions, one file per language.
   signature: {

@@ -169,6 +169,24 @@ export const problem = {
     'Which shape of graph makes a recursive version run out of stack, and how do you avoid recursion?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Give a start node color A; then all its neighbors must be B, theirs A, and so on. Spread colors
+    with BFS and stop as soon as an edge joins two nodes of the same color.</p>
+    <h4>Why it works</h4>
+    <p>Inside one connected piece, the first node's color forces every other color, so there is only
+    one candidate split (up to swapping). If BFS finds an edge with equal colors on both ends, that
+    forced split fails and no other split exists. That conflict happens exactly when the graph has a
+    cycle of odd length. Pieces do not interact, so each is colored on its own.</p>
+    <h4>Complexity</h4>
+    <p>O(V + E) time: each node is colored and queued once, and each adjacency entry is read once.
+    O(V) space for the colors and the queue.</p>
+    <h4>Pitfall</h4>
+    <p>The graph may be disconnected: start a BFS from every node that is still uncolored, not only
+    from node <code>0</code>. And avoid recursive DFS, since a path of 10^5 nodes overflows the stack.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'isBipartite',

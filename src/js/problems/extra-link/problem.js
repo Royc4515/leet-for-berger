@@ -158,6 +158,25 @@ export const problem = {
     'How can you tell quickly whether two nodes are already connected while links keep being added?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Add the links one by one, in input order, to a union-find. The first link whose two ends are
+    already connected closes the cycle, and that is the link to return.</p>
+    <h4>Why it works</h4>
+    <p>Only links on the single cycle can be removed while keeping the network connected. Before the
+    cycle closes, every link joins two separate pieces. The link that finds its ends already connected
+    must lie on the cycle, and since all the other cycle links were added before it, it is the cycle link
+    that appears last in <code>edges</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(n alpha(n)) time with union by size and path halving, practically linear. O(n) space.
+    Removing each link in turn and testing connectivity is O(n^2).</p>
+    <h4>Pitfall</h4>
+    <p>Links can form a chain of 10^5 nodes. A union-find without union by size, and with a recursive
+    <code>find</code>, builds a tree that deep and overflows the stack. Keep <code>find</code> iterative
+    and attach the smaller tree under the larger.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'findRedundantConnection',

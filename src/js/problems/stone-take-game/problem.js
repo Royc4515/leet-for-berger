@@ -86,6 +86,25 @@ export const problem = {
     'Can you explain why, from any other size, there is always a move to one of those losing sizes?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>You lose exactly when <code>n</code> is a multiple of 4. Return
+    <code>n % 4 != 0</code>.</p>
+    <h4>Why it works</h4>
+    <p>Call a pile size losing if the player to move loses with perfect play. A pile of 0 is losing,
+    since the previous player took the last stone. From a multiple of 4, every move of 1, 2 or 3
+    leaves a size that is not a multiple of 4. From any other size, taking <code>n % 4</code> stones
+    leaves a multiple of 4. By induction the losing sizes are exactly the multiples of 4: the winner
+    keeps handing them back until the pile is empty.</p>
+    <h4>Complexity</h4>
+    <p>O(1) time and space. A win/lose table over every pile size would be O(n) time, and with
+    <code>n</code> up to 2^31 - 1 that is far too slow and too large.</p>
+    <h4>Pitfall</h4>
+    <p>Writing the table or a recursion anyway. It discovers the pattern for small piles but cannot
+    run at 2^31 - 1 stones, so the pattern has to become the answer.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'canWinStones',

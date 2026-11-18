@@ -110,6 +110,29 @@ export const problem = {
     'Could you describe the answer as the largest salary that is smaller than the largest salary?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Sort the distinct salaries from high to low and skip the first one with <code>LIMIT 1 OFFSET
+    1</code>. Put that query inside a scalar subquery of an outer <code>SELECT</code> with no
+    <code>FROM</code>, aliased <code>SecondHighestSalary</code>, so the result is always one row.</p>
+    <h4>Why it works</h4>
+    <p><code>DISTINCT</code> collapses ties before the offset is applied, so when several people share
+    the top salary the query skips that value, not just one person. When there is no second value (an
+    empty table, or everyone earns the same) the inner query returns no rows, and a scalar subquery with
+    no rows evaluates to <code>NULL</code>. The outer <code>SELECT</code> produces exactly one row
+    either way.</p>
+    <h4>Complexity</h4>
+    <p>O(n log n) for n rows: one scan of <code>Employee</code> plus sorting the distinct salaries. O(d)
+    extra space for the d distinct values. An index on <code>salary</code> would let the database read
+    the two largest values without sorting.</p>
+    <h4>Pitfall</h4>
+    <p>Running the inner query on its own. It is correct whenever a second salary exists, but on a table
+    with one distinct salary it returns zero rows instead of one row holding <code>NULL</code>. Leaving
+    out <code>DISTINCT</code> is the other slip: a tied top salary is then reported as its own
+    runner-up.</p>
+  `,
+
   signature,
 
   visibleTests: visibleArgs.map((args) => ({ args, expected: reference(...args) })),

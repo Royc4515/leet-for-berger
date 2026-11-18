@@ -87,6 +87,27 @@ export const problem = {
     'The smallest game has one player. Can you build up from there with a loop instead of deep recursion?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Build the answer up from a circle of one player. If you know the winner's 0-based seat in a circle
+    of <code>size - 1</code>, the winner's seat in a circle of <code>size</code> is
+    <code>(pos + k) % size</code>. Loop <code>size</code> from 2 to <code>n</code> and add 1 at the end.</p>
+    <h4>Why it works</h4>
+    <p>In a circle of <code>size</code> players the first round removes seat <code>(k - 1) % size</code>,
+    and the next round starts on seat <code>k % size</code>. The survivors then play the same game with
+    <code>size - 1</code> players, only relabeled so that seat 0 of the smaller game is seat
+    <code>k % size</code> of the bigger one. Shifting the smaller game's winner forward by <code>k</code>
+    and wrapping undoes that relabeling.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time with one constant-time step per circle size, and O(1) space. Simulating with list
+    deletions costs O(n) per removal, O(n^2) in total.</p>
+    <h4>Pitfall</h4>
+    <p>Mixing 1-based and 0-based numbering: the recurrence works on 0-based seats, and the players are
+    numbered from <code>1</code>, so convert only once at the end. Writing the recurrence recursively also
+    needs 10^5 nested calls, which exceeds the default recursion limit in some languages.</p>
+  `,
+
   signature: {
     name: 'findTheWinner',
     params: [

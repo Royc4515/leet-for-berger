@@ -101,6 +101,27 @@ export const problem = {
     'Why is it safe to take the remainder after every addition instead of only at the end?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Each Fibonacci number needs only the two before it, so walk forward from <code>F(0)</code> and
+    <code>F(1)</code> in a loop, keeping just the last two values and reducing modulo
+    <code>1000000007</code> after every addition.</p>
+    <h4>Why it works</h4>
+    <p>After <code>i</code> iterations the pair <code>(a, b)</code> holds <code>F(i)</code> and
+    <code>F(i + 1)</code> modulo the prime, so after <code>n</code> iterations <code>a</code> is the
+    answer. Taking the remainder early is safe because <code>(x + y) mod m</code> equals
+    <code>((x mod m) + (y mod m)) mod m</code>, so the final remainder is unchanged.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time, one addition per step. O(1) space. The plain recursion makes about 1.6^n calls, and a
+    memoized recursion is O(n) time but n frames deep.</p>
+    <h4>Pitfall</h4>
+    <p>Memoized recursion looks correct but overflows the call stack at <code>n = 10^6</code>. Skipping the
+    reduction until the end fails differently: the values have hundreds of thousands of digits, which
+    overflows fixed-width integers and makes big-integer languages very slow. Also handle
+    <code>n = 0</code>, which should return <code>0</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'fibonacciMod',

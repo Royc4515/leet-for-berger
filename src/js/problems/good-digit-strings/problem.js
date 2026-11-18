@@ -108,6 +108,27 @@ export const problem = {
     'Two remainders below 1000000007 multiply to about 10^18. Which type holds that exactly?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Every position is chosen independently: the <code>ceil(n / 2)</code> even indices have 5 options
+    each and the <code>floor(n / 2)</code> odd indices have 4. The count is
+    <code>5^ceil(n/2) * 4^floor(n/2)</code>, computed with fast modular exponentiation.</p>
+    <h4>Why it works</h4>
+    <p>No rule links two positions, so by the product rule the number of strings is the product of the
+    per-position choices. Binary exponentiation squares the base and halves the exponent each step,
+    multiplying the result in whenever the current exponent bit is set, which rebuilds the power from
+    its binary digits. Reducing modulo 1 000 000 007 after every multiplication keeps the numbers small
+    without changing the final remainder.</p>
+    <h4>Complexity</h4>
+    <p>O(log n) time, about 50 squaring steps per power at n = 10^15, and O(1) space. Multiplying one
+    factor per position would take 10^15 steps.</p>
+    <h4>Pitfall</h4>
+    <p>Integer width. Two residues below the modulus multiply to about 10^18, which overflows 32 bits
+    and loses precision in a double, so the products need 64-bit integers (BigInt in JavaScript).
+    <code>n</code> itself is also 64-bit, so halving it with 32-bit bit operators truncates it.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'countGoodStrings',

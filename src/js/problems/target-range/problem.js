@@ -109,6 +109,29 @@ export const problem = {
     'What does your search return when every value is smaller than the target, or the array is empty?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Run two lower-bound binary searches: <code>l</code>, the first index whose value is
+    <code>&gt;= target</code>, and <code>r</code>, the first index whose value is
+    <code>&gt;= target + 1</code>. The copies of <code>target</code> occupy exactly
+    <code>[l, r)</code>.</p>
+    <h4>Why it works</h4>
+    <p>The array is sorted, so every value before <code>l</code> is smaller than <code>target</code> and
+    every value from <code>r</code> on is larger. Because the values are integers, nothing lies strictly
+    between <code>target</code> and <code>target + 1</code>, so the run in between is all copies. If
+    <code>l == r</code> the run is empty and the answer is <code>[-1, -1]</code>; otherwise it is
+    <code>[l, r - 1]</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(log n) time for two binary searches, O(1) space. Finding one copy and walking outwards is O(n)
+    when most of the array equals <code>target</code>.</p>
+    <h4>Pitfall</h4>
+    <p>A lower bound returns <code>nums.length</code> when every value is smaller, so check before reading
+    <code>nums[l]</code>; comparing <code>l</code> with <code>r</code> avoids the read altogether and also
+    covers the empty array. In fixed-width languages, <code>target + 1</code> stays in range here because
+    <code>target &lt;= 10^9</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'searchRange',

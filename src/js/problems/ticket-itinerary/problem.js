@@ -157,6 +157,25 @@ export const problem = {
     'With 30,000 tickets, how do you replace the recursion with a stack you manage yourself?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Using every ticket once is an Eulerian path from <code>"JFK"</code>. Hierholzer's algorithm with a
+    stack builds it: always take the smallest unused ticket out of the airport on top; when that airport
+    has none left, pop it onto the answer. Reverse the answer at the end.</p>
+    <h4>Why it works</h4>
+    <p>An airport with no unused tickets can only be the end of the remaining trip, so it is placed after
+    everything still on the stack: the trip is built back to front. A dead end reached too early is
+    popped first and so lands at the end, while the detours taken later are spliced in before it. Taking
+    the smallest destination at every choice makes the result the lexicographically smallest trip.</p>
+    <h4>Complexity</h4>
+    <p>O(E log E) time for sorting the tickets; the walk itself uses each ticket once. O(E) space.
+    Backtracking over choices also works but can explode.</p>
+    <h4>Pitfall</h4>
+    <p>A greedy walk without the "pop when stuck" rule can strand tickets. With up to 30,000 tickets, a
+    recursive version goes too deep, so manage the stack yourself. Duplicate tickets must each be used.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'findItinerary',

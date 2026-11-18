@@ -196,6 +196,28 @@ export const problem = {
     'Once every word below a trie node has been found, is there any reason to walk into that node again?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Put every word into one trie and run a single backtracking search from each cell that follows
+    the trie, so words with the same beginning share one walk. A path stops as soon as its letters
+    are no longer a prefix of any remaining word.</p>
+    <h4>Why it works</h4>
+    <p>Any path that spells a word follows that word's path in the trie, so the search tries every
+    useful path and no others. Marking the current cell as used, and restoring it on the way back,
+    enforces the use-once rule within a path. When a word is found its end mark is removed, so it is
+    reported once, and trie branches that become empty are deleted so they are never walked
+    again.</p>
+    <h4>Complexity</h4>
+    <p>Building the trie is O(total word length). The search is bounded by O(cells * 4 * 3^(L - 1))
+    for words of length L = 10, since after the first step a path has at most 3 new directions, and
+    pruning keeps real runs far lower. One board search per word would repeat that work up to 3 *
+    10^4 times.</p>
+    <h4>Pitfall</h4>
+    <p>Reporting a word each time a path spells it, and forgetting the order: the output lists
+    distinct words, sorted in dictionary order.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'findWords',

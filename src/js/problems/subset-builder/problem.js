@@ -120,6 +120,26 @@ export const problem = {
     'How does the default sort in your language order 10, 2 and -1?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Sort the values, then run a depth-first search where each call first records the current
+    partial subset and then tries extending it with each later value in turn, undoing the choice on
+    the way back.</p>
+    <h4>Why it works</h4>
+    <p>Each subset of the sorted values is reached by exactly one path, adding its elements in
+    increasing order, so nothing is missed or repeated. Recording a subset on entry, before any of
+    its extensions, puts every prefix ahead of the subsets that extend it, and trying smaller next
+    values first gives the required lexicographic order.</p>
+    <h4>Complexity</h4>
+    <p>O(2^n * n) time and space: there are 2^n subsets and copying each costs up to n. No method
+    can do better, because that is the size of the output.</p>
+    <h4>Pitfall</h4>
+    <p>Store a copy of the current subset, not the working list itself, or every entry ends up as
+    the same emptied list. And sort numerically first: the input is unsorted, and a string sort
+    would put <code>-1</code> and <code>10</code> in the wrong places.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'subsets',

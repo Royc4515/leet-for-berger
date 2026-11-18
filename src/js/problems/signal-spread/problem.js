@@ -190,6 +190,25 @@ export const problem = {
     'How do you find that node quickly when there are 10^5 of them?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Every node hears the signal at its shortest-path time from <code>k</code>, so the answer is the
+    largest of those times. Delays are non-negative, so Dijkstra with a min-heap computes them.</p>
+    <h4>Why it works</h4>
+    <p>When the heap pops the node with the smallest tentative time, no other route can reach it sooner:
+    any other route passes through a node with a time at least as large and only adds non-negative
+    delays. So that time is final. Stale heap entries, whose time is larger than the node's current
+    best, are skipped. A node that is never reached keeps an infinite time, and then the answer is
+    <code>-1</code>.</p>
+    <h4>Complexity</h4>
+    <p>O((V + E) log V) time: each link can push one heap entry. O(V + E) space. The array version of
+    Dijkstra is O(V^2) and Bellman-Ford O(V * E), both too slow at 10^5 nodes.</p>
+    <h4>Pitfall</h4>
+    <p>Plain BFS counts links, not time, and gives wrong arrival times. Return the maximum distance,
+    not the sum, and remember links of weight <code>0</code> and parallel links between the same pair.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'networkDelayTime',

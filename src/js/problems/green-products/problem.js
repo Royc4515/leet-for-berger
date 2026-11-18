@@ -110,6 +110,26 @@ export const problem = {
     'Are you returning only the column the task asks for, with that exact name?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>One table, one filter: select <code>product_id</code> from <code>Products</code> where
+    <code>low_fats = 'Y'</code> <code>AND</code> <code>recyclable = 'Y'</code>.</p>
+    <h4>Why it works</h4>
+    <p>The <code>WHERE</code> clause is evaluated on each row on its own, and <code>AND</code> keeps a
+    row only when both conditions hold, which is exactly "low fat and recyclable". Since
+    <code>product_id</code> is the primary key, each product appears at most once in the table, so the
+    result has no duplicates and needs no <code>DISTINCT</code>. The order does not matter, so no
+    <code>ORDER BY</code> either.</p>
+    <h4>Complexity</h4>
+    <p>O(n) for n rows: the engine scans the table once and tests two columns per row. Output size is
+    at most n.</p>
+    <h4>Pitfall</h4>
+    <p>Writing <code>OR</code> instead of <code>AND</code>, which returns products that pass only one of
+    the two checks. Selecting <code>*</code> instead of the single <code>product_id</code> column is the
+    other way to fail, because the result must have exactly that one column.</p>
+  `,
+
   signature,
 
   visibleTests: visibleArgs.map((args) => ({ args, expected: reference(...args) })),

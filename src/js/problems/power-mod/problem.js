@@ -107,6 +107,29 @@ export const problem = {
     'Why is reducing modulo 1000000007 after every multiplication allowed?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Binary exponentiation. Keep <code>base = x^(2^k) mod p</code>, squaring it each step, and multiply
+    it into <code>result</code> whenever bit <code>k</code> of <code>n</code> is set. Shift
+    <code>n</code> right until it reaches zero.</p>
+    <h4>Why it works</h4>
+    <p>Writing <code>n</code> in binary turns <code>x^n</code> into a product of the squares
+    <code>x^(2^k)</code> for the set bits. The loop visits each bit once, from lowest to highest, and
+    <code>base</code> always holds the square that bit stands for. Since
+    <code>(a * b) mod p = ((a mod p) * (b mod p)) mod p</code>, reducing after every multiplication
+    gives the same remainder. With <code>n = 0</code> the loop never runs and the result is
+    <code>1</code>, which matches the <code>0^0 = 1</code> convention.</p>
+    <h4>Complexity</h4>
+    <p>O(log n) time, about 60 iterations for n near 10^18, and O(1) space. A plain loop would need
+    10^18 multiplications.</p>
+    <h4>Pitfall</h4>
+    <p>Overflow and precision. Two residues near 10^9 multiply to about 10^18, which wraps in 32 bits
+    and is not exact in a double, so use 64-bit integers or BigInt. Reduce <code>x</code> modulo
+    <code>p</code> before the first square, and do not shift a 64-bit <code>n</code> with 32-bit
+    operators.</p>
+  `,
+
   signature: {
     name: 'powerMod',
     params: [

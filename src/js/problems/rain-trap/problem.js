@@ -109,6 +109,28 @@ export const problem = {
     'How large can the total get with 2 * 10^5 bars of height 10^5, and what type holds it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The water above bar <code>i</code> is <code>min(maxLeft, maxRight) - heights[i]</code>. Put one
+    pointer at each end and always move the one on the lower bar: on that side the water level is
+    already known, so add its water and step inward.</p>
+    <h4>Why it works</h4>
+    <p>The left pointer only moves past a bar when a bar at least as tall stands at <code>hi</code>,
+    which is still part of the right side. So whenever <code>lo</code> moves, the right side holds a
+    wall at least <code>leftMax</code> high, the true level <code>min(leftMax, maxRight)</code> is
+    <code>leftMax</code>, and the water at <code>lo</code> is final. The other case is the mirror image
+    with <code>rightMax</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: each bar is visited once. O(1) extra space. Precomputing left and right maximum arrays
+    is also O(n) but uses O(n) space; rescanning both sides for every bar is O(n^2), too slow for 2 *
+    10^5 bars.</p>
+    <h4>Pitfall</h4>
+    <p>Overflow. The total can reach about 2 * 10^10, past the 32-bit range, so the accumulator must be
+    a 64-bit integer (<code>long</code> in Java, <code>long long</code> in C and C++). The small
+    examples never show it.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'trapRain',

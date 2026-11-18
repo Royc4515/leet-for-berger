@@ -94,6 +94,27 @@ export const problem = {
     'Which structure lets you look at the most recent waiting day and remove it once it is answered?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Keep a stack of the indices of days still waiting for a warmer day. Each new day <code>i</code>
+    pops every waiting day <code>d</code> that is strictly cooler and records <code>i - d</code> as its
+    answer, then waits on the stack itself.</p>
+    <h4>Why it works</h4>
+    <p>The temperatures on the stack never increase from bottom to top, because a day warmer than the
+    top would have popped it. So when today pops a day, today is the first later day warmer than it, and
+    the answer is final. Days still on the stack at the end never see a warmer day and keep their
+    default <code>0</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: each day is pushed once and popped at most once. O(n) space for the stack in the worst
+    case, a run of falling temperatures. Scanning forward from every day is O(n^2), for example on 10^5
+    equal temperatures.</p>
+    <h4>Pitfall</h4>
+    <p>Popping on <code>&lt;=</code> instead of <code>&lt;</code>. An equal temperature is not warmer,
+    so a day with the same temperature must keep waiting, and its answer comes from a later, strictly
+    warmer day.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'dailyTemperatures',

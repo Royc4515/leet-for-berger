@@ -86,6 +86,27 @@ export const problem = {
     'A recursive version is elegant. What happens to it on a list of 100,000 nodes?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Walk the list once with two pointers, <code>prev</code> and the current node. For each node, save
+    its <code>next</code>, point it back at <code>prev</code>, and step both pointers forward. When the
+    walk ends, <code>prev</code> is the new head.</p>
+    <h4>Why it works</h4>
+    <p>At the start of each step, the nodes already passed form a reversed list headed by
+    <code>prev</code>, and the current node starts the untouched rest. Turning one link around moves
+    exactly one node from the rest to the reversed part. The first node ends up pointing at
+    <code>null</code>, which makes it the new tail, and an empty list returns <code>null</code>
+    immediately.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time, each node is visited once. O(1) extra space, only three pointers. A recursive version is
+    also O(n) time but uses O(n) stack.</p>
+    <h4>Pitfall</h4>
+    <p>Overwriting <code>head.next</code> before saving it loses the rest of the list. The recursive
+    version is the other trap: 10^5 nested calls overflow the default call stack in several languages,
+    so keep it iterative.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it
   // (src/js/engine/codegen.js). Solutions live in ./solutions, one file per language.
   signature: {

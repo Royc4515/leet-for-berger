@@ -118,6 +118,28 @@ export const problem = {
     'Try your comparisons when the target equals nums[lo], nums[mid] or nums[hi]. Does each case still land in the right half?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Cut the rotated array at <code>mid</code>: at least one of the two halves is sorted. Find it by
+    comparing <code>nums[0]</code> with <code>nums[mid]</code>, check whether <code>target</code> falls in
+    that sorted half's value range, and keep the half that can contain it.</p>
+    <h4>Why it works</h4>
+    <p>If <code>nums[0] &lt;= nums[mid]</code>, no rotation point lies in <code>[0, mid]</code>, so that
+    prefix is sorted and <code>nums[0] &lt;= target &lt;= nums[mid]</code> decides exactly whether the
+    target is there. Otherwise the rotation point is in the prefix, so <code>[mid, n - 1]</code> is sorted
+    and <code>nums[mid] &lt; target &lt;= nums[n - 1]</code> decides whether to go right. Each step keeps
+    any copy of the target in range, and with distinct values the loop ends on the only possible index,
+    checked once at the end.</p>
+    <h4>Complexity</h4>
+    <p>O(log n) time, the range halves each step. O(1) space. A linear scan is O(n).</p>
+    <h4>Pitfall</h4>
+    <p>The boundary comparisons. The first test must be <code>&lt;=</code> so that <code>mid == 0</code>
+    counts as sorted, and the range checks must include the endpoints that belong to each half. A slip
+    there misses targets equal to <code>nums[0]</code>, the largest value, or the last value. Also test an
+    array rotated by zero positions.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'search',

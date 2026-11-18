@@ -237,6 +237,27 @@ export const problem = {
     'Building the string by repeated concatenation copies it again and again. What builds it in one pass?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Serialize with a pre-order walk: write the node's value, then its left subtree, then its right
+    subtree, and write <code>#</code> for every missing child. Deserialize with the same recursion,
+    reading one token per call.</p>
+    <h4>Why it works</h4>
+    <p>Because every missing child is written as <code>#</code>, the string pins down the shape: a
+    value token always starts a subtree whose left part follows at once, and a <code>#</code> ends a
+    branch. The parser consumes tokens in exactly the order the serializer produced them, so it
+    rebuilds each subtree completely before moving to the next.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time per call for a tree of n nodes, since there are 2n + 1 tokens. O(n) space for the
+    tokens and O(h) for the recursion, with h at most 500. Building the string by repeated
+    concatenation can turn this quadratic, so join once at the end.</p>
+    <h4>Pitfall</h4>
+    <p>Keep the token position local to each <code>deserialize</code> call. Stored in a field and
+    never reset, it makes the second call on the same codec start reading at a stale position. The
+    empty tree is the single token <code>#</code>.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

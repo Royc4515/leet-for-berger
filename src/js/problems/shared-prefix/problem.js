@@ -106,6 +106,28 @@ export const problem = {
     'If you instead tried every possible prefix length and compared whole prefixes, how much work would two words of 500,000 letters cost?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Scan column by column: compare position <code>j</code> of the first word with position
+    <code>j</code> of every other word, and stop at the first mismatch or at the first word that
+    ends there. The columns before that are the answer.</p>
+    <h4>Why it works</h4>
+    <p>A common prefix of length <code>j + 1</code> exists only if every word has a character at
+    <code>j</code> and they all agree. The first column where that fails bounds the answer, and
+    every column before it agreed. The Python solution uses an equivalent shortcut: the smallest and
+    largest words in sorted order first differ exactly where the whole list stops agreeing, so it
+    compares only those two.</p>
+    <h4>Complexity</h4>
+    <p>O(total length) time, since each character is read at most once, and O(1) extra space besides
+    the result. Trying every prefix length and comparing whole prefixes is quadratic in word
+    length.</p>
+    <h4>Pitfall</h4>
+    <p>Words can be empty or shorter than the first word. Reading past the end of a shorter word
+    must count as a mismatch, not crash or compare garbage. An empty word anywhere makes the answer
+    <code>""</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'longestCommonPrefix',

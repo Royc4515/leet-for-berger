@@ -108,6 +108,24 @@ export const problem = {
     'If you store a number before checking for its partner, what goes wrong when the partner is the same position?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>For each number <code>x</code>, its partner must be exactly <code>target - x</code>. Instead of
+    searching for that partner, remember every number already passed in a hash map from value to index,
+    and ask the map in O(1).</p>
+    <h4>Why it works</h4>
+    <p>Walk left to right. When position <code>j</code> holds the second number of the pair, the first one
+    sits at some <code>i &lt; j</code>, so it is already in the map. The first time a lookup succeeds,
+    the pair is found, with the smaller index first.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: one pass with constant-time lookups. O(n) space for the map. Checking every pair would be
+    O(n^2), about 5 * 10^9 pairs at n = 10^5.</p>
+    <h4>Pitfall</h4>
+    <p>Look up the partner <em>before</em> storing the current number. Storing first lets
+    <code>x + x == target</code> pair a position with itself.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'pairSum',

@@ -171,6 +171,27 @@ export const problem = {
     'Does it matter whether you search for the word forwards or backwards?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Backtracking: from every cell, try to match the word letter by letter, stepping up, down, left
+    or right. Mark a cell while it is on the current path and unmark it on the way back. Two cheap
+    checks first: fail at once if the grid lacks enough of some letter, and search from whichever
+    end of the word is rarer in the grid.</p>
+    <h4>Why it works</h4>
+    <p>The search explores every simple path that matches a prefix of the word, so it finds a match
+    whenever one exists. The mark stops a path from reusing a cell. Reversing the word is safe
+    because a path read backwards is still a path, and starting from a rare letter cuts most branches
+    in the first step.</p>
+    <h4>Complexity</h4>
+    <p>O(rows * cols * 3^L) time in the worst case for a word of length L, since after the first step
+    each cell has at most three new neighbours. O(L) space for the recursion, plus a copy of the grid. Without the prunes, a
+    board of one letter can take millions of paths.</p>
+    <h4>Pitfall</h4>
+    <p>Restore the cell on every way out of the call, including after a failed search. A cell left
+    marked blocks later starting points and gives false negatives.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'exist',

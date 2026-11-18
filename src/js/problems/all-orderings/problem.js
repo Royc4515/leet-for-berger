@@ -118,6 +118,26 @@ export const problem = {
     'If the values are sorted and each position tries them in ascending order, in what order do the finished permutations appear?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Fill the positions left to right. At each position, try every value not used yet, mark it as
+    used, recurse to the next position, then release it. Sort the values first and try them in
+    ascending order.</p>
+    <h4>Why it works</h4>
+    <p>A permutation is a choice of value for position 0, then one of the remaining values for
+    position 1, and so on, so the search tree has exactly one leaf per ordering. With the values
+    tried in ascending order, all orderings that begin with a smaller value are finished before any
+    that begin with a larger one, which is lexicographic order.</p>
+    <h4>Complexity</h4>
+    <p>O(n! * n) time and space: n! orderings, each copied in O(n). With n at most 8 that is
+    40,320 orderings, and no method can avoid producing them all.</p>
+    <h4>Pitfall</h4>
+    <p>Undo the mark after the recursive call returns. Forgetting to release a value leaves it
+    blocked for every later branch and silently drops orderings. Also copy the current ordering when
+    you record it, instead of storing the array you keep overwriting.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'permute',

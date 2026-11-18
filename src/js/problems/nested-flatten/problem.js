@@ -177,6 +177,28 @@ export const problem = {
     'If hasNext moves your position forward, what must stay true when it is called twice in a row?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Walk the nested list depth first with an explicit stack of frames, each one a list and the
+    index of its next unread item. <code>hasNext</code> moves the stack until its top points at an
+    integer; <code>next</code> reads that integer and steps past it.</p>
+    <h4>Why it works</h4>
+    <p>The stack holds exactly the position a recursive walk would keep on its call stack, so
+    integers come out left to right. <code>hasNext</code> only descends into sublists and pops
+    finished frames, which skip no integers, so calling it twice in a row leaves the same integer on
+    top and consumes nothing. Empty lists are pushed and popped without producing anything.</p>
+    <h4>Complexity</h4>
+    <p>O(1) amortized per call: over the whole run each list item is stepped past once and each list
+    is pushed and popped once. O(depth) space, against O(total integers) for flattening everything
+    up front.</p>
+    <h4>Pitfall</h4>
+    <p>Answering <code>hasNext</code> with "the stack is not empty" fails on trailing empty lists
+    such as <code>[1, [[]]]</code>: frames remain but no integer does. <code>hasNext</code> must
+    settle on a real integer, and <code>next</code> should call it first instead of assuming the top
+    is ready.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

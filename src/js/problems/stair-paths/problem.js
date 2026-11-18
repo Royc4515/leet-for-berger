@@ -69,6 +69,25 @@ export const problem = {
     'Two counts below 10^9 + 7 add up to about 2 * 10^9. Does that still fit in a 32-bit int, and when should you reduce?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The last move onto step <code>n</code> is either 1 or 2 steps, so
+    <code>ways(n) = ways(n - 1) + ways(n - 2)</code>, the Fibonacci recurrence. Compute it bottom up
+    with two variables, reducing modulo <code>1000000007</code> at every step.</p>
+    <h4>Why it works</h4>
+    <p>Every climb ends with exactly one of the two moves, and removing that move leaves a climb of
+    <code>n - 1</code> or <code>n - 2</code> steps. The two groups never overlap, so their counts
+    add. Starting from one way to stand at step 0 builds every later count in order, and reducing
+    each sum keeps the result correct modulo the prime.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time and O(1) space: one addition per step, only the last two counts kept. Plain
+    recursion is exponential, and memoized recursion needs 10^6 stack frames here.</p>
+    <h4>Pitfall</h4>
+    <p>Reduce inside the loop, not at the end. The counts grow exponentially, so they overflow 64-bit
+    integers (and lose precision in JavaScript past 2^53) within about 90 steps.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'climbStairs',

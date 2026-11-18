@@ -122,6 +122,27 @@ export const problem = {
     'In which order must you clear the cells so no note is erased before it is read?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Use the first row and the first column as markers. For every zero at <code>(i, j)</code> with
+    <code>i, j &gt;= 1</code>, set <code>matrix[i][0]</code> and <code>matrix[0][j]</code> to
+    <code>0</code>. Two flags, taken before any marking, record whether the first row and the first
+    column held a zero of their own.</p>
+    <h4>Why it works</h4>
+    <p>Marks only go into row 0 and column 0, so the scan of the inner cells sees only original values
+    and no zero spreads further than it should. A second pass clears each inner cell whose row marker or
+    column marker is <code>0</code>. Only then are the first row and column cleared, according to the
+    two flags, because clearing them earlier would erase marks still waiting to be read.</p>
+    <h4>Complexity</h4>
+    <p>O(m * n) time: a constant number of passes over the grid. O(1) extra space. Keeping sets of rows
+    and columns to clear is simpler and uses O(m + n) space.</p>
+    <h4>Pitfall</h4>
+    <p>Clearing a row and column the moment a zero is found. The scan then meets those new zeros and
+    clears even more rows and columns. In the marker version, the same cascade happens if row 0 or
+    column 0 is cleared before the inner cells have read their markers.</p>
+  `,
+
   signature: {
     name: 'setZeroes',
     params: [{ name: 'matrix', type: 'int[][]' }],

@@ -138,6 +138,27 @@ export const problem = {
     'Could the output array itself hold the left products, so the right side needs only one running variable?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p><code>answer[i]</code> is the product of everything left of <code>i</code> times the product of
+    everything right of <code>i</code>. A left-to-right sweep writes the left products into
+    <code>answer</code>, and a right-to-left sweep multiplies in a running right product.</p>
+    <h4>Why it works</h4>
+    <p>After the first sweep, <code>answer[i]</code> holds <code>nums[0] * ... * nums[i - 1]</code>, or
+    <code>1</code> for <code>i = 0</code>. During the second sweep the running variable equals
+    <code>nums[i + 1] * ... * nums[n - 1]</code> when it reaches position <code>i</code>. Their product
+    leaves out exactly <code>nums[i]</code>, with no division.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: two passes. O(1) extra space besides the output array, since the right side needs only
+    one variable. Recomputing each product from scratch is O(n^2).</p>
+    <h4>Pitfall</h4>
+    <p>Dividing the total product by <code>nums[i]</code>. With one zero in the array that gives a
+    division by zero at its own position, and with two zeros the total tells you nothing. In JavaScript
+    a product of zero and a negative number is <code>-0</code>; the shipped solution normalizes it to
+    <code>0</code>.</p>
+  `,
+
   signature: {
     name: 'productExceptSelf',
     params: [{ name: 'nums', type: 'int[]' }],

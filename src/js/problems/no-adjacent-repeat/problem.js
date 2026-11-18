@@ -134,6 +134,27 @@ export const problem = {
     'Can you decide each position by looking only at 26 counts, without rescanning the remaining string?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Build the answer left to right from the 26 letter counts. With <code>m</code> letters still
+    to place, a letter with <code>2 * count &gt; m</code> must go next. Otherwise write the smallest
+    letter that differs from the previous one.</p>
+    <h4>Why it works</h4>
+    <p>A set of letters can be arranged with no equal neighbours exactly when no letter fills more
+    than <code>ceil(m / 2)</code> of it. A letter above half of what remains has to take this
+    position or it can never be separated later. When no letter is that heavy, the smallest letter
+    that differs from the previous one keeps the rest arrangeable, and choosing the smallest safe
+    letter at each position gives the smallest string.</p>
+    <h4>Complexity</h4>
+    <p>O(26 * n) time, since each position looks at 26 counts, and O(26) extra space. Rechecking the
+    remaining string at every position would be O(n^2).</p>
+    <h4>Pitfall</h4>
+    <p>Always taking the most frequent letter (the usual heap approach) produces a valid string but
+    not the lexicographically smallest one. And the impossibility test is <code>count &gt; (n + 1) /
+    2</code>, not <code>n / 2</code>: <code>"aab"</code> becomes <code>"aba"</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'reorganizeString',

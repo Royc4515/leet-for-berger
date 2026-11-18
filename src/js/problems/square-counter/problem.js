@@ -196,6 +196,29 @@ export const problem = {
     'If each of the three corners was added 2000 times, how large is the answer?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Store a multiplicity for every grid point and, per column, the list of distinct
+    <code>y</code> values seen. For a query <code>(x, y)</code>, walk the stored points
+    <code>(x, y2)</code> in the same column. Each one fixes the side <code>d = y2 - y</code>, and the
+    square sits either at <code>x - d</code> or at <code>x + d</code>.</p>
+    <h4>Why it works</h4>
+    <p>Any axis-aligned square with the query as a corner has exactly one other corner on the
+    query's vertical line, so enumerating that corner finds every square once. Given it, the two
+    remaining corners are fully determined for each side, left or right. Copies are distinct
+    choices, so each square contributes the product of its three corners' multiplicities, which is
+    zero when a corner is missing. Skipping <code>d = 0</code> rules out squares with no area.</p>
+    <h4>Complexity</h4>
+    <p>O(1) per <code>add</code>. O(c) per <code>count</code>, for c distinct points in the query's
+    column. O(1001^2) space for the count grid. Checking every stored point, or every triple, is much
+    slower at 5 * 10^4 calls.</p>
+    <h4>Pitfall</h4>
+    <p>The count overflows 32 bits: three multiplicities in the thousands multiply to about
+    10^12, so use a 64-bit integer. Also check both sides and bounds-check <code>x - d</code> and
+    <code>x + d</code>, since <code>d</code> can be negative.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

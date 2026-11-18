@@ -98,6 +98,28 @@ export const problem = {
     'What value marks an amount as unreachable without causing overflow when you add 1 to it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Let <code>f[a]</code> be the fewest coins that pay exactly <code>a</code>. The best way to
+    pay <code>a</code> ends with some coin <code>c</code> after paying <code>a - c</code> as cheaply
+    as possible, so <code>f[a] = 1 + min(f[a - c])</code> over the coins. Fill the table from 0 up
+    to <code>amount</code>.</p>
+    <h4>Why it works</h4>
+    <p>Every smaller amount is settled before it is needed. Taking the largest coin that fits is not
+    safe: with <code>[1, 3, 4]</code> and 6 it uses three coins where <code>3 + 3</code> uses two,
+    so every possible last coin has to be tried. The shipped solution loops over coins outside and
+    amounts inside; each pass lets one more denomination be used any number of times, and the final
+    table is the same.</p>
+    <h4>Complexity</h4>
+    <p>O(amount * coins.length) time and O(amount) space, one entry per amount. Trying all
+    combinations of coins grows exponentially.</p>
+    <h4>Pitfall</h4>
+    <p>Marking unreachable amounts with the largest integer and then adding 1 overflows in
+    fixed-width languages. Use <code>amount + 1</code> as the sentinel instead: no real answer needs
+    that many coins, because every coin is worth at least 1.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'coinChange',

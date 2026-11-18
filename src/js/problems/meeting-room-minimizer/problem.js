@@ -111,6 +111,26 @@ export const problem = {
     'When one meeting ends at the exact time another starts, which event should you handle first?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The answer is the largest number of meetings running at the same moment. Which meeting a start or
+    an end belongs to does not matter, so sort all start times and all end times separately and sweep
+    through the starts with a pointer into the ends.</p>
+    <h4>Why it works</h4>
+    <p><code>ends[e]</code> is always the earliest time a busy room frees up. For each start
+    <code>s</code> in order: if <code>s &lt; ends[e]</code>, every room in use is still busy, so open a new
+    one. Otherwise a meeting has already left, so reuse its room and advance <code>e</code>. The room count
+    only grows when the overlap reaches a new peak, which is exactly the minimum needed.</p>
+    <h4>Complexity</h4>
+    <p>O(n log n) time for the two sorts; the sweep itself is O(n). O(n) space for the sorted copies.
+    Counting overlaps against every other meeting would be O(n^2).</p>
+    <h4>Pitfall</h4>
+    <p>Meetings are half-open. A meeting ending at <code>t</code> frees its room for one starting at
+    <code>t</code>, so the test must be a strict <code>s &lt; ends[e]</code>; using <code>&lt;=</code>
+    counts back-to-back meetings as overlapping. In JavaScript, also sort numerically, not as strings.</p>
+  `,
+
   signature: {
     name: 'minMeetingRooms',
     params: [{ name: 'intervals', type: 'int[][]' }],

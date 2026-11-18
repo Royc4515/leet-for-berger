@@ -106,6 +106,27 @@ export const problem = {
     'Could you turn each list into an integer, add, and split it back into digits? How many digits can a number here have?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Do grade-school addition directly on the lists. The heads are the ones digits, so walk both lists
+    together, add the two digits plus the carry, write <code>sum % 10</code> to a new node and carry
+    <code>sum / 10</code>, rounded down, to the next position.</p>
+    <h4>Why it works</h4>
+    <p>Adding column by column from the least significant digit is exactly how addition works, and the
+    reversed order means the lists already run in that direction. A missing digit in the shorter list
+    counts as <code>0</code>, and the loop keeps going while either list has nodes or the carry is
+    nonzero, so no column is skipped. A placeholder head node avoids special-casing the first output
+    node.</p>
+    <h4>Complexity</h4>
+    <p>O(max(m, n)) time, one step per output digit. O(max(m, n)) space for the result list itself, O(1)
+    besides it.</p>
+    <h4>Pitfall</h4>
+    <p>Converting each list to a built-in integer, adding, and splitting back fails here: the numbers have
+    up to 100,000 digits, which overflows fixed-width types and is slow even with big integers. Also do not
+    drop the final carry: <code>999 + 1</code> needs one more node than either input.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'addTwoNumbers',

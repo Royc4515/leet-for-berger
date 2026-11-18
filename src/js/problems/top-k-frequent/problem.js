@@ -120,6 +120,26 @@ export const problem = {
     'Counts are between 1 and n. Could a bucket per count avoid sorting altogether?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Count every value once with a hash map, then rank the distinct values by count descending,
+    breaking ties by the smaller value, and keep the first <code>k</code>.</p>
+    <h4>Why it works</h4>
+    <p>After the counting pass, the answer depends only on the (value, count) pairs, not on where the
+    values appeared. Sorting by the key <code>(-count, value)</code> puts the values in exactly the
+    order the statement asks for, including who makes the cut when counts tie at position
+    <code>k</code>, so the prefix of length <code>k</code> is the answer.</p>
+    <h4>Complexity</h4>
+    <p>O(n + d log d) time for n elements and d distinct values: one counting pass plus a sort of the
+    distinct values. O(d) space for the counts. Re-scanning the array to count each candidate would be
+    O(n * d), quadratic when most values are distinct.</p>
+    <h4>Pitfall</h4>
+    <p>Ignoring the tie rule. A heap or bucket approach that returns tied values in arbitrary order
+    gives the right set but the wrong list, and can even pick the wrong value at the cut-off. The
+    smaller value must win every tie.</p>
+  `,
+
   signature: {
     name: 'topKFrequent',
     params: [

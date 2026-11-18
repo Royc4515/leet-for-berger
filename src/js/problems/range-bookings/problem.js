@@ -113,6 +113,27 @@ export const problem = {
     'Where exactly should a booking stop counting: at flight last, or just after it? What array size does that need?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Use a difference array. For each booking, add <code>seats</code> at index <code>first - 1</code>
+    and subtract it at index <code>last</code>, the first 0-based slot after the range. A running sum
+    over the array then gives every flight's total.</p>
+    <h4>Why it works</h4>
+    <p>The running sum at index <code>j</code> includes the plus mark of every booking that started on
+    or before flight <code>j + 1</code> and the minus mark of every booking that ended before it. What
+    remains is exactly the seats of the bookings covering that flight. The array has <code>n + 1</code>
+    slots, so a booking that ends on flight <code>n</code> puts its minus mark in a slot that is never
+    read.</p>
+    <h4>Complexity</h4>
+    <p>O(n + b) time for b bookings: constant work per booking, then one pass over the flights. O(n)
+    space. Adding each booking flight by flight is O(n * b), about 10^10 at the limits.</p>
+    <h4>Pitfall</h4>
+    <p>Mixing 1-based flight numbers with 0-based indexes. Putting the minus mark at index <code>last -
+    1</code> ends every booking one flight early, and sizing the array <code>n</code> instead of <code>n
+    + 1</code> runs past the end when a booking ends on the last flight.</p>
+  `,
+
   signature: {
     name: 'corpFlightBookings',
     params: [

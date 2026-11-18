@@ -119,6 +119,27 @@ export const problem = {
     'What should your code do with a list that is empty from the start?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The next node of the result is always the smallest of the <code>k</code> current heads. A
+    min-heap of those heads hands it over in O(log k); after taking a node, push its successor.
+    The JavaScript solution reaches the same bound by merging the lists in pairs, round after
+    round.</p>
+    <h4>Why it works</h4>
+    <p>Each list is sorted, so its smallest remaining node is its head, and the smallest node overall
+    is the smallest head. The heap always holds exactly one head per non-empty list. In the pairwise
+    version each round is a set of ordinary two-list merges and halves the number of lists.</p>
+    <h4>Complexity</h4>
+    <p>O(N log k) time for N nodes: each node enters and leaves a heap of size at most k, or takes
+    part in log k merge rounds. O(k) extra space for the heap. Folding the lists one by one into a
+    growing result is O(N * k).</p>
+    <h4>Pitfall</h4>
+    <p>Empty lists inside <code>lists</code> are <code>null</code> heads and must never enter the
+    heap, and an empty <code>lists</code> returns an empty list. In Python, add the list index to
+    each heap entry so equal values never fall through to comparing nodes.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'mergeKLists',

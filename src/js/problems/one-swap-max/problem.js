@@ -72,6 +72,26 @@ export const problem = {
     'If the best digit to bring forward appears several times, does it matter which copy you take? Try 1993.',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Find the leftmost digit that has a strictly larger digit somewhere to its right, and swap it
+    with the largest digit to its right. Precompute, for each position, where the largest digit
+    of the suffix sits, taking the rightmost copy on ties.</p>
+    <h4>Why it works</h4>
+    <p>The leftmost position you can raise matters more than every position after it, so improve
+    that one and raise it as high as possible. The digit sent back lands on a later position, and
+    sending it to the rightmost possible place puts the smaller digit where it hurts least. If no
+    digit has a larger one after it, the digits are non-increasing and no swap helps.</p>
+    <h4>Complexity</h4>
+    <p>O(d) time and space for d digits, at most 9 here: one right-to-left pass for the suffix
+    maxima and one left-to-right pass to find the swap. Trying all pairs is O(d^2), fine too, but
+    the greedy is the point.</p>
+    <h4>Pitfall</h4>
+    <p>Ties. With <code>1993</code> the 1 must swap with the last 9, giving <code>9913</code>;
+    picking the first 9 gives <code>9193</code>. Keep the later index when digits are equal.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'maximumSwap',

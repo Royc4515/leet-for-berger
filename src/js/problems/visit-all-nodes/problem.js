@@ -140,6 +140,27 @@ export const problem = {
     'You may start anywhere: how can one BFS try every starting node at once?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Search over states <code>(node, set of nodes seen so far)</code>, with the set stored as a bitmask.
+    Start a breadth-first search from all <code>n</code> single-node states at once and stop at the first
+    state whose mask contains every node.</p>
+    <h4>Why it works</h4>
+    <p>A walk may revisit nodes, so the node alone does not describe where you are in the search: the
+    same node with different seen sets leads to different futures. Every edge costs 1, so BFS reaches each
+    state by its shortest walk, and seeding all starting nodes at distance <code>0</code> covers the free
+    choice of start. The first full-mask state popped is therefore the shortest walk overall.</p>
+    <h4>Complexity</h4>
+    <p>There are <code>n * 2^n</code> states and each scans up to <code>n</code> neighbors, so
+    O(2^n * n^2) time and O(n * 2^n) space for the visited table. Trying every order of the nodes would be
+    12 factorial, about 4.8 * 10^8 orders.</p>
+    <h4>Pitfall</h4>
+    <p>Marking nodes, rather than (node, mask) pairs, as visited forbids the revisits a walk often needs,
+    so the search misses valid answers. Also do not assume the answer is <code>n - 1</code>: that only
+    holds when a path through every node exists, and a star graph already needs more.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'shortestPathLength',

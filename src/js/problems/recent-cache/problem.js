@@ -202,6 +202,26 @@ export const problem = {
     'Placeholder head and tail nodes remove most of the edge cases. Which ones?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Keep entries in a doubly linked list ordered by last use, newest at one end, and a hash map
+    from key to its list node. A use moves the node to the newest end; eviction removes the node
+    at the oldest end.</p>
+    <h4>Why it works</h4>
+    <p>The map finds a key's node in O(1), and holding the node lets you unlink it in O(1) because
+    it knows both neighbours. Placeholder head and tail nodes mean nothing is ever unlinked from an
+    empty edge. The node stores its key, so evicting it can also delete the map entry. In Python an
+    <code>OrderedDict</code> is exactly this structure.</p>
+    <h4>Complexity</h4>
+    <p>O(1) average time per <code>get</code> and <code>put</code>, O(capacity) space. Scanning for
+    the oldest entry instead costs O(capacity) per call, about 10^10 steps at the limits.</p>
+    <h4>Pitfall</h4>
+    <p><code>put</code> on a key that is already present must replace the value and refresh its
+    recency without counting as a new entry. Treating it as an insert evicts a key too early, and
+    forgetting the refresh evicts the wrong one. A successful <code>get</code> is a use too.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

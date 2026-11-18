@@ -206,6 +206,25 @@ export const problem = {
     'Two values near 2^31 - 1 are both valid inputs. What type must their sum have?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Split the numbers into a lower half in a max-heap and an upper half in a min-heap, with the
+    lower half the same size or one larger. The median then sits on top of the heaps.</p>
+    <h4>Why it works</h4>
+    <p>Each new number goes into the lower half, whose largest element then moves to the upper half,
+    so every lower value stays <code>&lt;=</code> every upper value. If the upper half gets bigger,
+    its smallest moves back. With an odd count the top of the lower half is the middle value, so
+    return twice it; with an even count return the sum of the two tops.</p>
+    <h4>Complexity</h4>
+    <p>O(log n) per <code>addNum</code>, a constant number of heap operations, and O(1) per
+    <code>findMedian</code>; O(n) space. Sorting on every query would cost O(n log n).</p>
+    <h4>Pitfall</h4>
+    <p>Two values near <code>2^31 - 1</code> sum past 32 bits, so compute twice the median in 64
+    bits. In Python, <code>heapq</code> only has min-heaps, so the lower half stores negated values;
+    forgetting to negate back flips the sign.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

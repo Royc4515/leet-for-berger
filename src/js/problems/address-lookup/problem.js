@@ -149,6 +149,28 @@ export const problem = {
     'If a person has no address, what values should city and state hold?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Start from <code>Person</code> and <code>LEFT JOIN</code> <code>Address</code> on
+    <code>personId</code>, then select <code>firstName</code>, <code>lastName</code>,
+    <code>city</code> and <code>state</code> in that order.</p>
+    <h4>Why it works</h4>
+    <p>A left join keeps every row of the left table. A person with matching addresses produces one
+    row per match, and a person with none produces one row with <code>NULL</code> in the
+    <code>Address</code> columns, which is exactly what the statement asks for. Addresses whose
+    <code>personId</code> is not in <code>Person</code> have no left row to attach to, so they never
+    appear.</p>
+    <h4>Complexity</h4>
+    <p>O(n + m) for n people and m addresses with a hash join or an index on
+    <code>Address.personId</code>; without either, a nested-loop join can cost O(n * m). The output has
+    at most n + m rows.</p>
+    <h4>Pitfall</h4>
+    <p>Using a plain <code>JOIN</code>: it is an inner join and silently drops every person without an
+    address. Joining on <code>addressId</code> instead of <code>personId</code> is the other common slip,
+    since both tables have an id column that looks plausible.</p>
+  `,
+
   signature,
 
   visibleTests: visibleArgs.map((args) => ({ args, expected: reference(...args) })),

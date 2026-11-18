@@ -114,6 +114,24 @@ export const problem = {
     'Does the order in which you combine values with XOR change the result?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>XOR every value together. Each value that appears twice cancels itself out, and the lone value is
+    all that remains.</p>
+    <h4>Why it works</h4>
+    <p>XOR has three properties that matter here: <code>x ^ x = 0</code>, <code>x ^ 0 = x</code>, and it is
+    commutative and associative. So the order of the array is irrelevant: you can imagine regrouping the
+    fold so each pair sits next to the other, every pair becomes <code>0</code>, and the result is
+    <code>0 ^ lone = lone</code>. Negative values work too, since XOR acts on their bit patterns the same way.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time, one pass. O(1) extra space, a single accumulator. A set or a counter is also O(n) time
+    but needs O(n) memory, which the statement asks you to avoid.</p>
+    <h4>Pitfall</h4>
+    <p>Starting the accumulator at the first element and then also folding the whole array from index 0
+    counts that element twice and cancels it. Start from <code>0</code>, or skip the first element.</p>
+  `,
+
   signature: {
     name: 'singleNumber',
     params: [{ name: 'nums', type: 'int[]' }],

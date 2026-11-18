@@ -170,6 +170,25 @@ export const problem = {
     'How would your design cope with 100,000 hits inside a single window?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Timestamps never decrease, so appending every hit keeps the list sorted.
+    <code>getHits(t)</code> binary searches for the first hit at or after <code>t - 299</code> and
+    counts everything from there to the end.</p>
+    <h4>Why it works</h4>
+    <p>The window is <code>t - 300 &lt; x &lt;= t</code>. No stored hit is later than the current
+    call, so only the lower bound matters, and in a sorted list the hits that pass it form a suffix.
+    Several hits at one timestamp are simply repeated entries.</p>
+    <h4>Complexity</h4>
+    <p>O(1) per <code>hit</code> and O(log n) per <code>getHits</code>, O(n) space for the hits.
+    Scanning every hit on each query could reach about 10^10 steps with 2 * 10^5 calls.</p>
+    <h4>Pitfall</h4>
+    <p>The boundary is off by one easily: a hit at <code>t - 300</code> no longer counts, a hit at
+    <code>t - 299</code> still does. Searching for the first value <code>&gt;= t - 300</code> counts
+    one second too many.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

@@ -152,6 +152,25 @@ export const problem = {
     'If you process cells from the largest value to the smallest, is every neighbor you need already done?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The longest uphill path starting at a cell is 1 plus the longest path from its strictly larger
+    neighbors. Settle cells from the largest value down, so those neighbors always have their answer
+    already.</p>
+    <h4>Why it works</h4>
+    <p>Each step goes to a strictly larger value, so a path can never return to a cell: the moves form
+    a DAG and the answers can be reused. Processing in decreasing value is a topological order of that
+    DAG. When a cell is reached, every neighbor it could step to is larger and so is final. Equal
+    neighbors are not moves and are simply ignored.</p>
+    <h4>Complexity</h4>
+    <p>O(mn log mn) time, dominated by sorting the cells; the sweep itself is O(mn) with four neighbor
+    checks per cell. O(mn) space. A DFS without reuse is exponential.</p>
+    <h4>Pitfall</h4>
+    <p>The usual memoized DFS recurses along the path, and a snake-shaped path can cover all 40,000 cells
+    of a 200 x 200 grid, which overflows the stack. Also, a step to an equal value is not uphill.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'longestIncreasingPath',

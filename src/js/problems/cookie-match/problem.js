@@ -94,6 +94,26 @@ export const problem = {
     'After sorting both arrays, how can two pointers find all the matches in one pass?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Sort children by greed and cookies by size. Walk the children from least greedy, and for
+    each one skip cookies that are too small, then give it the first cookie that fits. Stop when
+    the cookies run out.</p>
+    <h4>Why it works</h4>
+    <p>A cookie too small for the current child is too small for every greedier child, so skipping
+    it loses nothing. Giving the least greedy child the smallest cookie that fits is safe by an
+    exchange argument: any better assignment can swap its cookie for this one without making
+    anyone unhappy, and the larger cookies stay free for greedier children.</p>
+    <h4>Complexity</h4>
+    <p>O(n log n + m log m) time for the two sorts, then one linear pass with two pointers. O(n +
+    m) space for the sorted copies. Trying every cookie for every child is O(n * m), 10^10 at the
+    limits.</p>
+    <h4>Pitfall</h4>
+    <p><code>s</code> can be empty, so guard the cookie index before reading it. Also note that a
+    fit is <code>s[j] &gt;= g[i]</code>, inclusive, and that the input arrays are unsorted.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'findContentChildren',

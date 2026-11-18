@@ -106,6 +106,26 @@ export const problem = {
     'How can you tell, with one lookup, that a number is the first of its run?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Put every value in a hash set. A value <code>x</code> starts a run only when
+    <code>x - 1</code> is missing; from each start, count upward while <code>x + 1</code>,
+    <code>x + 2</code>, ... are in the set, and keep the longest count.</p>
+    <h4>Why it works</h4>
+    <p>Every run of consecutive integers has exactly one first number, the one whose predecessor is
+    absent. Counting only from those starts measures each run once and in full, so the maximum over
+    all starts is the longest run. The set also collapses repeated values, which the statement says
+    count once.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: building the set is O(n), and each value is visited by the inner loop at most once,
+    as part of its own run. O(n) space for the set. Sorting first would cost O(n log n).</p>
+    <h4>Pitfall</h4>
+    <p>Starting a count from every value, not only from run starts. A single run of 10^5 numbers
+    then costs about 5 * 10^9 lookups. Also remember the empty array: the answer is <code>0</code>,
+    not <code>1</code>.</p>
+  `,
+
   signature: {
     name: 'longestStreak',
     params: [{ name: 'nums', type: 'int[]' }],

@@ -130,6 +130,25 @@ export const problem = {
     'Can a stack or queue you manage yourself replace the call stack?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Scan the grid; each land cell not yet seen starts a new island. Count it, then flood fill
+    from it with an explicit stack and mark every land cell of that island as seen, so the scan
+    skips them later.</p>
+    <h4>Why it works</h4>
+    <p>The flood fill reaches exactly the land cells joined to the start by up, down, left and right
+    steps, which is its island. All of them are marked, so no island is counted twice, and each
+    count happens at a cell no earlier fill reached, so it is a new island.</p>
+    <h4>Complexity</h4>
+    <p>O(rows * cols) time and space: each cell is pushed at most once and looks at 4 neighbours,
+    and the seen marks take one flag per cell.</p>
+    <h4>Pitfall</h4>
+    <p>A recursive flood fill. One snake-shaped island can be about 45,000 cells deep, beyond the
+    recursion limit in Python and the call stack in browsers. Use your own stack, and mark a cell as
+    seen when you push it, not when you pop it, or cells enter the stack several times.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'countIslands',

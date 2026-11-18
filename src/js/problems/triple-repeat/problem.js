@@ -131,6 +131,29 @@ export const problem = {
     'A run of five contains three runs of three. How many times does your query print that number?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Join <code>Logs</code> to itself twice: match each row <code>l1</code> to the row with <code>id =
+    l1.id + 1</code> and the row with <code>id = l1.id + 2</code>, both with the same <code>num</code>.
+    Every row that survives both joins starts a run of three, and <code>SELECT DISTINCT</code> reports
+    each number once.</p>
+    <h4>Why it works</h4>
+    <p>The ids are exactly <code>1..n</code>, so three in a row means three consecutive ids. Joining on
+    id arithmetic follows the log order no matter how the rows are physically stored. A run of length r
+    matches r - 2 times, and the same number can have several separate runs, which is why
+    <code>DISTINCT</code> is needed.</p>
+    <h4>Complexity</h4>
+    <p>O(n log n) for n rows: one scan of <code>l1</code> and two primary-key lookups per row, each
+    O(log n) in the index. O(n) space at most for the result. Without an index on <code>id</code> each
+    join would compare O(n^2) row pairs.</p>
+    <h4>Pitfall</h4>
+    <p>Counting instead of checking adjacency. <code>GROUP BY num HAVING COUNT(*) &gt;= 3</code> reports
+    a number that appears four times but never three times in a row. Reading neighbours in storage order
+    (for example with a window function that is not ordered by <code>id</code>) fails because the rows
+    may be stored shuffled.</p>
+  `,
+
   signature,
 
   visibleTests: visibleArgs.map((args) => ({ args, expected: reference(...args) })),

@@ -108,6 +108,25 @@ export const problem = {
     'When the window slides one step, how do you update its 20-bit code without rebuilding it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Slide a window of length 10 across <code>s</code> and count each window string in a hash map.
+    Record a window the moment its count reaches 2, then sort the recorded windows.</p>
+    <h4>Why it works</h4>
+    <p>Every repeated substring of length 10 is one of the windows, and windows start at every
+    index, so overlapping occurrences are counted too. Recording exactly at the second sighting
+    lists a window once, however many more times it appears.</p>
+    <h4>Complexity</h4>
+    <p>O(n) windows of constant length, so O(n) hashing work, plus O(r log r) to sort the r repeats;
+    O(n) space for the map. Comparing every window with every other is O(n^2). Packing each window
+    into 20 bits (2 per letter) avoids building strings, at the same O(n).</p>
+    <h4>Pitfall</h4>
+    <p>Discovery order is the order of second occurrences, not the requested lexicographic order, so
+    sort at the end. And a string shorter than 10 has no windows: the loop must not run, and the
+    answer is an empty list.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'repeatedWindows',

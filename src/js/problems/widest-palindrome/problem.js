@@ -124,6 +124,29 @@ export const problem = {
     'When two palindromes have the same length, how do you make sure you keep the leftmost?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Every palindrome grows symmetrically around a center. Manacher's algorithm finds, for each
+    position, the radius of the longest odd palindrome centered there and of the longest even one
+    whose right middle is there, reusing the mirror position inside the rightmost palindrome found
+    so far.</p>
+    <h4>Why it works</h4>
+    <p>If <code>i</code> lies inside a known palindrome <code>[l, r]</code>, the text around
+    <code>i</code> mirrors the text around <code>l + r - i</code>, so that radius is a valid start,
+    capped at <code>r - i + 1</code> so it never claims more than is known. Character comparisons
+    only happen beyond <code>r</code>, and every successful one pushes <code>r</code> to the
+    right.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time and O(n) space, because <code>r</code> only moves right. Expanding around all 2n -
+    1 centers is O(n^2), which also fits n = 5000; checking every substring separately is
+    O(n^3).</p>
+    <h4>Pitfall</h4>
+    <p>Ties go to the leftmost start. Odd and even palindromes are found in separate passes, so
+    keeping the first one found is not enough: on equal length compare the start positions too. And
+    forgetting even centers misses answers such as <code>"abba"</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'widestPalindrome',

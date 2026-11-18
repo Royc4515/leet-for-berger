@@ -97,6 +97,25 @@ export const problem = {
     'What does a number ending in 0 have to start with to be a palindrome?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Peel digits off the end of <code>x</code> and build the reverse of only the lower half. Stop
+    once the reversed half is at least as large as what remains, then compare the two halves.</p>
+    <h4>Why it works</h4>
+    <p>Each step moves the last digit of <code>x</code> onto <code>half</code>, so <code>half</code> is
+    the reversed suffix and <code>x</code> the prefix. The loop stops at the middle. With an even digit
+    count a palindrome gives <code>x == half</code>; with an odd count the middle digit sits at the end
+    of <code>half</code>, so compare <code>x == half / 10</code>. Negatives fail up front, and so does
+    any nonzero number ending in <code>0</code>, since it would need a leading zero.</p>
+    <h4>Complexity</h4>
+    <p>O(log10 x) time, about half the digits are processed. O(1) space.</p>
+    <h4>Pitfall</h4>
+    <p>Reversing the whole number. For values near 2^31 the full reverse overflows a 32-bit integer.
+    Skipping the trailing-zero check is the other trap: <code>10</code> would leave <code>x = 0</code>
+    and <code>half = 1</code>, and <code>half / 10 == 0</code> wrongly reports a palindrome.</p>
+  `,
+
   signature: {
     name: 'isPalindrome',
     params: [{ name: 'x', type: 'int' }],

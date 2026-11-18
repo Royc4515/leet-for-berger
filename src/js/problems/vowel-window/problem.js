@@ -96,6 +96,27 @@ export const problem = {
     'Does your loop look at the very last window, the one that ends at the final character?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Count the vowels in the first <code>k</code> characters, then slide the window one step at a time:
+    the character entering on the right may add a vowel and the one leaving on the left may remove one.
+    Track the best count seen.</p>
+    <h4>Why it works</h4>
+    <p>Two neighboring windows of length <code>k</code> share <code>k - 1</code> characters, so the new
+    count is the old count plus the entering character minus the leaving one. Every window from start
+    <code>0</code> to start <code>n - k</code> is visited exactly once, so the maximum over them is the
+    answer.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time, a constant amount of work per step. O(1) space. Recounting each window costs O(n * k),
+    about 5 * 10^9 checks when <code>n = 10^5</code> and <code>k = n / 2</code>.</p>
+    <h4>Pitfall</h4>
+    <p>Off-by-one at the boundaries: the character that leaves when position <code>i</code> enters is
+    <code>s[i - k]</code>, not <code>s[i - k + 1]</code>. Also make sure the best count starts from the
+    first window, so the case <code>k = s.length</code>, which has only one window, still returns its
+    count.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'maxVowels',

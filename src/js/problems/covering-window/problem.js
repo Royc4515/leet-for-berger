@@ -112,6 +112,29 @@ export const problem = {
     'When two windows have the same shortest length, which one does your scan find first, and does your update keep it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Grow a window to the right until it covers <code>t</code>, then shrink it from the left for as long
+    as it still covers <code>t</code>, recording each covering window. A single counter of how many
+    needed characters the window currently supplies makes the "does it cover" test O(1).</p>
+    <h4>Why it works</h4>
+    <p>For each right edge, the inner loop pushes <code>l</code> to the last position where the window
+    still covers <code>t</code>, so the shortest covering window ending at that right edge is seen. The
+    counter rises only when a character fills a slot of <code>t</code> that was still empty, and drops only
+    when removing a character empties one, so it equals <code>t.length</code> exactly when every count is
+    met, repeats included.</p>
+    <h4>Complexity</h4>
+    <p>O(m + n) time: each index of <code>s</code> enters and leaves the window once, plus one pass over
+    <code>t</code>. O(1) extra space for two 128-entry count tables. Checking every substring would be
+    O(m^2) windows.</p>
+    <h4>Pitfall</h4>
+    <p>Ties must go to the leftmost window. The scan meets equal-length windows from left to right, so
+    replace the best only on a strictly shorter length; using <code>&lt;=</code> returns the rightmost
+    one. Return <code>""</code> when <code>t</code> is never covered, including when it is longer than
+    <code>s</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'minWindow',

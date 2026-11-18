@@ -106,6 +106,26 @@ export const problem = {
     'A left-mover may win several fights in a row. When does it stop, and does it get added afterwards?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Build the survivors left to right on a stack. A new asteroid can only collide if it moves left
+    and the top of the stack moves right. It then destroys smaller right-movers one at a time, until it
+    is destroyed, ties, or no right-mover is left on top.</p>
+    <h4>Why it works</h4>
+    <p>Asteroids moving apart or in the same direction never meet, so every collision is a right-mover
+    on the left against a left-mover on the right. The first one a left-mover reaches is the nearest
+    surviving right-mover, which is the top of the stack. A left-mover that survives every fight has
+    only left-movers or nothing below it, so it is pushed and never collides again.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: every asteroid is pushed once and popped at most once, so the inner loop is amortized
+    across the whole scan. O(n) space for the stack.</p>
+    <h4>Pitfall</h4>
+    <p>Equal sizes destroy both asteroids: pop the right-mover and do not push the left-mover. Also
+    check the directions exactly. A left-mover on top with a right-mover arriving (<code>top &lt;
+    0</code>, <code>a &gt; 0</code>) is a pair moving apart, not a collision.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'asteroidCollision',

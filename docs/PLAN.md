@@ -86,7 +86,7 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [ ] Real-time battle against a person, judged on the server
 
 ### Stage D: content expansion
-- [ ] Write `explanationHtml` (our own prose: the idea, why it works, the pitfall) for the 131 essential problems; the walkthrough shows it on top once present
+- [x] Write `explanationHtml` (our own prose: the idea, why it works, the pitfall) for the 131 essential problems (PR #18; `tests/explanations.test.js` keeps the format and full coverage)
 - [ ] Growth measurement for all problems (target filled automatically, input generators gradually)
 - [ ] Graphs as objects (Clone Graph) and numbers above 2^53
 - [ ] Data for the 4 missing Israeli companies: Payoneer, Playtika, AppsFlyer, Gong

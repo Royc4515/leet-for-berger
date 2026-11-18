@@ -89,6 +89,25 @@ export const problem = {
     'Does the count for value v include the copies of v itself? Check the [7, 7, 7, 7] example.',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The values lie in <code>0..100</code>, so count how often each value occurs, then take a running
+    total: <code>smaller[v]</code> is the number of elements with a value below <code>v</code>. Each
+    answer is the lookup <code>smaller[nums[i]]</code>.</p>
+    <h4>Why it works</h4>
+    <p>An element counts toward <code>answer[i]</code> exactly when its value is strictly less than
+    <code>nums[i]</code>. <code>smaller[v] = smaller[v - 1] + freq[v - 1]</code> adds up the counts of
+    every value from <code>0</code> to <code>v - 1</code>, and the copies of <code>v</code> itself are
+    left out, as the statement requires.</p>
+    <h4>Complexity</h4>
+    <p>O(n + 101) time: one pass to count, one over the 101 possible values, one to answer. O(101) extra
+    space besides the output. Comparing every pair is O(n^2), 10^10 comparisons at n = 10^5.</p>
+    <h4>Pitfall</h4>
+    <p>Including <code>freq[v]</code> in the total for <code>v</code>, which counts the element itself
+    and its equal copies. When every value is the same, every answer must be <code>0</code>.</p>
+  `,
+
   signature: {
     name: 'smallerNumbersThanCurrent',
     params: [{ name: 'nums', type: 'int[]' }],

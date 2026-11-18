@@ -145,6 +145,28 @@ export const problem = {
     'How do you compute that inverse quickly, and how do you avoid recomputing factorials for every word?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Words are independent, so the answer is the product over words of the multinomial
+    <code>len! / (count_a! * count_b! * ...)</code>. Build the numerator and the denominator together
+    in one pass, modulo 1 000 000 007, and divide once at the end with a modular inverse.</p>
+    <h4>Why it works</h4>
+    <p>A word of length L has L! orderings, and swapping equal letters gives the same string, so each
+    distinct arrangement is counted once per permutation of every repeated letter. While scanning a
+    word, the i-th letter multiplies the numerator by <code>i</code>, and the k-th copy of a letter
+    multiplies the denominator by <code>k</code>, which yields exactly the factorials. The modulus is
+    prime, so dividing by <code>mul</code> means multiplying by <code>mul^(p-2)</code> (Fermat).</p>
+    <h4>Complexity</h4>
+    <p>O(n + log p) time: constant work per character plus one fast power for the inverse. O(1) extra
+    space beyond splitting the words, since each word needs only a 26-letter count.</p>
+    <h4>Pitfall</h4>
+    <p>Dividing with ordinary integer division after reducing modulo p. Once the numerator is a
+    remainder, it is no longer divisible by the denominator, so the result is wrong. Computing the
+    factorials exactly is no fix either, as they have hundreds of thousands of digits. Products of
+    two residues also need 64-bit integers.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'countArrangements',

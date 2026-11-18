@@ -85,6 +85,29 @@ export const problem = {
     'Do you need to sieve with primes larger than the square root of n?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Use the Sieve of Eratosthenes: an array of flags for <code>0</code> to <code>n - 1</code>. For
+    each <code>p</code> with <code>p * p &lt; n</code> that is still unmarked, cross out
+    <code>p * p</code>, <code>p * p + p</code>, ... Whatever stays unmarked from 2 upward is prime,
+    so count it.</p>
+    <h4>Why it works</h4>
+    <p>A number is crossed out only when it is a multiple of a smaller prime, so primes survive. Every
+    composite <code>c &lt; n</code> has a prime factor <code>p</code> with <code>p * p &lt;= c</code>,
+    so it is crossed out while sieving with that <code>p</code>. Starting at <code>p * p</code> is safe
+    because smaller multiples of <code>p</code> have a smaller prime factor and were already crossed
+    out.</p>
+    <h4>Complexity</h4>
+    <p>O(n log log n) time, since each prime <code>p</code> touches about <code>n / p</code> cells. O(n)
+    space, one byte per flag. Trial division of each number would be about O(n * sqrt(n)).</p>
+    <h4>Pitfall</h4>
+    <p>The bound is strict: count primes <em>below</em> <code>n</code>, so <code>n</code> itself never
+    counts, and for <code>n</code> of 0, 1 or 2 the answer is <code>0</code>. Allocating the array
+    before that check, or indexing <code>[0]</code> and <code>[1]</code> of an empty array, breaks the
+    smallest inputs.</p>
+  `,
+
   signature: {
     name: 'countPrimes',
     params: [{ name: 'n', type: 'int' }],

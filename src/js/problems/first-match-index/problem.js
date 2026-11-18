@@ -120,6 +120,28 @@ export const problem = {
     'What happens if you run the same computation on needle + "#" + haystack?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Knuth-Morris-Pratt. Precompute <code>fail[i]</code>, the length of the longest proper prefix
+    of <code>needle[0..i]</code> that is also its suffix. Then scan the haystack once, keeping
+    <code>k</code>, the number of needle characters currently matched.</p>
+    <h4>Why it works</h4>
+    <p>On a mismatch at <code>needle[k]</code>, the last <code>k</code> text characters equal
+    <code>needle[0..k-1]</code>. The longest match that could still be in progress is the longest
+    border of that prefix, <code>fail[k - 1]</code>, so <code>k</code> falls back to it without
+    rereading the text. No possible starting position is skipped, and the text pointer never moves
+    back.</p>
+    <h4>Complexity</h4>
+    <p>O(n + m) time and O(m) space: <code>k</code> rises at most once per text character, so its
+    total drops are bounded by the same amount. Comparing the needle at every position is O(n * m),
+    about 10^11 steps on an all-<code>a</code> text with a needle that ends in <code>b</code>.</p>
+    <h4>Pitfall</h4>
+    <p>Falling back only once instead of looping. After a mismatch, <code>k</code> must keep falling
+    back while the next character still does not match and <code>k &gt; 0</code>, both when building
+    <code>fail</code> and when scanning; a single <code>if</code> misses shorter borders.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'firstMatchIndex',

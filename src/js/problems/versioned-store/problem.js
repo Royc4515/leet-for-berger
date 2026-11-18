@@ -214,6 +214,26 @@ export const problem = {
     'Could you instead step backwards one time unit at a time until you hit a version? How far apart can versions be?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>For each key keep two parallel lists, timestamps and values. Set timestamps strictly
+    increase, so appending keeps every key's versions sorted, and a <code>get</code> is one binary
+    search for the last version at or before the time asked.</p>
+    <h4>Why it works</h4>
+    <p>An upper-bound search counts the versions with timestamp <code>&lt;= t</code>. The last of
+    them is exactly the latest <code>set</code> that had happened by time <code>t</code>. If the
+    count is zero, every version is later than <code>t</code> and the answer is <code>""</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(1) per <code>set</code> and O(log n) per <code>get</code>, n being that key's number of
+    versions; O(total sets) space. Stepping back one time unit at a time could cost up to 10^7 steps
+    per <code>get</code>.</p>
+    <h4>Pitfall</h4>
+    <p>Searching for the first timestamp <code>&gt;= t</code> and stepping back one skips a version
+    set exactly at <code>t</code>. Search for the first timestamp <code>&gt; t</code> instead, and
+    remember the two empty cases: a key never set, and a time before its first version.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

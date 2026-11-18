@@ -173,6 +173,28 @@ export const problem = {
     'How many buckets do you need so that the lists stay short with 10^5 keys stored?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Separate chaining: a fixed array of 2^17 buckets, a hash that turns a key into a bucket
+    index, and in each bucket a short list of (key, value) pairs that <code>put</code>,
+    <code>get</code> and <code>remove</code> scan.</p>
+    <h4>Why it works</h4>
+    <p>A key always hashes to the same bucket, so every operation on it looks at the one list where
+    it can live. <code>put</code> overwrites the pair in place when the key is already there, so a
+    key never has two entries. <code>remove</code> moves the last pair into the gap, because order
+    inside a bucket does not matter.</p>
+    <h4>Complexity</h4>
+    <p>O(1) average per call and O(n + B) space for n keys and B buckets: with 2^17 buckets and at
+    most 2 * 10^5 calls, chains stay around one pair long. One flat list of pairs would cost O(n)
+    per call.</p>
+    <h4>Pitfall</h4>
+    <p>A hash that keeps only the low bits (<code>key % 2^17</code>) piles keys with a regular
+    structure, such as multiples of a power of two, into a handful of buckets, and the chains grow
+    to thousands. The solution multiplies by <code>2654435761</code> and takes the top 17 bits of
+    the 32-bit product, so every bit of the key affects the index.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

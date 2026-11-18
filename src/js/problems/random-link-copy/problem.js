@@ -95,6 +95,25 @@ export const problem = {
     'Can you avoid the extra map by placing each copy right after its original for a while?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Make the copies first and wire them second. One pass creates a fresh node for every original
+    and records it in a map from original node to copy. A second pass sets each copy's
+    <code>next</code> and <code>random</code> by looking up the copies of the original's targets.</p>
+    <h4>Why it works</h4>
+    <p>A <code>random</code> pointer can aim forward, at a node whose copy does not exist yet when
+    you build front to back. After the first pass every copy exists, so any target can be translated
+    in O(1). Mapping <code>null</code> to <code>null</code> covers the tail and empty pointers, and
+    since every pointer goes through the map, no copy ever refers to an original node.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: two passes with constant-time lookups. O(n) space for the map. Finding each random
+    target by walking from the head would be O(n^2), over 10^9 steps at 5 * 10^4 nodes.</p>
+    <h4>Pitfall</h4>
+    <p>Key the map on the node itself, not on its value. Values repeat, so a value-keyed map sends
+    two different <code>random</code> pointers to the same copy.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it
   // (src/js/engine/codegen.js). Solutions live in ./solutions, one file per language.
   signature: {
