@@ -288,9 +288,28 @@ test('one spoiled size among many is dropped; a real bend is not hidden by it', 
   // Linear for small sizes, then quadratic: several points bend, so dropping one cannot make it match.
   const bent = synth({ model: (n) => (n <= 16000 ? n * 16000 : n * n), sizes, topMs: 3000 });
   assert.notEqual(estimateGrowth(bent, 'n').verdict, 'matches');
-  // Only 4 sizes: nothing is dropped.
-  const four = synth({ model: 'n', sizes: [8000, 16000, 32000, 64000], topMs: 50 }).map((s) => (s.n === 16000 ? { ...s, ms: s.ms * 6 } : s));
-  assert.equal(estimateGrowth(four, 'n').dropped, null);
+});
+
+test('with only 4 sizes, one spoiled interior size is dropped, and nothing else is', () => {
+  const sizes = [8000, 16000, 32000, 64000];
+  const spoil = (samples, n, f) => samples.map((s) => (s.n === n ? { ...s, ms: s.ms * f } : s));
+  // Linear with a 6x slow middle size: dropped, and the verdict is the honest one.
+  const four = estimateGrowth(spoil(synth({ model: 'n', sizes, topMs: 50 }), 16000, 6), 'n');
+  assert.equal(four.dropped?.n, 16000);
+  assert.equal(four.verdict, 'matches');
+  // Quadratic with a fast middle size is still slower than a linear target.
+  const quad = estimateGrowth(spoil(synth({ model: 'n^2', sizes, topMs: 400 }), 32000, 1 / 4), 'n');
+  assert.equal(quad.verdict, 'slower than target');
+  // A slow LAST size may be growth setting in: never dropped, so it cannot be explained away.
+  const last = estimateGrowth(spoil(synth({ model: 'n', sizes, topMs: 50 }), 64000, 6), 'n');
+  assert.equal(last.dropped, null);
+  assert.notEqual(last.verdict, 'matches');
+  // Linear that turns quadratic halfway: two points bend, so no single drop makes it match.
+  const bent = estimateGrowth(synth({ model: (n) => (n <= 16000 ? n * 16000 : n * n), sizes, topMs: 400 }), 'n');
+  assert.notEqual(bent.verdict, 'matches');
+  // Noisy everywhere: the other 3 sizes do not lie on a tight line, so nothing is dropped.
+  const noisy = synth({ model: 'n', sizes, topMs: 50 }).map((s) => ({ ...s, ms: s.ms * ({ 16000: 1.8, 32000: 0.6, 64000: 1.7 }[s.n] ?? 1) }));
+  assert.equal(estimateGrowth(noisy, 'n').dropped, null);
 });
 
 test('linear code whose per-item cost creeps up with the heap still reads as linear', () => {
