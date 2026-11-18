@@ -76,7 +76,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Hash Set', 'Sliding Window', 'Rolling Hash', 'Bit Manipulation'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['s'],
 

@@ -73,7 +73,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Stack', 'Simulation'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['asteroids'],
 

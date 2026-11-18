@@ -57,7 +57,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['Linked List', 'Pointer Rewiring'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['head'],
 

@@ -67,7 +67,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Sliding Window'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['s', 'k'],
 

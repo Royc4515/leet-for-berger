@@ -64,7 +64,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['dp'],
   patterns: ['Dynamic Programming', 'Counting', 'Modular Arithmetic'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['low', 'high', 'zero', 'one'],
 

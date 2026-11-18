@@ -77,7 +77,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Math', 'Combinatorics', 'Fast Exponentiation'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['n'],
 

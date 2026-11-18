@@ -65,7 +65,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Stack', 'Monotonic Stack'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['temperatures'],
 

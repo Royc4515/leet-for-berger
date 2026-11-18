@@ -74,7 +74,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Bit Manipulation', 'Carry Propagation'],
-  milestone: 1,
   timeLimitMs: 1000,
   argNames: ['a', 'b'],
 

@@ -110,7 +110,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Math', 'Combinatorics', 'Modular Inverse'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['s'],
 

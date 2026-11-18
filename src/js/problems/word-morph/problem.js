@@ -137,7 +137,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['graphs'],
   patterns: ['BFS', 'Implicit Graph', 'Hash Set'],
-  milestone: 2,
   timeLimitMs: 4000,
   argNames: ['beginWord', 'endWord', 'wordList'],
 

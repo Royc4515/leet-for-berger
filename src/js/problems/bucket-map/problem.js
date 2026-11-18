@@ -129,7 +129,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['Design', 'Hashing', 'Separate Chaining'],
-  milestone: 1,
   timeLimitMs: 3000,
   argNames: ['operations', 'arguments'],
 

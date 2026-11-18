@@ -77,7 +77,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Two Pointers', 'Prefix Maximum'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['heights'],
 

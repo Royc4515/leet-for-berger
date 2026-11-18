@@ -121,7 +121,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['graphs'],
   patterns: ['0-1 BFS', 'Shortest Path', 'Grid'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['grid'],
 

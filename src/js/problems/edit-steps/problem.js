@@ -87,7 +87,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['dp', 'arrays-strings'],
   patterns: ['Dynamic Programming', '2D DP', 'Strings'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['word1', 'word2'],
 

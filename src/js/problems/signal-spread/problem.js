@@ -157,7 +157,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['graphs'],
   patterns: ["Dijkstra's Algorithm", 'Shortest Path', 'Heap'],
-  milestone: 2,
   timeLimitMs: 5000,
   argNames: ['times', 'n', 'k'],
 

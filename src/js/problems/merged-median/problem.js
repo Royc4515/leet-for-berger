@@ -89,7 +89,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Binary Search', 'Divide and Conquer'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['nums1', 'nums2'],
 

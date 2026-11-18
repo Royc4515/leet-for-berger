@@ -68,7 +68,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['Two Pointers', 'Merge'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['nums1', 'nums2'],
 

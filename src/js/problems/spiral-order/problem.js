@@ -76,7 +76,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Matrix', 'Simulation', 'Boundary Shrinking'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['matrix'],
 

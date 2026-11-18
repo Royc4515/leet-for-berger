@@ -68,7 +68,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['greedy'],
   patterns: ['Greedy', 'Farthest Reach'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['nums'],
 

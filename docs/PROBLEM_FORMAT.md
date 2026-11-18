@@ -41,7 +41,6 @@ Starter code and per-language entry names are **generated** from the signature (
 | `difficulty` | `'Easy' \| 'Medium' \| 'Hard'` | |
 | `topics` | string[] | ids from `TOPICS` in `problems/index.js` |
 | `patterns` | string[] | free text tags shown in the header |
-| `milestone` | 1-4 | learning path placement (v0.1 UI) |
 | `timeLimitMs` | number | **per case** wall clock |
 | `argNames` | string[] | used to print `s = "..."` in the console |
 | `statementHtml` | string | trusted author HTML only |

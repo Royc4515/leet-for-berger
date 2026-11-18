@@ -59,7 +59,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['Counting', 'Prefix Sum', 'Counting Sort'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['nums'],
 

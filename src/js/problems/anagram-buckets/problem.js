@@ -79,7 +79,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Hash Map', 'Group by Key'],
-  milestone: 1,
   timeLimitMs: 3000,
   argNames: ['words'],
 

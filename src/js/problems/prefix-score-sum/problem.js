@@ -81,7 +81,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['String Matching', 'Z-function'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['s'],
 

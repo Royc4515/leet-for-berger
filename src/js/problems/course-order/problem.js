@@ -172,7 +172,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['graphs'],
   patterns: ['Topological Sort', 'Heap'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['numCourses', 'prerequisites'],
 

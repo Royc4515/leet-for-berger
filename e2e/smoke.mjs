@@ -281,6 +281,22 @@ try {
     await expectText('.result-head', /15 \/ 15/);
   });
 
+  if (!skipPython) {
+    // The special input types go through the Python adapter too; check each once in Pyodide.
+    for (const id of ['list-loop', 'random-link-copy', 'nested-flatten']) {
+      await check(`Python via Pyodide: ${id} (special input type) reveal + submit is Accepted`, async () => {
+        await page.goto(`${BASE}#/problem/${id}`);
+        await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+        await page.selectOption('.toolbar select', 'python');
+        await page.click('button:has-text("Reveal Solution")');
+        await page.click('dialog.modal button:has-text("Reveal")');
+        await page.click('button:has-text("Submit")');
+        await expectText('.result-head', /Accepted/, 90000);
+        await page.selectOption('.toolbar select', 'javascript');
+      });
+    }
+  }
+
   await check('random answers (Random Pool): JS reveal + submit is Accepted by the randomized-set judge', async () => {
     await page.goto(`${BASE}#/problem/random-pool`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });

@@ -119,7 +119,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['dp', 'graphs'],
   patterns: ['Memoization', 'Topological Order', 'Grid'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['matrix'],
 

@@ -160,7 +160,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['trees', 'arrays-strings'],
   patterns: ['Trie', 'Backtracking', 'DFS', 'Matrix'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['board', 'words'],
 

@@ -71,10 +71,10 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [x] More robust growth measurement, so one slow size doesn't skew it (PR #16)
 
 ### Stage B: small maintenance
-- [ ] Remove the legacy `milestone` field from problem files and the catalog (no longer read by any view)
-- [ ] Automatic runner health check and an alert when it's down
-- [ ] Redeploy the Worker so disabling preview URLs takes effect
-- [ ] Browser Python check on the new input types
+- [x] Remove the legacy `milestone` field from problem files and the catalog (PR #17)
+- [x] Automatic runner health check and an alert when it's down (PR #17; the deep check needs the Worker redeployed)
+- [ ] Redeploy the Worker (owner, one command: `cd deploy/cloudflare-worker && npx wrangler deploy`) so disabling preview URLs and the deep health check take effect
+- [x] Browser Python check on the new input types (PR #17: list-loop, random-link-copy, nested-flatten pass in Pyodide)
 - [x] Script that fetches complexity and solution sources (PR #9)
 
 ### Stage C: users and server

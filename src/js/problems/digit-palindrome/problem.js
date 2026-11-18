@@ -67,7 +67,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['Math', 'Digit Manipulation'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['x'],
 

@@ -80,7 +80,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['sql'],
   patterns: ['Subquery', 'DISTINCT', 'NULL result'],
-  milestone: 2,
   timeLimitMs: 2000,
 
   statementHtml: `

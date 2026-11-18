@@ -84,7 +84,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Two Pointers', 'Sorting'],
-  milestone: 1,
   timeLimitMs: 3000,
   argNames: ['nums'],
 

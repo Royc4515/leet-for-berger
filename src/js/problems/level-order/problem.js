@@ -88,7 +88,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['trees'],
   patterns: ['Breadth-First Search', 'Queue'],
-  milestone: 3,
   timeLimitMs: 2000,
   argNames: ['root'],
 

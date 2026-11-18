@@ -85,7 +85,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Linked List', 'Heap', 'Divide and Conquer'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['lists'],
 

@@ -154,7 +154,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['trees'],
   patterns: ['Design', 'Trie'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['operations', 'arguments'],
 

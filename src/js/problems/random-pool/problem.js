@@ -135,7 +135,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Design', 'Hash Map', 'Randomized'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['operations', 'arguments'],
   // getRandom is judged by membership and fairness, not by equality (engine/harness.js).

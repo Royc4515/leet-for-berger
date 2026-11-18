@@ -79,7 +79,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['dp'],
   patterns: ['Dynamic Programming', 'State Machine'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['prices'],
 

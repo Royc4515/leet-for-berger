@@ -59,7 +59,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Backtracking', 'Cartesian Product'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['digits'],
 

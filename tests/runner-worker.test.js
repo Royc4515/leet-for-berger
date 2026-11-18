@@ -160,3 +160,35 @@ test('wrangler.toml holds only public values: https origins, a VPC service id, n
   assert.match(toml, /^service_id = "([0-9a-f-]{36}|VPC_SERVICE_ID)"$/m);
   assert.match(toml, /\[\[ratelimits\]\]/);
 });
+
+test('deep health: asks the gate with the secret and reports its runtimes; failures are 503 or 502', async () => {
+  const ok = setup({ upstream: () => new Response(JSON.stringify({ ok: true, runtimes: ['java-21.0.13', 'gcc-12.2.0'], active: 0, queued: 0 }), { status: 200 }) });
+  const res = await ok.worker.fetch(new Request('https://w.example/v1/health?deep=1'), env());
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.ok, true);
+  assert.deepEqual(body.gate.runtimes, ['java-21.0.13', 'gcc-12.2.0']);
+  assert.equal(ok.calls[0].url, 'https://gate.example/v1/health');
+  assert.equal(ok.calls[0].init.headers['X-LFB-Secret'], 's3cret');
+  assert.ok(!JSON.stringify(body).includes('s3cret'), 'the secret never comes back');
+
+  const down = setup({ upstream: () => new Response('{"error":"Piston unreachable"}', { status: 503 }) });
+  const r2 = await down.worker.fetch(new Request('https://w.example/v1/health?deep=1'), env());
+  assert.equal(r2.status, 503);
+  assert.equal((await r2.json()).gate.error, 'Piston unreachable');
+
+  const gone = setup({ upstream: () => { throw new Error('tunnel down'); } });
+  assert.equal((await gone.worker.fetch(new Request('https://w.example/v1/health?deep=1'), env())).status, 502);
+
+  // The plain check stays VM-free.
+  const plain = setup();
+  assert.equal((await plain.worker.fetch(new Request('https://w.example/v1/health'), env())).status, 200);
+  assert.equal(plain.calls.length, 0);
+});
+
+test('deep health is rate limited like a run', async () => {
+  const { worker } = setup({ upstream: () => new Response('{"ok":true,"runtimes":[]}', { status: 200 }), limiter: new MemoryLimiter({ limit: 1 }) });
+  const req = () => new Request('https://w.example/v1/health?deep=1', { headers: { 'CF-Connecting-IP': '198.51.100.1' } });
+  assert.equal((await worker.fetch(req(), env())).status, 200);
+  assert.equal((await worker.fetch(req(), env())).status, 429);
+});

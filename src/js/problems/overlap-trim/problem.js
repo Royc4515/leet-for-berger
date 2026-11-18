@@ -71,7 +71,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['greedy'],
   patterns: ['Greedy', 'Intervals', 'Sorting'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['intervals'],
 

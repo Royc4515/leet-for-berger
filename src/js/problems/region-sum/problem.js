@@ -132,7 +132,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Design', 'Prefix Sum', '2D Prefix Sum'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['operations', 'arguments'],
 

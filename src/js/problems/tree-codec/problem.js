@@ -190,7 +190,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['trees'],
   patterns: ['Design', 'Pre-order Traversal', 'Parsing'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['operations', 'arguments'],
 

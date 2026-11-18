@@ -56,7 +56,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Recursion', 'Josephus Recurrence', 'Simulation'],
-  milestone: 1,
   timeLimitMs: 1000,
   argNames: ['n', 'k'],
 

@@ -73,7 +73,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['dp'],
   patterns: ['Dynamic Programming', 'Unbounded Knapsack', 'Counting'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['amount', 'coins'],
 

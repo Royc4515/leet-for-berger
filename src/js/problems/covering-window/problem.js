@@ -79,7 +79,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Sliding Window', 'Hash Map'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['s', 't'],
 

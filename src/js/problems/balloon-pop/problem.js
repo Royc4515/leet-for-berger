@@ -71,7 +71,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['dp'],
   patterns: ['Dynamic Programming', 'Interval DP'],
-  milestone: 2,
   timeLimitMs: 4000,
   argNames: ['nums'],
 

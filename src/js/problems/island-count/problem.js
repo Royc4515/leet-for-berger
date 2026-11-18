@@ -96,7 +96,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['graphs'],
   patterns: ['Flood Fill', 'BFS / DFS', 'Grid'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['grid'],
 

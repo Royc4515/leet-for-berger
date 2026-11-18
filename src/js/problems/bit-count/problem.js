@@ -63,7 +63,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['Bit Manipulation'],
-  milestone: 1,
   timeLimitMs: 1000,
   argNames: ['n'],
 

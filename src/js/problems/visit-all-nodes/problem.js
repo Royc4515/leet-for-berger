@@ -108,7 +108,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['graphs', 'dp'],
   patterns: ['Bitmask', 'BFS', 'State Space Search'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['n', 'edges'],
 

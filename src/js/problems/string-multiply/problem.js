@@ -69,7 +69,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Math', 'Simulation'],
-  milestone: 1,
   timeLimitMs: 3000,
   argNames: ['num1', 'num2'],
 

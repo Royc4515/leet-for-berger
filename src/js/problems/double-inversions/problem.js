@@ -82,7 +82,6 @@ export const problem = {
   difficulty: 'Hard',
   topics: ['arrays-strings'],
   patterns: ['Merge Sort', 'Divide and Conquer', 'Counting Pairs'],
-  milestone: 2,
   timeLimitMs: 4000,
   argNames: ['nums'],
 

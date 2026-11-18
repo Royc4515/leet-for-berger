@@ -61,7 +61,6 @@ export const problem = {
   difficulty: 'Easy',
   topics: ['arrays-strings'],
   patterns: ['Linked List', 'Fast and Slow Pointers'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['head'],
 

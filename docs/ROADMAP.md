@@ -43,7 +43,7 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 - [~] Complexity feedback: after Accepted (JavaScript, TypeScript, Python), time the code on growing inputs and compare the growth to the target (ADR 0004); 10 pilot problems declare `growth`, CI checks their targets. Next: `growth` for the remaining algorithm problems (checklist in docs/PROBLEM_FORMAT.md), other languages with the server runner, LLM explanation with the backend
 - [x] SQL runner: sql.js (SQLite wasm) in a worker and in the CI verifier, ADR 0003; first 5 SQL problems
 - [ ] Author problems topic by topic, tier 0 first; 15 tests each, solutions in 3 languages
-- [ ] Replace the 4 hand-picked milestones with paths derived from the taxonomy
+- [x] Replace the 4 hand-picked milestones with paths derived from the taxonomy (essential path, PR #12)
 - [ ] Practice modes on top of the index: topic drill, mixed review, mock OA, company set, daily, weak spots
 - [ ] Problem editorial view (unlocked after solve)
 - [ ] Per-problem submission history in the workspace

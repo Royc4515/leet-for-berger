@@ -80,7 +80,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['greedy'],
   patterns: ['Sorting', 'Intervals', 'Sweep Line', 'Heap'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['intervals'],
 

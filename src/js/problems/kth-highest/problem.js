@@ -61,7 +61,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Heap', 'Quickselect', 'Sorting'],
-  milestone: 2,
   timeLimitMs: 3000,
   argNames: ['nums', 'k'],
 

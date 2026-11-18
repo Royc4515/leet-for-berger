@@ -61,7 +61,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['dp'],
   patterns: ['Kadane', 'Dynamic Programming'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['nums'],
 

@@ -6,7 +6,7 @@ argument-hint: <problem-id or short description>
 Add a new problem to Leet-For-Berger: $ARGUMENTS
 
 1. Read `CLAUDE.md`, `docs/PROBLEM_FORMAT.md` and `src/js/problems/notify-recipients/` (reference implementation).
-2. Check `content/index/problems.json` for the problem's topic, subtopic (`concept`) and family; if the id matches a `planned` entry in `src/js/problems/index.js`, reuse its title, difficulty, topics and milestone.
+2. Check `content/index/problems.json` for the problem's topic, subtopic (`concept`) and family; if the id matches a `planned` entry in `src/js/problems/index.js`, reuse its title, difficulty and topics.
 3. Write a plain JS `reference` solution first, then a brute force in the test file. Make them agree on 1000+ seeded random inputs before writing anything else.
 4. Design tests with the checklist in PROBLEM_FORMAT.md: exactly 5 visible, exactly 10 hidden, at least 2 at max constraints, all generated inputs seeded.
 5. Declare the neutral `signature`. Do not write starter code: it is generated.

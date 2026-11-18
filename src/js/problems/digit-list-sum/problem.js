@@ -71,7 +71,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Linked List', 'Carry'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['l1', 'l2'],
 

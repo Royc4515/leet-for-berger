@@ -66,7 +66,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Matrix', 'Transpose and Reflect', 'In-Place'],
-  milestone: 1,
   timeLimitMs: 2000,
   argNames: ['matrix'],
 

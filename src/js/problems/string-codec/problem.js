@@ -155,7 +155,6 @@ export const problem = {
   difficulty: 'Medium',
   topics: ['arrays-strings'],
   patterns: ['Design', 'String Building', 'Length Prefix'],
-  milestone: 2,
   timeLimitMs: 2000,
   argNames: ['operations', 'arguments'],
 
