@@ -48,6 +48,7 @@ src/js/data/families.js    problem families, pickVersion per company, distinctPr
 src/js/data/problem-meta.js companies, best known complexity, family per shipped problem (-> problem-meta.json, scripts/content/build-meta.mjs)
 src/js/data/company-sets.js practice by company: per-company problem lists, one row per family (-> company-sets.json, same script)
 src/js/data/learning-path.js essential path: 131 problems by tier and topic, easy to hard (-> essential-path.json, same script)
+src/js/data/recommend.js   problem of the day, weak spots from progress
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md)
 scripts/content/           fetch sources, build index, audit
 scripts/verify/            verifier helpers (harnesses.mjs re-exports engine/programs; sql, growth)

@@ -520,6 +520,19 @@ try {
     if (offlineErrors.length) throw new Error(offlineErrors.join(' | '));
   });
 
+  await check('dashboard: problem of the day and weak spots from the session so far', async () => {
+    await page.goto(`${BASE}#/`);
+    await page.waitForSelector('.today-card .problem-link', { timeout: 15000 });
+    // Earlier steps solved problems after revealing the solution, which must surface as weak spots.
+    await page.waitForSelector('.weak-list li', { timeout: 15000 });
+    await expectText('.weak-list', /solution revealed/);
+    await shot('17-today');
+    const href = await page.locator('.today-card .problem-link').getAttribute('href');
+    await page.click('.today-card .problem-link');
+    await page.waitForFunction((h) => location.hash === h, href);
+    await page.waitForSelector('.problem-title');
+  });
+
   await check('unknown route shows not found', async () => {
     await page.goto(`${BASE}#/nope`);
     await expectText('.page', /Not found/);
