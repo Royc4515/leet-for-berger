@@ -100,6 +100,11 @@ test('sign-out pushes first, then clears local progress; a failed push keeps the
   assert.equal(await bad.acc.signOut(), false);
   assert.equal(bad.acc.get().status, 'signed-in');
   assert.equal(bad.resets(), 0);
+
+  // The user chose "Sign out anyway": no push, and the device is cleared.
+  assert.equal(await bad.acc.signOut({ force: true }), true);
+  assert.equal(bad.acc.get().status, 'signed-out');
+  assert.ok(bad.resets() >= 1, 'local progress was reset after a forced sign-out');
 });
 
 test('an unreachable CDN leaves sign-in unavailable but never throws', async () => {

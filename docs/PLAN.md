@@ -95,8 +95,16 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [ ] Data for the 4 missing Israeli companies: Payoneer, Playtika, AppsFlyer, Gong
 - [ ] The whole bank beyond the essential path: 465 more distinct problems and 92 families with versions by company and wording, in waves by company priority. Each version links to its base problem
 
+### Stage D2: owner review fixes (2026-11-19)
+- [x] Sign-out clears the user's data from the device; sign out, disconnect GitHub and loading old code ask first; a failed save offers "Sign out anyway"
+- [x] AI Mentor panel no longer hides behind the editor
+- [ ] Companies: top companies first, a filter for top employers in Israel (any company with Israeli R&D, not only Israeli ones), companies that do not hire in Israel lower (`content/israel-hiring.json`)
+- [ ] Interview: a readable company picker sorted by relevance to hiring in Israel
+- [ ] Battle (1v1): a readable problem picker that shows topic and difficulty
+- [ ] Load views only when opened, and load supabase-js only with a session or on Sign in (perf plan steps 2-3)
+
 ### Stage E: new UI
-- [ ] Redesign once features from stages A-D accumulate
+- [ ] Redesign once content and features are done: a dedicated design session (Fable 5.2) with a plan per screen, then execution per screen. Not before; until then fixes keep the current look. Known asks: company buttons instead of a plain list, readable pickers in every mode
 
 ## Content sources
 
@@ -110,6 +118,8 @@ Every decision that changes direction goes here, newest first. Detailed technica
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-19 | Design waits for a dedicated session after content and features | Owner's call: polishing screens that still change is waste; one planned pass per screen later |
+| 2026-11-19 | Problems load on demand from a generated catalog (ADR 0008), no bundler | One 12.4 s main-thread task built every hidden test on every page load |
 | 2026-11-18 | Stage A starts with the problem page: company tags, complexity, and the family view. Then practice by company, learning paths, mock OA, daily and weak spots | The data already exists and needs no backend; the problem page is what every later mode links to |
 | 2026-11-18 | Sign-in and GitHub sync come after stage A, in stage C | Stage A needs no backend; sync has little to save until there is more to practice |
 | 2026-11-18 | GitHub sync is opt-in once, then automatic on every Accepted. Assisted problems (solution revealed) are not synced automatically; the user can push one by hand, and its README says "assisted" | One setup click, no friction after; the portfolio stays honest |

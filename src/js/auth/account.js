@@ -101,12 +101,15 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
     /**
      * Signs out and removes this user's data from the device (ADR 0006). The latest progress is
      * pushed first; if that fails nothing is cleared and the user stays signed in, so no work is lost.
+     * `force` skips the push after the user chose to sign out anyway (offline, service down), so a
+     * failing sync can never trap them in an account on a shared device.
+     * @param {{ force?: boolean }} [opts]
      * @returns {Promise<boolean>} true when signed out
      */
-    async signOut() {
+    async signOut({ force = false } = {}) {
       if (!client) return false;
-      if (state.user && !(await sync.pushNow())) {
-        set({ error: 'Could not save your latest progress, so you are still signed in. Try again.' });
+      if (!force && state.user && !(await sync.pushNow())) {
+        set({ error: 'Could not save your latest progress, so you are still signed in.' });
         return false;
       }
       await client.auth.signOut();

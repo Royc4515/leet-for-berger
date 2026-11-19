@@ -34,7 +34,15 @@ export function mountAccountMenu(host, account, github = null) {
       confirmLabel: 'Sign out',
       danger: true,
     });
-    if (ok) await account.signOut();
+    if (!ok || (await account.signOut())) return;
+    if (!account.get().user) return;
+    const anyway = await confirmDialog({
+      title: 'Sign out without saving?',
+      body: 'Your latest progress could not be saved to your account. Signing out now removes it from this device.',
+      confirmLabel: 'Sign out anyway',
+      danger: true,
+    });
+    if (anyway) await account.signOut({ force: true });
   };
   const render = (s) => {
     if (s.status === 'off') return mount(host);
