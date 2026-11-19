@@ -485,6 +485,10 @@ body.lockdown .app-header {
 .pane-right {
   display: flex;
   flex-direction: column;
+  /* Monaco positions itself (relative/absolute, own z-indexes). Clipping and isolating the pane keeps
+     the editor inside its grid column and below the mentor, which is the next grid column. */
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .resizer {
@@ -639,6 +643,11 @@ body.resizing-y * {
   padding: 0 10px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  /* With the mentor open the pane is narrow: scroll instead of spilling buttons under the panel. */
+  overflow-x: auto;
+}
+.toolbar > * {
+  flex-shrink: 0;
 }
 .toolbar-spacer {
   flex: 1;
@@ -663,13 +672,18 @@ body.resizing-y * {
 }
 .editor-split {
   display: grid;
+  /* don't touch / explicit track: an implicit auto column grows to Monaco's pixel width (set when the
+     pane was wider) and never shrinks, so the editor overflowed under the mentor panel. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: var(--editor-size, 62%) 6px minmax(0, 1fr);
   flex: 1;
   min-height: 0;
 }
 .editor-host {
   position: relative;
+  min-width: 0;
   min-height: 0;
+  overflow: hidden;
   background: #1e1e1e; /* matches vs-dark so there is no flash while Monaco boots */
 }
 .editor-loading {
