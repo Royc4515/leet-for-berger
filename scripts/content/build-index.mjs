@@ -281,6 +281,12 @@ const CONTENT_IDS = {
   'minimum-distance-between-bst-nodes': ['bst-min-gap', 'verified'],
   'palindrome-pairs': ['palindrome-joins', 'verified'],
   'employees-earning-more-than-their-managers': ['above-manager-pay', 'verified'],
+  // Wave F2-1, group B
+  'rotting-oranges': ['rot-spread', 'verified'],
+  'validate-binary-search-tree': ['bst-check', 'verified'],
+  'palindrome-linked-list': ['list-mirror', 'verified'],
+  'last-stone-weight': ['stone-smash', 'verified'],
+  'find-consecutive-integers-from-a-data-stream': ['streak-watch', 'verified'],
 };
 
 const WINDOWS = [
@@ -305,7 +311,10 @@ const RECENCY_ORDER = ['30d', '3m', '6m', 'older', 'reported'];
 const REPORTED_FREQUENCY = 50;
 
 /** Reasons that only add coverage; a problem selected for these alone is wave 2. */
-const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice'];
+const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice', 'hand-picked'];
+
+/** Problems authored on purpose although no selection rule picks them (few companies, no list). */
+const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream']);
 
 const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -565,6 +574,7 @@ async function main() {
     if (companyVersions.has(p.slug)) why.push('company-version');
     if (israeliTop.has(p.slug)) why.push('israeli-company');
     if (wave2.platformLists.some((l) => p.lists.includes(l))) why.push('platform-practice');
+    if (HAND_PICKED.has(p.slug)) why.push('hand-picked');
     return why;
   };
 

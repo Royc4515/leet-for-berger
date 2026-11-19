@@ -7,6 +7,13 @@
 - The mock OA company picker is a searchable chip list with the same ordering and filter, instead of a select of 176 names; the selected company is clearly marked.
 - The 1v1 Battle problem picker shows each problem with title, difficulty and topics, filters by difficulty, topic and title, and has a Random button (`src/js/modes/battle-picker.js`). Battle rules are unchanged.
 
+#### Wave F2-1 (group B)
+- Rot Spread (LeetCode 994, Medium): multi-source BFS on a fruit grid up to 300 x 300, with a winding path that needs about 45,000 minutes, so rescanning the grid every minute times out.
+- BST Check (LeetCode 98, Medium): is a tree a binary search tree, with 32-bit values (a fixed-int range check rejects INT_MIN and INT_MAX), strict ordering, and trees broken only by a far ancestor.
+- List Mirror (LeetCode 234, Easy): is a linked list of up to 10^5 digits a palindrome, in O(1) space; turning the digits into one number is caught by the tests.
+- Stone Smash (LeetCode 1046, Easy): last stone weight with up to 10^5 stones of weight up to 10^9, so a heap is required (C and Go carry their own).
+- Streak Watch (LeetCode 2526, Medium): a design class with a two-argument constructor; 10^5 calls with k = 50,000 rule out scanning the last k readings.
+
 ### Fixed
 - The dashboard took about 12 s to show the problem list (one 12.4 s main-thread task, 205 requests, 745 KB gzipped on the live site): `problems/index.js` imported all 145 problem modules, and each builds its 10 hidden tests at import. Problems now load only when opened (ADR 0008): a generated catalog (`src/js/problems/catalog.js`, `node scripts/content/build-catalog.mjs`) feeds the dashboard, learning path, companies and mode setups, and `loadProblem(id)` imports one module on demand. Locally the dashboard is ready in about 0.3 s (was about 14 s) and fetches no problem module. Interview and battle start their clocks only after the problems have loaded. A problem that fails to load shows "Could not load". Tests and scripts use `await loadAllProblems()`; `tests/catalog.test.js` fails on a stale catalog, and the e2e test checks that the dashboard loads no problem module and a problem page exactly one.
 - Signing out left the account's progress, drafts and submissions on the device and on screen. Sign-out now pushes the latest progress, then clears every per-user local store and re-renders as a guest. If the push fails you stay signed in and nothing is cleared, unless you then choose "Sign out anyway". The list of per-user keys lives in `state/user-data.js`, and a unit test fails when a source file persists a key the list misses (ADR 0006 amended).
