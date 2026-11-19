@@ -35,8 +35,9 @@ export function remoteRunnerConfig(scope = globalThis) {
  * stays in this browser only.
  */
 export const AUTH = {
-  supabaseUrl: '',
-  supabaseAnonKey: '',
+  supabaseUrl: 'https://jezwwmnczliubfmqgutc.supabase.co',
+  // Publishable (anon) key: public by design, Row Level Security guards the data.
+  supabaseAnonKey: 'sb_publishable_GBa7UHSmKAFQG4vSdxDdzw_Tlmffpwf',
 };
 
 /**

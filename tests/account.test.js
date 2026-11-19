@@ -11,16 +11,22 @@ const store = () => {
 };
 
 test('authConfig: off by default, on with both values, overrides win', () => {
-  assert.equal(authConfig({}).enabled, false);
+  assert.equal(authConfig({ LFB_SUPABASE_URL: '', LFB_SUPABASE_ANON_KEY: '' }).enabled, false, 'overrides can switch it off');
+  // The shipped config names the live project with a publishable key (never a secret one).
+  const shipped = authConfig({});
+  assert.equal(shipped.enabled, true);
+  assert.match(shipped.supabaseUrl, /^https:\/\/[a-z0-9]+\.supabase\.co$/);
+  assert.match(shipped.supabaseAnonKey, /^(sb_publishable_|eyJ)/);
+  assert.doesNotMatch(shipped.supabaseAnonKey, /secret|service_role/);
   const c = authConfig({ LFB_SUPABASE_URL: 'https://x.supabase.co/', LFB_SUPABASE_ANON_KEY: 'k' });
   assert.equal(c.enabled, true);
   assert.equal(c.supabaseUrl, 'https://x.supabase.co');
-  assert.equal(authConfig({ LFB_SUPABASE_URL: 'https://x.supabase.co' }).enabled, false, 'a URL without a key is off');
+  assert.equal(authConfig({ LFB_SUPABASE_URL: 'https://x.supabase.co', LFB_SUPABASE_ANON_KEY: '' }).enabled, false, 'a URL without a key is off');
 });
 
 test('not configured: no client is ever loaded', async () => {
   let loaded = false;
-  const acc = createAccount({ store: store(), config: authConfig({}), loadClient: async () => (loaded = true) });
+  const acc = createAccount({ store: store(), config: authConfig({ LFB_SUPABASE_URL: '', LFB_SUPABASE_ANON_KEY: '' }), loadClient: async () => (loaded = true) });
   await acc.start();
   assert.equal(acc.get().status, 'off');
   assert.equal(loaded, false);

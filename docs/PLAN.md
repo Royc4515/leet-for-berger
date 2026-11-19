@@ -78,7 +78,8 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [x] Script that fetches complexity and solution sources (PR #9)
 
 ### Stage C: users and server
-- [ ] Supabase setup (free plan; owner steps in `docs/DEPLOY_AUTH.md`) and automatic content sync from CI
+- [x] Supabase setup (free plan, Frankfurt; owner steps in `docs/DEPLOY_AUTH.md`), project `jezwwmnczliubfmqgutc`, Google and GitHub sign-in on
+- [ ] Automatic content sync from CI into Supabase
 - [x] User management (code, PR #18; live once the project exists): sign-in with Google (and GitHub) via Supabase Auth, profile, and progress, drafts and submissions stored on the server and synced across devices. Existing localStorage progress moves to the account on first sign-in
 - [ ] Personal GitHub sync: every Accepted solution is committed to a repo the user picks, one folder per problem with the code and a README with the complexity. Through a GitHub App with access to that one repo only; the token stays on the server, never in the browser
 - [ ] Hidden tests and solutions served only from the server

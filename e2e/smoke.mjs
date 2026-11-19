@@ -23,8 +23,11 @@ const browser = await chromium.launch({ channel: process.env.PW_CHANNEL || undef
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 // src/js/config.js points at the live runner; the smoke test must not depend on it or spend its
 // free quota, so the main page runs with the runner unset (editor-only), as a fork without one would.
+// Same for accounts: the main page runs without the live Supabase project; a stubbed step covers sign-in.
 await page.addInitScript(() => {
   window.LFB_REMOTE_RUNNER_URL = '';
+  window.LFB_SUPABASE_URL = '';
+  window.LFB_SUPABASE_ANON_KEY = '';
 });
 const errors = [];
 page.on('console', (m) => m.type() === 'error' && errors.push(`console (during step ${step}): ${m.text()}`));
@@ -217,6 +220,8 @@ try {
     try {
       await remote.addInitScript((url) => {
         window.LFB_REMOTE_RUNNER_URL = url;
+        window.LFB_SUPABASE_URL = '';
+        window.LFB_SUPABASE_ANON_KEY = '';
       }, `http://localhost:${PORT + 100}`);
       await remote.goto(`${BASE}#/problem/pair-sum-target`);
       await remote.waitForSelector('.monaco-editor', { timeout: 30000 });
@@ -541,6 +546,10 @@ try {
   // Its own page: the blocked CDN request is logged as a failed resource, which is the point here.
   await check('without Monaco, TypeScript reports honestly that it needs the editor and nothing crashes', async () => {
     const offline = await browser.newPage();
+    await offline.addInitScript(() => {
+      window.LFB_SUPABASE_URL = '';
+      window.LFB_SUPABASE_ANON_KEY = '';
+    });
     const offlineErrors = [];
     offline.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && offlineErrors.push(m.text()));
     offline.on('pageerror', (e) => offlineErrors.push(e.message));
