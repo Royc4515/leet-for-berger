@@ -363,7 +363,18 @@ try {
   await check('practice by company: search, Israeli filter, company page with practice links', async () => {
     await page.click('nav a[data-nav="companies"]');
     await page.waitForSelector('.company-card', { timeout: 15000 });
-    await page.check('#israeli-only');
+    await page.waitForSelector('.segmented[aria-label="Show companies"]');
+    // Default is "Hiring in Israel": the first card is a major company, with its badge.
+    await expectText('.segmented-btn[aria-pressed="true"]', /Hiring in Israel/);
+    await expectText('.company-card:first-child', /Major in Israel/);
+    const hiringCount = await page.locator('.company-card').count();
+    await shot('15a-companies-hiring');
+    await page.click('.segmented-btn:has-text("Top in Israel")');
+    const topCount = await page.locator('.company-card').count();
+    if (!(topCount > 0 && topCount < hiringCount)) throw new Error(`"Top in Israel" should narrow the list (${topCount} vs ${hiringCount})`);
+    await page.click('.segmented-btn:has-text("All")');
+    const allCount = await page.locator('.company-card').count();
+    if (!(allCount > hiringCount)) throw new Error(`"All" should show more cards than "Hiring in Israel" (${allCount} vs ${hiringCount})`);
     await page.fill('input[aria-label="Search companies"]', 'wix');
     await page.waitForFunction(() => document.querySelectorAll('.company-card').length === 1);
     await shot('15-companies');
@@ -525,8 +536,16 @@ try {
   await check('mock OA: hard format from one company, 3 problems, lockdown, report', async () => {
     await page.goto(`${BASE}#/interview`);
     await page.click('.chip-group[aria-label="Format"] button:has-text("Hard OA")');
-    await page.waitForFunction(() => !document.querySelector('select[aria-label="Company"]').disabled);
-    await page.selectOption('select[aria-label="Company"]', 'google');
+    await page.waitForSelector('.company-chip[data-slug="google"]', { timeout: 15000 });
+    // Search narrows the picker; the selected chip is obvious (aria-pressed).
+    await page.fill('input[aria-label="Search companies"]', 'goog');
+    await page.waitForFunction(() => document.querySelectorAll('.company-chip').length === 2);
+    await page.click('.company-chip[data-slug="google"]');
+    if ((await page.getAttribute('.company-chip[data-slug="google"]', 'aria-pressed')) !== 'true') throw new Error('selected company chip is not pressed');
+    await page.fill('input[aria-label="Search companies"]', '');
+    await page.click('.segmented-btn:has-text("All")');
+    if ((await page.locator('.company-chip').count()) <= 2) throw new Error('"All" should list more companies');
+    await shot('06-oa-setup-picker');
     await expectText('.setup-card', /2 Medium \+ 1 Hard, 90 minutes/);
     await expectText('.setup-card', /asked at Google/);
     await shot('06-oa-setup');
@@ -556,6 +575,26 @@ try {
     await page.waitForSelector('.score-ring');
     if (!(await page.locator('.app-header').isVisible())) throw new Error('nav not restored after interview');
     await shot('08-report');
+  });
+
+  await check('battle setup: problems show difficulty and topics, filters narrow the list', async () => {
+    await page.goto(`${BASE}#/battle`);
+    await page.waitForSelector('.pick-row');
+    await expectText('.pick-row:first-child', /Easy|Medium|Hard/);
+    if (!(await page.locator('.pick-row >> nth=0').locator('.tag').count())) throw new Error('problem row shows no topic');
+    const before = await page.locator('.pick-row').count();
+    await page.click('.chip-group[aria-label="Difficulty"] button:has-text("Hard")');
+    const hard = await page.locator('.pick-row').count();
+    if (!(hard > 0 && hard < before)) throw new Error(`difficulty filter should narrow the list (${hard} vs ${before})`);
+    const nonHard = await page.locator('.pick-row:not(:has(.diff-hard))').count();
+    if (nonHard) throw new Error('hard filter shows other difficulties');
+    await page.fill('input[aria-label="Search problems"]', 'zzzz-no-such-problem');
+    await page.waitForSelector('.pick-list .empty');
+    await page.fill('input[aria-label="Search problems"]', '');
+    await page.click('button:has-text("Random")');
+    await page.waitForSelector('.pick-row[aria-pressed="true"]');
+    await shot('09a-battle-setup');
+    await page.click('.chip-group[aria-label="Difficulty"] button:has-text("All difficulties")');
   });
 
   await check('battle: race banner with two progress bars', async () => {

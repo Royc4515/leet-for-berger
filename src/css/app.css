@@ -1731,3 +1731,105 @@ body.resizing-y * {
   border: 0;
   font-size: 13px;
 }
+
+/* ---------- Israel filter, company picker, battle picker ---------- */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.segmented-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text-2);
+  font: 500 13px var(--font);
+  cursor: pointer;
+}
+.segmented-btn:last-child {
+  border-right: 0;
+}
+.segmented-btn:hover {
+  color: var(--text);
+}
+.segmented-btn[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.segmented[hidden] {
+  display: none;
+}
+.il-badge {
+  margin: 0 0 6px;
+}
+.il-major {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.il-present {
+  border: 1px solid var(--border);
+}
+.company-count {
+  margin: 0 0 4px;
+}
+.company-chips,
+.pick-list {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.company-chip .il-star {
+  margin-left: 4px;
+  color: var(--accent);
+  font-size: 11px;
+}
+.setup-card .filters .search {
+  margin-left: 0;
+  min-width: 160px;
+  flex: 1;
+}
+.pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 300px;
+}
+.pick-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--text);
+  font: 13px var(--font);
+  text-align: left;
+  cursor: pointer;
+}
+.pick-row:hover {
+  border-color: var(--border-strong);
+}
+.pick-row[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.pick-title {
+  font-weight: 600;
+}
+.pick-row .badge,
+.pick-row .tag {
+  margin: 0;
+}
+.pick-topics {
+  margin-left: auto;
+}
+.pick-selected {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
