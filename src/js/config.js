@@ -40,7 +40,7 @@ export const AUTH = {
   supabaseAnonKey: 'sb_publishable_GBa7UHSmKAFQG4vSdxDdzw_Tlmffpwf',
   // The GitHub App users install to sync solutions (ADR 0007, docs/DEPLOY_GITHUB_SYNC.md).
   // Empty hides GitHub sync.
-  githubAppSlug: '',
+  githubAppSlug: 'leet-for-berger-sync',
 };
 
 /**

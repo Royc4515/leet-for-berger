@@ -13,6 +13,7 @@
 - First Match Index is Medium (was Easy): with our limits it needs KMP.
 
 ### Added
+- GitHub sync is on: `githubAppSlug` names the GitHub App (Leet-For-Berger Sync); the github-sync Edge Function is deployed and its secrets are set in Supabase.
 - 12 problems Wix asks, each with a statement in our own words, 15 tests, solutions in all 8 languages (or one SQL query), hints and a walkthrough: Two Wall Tank, Glyph Order, K Steps Away, Suspicious Payments, Subsequence Check, Growing Word Chain, Bucket Set, Caesar Groups, Common Values, BST Min Gap, Palindrome Joins, Above Manager Pay. Wix now has 35 of its top 50 problems on the site (was 23); 145 problems in all.
 - GitHub sync (ADR 0007): through a GitHub App installed on one repository of the user's, a Supabase Edge Function (`deploy/supabase/functions/github-sync`) commits each Accepted solution with a README, one commit per push; automatic after Accepted in practice, by hand (Submissions, "Push to GitHub") for assisted solves, which the README marks. The function verifies the installation belongs to the signed-in GitHub account and grants exactly one repository; the App key and tokens never reach the browser. `github_links` is readable by its owner only and written only by the function. Hidden until `githubAppSlug` is set; owner steps in `docs/DEPLOY_GITHUB_SYNC.md`.
 - The account menu (signed in) holds GitHub sync and Sign out, and closes on navigation, an outside click or Escape.
