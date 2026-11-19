@@ -1,8 +1,8 @@
 # Work plan (living)
 
-Last updated: 2026-11-18. Owner: Roy.
+Last updated: 2026-11-19. Owner: Roy.
 
-A LeetCode-style practice platform for interviews and take-home tests, at $0. All 131 essential-path problems are verified in all 8 languages, every language runs on the live site, and the next stage is the practice experience. This file is open to change: every new decision goes into the decision log.
+A LeetCode-style practice platform for interviews and take-home tests, at $0. 145 problems are verified in all 8 languages, every language runs on the live site, accounts and GitHub sync are live, and the dashboard loads in under a second. The bottleneck now is content: most company lists show many more asked problems than we have. This file is open to change: every new decision goes into the decision log.
 
 Live site: https://royc4515.github.io/leet-for-berger/
 
@@ -26,15 +26,16 @@ Goal: one place to prepare for a technical interview or take-home test, from eas
 
 ## Where we are
 
-Stages 0 and 1 are nearly done and the runner is live. What's missing is the way to practice: paths, practice modes, and showing the data we already have.
+Platform, practice modes and accounts are done. What limits the site now is how many problems it has, and the complexity feedback, which covers only a pilot.
 
-| Stage | Progress | Done | Left |
-|---|---|---|---|
-| 0. Base platform | 100% | Editor, 15 cases, interview mode, bot battle, scripted mentor | - |
-| 1. Content | ~80% | Index of 3,517 problems and 680 companies; essential path 131/131 verified in 8 languages + 5 SQL problems; special input types; growth measurement (pilot on 10 problems); sources and best known complexity saved (PR #9) | Paths and practice modes; company and complexity display; growth for all problems |
-| 2. Server | ~55% | Live runner for Java, C++, C, C#, Go; PostgreSQL schema | Supabase setup; hidden tests and solutions server-only; monitoring |
-| 3. Users | 0% | - | Sign-in, server-side progress, GitHub sync, real AI mentor, human battles |
-| 4. New UI | 0% | - | Redesign once features accumulate |
+| Area | State | Left |
+|---|---|---|
+| Platform | Done: editor, 15 cases, 8 languages live, dashboard in 0.3 s (ADR 0008) | Small speed steps (F1) |
+| Practice | Done: paths, company practice by Israel hiring, mock OA, daily, weak spots, walkthroughs, battle vs bot | - |
+| Content | 145 problems (131 essential + 14 company problems) | Company waves (F2), growth for all (F3) |
+| Accounts | Done: Google and GitHub sign-in, synced progress, GitHub sync of solutions | Owner check of GitHub sync |
+| AI mentor | Scripted hint ladder | Real LLM mentor (F4, needs a budget decision) |
+| Design | Current look | Dedicated design session (F5) |
 
 **Languages on the live site:** JavaScript, TypeScript, Python and SQL run in the browser; Java, C++, C, C# and Go run on the server. A real Java submission on the live site was Accepted 15/15 in 3.8 s.
 
@@ -57,7 +58,20 @@ Until stage C there is no backend with users: progress lives in localStorage, an
 
 ## Next steps
 
-Recommended order: practice experience first (stage A), since all the content exists and runs; only the way to practice it is missing. Each item closes with a PR that passes CI and waits for the owner's approval to merge.
+Stages A to D2 below are the history. The order from here is stage F. Each item closes with a PR that passes CI and waits for the owner's approval to merge.
+
+### Stage F: focus from 2026-11-19 (in this order)
+- [ ] **F1. Last speed steps (small, one PR):** load views only when opened, and load supabase-js only with a stored session, an auth callback, or a click on Sign in. About 35 fewer modules and 9 fewer requests on a first visit
+- [ ] **F2. Company waves by hiring in Israel (main work, repeating):** each wave adds 15 to 20 of the most-asked problems we lack for the next companies in `content/israel-hiring.json` rank order (Nvidia, Intel, Amdocs, Microsoft, Mobileye, Check Point, Wix, Palo Alto Networks, Apple, Google, ...), counting a family once. Same bar as today: our own wording, 15 cases, 8 verified languages, explanation, family links. Graphs as objects and numbers above 2^53 are built when the first wave needs them, not before
+- [ ] **F3. Growth measurement for every problem:** complexity feedback is a core promise and covers 10 problems. Fill targets automatically from the best known complexity and add input generators per problem; new wave problems ship with it
+- [ ] **F4. Real AI mentor:** an LLM behind a Supabase Edge Function with a hard monthly cap, using the system prompt already in `src/js/mentor/mentor.js`. Starts only after the budget decision below
+- [ ] **F5. Design session:** after F1, F3 and the first three F2 waves. A dedicated session (Fable 5.2): a plan per screen, then execution per screen
+- [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
+
+### Deferred until there is a reason (decided 2026-11-19)
+- Hidden tests and solutions served only from the server, and the CI to Supabase content sync that would feed them. The judge runs in the page, so expected values reach the browser anyway; serving them from the server only hides them from casual reading. Worth it only with scored peer battles or leaderboards.
+- Real-time battles against people. Needs server-side judging so clients cannot fake progress. Revisit if more users arrive.
+- Faster problem open (build hidden tests on first Run) and faster heavy references (perf plan steps 4 and 6). Opening a problem costs 0.05 to 0.9 s today; revisit if it feels slow.
 
 ### Stage A: practice experience (next)
 - [x] Company tags on every problem: name, frequency, recency, Israeli companies marked (PR #10)
@@ -79,21 +93,21 @@ Recommended order: practice experience first (stage A), since all the content ex
 
 ### Stage C: users and server
 - [x] Supabase setup (free plan, Frankfurt; owner steps in `docs/DEPLOY_AUTH.md`), project `jezwwmnczliubfmqgutc`, Google and GitHub sign-in on
-- [ ] Automatic content sync from CI into Supabase
+- [ ] Automatic content sync from CI into Supabase (deferred, see above)
 - [x] User management (code, PR #18; live once the project exists): sign-in with Google (and GitHub) via Supabase Auth, profile, and progress, drafts and submissions stored on the server and synced across devices. Existing localStorage progress moves to the account on first sign-in
 - [x] Personal GitHub sync (code, PR #20; live once the GitHub App exists, `docs/DEPLOY_GITHUB_SYNC.md`): every Accepted solution is committed to a repo the user picks, one folder per problem with the code and a README with the complexity. Through a GitHub App with access to that one repo only; the token stays on the server, never in the browser
-- [ ] Hidden tests and solutions served only from the server
-- [ ] Real AI mentor that also explains complexity (depends on the budget decision)
-- [ ] Real-time battle against a person, judged on the server
+- [ ] Hidden tests and solutions served only from the server (deferred, see above)
+- [ ] Real AI mentor that also explains complexity (now F4)
+- [ ] Real-time battle against a person, judged on the server (deferred, see above)
 
 ### Stage D: content expansion
 - [x] Wix wave: 12 problems, Wix at 35 of its top 50 on the site (PR #20)
 - [x] Load each problem only when it is opened (ADR 0008): a generated catalog (`src/js/problems/catalog.js`) feeds the listing views and `loadProblem(id)` imports one module on demand; the dashboard went from about 14 s to 0.3 s locally
 - [x] Write `explanationHtml` (our own prose: the idea, why it works, the pitfall) for the 131 essential problems (PR #18; `tests/explanations.test.js` keeps the format and full coverage)
-- [ ] Growth measurement for all problems (target filled automatically, input generators gradually)
+- [ ] Growth measurement for all problems (now F3)
 - [ ] Graphs as objects (Clone Graph) and numbers above 2^53
-- [ ] Data for the 4 missing Israeli companies: Payoneer, Playtika, AppsFlyer, Gong
-- [ ] The whole bank beyond the essential path: 465 more distinct problems and 92 families with versions by company and wording, in waves by company priority. Each version links to its base problem
+- [ ] Data for the 4 missing Israeli companies: Payoneer, Playtika, AppsFlyer, Gong (folded into F2: added when a wave reaches them)
+- [ ] The whole bank beyond the essential path: 465 more distinct problems and 92 families with versions by company and wording (now F2, ordered by hiring in Israel). Each version links to its base problem
 
 ### Stage D2: owner review fixes (2026-11-19)
 - [x] Sign-out clears the user's data from the device; sign out, disconnect GitHub and loading old code ask first; a failed save offers "Sign out anyway"
@@ -101,10 +115,10 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [x] Companies: top companies first, a filter for top employers in Israel (any company with Israeli R&D, not only Israeli ones), companies that do not hire in Israel lower (`content/israel-hiring.json`)
 - [x] Interview: a readable company picker sorted by relevance to hiring in Israel
 - [x] Battle (1v1): a readable problem picker that shows topic and difficulty
-- [ ] Load views only when opened, and load supabase-js only with a session or on Sign in (perf plan steps 2-3)
+- [ ] Load views only when opened, and load supabase-js only with a session or on Sign in (moved to F1)
 
 ### Stage E: new UI
-- [ ] Redesign once content and features are done: a dedicated design session (Fable 5.2) with a plan per screen, then execution per screen. Not before; until then fixes keep the current look. Known asks: company buttons instead of a plain list, readable pickers in every mode
+- [ ] Redesign (now F5): a dedicated design session (Fable 5.2) with a plan per screen, then execution per screen. Until then fixes keep the current look. Known asks: company buttons instead of a plain list, readable pickers in every mode
 
 ## Content sources
 
@@ -118,6 +132,9 @@ Every decision that changes direction goes here, newest first. Detailed technica
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-19 | New order (stage F): last speed steps, then company waves ranked by hiring in Israel, growth for every problem, real AI mentor after a budget decision, then the design session | Platform and practice modes are done; problem count and complexity feedback are what limit the site for an Israeli job seeker |
+| 2026-11-19 | Defer server-only hidden tests, the CI to Supabase content sync and peer battles | The judge runs in the page, so server-only data only hides answers from casual reading; it pays off only with scored peer play |
+| 2026-11-19 | Content waves follow `content/israel-hiring.json` rank, not global company frequency | The owner and the audience are hiring in Israel; the data is now verified with sources |
 | 2026-11-19 | Design waits for a dedicated session after content and features | Owner's call: polishing screens that still change is waste; one planned pass per screen later |
 | 2026-11-19 | Problems load on demand from a generated catalog (ADR 0008), no bundler | One 12.4 s main-thread task built every hidden test on every page load |
 | 2026-11-18 | Stage A starts with the problem page: company tags, complexity, and the family view. Then practice by company, learning paths, mock OA, daily and weak spots | The data already exists and needs no backend; the problem page is what every later mode links to |
@@ -146,7 +163,10 @@ Every decision that changes direction goes here, newest first. Detailed technica
 
 ## Open decisions
 
-Tick when decided, and move the decision to the log. None open right now.
+Tick when decided, and move the decision to the log.
+
+- [ ] **AI mentor budget (F4):** a provider and a hard monthly cap in dollars (or $0 with a free tier and its limits). Nothing is spent until this is decided.
+- [ ] **When the design session starts (F5):** proposed after F1, F3 and three F2 waves; the owner can move it.
 
 ## Risks
 
@@ -154,7 +174,8 @@ Tick when decided, and move the decision to the log. None open right now.
 |---|---|---|
 | Oracle reclaims an idle Always Free VM (7 days) | Java, C++, C, C# and Go stop running; the site shows an honest message | New VM and `sudo ./setup.sh tunnel` (about 20 min), or upgrade to Pay As You Go |
 | Cloudflare quota runs out (100,000 requests/day) | Server languages stop until midnight UTC | Plenty for current use; Turnstile against abuse |
-| Monthly Claude usage runs out | Agent work stops mid-wave | Smaller waves; work is saved and resumes after reset |
+| Monthly Claude usage runs out | Agent work stops mid-wave | Waves of 15 to 20 problems, one PR each; work is saved and resumes after reset |
+| Israel hiring data goes stale (layoffs, acquisitions) | Company order is a little off | Sources and dates in `content/israel-hiring.md`; refresh twice a year |
 | Solutions and hidden tests ship to the browser | A determined user can read them | Stage C: served from the server only |
 | Company data is crowdsourced | Partial or stale tags | Show recency, present as a trend, not a promise |
 | Growth measurement answers "inconclusive" | The user gets no clear answer | Improve the estimator (stage A) |
