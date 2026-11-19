@@ -5,7 +5,7 @@
  */
 import { h, mount, difficultyBadge } from '../dom.js';
 import { expandRows, companyProgress } from '../../data/company-sets.js';
-import { rankCompanies, filterRanked, findBySlug, israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
+import { filterRanked, findBySlug, israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
 
 const RECENCY_LABEL = { '30d': 'Last 30 days', '3m': 'Last 3 months', '6m': 'Last 6 months', older: 'Older' };
 
@@ -22,28 +22,14 @@ export function loadSets() {
   return setsPromise;
 }
 
-let hiringPromise = null;
-
 /**
- * Israel hiring data (content/israel-hiring.json, copied to the site by the Pages workflow), fetched
- * once. Null when it cannot be loaded: lists then fall back to "All" instead of showing nothing.
- * @returns {Promise<import('../../data/israel-hiring.js').Hiring|null>}
- */
-export function loadHiring() {
-  hiringPromise ??= fetch(new URL('../../../../content/israel-hiring.json', import.meta.url))
-    .then((r) => (r.ok ? r.json() : null))
-    .catch(() => null);
-  return hiringPromise;
-}
-
-/**
- * Companies merged, ordered by Israel relevance and ready to filter; shared with the mock OA setup.
- * @returns {Promise<{ sets: import('../../data/company-sets.js').CompanySets, ranked: import('../../data/israel-hiring.js').RankedCompany[], hasHiring: boolean }|null>}
+ * Companies already merged and ordered by Israel relevance (baked into company-sets.json); shared
+ * with the mock OA setup.
+ * @returns {Promise<{ sets: import('../../data/company-sets.js').CompanySets, ranked: import('../../data/israel-hiring.js').RankedCompany[] }|null>}
  */
 export async function loadRankedCompanies() {
-  const [sets, hiring] = await Promise.all([loadSets(), loadHiring()]);
-  if (!sets) return null;
-  return { sets, ranked: rankCompanies(sets.companies, hiring), hasHiring: Boolean(hiring) };
+  const sets = await loadSets();
+  return sets ? { sets, ranked: sets.companies } : null;
 }
 
 /**
@@ -136,7 +122,6 @@ export function renderCompanies(root, { store }) {
     if (disposed) return;
     if (!d) return loadFailed(root);
     data = d;
-    if (!d.hasHiring) filters.filter = 'all';
     const search = h('input.search', { type: 'search', placeholder: 'Search companies', 'aria-label': 'Search companies' });
     search.addEventListener('input', () => {
       filters.query = search.value;
@@ -151,12 +136,10 @@ export function renderCompanies(root, { store }) {
         h(
           'div.filters',
           {},
-          d.hasHiring
-            ? israelFilterControl(filters.filter, (id) => {
-                filters.filter = id;
-                renderGrid();
-              })
-            : null,
+          israelFilterControl(filters.filter, (id) => {
+            filters.filter = id;
+            renderGrid();
+          }),
           search,
         ),
         count,

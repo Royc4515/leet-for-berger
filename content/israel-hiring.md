@@ -57,6 +57,7 @@ Fields per company: `israel` (`major` / `present` / `none`), `tier` (1 top globa
 1. Add or change the entry in `content/israel-hiring.json` (keep names identical to the metadata).
 2. Give every `major` or `present` entry a `source` URL. If you cannot find one, use `none` with `"unverified": true`.
 3. Run `node --test tests/israel-hiring.test.js`. It fails when a metadata company has no entry, a value is outside the allowed sets, or a major/present entry has no source.
-4. Update the date at the top of this file and the `checked` field in the JSON.
+4. Run `node scripts/content/build-meta.mjs`. It merges the ratings into `src/js/data/company-sets.json` (aliases collapsed, display order fixed); commit the regenerated file. `tests/company-sets.test.js` fails when it is stale.
+5. Update the date at the top of this file and the `checked` field in the JSON.
 
 After `scripts/content/build-meta.mjs` adds new companies, the test lists the missing names.

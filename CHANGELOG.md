@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 ### Added
-- Companies are ordered for a job search in Israel (`content/israel-hiring.json`, pure logic in `src/js/data/israel-hiring.js`): major employers first (by rankIL, tier, problem count), then those with an Israel office, then the rest. A filter ("Hiring in Israel", the default, "Top in Israel", "All") and a "Major in Israel" / "Israel office" badge sit on every card, and alias spellings (X/Twitter, Snap/Snapchat, Citi/Citigroup...) show as one company with merged problem lists. The Pages workflow now also ships `content/israel-hiring.json`.
+- Companies are ordered for a job search in Israel (`content/israel-hiring.json`, merged into `src/js/data/company-sets.json` at build time by `scripts/content/israel-companies.mjs`; the browser only filters, in `src/js/data/israel-hiring.js`): major employers first (by rankIL, tier, problem count), then those with an Israel office, then the rest. A filter ("Hiring in Israel", the default, "Top in Israel", "All") and a "Major in Israel" / "Israel office" badge sit on every card, and alias spellings (X/Twitter, Snap/Snapchat, Citi/Citigroup...) show as one company with merged problem lists.
 - The mock OA company picker is a searchable chip list with the same ordering and filter, instead of a select of 176 names; the selected company is clearly marked.
 - The 1v1 Battle problem picker shows each problem with title, difficulty and topics, filters by difficulty, topic and title, and has a Random button (`src/js/modes/battle-picker.js`). Battle rules are unchanged.
 

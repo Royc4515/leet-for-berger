@@ -2,7 +2,8 @@
 /**
  * Writes src/js/data/problem-meta.json (companies, best known complexity and family versions
  * for every shipped problem, see src/js/data/problem-meta.js) and src/js/data/company-sets.json
- * (practice by company, see src/js/data/company-sets.js) and src/js/data/essential-path.json (the
+ * (practice by company, with Israel hiring fields merged in from content/israel-hiring.json,
+ * see src/js/data/company-sets.js and scripts/content/israel-companies.mjs) and src/js/data/essential-path.json (the
  * learning path, see src/js/data/learning-path.js).
  *
  * Usage: node scripts/content/build-meta.mjs   (after build-index.mjs and complexity.mjs)
@@ -13,6 +14,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildProblemMeta } from '../../src/js/data/problem-meta.js';
 import { buildCompanySets } from '../../src/js/data/company-sets.js';
+import { applyIsrael } from './israel-companies.mjs';
 import { buildPath } from '../../src/js/data/learning-path.js';
 import { TOPICS } from '../../src/js/data/taxonomy.js';
 
@@ -27,7 +29,7 @@ const body = Object.entries(meta).sort(([a], [b]) => a.localeCompare(b)).map(([i
 writeFileSync(join(ROOT, 'src/js/data/problem-meta.json'), `{\n${body}\n}\n`);
 console.log(`${Object.keys(meta).length} problems -> src/js/data/problem-meta.json`);
 
-const sets = buildCompanySets(records, read('content/families.json').families, read('content/companies.json').israeli);
+const sets = applyIsrael(buildCompanySets(records, read('content/families.json').families, read('content/companies.json').israeli), read('content/israel-hiring.json'));
 const setsBody = [
   '{',
   '"problems": [',

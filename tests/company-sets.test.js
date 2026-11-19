@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { applyIsrael } from '../scripts/content/israel-companies.mjs';
 import { companySlug, buildCompanySets, expandRows, filterCompanies, companyProgress, MIN_PROBLEMS, PER_COMPANY } from '../src/js/data/company-sets.js';
 
 const rec = (slug, number, companies, extra = {}) => ({ slug, number, platform: 'leetcode', title: slug, difficulty: 'Easy', contentId: null, companies, ...extra });
@@ -56,8 +57,9 @@ test('company-sets.json is fresh and within limits', () => {
   const read = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url)));
   const raw = read('../content/index/problems.json');
   const records = Array.isArray(raw) ? raw : raw.problems;
-  const rebuilt = buildCompanySets(records, read('../content/families.json').families, read('../content/companies.json').israeli);
+  const rebuilt = applyIsrael(buildCompanySets(records, read('../content/families.json').families, read('../content/companies.json').israeli), read('../content/israel-hiring.json'));
   assert.deepEqual(read('../src/js/data/company-sets.json'), rebuilt, 'run: node scripts/content/build-meta.mjs');
-  for (const c of rebuilt.companies) assert.ok(c.rows.length <= PER_COMPANY, c.name);
+  // A merged alias group unions the rows of its spellings, so the cap applies per spelling.
+  for (const c of rebuilt.companies) assert.ok(c.rows.length <= PER_COMPANY * (1 + c.aliases.length), c.name);
   assert.equal(new Set(rebuilt.companies.map((c) => c.slug)).size, rebuilt.companies.length, 'company slugs are unique');
 });

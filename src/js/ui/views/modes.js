@@ -146,10 +146,6 @@ function renderInterviewSetup(root, { store }) {
       companyHint.textContent = 'Company data could not be loaded.';
       return;
     }
-    if (!d.hasHiring) {
-      cf.filter = 'all';
-      companyFilter.hidden = true;
-    }
     ranked = d.ranked;
     for (const c of ranked) {
       const ids = eligibleIdsOf(c, d.sets);
