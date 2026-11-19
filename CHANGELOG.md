@@ -13,6 +13,7 @@
 - First Match Index is Medium (was Easy): with our limits it needs KMP.
 
 ### Added
+- Suite snapshot: `tests/suite-snapshot.test.js` hashes every problem's 15 cases (visible and hidden, args and expected, SHA-256 of canonical JSON) against `tests/fixtures/suite-hashes.json`, so a change to how problems load cannot silently move a test. After a deliberate test change: `node scripts/content/suite-hashes.mjs --write`.
 - Connecting a repository asks "Do you have one?": yes opens the app's install page; no first opens GitHub's new-repository page prefilled (`leetcode-solutions`, private or public as chosen), then the install page. The site still never gets more than one repository (ADR 0007).
 - GitHub sync is on: `githubAppSlug` names the GitHub App (Leet-For-Berger Sync); the github-sync Edge Function is deployed and its secrets are set in Supabase.
 - 12 problems Wix asks, each with a statement in our own words, 15 tests, solutions in all 8 languages (or one SQL query), hints and a walkthrough: Two Wall Tank, Glyph Order, K Steps Away, Suspicious Payments, Subsequence Check, Growing Word Chain, Bucket Set, Caesar Groups, Common Values, BST Min Gap, Palindrome Joins, Above Manager Pay. Wix now has 35 of its top 50 problems on the site (was 23); 145 problems in all.
