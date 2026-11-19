@@ -11,6 +11,45 @@ import { clearUserData } from '../state/user-data.js';
 const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm';
 
 /**
+ * The Supabase project ref: the first label of the project host, which supabase-js uses in its
+ * storage key (`sb-<ref>-auth-token`).
+ * @param {string} url
+ * @returns {string} '' when the URL does not parse
+ */
+export function projectRefFromUrl(url) {
+  try {
+    return new URL(url).hostname.split('.')[0];
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Whether to load supabase-js at page start. Only a returning user (stored session), or one
+ * mid-redirect (OAuth code or error, GitHub App install), needs it before clicking Sign in; for
+ * everyone else the menu renders signed out from config alone and the client loads on click.
+ * @param {{ storageKeys: string[], search: string, projectRef: string }} opts
+ * @returns {boolean}
+ */
+export function shouldStartAuthEagerly({ storageKeys, search, projectRef }) {
+  const q = new URLSearchParams(search);
+  // don't touch / the auth callback must reach supabase-js (detectSessionInUrl) while the URL still carries it.
+  if (q.has('code') || q.has('error_description') || q.has('installation_id')) return true;
+  if (!projectRef) return false;
+  const prefix = `sb-${projectRef}-auth-token`;
+  return storageKeys.some((k) => k === prefix || k.startsWith(`${prefix}.`));
+}
+
+/** localStorage keys, or [] when storage is blocked (private window, site data off). */
+function storedKeys() {
+  try {
+    return Object.keys(localStorage);
+  } catch {
+    return [];
+  }
+}
+
+/**
  * @typedef {{ status: 'off'|'loading'|'signed-out'|'signed-in', user: { id: string, email: string|null, name: string|null }|null, sync: 'idle'|'syncing'|'synced'|'error', error: string|null }} AccountState
  */
 
@@ -30,8 +69,25 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
   let clearLocal = () => {};
   let apply = () => {};
 
-  async function start() {
-    if (!config.enabled) return;
+  let starting = null;
+  /** Loads the client once; a later call (the Sign in click) joins the same load, or retries after a failure. */
+  function start() {
+    if (!config.enabled) return Promise.resolve();
+    starting ??= load().finally(() => {
+      if (!client) starting = null;
+    });
+    return starting;
+  }
+
+  /** Eager at page start only when `shouldStartAuthEagerly`; otherwise signed out until the first click. */
+  function startIfNeeded({ keys = storedKeys(), search = location.search } = {}) {
+    if (!config.enabled) return Promise.resolve();
+    if (shouldStartAuthEagerly({ storageKeys: keys, search, projectRef: projectRefFromUrl(config.supabaseUrl) })) return start();
+    set({ status: 'signed-out' });
+    return Promise.resolve();
+  }
+
+  async function load() {
     try {
       client = await loadClient(config.supabaseUrl, config.supabaseAnonKey);
     } catch {
@@ -84,8 +140,10 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
       return () => listeners.delete(fn);
     },
     start,
+    startIfNeeded,
     /** @param {'google'|'github'} provider */
     async signIn(provider) {
+      await start();
       if (!client) return;
       // Back to this exact page (path and hash route) after the provider's consent screen.
       const { error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo: location.href.split('#')[0] } });

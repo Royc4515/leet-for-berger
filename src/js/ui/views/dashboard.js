@@ -6,7 +6,7 @@ import { h, mount, difficultyBadge } from '../dom.js';
 import { catalog, catalogEntry, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import { stats, dayKey } from '../../state/progress.js';
 import { dailyProblem, dailyCandidates, weakSpots } from '../../data/recommend.js';
-import { loadPath } from './path.js';
+import { loadPath } from '../../data/path-loader.js';
 
 export function renderDashboard(root, { store }) {
   const filters = { difficulty: 'All', topic: 'all', query: '' };

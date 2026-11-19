@@ -113,3 +113,64 @@ test('an unreachable CDN leaves sign-in unavailable but never throws', async () 
   assert.equal(acc.get().status, 'signed-out');
   assert.match(acc.get().error, /unavailable/);
 });
+
+test('projectRefFromUrl: first host label, empty when unparsable', async () => {
+  const { projectRefFromUrl } = await import('../src/js/auth/account.js');
+  assert.equal(projectRefFromUrl('https://abcdef.supabase.co'), 'abcdef');
+  assert.equal(projectRefFromUrl(''), '');
+  assert.equal(projectRefFromUrl('not a url'), '');
+});
+
+test('shouldStartAuthEagerly: stored session, auth callback or GitHub install only', async () => {
+  const { shouldStartAuthEagerly } = await import('../src/js/auth/account.js');
+  const ref = 'abcdef';
+  const go = (storageKeys, search = '') => shouldStartAuthEagerly({ storageKeys, search, projectRef: ref });
+  assert.equal(go([]), false, 'a fresh visitor loads nothing');
+  assert.equal(go(['lfb-progress', 'sb-other-auth-token']), false, 'another project\'s session does not count');
+  assert.equal(go(['sb-abcdef-auth-token-code-verifier']), false, 'a code verifier alone is not a session');
+  assert.equal(go(['lfb-progress', 'sb-abcdef-auth-token']), true);
+  assert.equal(go(['sb-abcdef-auth-token.0']), true, 'chunked session storage');
+  assert.equal(go([], '?code=abc123'), true, 'PKCE callback');
+  assert.equal(go([], '?error_description=access_denied'), true);
+  assert.equal(go([], '?installation_id=42&setup_action=install'), true);
+  assert.equal(go([], '?utm_source=x'), false);
+  assert.equal(shouldStartAuthEagerly({ storageKeys: ['sb--auth-token'], search: '', projectRef: '' }), false, 'no ref, no guess');
+});
+
+test('startIfNeeded: lazy visitors render signed out without loading; Sign in loads the client once', async () => {
+  let loads = 0;
+  const client = { auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({}), signInWithOAuth: async () => ({ error: null }) }, from: () => ({}) };
+  const acc = createAccount({ store: store(), config: authConfig({ LFB_SUPABASE_URL: 'https://x.supabase.co', LFB_SUPABASE_ANON_KEY: 'k' }), loadClient: async () => (loads++, client) });
+  assert.equal(acc.get().status, 'loading');
+  await acc.startIfNeeded({ keys: ['lfb-progress'], search: '' });
+  assert.equal(acc.get().status, 'signed-out');
+  assert.equal(loads, 0, 'nothing is downloaded for a fresh visitor');
+  globalThis.location = { href: 'https://site.test/#/' };
+  try {
+    await Promise.all([acc.signIn('google'), acc.start()]);
+  } finally {
+    delete globalThis.location;
+  }
+  assert.equal(loads, 1, 'concurrent starts share one load');
+});
+
+test('startIfNeeded: a stored session starts the client and signs in', async () => {
+  const client = {
+    auth: { getSession: async () => ({ data: { session: { user: { id: 'u1', email: 'a@example.com', user_metadata: {} } } } }), onAuthStateChange: () => ({}) },
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }), upsert: async () => ({ error: null }) }),
+  };
+  const acc = createAccount({ store: store(), config: authConfig({ LFB_SUPABASE_URL: 'https://x.supabase.co', LFB_SUPABASE_ANON_KEY: 'k' }), loadClient: async () => client });
+  await acc.startIfNeeded({ keys: ['sb-x-auth-token'], search: '' });
+  assert.equal(acc.get().status, 'signed-in');
+});
+
+test('start: a failed load can be retried by the next click', async () => {
+  let n = 0;
+  const client = { auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({}) }, from: () => ({}) };
+  const acc = createAccount({ store: store(), config: authConfig({ LFB_SUPABASE_URL: 'https://x.supabase.co', LFB_SUPABASE_ANON_KEY: 'k' }), loadClient: async () => { if (n++ === 0) throw new Error('cdn down'); return client; } });
+  await acc.start();
+  assert.match(acc.get().error, /unavailable/);
+  await acc.start();
+  assert.equal(n, 2);
+  assert.equal(acc.get().status, 'signed-out');
+});

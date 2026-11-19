@@ -52,6 +52,11 @@ A bundler would minify them; it would not stop the dashboard from running 1,450 
 - Adding a problem has one more step: run `node scripts/content/build-catalog.mjs`. Forgetting it
   fails `tests/catalog.test.js` and `tests/solutions.test.js`, never silently.
 - Tests and scripts that need every problem call `await loadAllProblems()`.
-- Still no build step (ADR 0001 stands). The remaining first-load JavaScript is the app shell and
-  the views; `main.js` still imports the workspace (and through it the runners and codegen)
-  statically. Lazy views are the next step if the shell grows, not a bundler.
+- Still no build step (ADR 0001 stands).
+- Update (F1): views are lazy too. `main.js` imports each view with `import()` when its route
+  opens, guarded by a navigation token so a slow load never renders over a newer route, and a
+  failed import renders "Could not load this page". A fresh `#/` now loads 19 local modules (was
+  50), with no workspace, runner, codegen or program builder. The dashboard reads the path JSON
+  through `data/path-loader.js`, not the path view. supabase-js is lazy as well (ADR 0006): it
+  starts at page load only for a stored session, an auth callback or a GitHub App install, and
+  otherwise on the Sign in click.
