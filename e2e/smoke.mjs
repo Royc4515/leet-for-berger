@@ -592,8 +592,9 @@ try {
     }`;
     let signedIn = false;
     await acct.route('**/@supabase/supabase-js@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: stub(signedIn) }));
-    // A fake github-sync Edge Function: linked to one repository, records pushes.
+    // A fake github-sync Edge Function: first not linked (the wizard), then linked to one repository; records pushes.
     const pushes = [];
+    let linked = false;
     await acct.route('https://example.supabase.co/functions/v1/github-sync/**', async (r) => {
       const path = new URL(r.request().url()).pathname;
       const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type' };
@@ -602,7 +603,7 @@ try {
         pushes.push(JSON.parse(r.request().postData()));
         return r.fulfill({ contentType: 'application/json', headers: cors, body: '{"ok":true,"repo":"ada/practice","url":"https://github.com/ada/practice/commit/x"}' });
       }
-      return r.fulfill({ contentType: 'application/json', headers: cors, body: '{"linked":true,"repo":"ada/practice","autoSync":true}' });
+      return r.fulfill({ contentType: 'application/json', headers: cors, body: linked ? '{"linked":true,"repo":"ada/practice","autoSync":true}' : '{"linked":false,"githubUser":true}' });
     });
     await acct.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
@@ -616,6 +617,17 @@ try {
     await acct.waitForSelector('.account-menu button:has-text("Continue with GitHub")');
     if (shotsDir) await acct.screenshot({ path: `${shotsDir}/19-sign-in.png` });
     signedIn = true;
+    await acct.reload();
+    await acct.waitForSelector('#account .account-name:has-text("Ada")');
+    await acct.click('#account .account-name');
+    // Not linked yet: the wizard offers GitHub's prefilled new-repository page, then the app install page.
+    await acct.click('.account-menu button:has-text("No, create one")');
+    await acct.click('#gh-vis-public');
+    const createHref = await acct.locator('.account-menu a:has-text("Create it on GitHub")').getAttribute('href');
+    if (!/^https:\/\/github\.com\/new\?name=leetcode-solutions&.*visibility=public/.test(createHref)) throw new Error(`create link: ${createHref}`);
+    const installHref = await acct.locator('.account-menu a:has-text("Connect it")').getAttribute('href');
+    if (installHref !== 'https://github.com/apps/lfb-sync/installations/new') throw new Error(`install link: ${installHref}`);
+    linked = true;
     await acct.reload();
     await acct.waitForSelector('#account .account-name:has-text("Ada")');
     await acct.click('#account .account-name');

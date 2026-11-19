@@ -40,3 +40,13 @@ test('client calls the function with the session token and the publishable key, 
   const off = createGitHubSync({ account: { ...account, config: { ...account.config, githubAppSlug: '' } }, fetchImpl });
   assert.equal(off.available, false);
 });
+
+test('newRepoUrl prefills GitHub\'s new-repository page, private by default', async () => {
+  const { newRepoUrl } = await import('../src/js/auth/github-sync.js');
+  const u = new URL(newRepoUrl());
+  assert.equal(u.origin + u.pathname, 'https://github.com/new');
+  assert.equal(u.searchParams.get('name'), 'leetcode-solutions');
+  assert.equal(u.searchParams.get('visibility'), 'private');
+  assert.equal(new URL(newRepoUrl({ visibility: 'public' })).searchParams.get('visibility'), 'public');
+  assert.equal(new URL(newRepoUrl({ visibility: 'weird' })).searchParams.get('visibility'), 'private');
+});

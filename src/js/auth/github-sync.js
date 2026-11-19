@@ -77,3 +77,14 @@ export function createGitHubSync({ account, fetchImpl = (...a) => fetch(...a) })
     clear: () => set(null),
   };
 }
+
+/**
+ * GitHub's "create a repository" page, prefilled. The site never creates repositories itself:
+ * that would need far more access than one repository (ADR 0007).
+ * @param {{ name?: string, visibility?: 'private'|'public' }} [opts]
+ * @returns {string}
+ */
+export function newRepoUrl({ name = 'leetcode-solutions', visibility = 'private' } = {}) {
+  const q = new URLSearchParams({ name, description: 'My solutions from Leet-For-Berger', visibility: visibility === 'public' ? 'public' : 'private' });
+  return `https://github.com/new?${q}`;
+}
