@@ -583,6 +583,7 @@ try {
     // A separate page (and storage) so the stubbed account never touches the main page's progress.
     const acct = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     acct.on('pageerror', (e) => errors.push(`account page: ${e.message}`));
+    acct.on('console', (m) => m.type() === 'error' && errors.push(`console (account page): ${m.text()}`));
     // A stub stands in for supabase-js: no network, and the test decides whether a session exists.
     const stub = (signedIn) => `export function createClient() {
       const user = ${signedIn ? "{ id: 'u1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } }" : 'null'};
@@ -605,6 +606,15 @@ try {
     await acct.reload();
     await acct.waitForSelector('#account .account-name:has-text("Ada")');
     await acct.waitForSelector('#account button:has-text("Sign out")');
+    // Regression: a signed-in Submit must reach a verdict (the progress sync once threw "Illegal invocation").
+    await acct.goto(`${BASE}#/problem/pair-sum-target`);
+    await acct.waitForSelector('.monaco-editor', { timeout: 30000 });
+    const code = await acct.evaluate(async () => (await fetch('src/js/problems/pair-sum-target/solutions/solution.js')).text());
+    await acct.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
+    await acct.click('button:has-text("Submit")');
+    await acct.waitForFunction(() => /Accepted/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 30000 }).catch(async () => {
+      throw new Error(`signed-in submit: ${(await acct.locator('.result-head, .console-body').first().textContent().catch(() => '?')).slice(0, 200)}`);
+    });
     await acct.close();
   });
 
