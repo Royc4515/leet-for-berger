@@ -47,3 +47,17 @@ Row Level Security) as the backend.
 - Free plan limits: 50,000 monthly active users and 500 MB of database, far above this site's use.
 - Next in stage C: syncing accepted solutions to the user's GitHub repository needs a server-side
   token, so it runs in a Supabase Edge Function behind a GitHub App limited to one repository.
+
+## Amendment: sign-out clears the device (2026-11-19)
+
+Sign-out used to end the session only, so the next visitor on the same browser saw the previous
+user's progress, drafts and submissions. Now `signOut()` (`auth/account.js`) first calls the sync
+controller's `pushNow()`, which cancels the debounce and merges and writes immediately. If that fails
+nothing is cleared and the user stays signed in, so unsynced work is never lost. On success it stops
+syncing (`setUser(null)`, so the reset is never uploaded as empty progress), resets the store and
+removes every per-user localStorage key, then `main.js` re-mounts the view as a guest. A `SIGNED_OUT`
+event from another tab does the same without the push (the session is already gone).
+The keys that belong to a user are listed once in `state/user-data.js` (progress, drafts); layout
+and language preferences are about the device and stay. `tests/user-data.test.js` scans the source
+for `lfb:` keys so a new store cannot be forgotten. The sign-in merge is unchanged: guest progress
+made before sign-in still merges into the account. The UI asks for confirmation before signing out.

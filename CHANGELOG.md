@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Fixed
+- Signing out left the account's progress, drafts and submissions on the device and on screen. Sign-out now pushes the latest progress, then clears every per-user local store and re-renders as a guest. If the push fails you stay signed in and nothing is cleared. The list of per-user keys lives in `state/user-data.js`, and a unit test fails when a source file persists a key the list misses (ADR 0006 amended).
+- The AI Mentor panel rendered behind the code editor: Monaco kept the pixel width it had before the panel opened (an implicit auto grid column never shrinks) and its positioned layers painted over the panel. The editor column is now `minmax(0, 1fr)`, the right pane clips and isolates its stacking context, and the toolbar scrolls instead of spilling buttons under the panel. The e2e test checks what sits at the panel's centre.
+- Sign out, Disconnect GitHub and loading code from the submission history now ask first (Reset code, Reveal Solution and End interview already did).
 - The site took about 18 s to show the problem list (measured on the live site): Min Stack's hidden-test generator counted pops by rescanning the whole operation list on every iteration, O(n^2) at 10^5 operations, and every problem builds its tests when the catalog is imported. A running count builds identical tests (same SHA-256) in 0.15 s instead of 11 s; the catalog import went from 26.6 s to 15 s (Node, this container). Loading problems only when opened is the next step.
 - Signed in, every Submit failed with "Internal error: Illegal invocation": the progress sync called `setTimeout` as a method of another object, which browsers reject (Node does not, so the unit tests passed). The e2e test now submits while signed in.
 

@@ -61,6 +61,47 @@ test('signed-in session: user is exposed and progress is pulled from user_state'
   assert.ok(queries.some((q) => q.ops.some((o) => o[0] === 'upsert' && o[1] === 'u1')));
 });
 
+test('sign-out pushes first, then clears local progress; a failed push keeps the user signed in', async () => {
+  const mk = (failSave) => {
+    const st = store();
+    let resets = 0;
+    st.reset = () => resets++;
+    const saved = [];
+    const listeners = [];
+    const chain = {
+      select: () => chain,
+      eq: () => chain,
+      maybeSingle: async () => ({ data: null, error: null }),
+      upsert: async (row) => (failSave ? { error: { message: 'offline' } } : (saved.push(row.user_id), { error: null })),
+    };
+    const client = {
+      auth: {
+        getSession: async () => ({ data: { session: { user: { id: 'u1', email: 'a@example.com', user_metadata: {} } } } }),
+        onAuthStateChange: (cb) => (listeners.push(cb), { data: {} }),
+        signOut: async () => listeners.forEach((l) => l('SIGNED_OUT', null)),
+      },
+      from: () => chain,
+    };
+    const acc = createAccount({ store: st, config: authConfig({ LFB_SUPABASE_URL: 'https://x.supabase.co', LFB_SUPABASE_ANON_KEY: 'k' }), loadClient: async () => client });
+    return { acc, saved, resets: () => resets };
+  };
+  const ok = mk(false);
+  await ok.acc.start();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(await ok.acc.signOut(), true);
+  assert.equal(ok.acc.get().status, 'signed-out');
+  assert.ok(ok.resets() >= 1, 'local progress was reset');
+  assert.ok(ok.saved.length >= 2, 'the latest progress was pushed again at sign-out');
+
+  // Sync cannot succeed: the account keeps the session and the local data.
+  const bad = mk(true);
+  await bad.acc.start();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(await bad.acc.signOut(), false);
+  assert.equal(bad.acc.get().status, 'signed-in');
+  assert.equal(bad.resets(), 0);
+});
+
 test('an unreachable CDN leaves sign-in unavailable but never throws', async () => {
   const acc = createAccount({ store: store(), config: authConfig({ LFB_SUPABASE_URL: 'https://x.supabase.co', LFB_SUPABASE_ANON_KEY: 'k' }), loadClient: async () => { throw new Error('offline'); } });
   await acc.start();

@@ -3,7 +3,9 @@
  * Kept apart from progress so autosave on every keystroke does not rewrite the whole
  * progress blob (and a corrupt draft cannot take progress down with it).
  */
-const key = (problemId, lang) => `lfb:draft:v1:${problemId}:${lang}`;
+/** Every draft key starts with this; state/user-data.js clears by prefix on sign-out. */
+export const DRAFT_PREFIX = 'lfb:draft:v1:';
+const key = (problemId, lang) => `${DRAFT_PREFIX}${problemId}:${lang}`;
 
 export function loadDraft(problemId, lang) {
   try {

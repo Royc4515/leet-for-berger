@@ -54,6 +54,8 @@ async function check(name, fn) {
 const expectText = async (sel, re, timeout = 15000) => {
   await page.waitForFunction(([s, src]) => new RegExp(src).test(document.querySelector(s)?.textContent ?? ''), [sel, re.source], { timeout });
 };
+const expectDialog = (p, re) =>
+  p.waitForFunction((src) => new RegExp(src).test(document.querySelector('dialog.modal')?.textContent ?? ''), re.source, { timeout: 5000 });
 const setCode = (code) => page.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
 
 try {
@@ -109,6 +111,7 @@ try {
     await shot('18-walkthrough-history');
     await setCode('// replaced');
     await page.click('.history-list li:first-child button:has-text("Load code")');
+    await page.click('dialog.modal button:has-text("Load code")');
     await page.waitForFunction(() => !window.monaco.editor.getModels()[0].getValue().includes('// replaced'));
   });
 
@@ -157,6 +160,16 @@ try {
     await page.press('.mentor-input', 'Enter');
     await expectText('.mentor-log', /won't hand you the solution/);
     await shot('04-mentor');
+    // Regression: Monaco once overflowed its grid column and painted over the panel. The panel's
+    // centre, its toolbar edge and the editor's right edge must all hit the panel or the editor, never cross.
+    const stacking = await page.evaluate(() => {
+      const m = document.querySelector('.mentor').getBoundingClientRect();
+      const hit = document.elementFromPoint(m.left + m.width / 2, m.top + m.height / 2);
+      const editorRight = document.querySelector('.editor-host').getBoundingClientRect().right;
+      return { inside: Boolean(hit?.closest('.mentor')), hit: hit?.className, overlap: editorRight - m.left };
+    });
+    if (!stacking.inside) throw new Error(`mentor panel is covered by ${stacking.hit}`);
+    if (stacking.overlap > 1) throw new Error(`editor extends ${stacking.overlap}px under the mentor panel`);
     await page.click('button[aria-label="Close mentor"]');
   });
 
@@ -586,9 +599,10 @@ try {
     acct.on('console', (m) => m.type() === 'error' && errors.push(`console (account page): ${m.text()}`));
     // A stub stands in for supabase-js: no network, and the test decides whether a session exists.
     const stub = (signedIn) => `export function createClient() {
+      const listeners = [];
       const user = ${signedIn ? "{ id: 'u1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } }" : 'null'};
       const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async () => ({ error: null }) };
-      return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: () => ({}), signInWithOAuth: async () => ({}), signOut: async () => ({}) }, from: () => chain };
+      return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: (cb) => { listeners.push(cb); return {}; }, signInWithOAuth: async () => ({}), signOut: async () => { listeners.forEach((l) => l('SIGNED_OUT', null)); return {}; } }, from: () => chain };
     }`;
     let signedIn = false;
     await acct.route('**/@supabase/supabase-js@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: stub(signedIn) }));
@@ -646,6 +660,42 @@ try {
     });
     await acct.waitForSelector('.toast:has-text("Saved to GitHub: ada/practice")', { timeout: 15000 });
     if (pushes.length !== 1 || pushes[0].problemId !== 'pair-sum-target' || pushes[0].assisted !== false || !pushes[0].code.includes('function')) throw new Error(`unexpected pushes: ${JSON.stringify(pushes).slice(0, 200)}`);
+
+    // Sign-out asks first, keeps everything on Cancel, and clears this user's data on confirm.
+    await acct.goto(`${BASE}#/`);
+    await acct.waitForSelector('#account .account-name:has-text("Ada")');
+    const stored = () => acct.evaluate(() => ({ progress: JSON.parse(localStorage.getItem('lfb:progress:v1') ?? 'null'), drafts: Object.keys(localStorage).filter((k) => k.startsWith('lfb:draft:')) }));
+    await acct.evaluate(() => localStorage.setItem('lfb:draft:v1:pair-sum-target:python', '# unsaved'));
+    if (!(await stored()).progress?.problems?.['pair-sum-target']) throw new Error('expected local progress before sign-out');
+    await acct.click('#account .account-name');
+    await acct.click('.account-menu button:has-text("Sign out")');
+    await acct.waitForSelector('dialog.modal[open]');
+    await expectDialog(acct, /Sign out\?[\s\S]*stays in your account[\s\S]*removed from this device/);
+    if (shotsDir) await acct.screenshot({ path: `${shotsDir}/22-sign-out-confirm.png` });
+    await acct.click('dialog.modal button:has-text("Cancel")');
+    await acct.waitForSelector('dialog.modal', { state: 'detached' });
+    if (!(await stored()).progress?.problems?.['pair-sum-target']) throw new Error('Cancel must keep local progress');
+    if ((await acct.locator('#account .account-name').count()) !== 1) throw new Error('Cancel must keep the session');
+    await acct.keyboard.press('Escape');
+    await acct.click('#account .account-name');
+    await acct.click('.account-menu button:has-text("Sign out")');
+    await acct.waitForSelector('dialog.modal[open]');
+    await acct.keyboard.press('Escape');
+    await acct.waitForSelector('dialog.modal', { state: 'detached' });
+    if (!(await stored()).progress) throw new Error('Escape must cancel');
+    // Disconnecting GitHub asks too, and names the repository.
+    await acct.click('#account .account-name');
+    await acct.click('.account-menu button:has-text("Disconnect")');
+    await expectDialog(acct, /Disconnect GitHub\?[\s\S]*ada\/practice[\s\S]*Nothing in the repository is deleted/);
+    await acct.click('dialog.modal button:has-text("Cancel")');
+    await acct.waitForSelector('dialog.modal', { state: 'detached' });
+    await acct.click('#account .account-name');
+    await acct.click('.account-menu button:has-text("Sign out")');
+    await acct.click('dialog.modal button:has-text("Sign out")');
+    await acct.waitForSelector('#account button:has-text("Sign in")');
+    const after = await stored();
+    if (after.progress && Object.keys(after.progress.problems).length) throw new Error(`progress left on the device: ${JSON.stringify(after.progress).slice(0, 120)}`);
+    if (after.drafts.length) throw new Error(`drafts left on the device: ${after.drafts}`);
     await acct.close();
   });
 

@@ -96,6 +96,12 @@ account.start();
 // GitHub sync (ADR 0007): load the link on sign-in, and finish connecting when GitHub sends the
 // user back from installing the app (?installation_id=...&setup_action=install).
 let pendingInstall = installationFromUrl(location.search);
+// Sign-out clears the user's data (auth/account.js); re-mount the current view so it shows the guest state.
+let wasSignedIn = false;
+account.subscribe((s) => {
+  if (wasSignedIn && s.status === 'signed-out') route();
+  wasSignedIn = s.status === 'signed-in';
+});
 account.subscribe(async (s) => {
   if (!services.github) return;
   if (s.status !== 'signed-in') return github.clear();
