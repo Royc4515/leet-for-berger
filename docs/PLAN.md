@@ -61,7 +61,7 @@ Until stage C there is no backend with users: progress lives in localStorage, an
 Stages A to D2 below are the history. The order from here is stage F. Each item closes with a PR that passes CI and waits for the owner's approval to merge.
 
 ### Stage F: focus from 2026-11-19 (in this order)
-- [ ] **F1. Last speed steps (small, one PR):** load views only when opened, and load supabase-js only with a stored session, an auth callback, or a click on Sign in. About 35 fewer modules and 9 fewer requests on a first visit
+- [x] **F1. Last speed steps (small, one PR):** load views only when opened, and load supabase-js only with a stored session, an auth callback, or a click on Sign in. Fresh `#/`: 50 to 19 local modules, 62 to 22 requests, supabase-js 7 to 0
 - [ ] **F2. Company waves by hiring in Israel (main work, repeating):** each wave adds 15 to 20 of the most-asked problems we lack for the next companies in `content/israel-hiring.json` rank order (Nvidia, Intel, Amdocs, Microsoft, Mobileye, Check Point, Wix, Palo Alto Networks, Apple, Google, ...), counting a family once. Same bar as today: our own wording, 15 cases, 8 verified languages, explanation, family links. Graphs as objects and numbers above 2^53 are built when the first wave needs them, not before
 - [ ] **F3. Growth measurement for every problem:** complexity feedback is a core promise and covers 10 problems. Fill targets automatically from the best known complexity and add input generators per problem; new wave problems ship with it
 - [ ] **F4. Real AI mentor:** an LLM behind a Supabase Edge Function with a hard monthly cap, using the system prompt already in `src/js/mentor/mentor.js`. Starts only after the budget decision below
@@ -115,7 +115,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
 - [x] Companies: top companies first, a filter for top employers in Israel (any company with Israeli R&D, not only Israeli ones), companies that do not hire in Israel lower (`content/israel-hiring.json`)
 - [x] Interview: a readable company picker sorted by relevance to hiring in Israel
 - [x] Battle (1v1): a readable problem picker that shows topic and difficulty
-- [ ] Load views only when opened, and load supabase-js only with a session or on Sign in (moved to F1)
+- [x] Load views only when opened, and load supabase-js only with a session or on Sign in (done in F1)
 
 ### Stage E: new UI
 - [ ] Redesign (now F5): a dedicated design session (Fable 5.2) with a plan per screen, then execution per screen. Until then fixes keep the current look. Known asks: company buttons instead of a plain list, readable pickers in every mode

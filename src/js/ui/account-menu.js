@@ -59,6 +59,8 @@ export function mountAccountMenu(host, account, github = null) {
         open = menu.hidden;
         menu.hidden = !open;
         toggle.setAttribute('aria-expanded', String(open));
+        // Opening the menu is the intent to sign in: start loading supabase-js now (a no-op once loaded).
+        if (open) account.start();
       });
       return mount(host, h('div.account', {}, toggle, menu));
     }

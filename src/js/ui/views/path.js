@@ -6,19 +6,7 @@ import { h, mount, difficultyBadge } from '../dom.js';
 import { catalogEntry } from '../../problems/index.js';
 import { pathProgress, conceptLabel } from '../../data/learning-path.js';
 import { TOPICS } from '../../data/taxonomy.js';
-
-let pathPromise = null;
-
-/**
- * The essential path, fetched once and shared by the path page and the dashboard.
- * @returns {Promise<import('../../data/learning-path.js').PathTier[]|null>}
- */
-export function loadPath() {
-  pathPromise ??= fetch(new URL('../../data/essential-path.json', import.meta.url))
-    .then((r) => (r.ok ? r.json() : null))
-    .catch(() => null);
-  return pathPromise;
-}
+import { loadPath } from '../../data/path-loader.js';
 
 const topicTitle = (id) => TOPICS.find((t) => t.id === id)?.title ?? id;
 

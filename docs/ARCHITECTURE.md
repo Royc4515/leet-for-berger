@@ -70,7 +70,7 @@ Streak = consecutive local days with an accepted submission, ending today or yes
 
 ## Routing
 
-Hash routes (`#/`, `#/problem/:id`, `#/path`, `#/modes`, `#/interview`, `#/battle`) so Pages needs no rewrite rules. Each render returns a cleanup; the router always calls the previous cleanup before rendering.
+Hash routes (`#/`, `#/problem/:id`, `#/path`, `#/modes`, `#/interview`, `#/battle`) so Pages needs no rewrite rules. Each render returns a cleanup; the router always calls the previous cleanup before rendering. Each view module is imported on demand (`import()` per route in `main.js`); a navigation token drops a render whose module arrives after the hash moved on, and a failed import shows "Could not load this page". The workspace, runners, codegen and program builders therefore load only when a problem or mode opens. supabase-js loads at start only for a stored session, an OAuth callback or a GitHub App install; otherwise on the Sign in click (`shouldStartAuthEagerly` in `auth/account.js`).
 
 ## Modes
 

@@ -73,6 +73,28 @@ const expectDialog = (p, re) =>
 const setCode = (code) => page.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
 
 try {
+  await check('a fresh visit to #/ loads no workspace, runner program builder or supabase-js, and the dashboard renders', async () => {
+    // Shipped auth config (live Supabase project) on purpose: that is the visitor who used to pay for supabase-js.
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const fresh = await ctx.newPage();
+    const urls = [];
+    fresh.on('request', (r) => urls.push(r.url()));
+    fresh.on('console', (m) => m.type() === 'error' && errors.push(`console (fresh page): ${m.text()}`));
+    fresh.on('pageerror', (e) => errors.push(`pageerror (fresh page): ${e.message}`));
+    await fresh.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+    });
+    await fresh.goto(`${BASE}#/`);
+    await fresh.waitForSelector('.problem-table tbody tr a.problem-link');
+    const ms = await fresh.evaluate(() => performance.now());
+    await fresh.waitForTimeout(800);
+    const bad = urls.filter((u) => /ui\/views\/workspace\.js|engine\/programs\/build\.js|supabase-js/.test(u));
+    if (bad.length) throw new Error(`loaded on a fresh #/: ${bad.join(', ')}`);
+    const modules = urls.filter((u) => u.startsWith(BASE) && u.endsWith('.js')).length;
+    console.log(`  # fresh #/: ${modules} local modules, ${urls.length} requests, dashboard ready in ${Math.round(ms)} ms`);
+    await ctx.close();
+  });
+
   await check('dashboard renders with stats and problem bank, without loading any problem module', async () => {
     await page.goto(BASE);
     await page.waitForSelector('.problem-table tbody tr a.problem-link');
@@ -660,8 +682,10 @@ try {
       const listeners = [];
       const user = ${signedIn ? "{ id: 'u1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } }" : 'null'};
       const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async () => ({ error: null }) };
-      return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: (cb) => { listeners.push(cb); return {}; }, signInWithOAuth: async () => ({}), signOut: async () => { listeners.forEach((l) => l('SIGNED_OUT', null)); return {}; } }, from: () => chain };
+      return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: (cb) => { listeners.push(cb); return {}; }, signInWithOAuth: async () => ({}), signOut: async () => { localStorage.removeItem('sb-example-auth-token'); listeners.forEach((l) => l('SIGNED_OUT', null)); return {}; } }, from: () => chain };
     }`;
+    const acctRequests = [];
+    acct.on('request', (r) => acctRequests.push(r.url()));
     let signedIn = false;
     await acct.route('**/@supabase/supabase-js@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: stub(signedIn) }));
     // A fake github-sync Edge Function: first not linked (the wizard), then linked to one repository; records pushes.
@@ -684,13 +708,24 @@ try {
       window.LFB_GITHUB_APP_SLUG = 'lfb-sync';
     });
     await acct.goto(`${BASE}#/`);
+    // Signed out and no auth callback: the menu renders from config alone, supabase-js is not fetched yet.
+    await acct.waitForSelector('#account button:has-text("Sign in")');
+    await acct.waitForTimeout(300);
+    if (acctRequests.some((u) => u.includes('supabase-js'))) throw new Error('supabase-js loaded before the Sign in click');
     await acct.click('#account button:has-text("Sign in")');
+    await acct.waitForFunction(() => document.querySelector('.account-menu button')?.textContent?.includes('Google'));
+    await acct.waitForTimeout(300);
+    if (!acctRequests.some((u) => u.includes('supabase-js'))) throw new Error('clicking Sign in did not load supabase-js');
     await acct.waitForSelector('.account-menu button:has-text("Continue with Google")');
     await acct.waitForSelector('.account-menu button:has-text("Continue with GitHub")');
     if (shotsDir) await acct.screenshot({ path: `${shotsDir}/19-sign-in.png` });
     signedIn = true;
+    // supabase-js keeps a returning user's session here; its presence is what starts the client at page load.
+    await acct.evaluate(() => localStorage.setItem('sb-example-auth-token', '{}'));
+    acctRequests.length = 0;
     await acct.reload();
     await acct.waitForSelector('#account .account-name:has-text("Ada")');
+    if (!acctRequests.some((u) => u.includes('supabase-js'))) throw new Error('a stored session must start supabase-js at page load');
     await acct.click('#account .account-name');
     // Not linked yet: the wizard offers GitHub's prefilled new-repository page, then the app install page.
     await acct.click('.account-menu button:has-text("No, create one")');
@@ -785,6 +820,43 @@ try {
     } finally {
       await page.unroute(broken);
     }
+  });
+
+  await check('a view module that fails to load shows the could-not-load page, with a way back', async () => {
+    // Throws while evaluating, so the import rejects without the browser's own network-error log.
+    const broken = '**/ui/views/path.js';
+    await page.route(broken, (route) => route.fulfill({ status: 200, contentType: 'text/javascript', body: 'throw new Error("simulated view failure");' }));
+    try {
+      await page.goto(`${BASE}#/path`);
+      await expectText('.page', /Could not load this page\. Check your connection and reload\./);
+    } finally {
+      await page.unroute(broken);
+    }
+    await page.click('.page a:has-text("Back to problems")');
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
+  });
+
+  await check('fast navigation dashboard, problem, back, problem leaves exactly one editor and one workspace', async () => {
+    await page.goto(`${BASE}#/`);
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
+    // Hash changes a few ms apart: views load asynchronously, so a stale load must not render over the newer one.
+    await page.evaluate(async () => {
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      location.hash = '#/problem/pair-sum-target';
+      await wait(15);
+      history.back();
+      await wait(15);
+      location.hash = '#/problem/pair-sum-target';
+    });
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await page.waitForTimeout(1500);
+    const { editors, workspaces, hash } = await page.evaluate(() => ({ editors: document.querySelectorAll('.monaco-editor').length, workspaces: document.querySelectorAll('.problem-title').length, hash: location.hash }));
+    if (editors !== 1 || workspaces !== 1) throw new Error(`expected one editor and one workspace, got ${editors} and ${workspaces}`);
+    if (hash !== '#/problem/pair-sum-target') throw new Error(`unexpected route ${hash}`);
+    // And back out again: the dashboard returns with the editor gone.
+    await page.evaluate(() => history.back());
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
+    if (await page.locator('.monaco-editor').count()) throw new Error('editor left behind after leaving the workspace');
   });
 
   await check('zero console errors across the whole session', async () => {
