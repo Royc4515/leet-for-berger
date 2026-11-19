@@ -98,9 +98,9 @@ Recommended order: practice experience first (stage A), since all the content ex
 ### Stage D2: owner review fixes (2026-11-19)
 - [x] Sign-out clears the user's data from the device; sign out, disconnect GitHub and loading old code ask first; a failed save offers "Sign out anyway"
 - [x] AI Mentor panel no longer hides behind the editor
-- [ ] Companies: top companies first, a filter for top employers in Israel (any company with Israeli R&D, not only Israeli ones), companies that do not hire in Israel lower (`content/israel-hiring.json`)
-- [ ] Interview: a readable company picker sorted by relevance to hiring in Israel
-- [ ] Battle (1v1): a readable problem picker that shows topic and difficulty
+- [x] Companies: top companies first, a filter for top employers in Israel (any company with Israeli R&D, not only Israeli ones), companies that do not hire in Israel lower (`content/israel-hiring.json`)
+- [x] Interview: a readable company picker sorted by relevance to hiring in Israel
+- [x] Battle (1v1): a readable problem picker that shows topic and difficulty
 - [ ] Load views only when opened, and load supabase-js only with a session or on Sign in (perf plan steps 2-3)
 
 ### Stage E: new UI
