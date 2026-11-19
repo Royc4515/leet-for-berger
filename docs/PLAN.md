@@ -71,7 +71,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
 ### Deferred until there is a reason (decided 2026-11-19)
 - Hidden tests and solutions served only from the server, and the CI to Supabase content sync that would feed them. The judge runs in the page, so expected values reach the browser anyway; serving them from the server only hides them from casual reading. Worth it only with scored peer battles or leaderboards.
 - Real-time battles against people. Needs server-side judging so clients cannot fake progress. Revisit if more users arrive.
-- Faster problem open (build hidden tests on first Run) and faster heavy references (perf plan steps 4 and 6). Opening a problem costs 0.05 to 0.9 s today; revisit if it feels slow.
+- Faster problem open (build hidden tests on first Run) and faster heavy references (perf plan steps 4 and 6). Opening a problem costs 0.05 to 0.9 s today; revisit if it feels slow. Trap when it is done: `hydrate()` copies the problem with an object spread, which invokes getters, so a lazy `hiddenTests` getter must be copied by property descriptor (with a unit test), and the module-level `rnd` in prime-count and roman-numeral-value must move inside the same thunk.
 
 ### Stage A: practice experience (next)
 - [x] Company tags on every problem: name, frequency, recency, Israeli companies marked (PR #10)
