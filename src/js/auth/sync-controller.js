@@ -17,7 +17,11 @@ import { mergeProgress } from '../state/sync.js';
  *   onStatus?: (status: 'syncing'|'synced'|'error', detail?: string) => void,
  * }} opts
  */
-export function createSyncController({ store, backend, debounceMs = 2000, timers = { set: setTimeout, clear: clearTimeout }, onStatus = () => {} }) {
+// don't touch / wrapped: browsers throw "Illegal invocation" when setTimeout is called as a method
+// of another object (timers.set(...)); Node does not, so only the e2e test catches a regression.
+const DEFAULT_TIMERS = { set: (fn, ms) => setTimeout(fn, ms), clear: (id) => clearTimeout(id) };
+
+export function createSyncController({ store, backend, debounceMs = 2000, timers = DEFAULT_TIMERS, onStatus = () => {} }) {
   let userId = null;
   let timer = null;
   let applying = false;

@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- Signed in, every Submit failed with "Internal error: Illegal invocation": the progress sync called `setTimeout` as a method of another object, which browsers reject (Node does not, so the unit tests passed). The e2e test now submits while signed in.
+
 ### Changed
 - The legacy `milestone` field is gone from all problem files, the catalog and the problem format (no view has read it since the essential path replaced the milestones).
 - Growth estimate: one slow (or fast) middle size no longer spoils a 4-size measurement. With exactly 4 sizes, an interior outlier is dropped when the other 3 fit tightly; the first and last sizes are never dropped there (a slow last size can be real growth). Outliers are now judged against the line through the other sizes. A linear solution with one slow middle size read "timings too noisy" before and reads "matches" now; a slow last size, a real bend and noise everywhere still do not match (ADR 0004 amended).
