@@ -1701,3 +1701,19 @@ body.resizing-y * {
 .account-section a {
   color: var(--info);
 }
+.gh-wizard {
+  display: grid;
+  gap: 6px;
+}
+.gh-wizard-actions {
+  display: flex;
+  gap: 6px;
+}
+.gh-vis {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 13px;
+}
