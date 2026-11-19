@@ -9,10 +9,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { appendFileSync, mkdtempSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { appendFileSync, mkdtempSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { availableProblems } from '../src/js/problems/index.js';
+import { loadAllProblems } from '../src/js/problems/index.js';
 import { buildSuite, comparatorFor } from '../src/js/engine/harness.js';
 import { LANGUAGES, validateSignature } from '../src/js/engine/codegen.js';
 import { buildHarness, buildProgram, programStdin, splitOutput, NATIVE_LANGUAGES, JAVA_SUPPORT_FILES } from '../scripts/verify/harnesses.mjs';
@@ -111,7 +111,15 @@ function verifySql(problem, suite) {
   });
 }
 
-for (const problem of availableProblems()) {
+const problems = await loadAllProblems();
+const problemDirs = readdirSync(join(ROOT, 'src/js/problems'), { withFileTypes: true }).filter((d) => d.isDirectory() && existsSync(join(ROOT, 'src/js/problems', d.name, 'problem.js')));
+
+// The loop below verifies what the catalog lists; a problem missing from it would skip silently.
+test('every problem directory is verified (none missing from the catalog)', () => {
+  assert.equal(problems.length, problemDirs.length, 'run: node scripts/content/build-catalog.mjs');
+});
+
+for (const problem of problems) {
   const suite = buildSuite(problem);
   if (isSql(problem.signature)) {
     verifySql(problem, suite);

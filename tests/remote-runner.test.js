@@ -9,7 +9,7 @@ import { buildProgram, programStdin } from '../src/js/engine/programs/build.js';
 import { RESULT_MARK, CASE_MARK } from '../src/js/engine/programs/output.js';
 import { remoteRunnerConfig, REMOTE_RUNNER } from '../src/js/config.js';
 import { buildSuite, judge } from '../src/js/engine/harness.js';
-import { availableProblems } from '../src/js/problems/index.js';
+import { loadProblem } from '../src/js/problems/index.js';
 
 const sig = { name: 'twice', params: [{ name: 'n', type: 'int' }], returns: 'int' };
 const cases = Array.from({ length: 15 }, (_, i) => ({ id: i + 1, args: [i] }));
@@ -45,7 +45,7 @@ test('config: the file sets the runner; a window override replaces it, and empty
 });
 
 test('request: path per language, gzip JSON body with files, stdin and args, never expected values', async () => {
-  const problem = availableProblems().find((p) => p.id === 'pair-sum-target');
+  const problem = await loadProblem('pair-sum-target');
   const suite = buildSuite(problem);
   const { runner, calls } = fakeRunner('go', () => ok({ compile: { code: 0, stdout: '', stderr: '' }, run: runOutput(suite.map((t) => t.expected)) }));
   const raw = await runner.run({ code: problem.starterCode.go, signature: problem.signature, cases: suite.map(({ id, args }) => ({ id, args })), timeLimitMs: problem.timeLimitMs });

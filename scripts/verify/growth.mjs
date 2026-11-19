@@ -7,7 +7,7 @@ import { estimateGrowth, shouldMeasureNext, median, growthSeed } from '../../src
 /**
  * Compiles user or solution code the way the worker does for a growth run: `prepare` turns JSON
  * args into what the user's code takes (untimed), `call` runs the user's code on them (timed).
- * @param {object} problem hydrated problem (problems/index.js)
+ * @param {object} problem hydrated problem (problems/index.js loadProblem)
  * @param {string} code
  * @returns {{ prepare: (...args: unknown[]) => unknown[], call: (prepared: unknown[]) => unknown, entry: Function, objects: boolean }}
  *   entry is the judged path (JSON in, JSON out), used to check a generator's input is valid;

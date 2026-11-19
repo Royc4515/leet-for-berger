@@ -2,7 +2,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { availableProblems } from '../src/js/problems/index.js';
+import { loadAllProblems } from '../src/js/problems/index.js';
+
+const problems = await loadAllProblems();
 import { pathOrder } from '../src/js/data/learning-path.js';
 
 const SECTIONS = ['Idea', 'Why it works', 'Complexity', 'Pitfall'];
@@ -23,13 +25,13 @@ export function explanationProblems(id, html) {
 }
 
 test('every explanation follows the format', () => {
-  const errs = availableProblems().filter((p) => p.explanationHtml).flatMap((p) => explanationProblems(p.id, p.explanationHtml));
+  const errs = problems.filter((p) => p.explanationHtml).flatMap((p) => explanationProblems(p.id, p.explanationHtml));
   assert.deepEqual(errs, []);
 });
 
 test('every essential-path problem has an explanation', () => {
   const path = JSON.parse(readFileSync(new URL('../src/js/data/essential-path.json', import.meta.url)));
-  const byId = new Map(availableProblems().map((p) => [p.id, p]));
+  const byId = new Map(problems.map((p) => [p.id, p]));
   const missing = pathOrder(path).map((p) => p.id).filter((id) => !byId.get(id)?.explanationHtml);
   // Ratchet: the number may only go down until it reaches zero.
   assert.ok(missing.length <= Number(process.env.EXPLANATIONS_MISSING_MAX ?? 0), `${missing.length} essential problems still need explanationHtml: ${missing.join(', ')}`);

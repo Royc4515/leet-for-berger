@@ -3,7 +3,7 @@
  */
 import { h, mount, toast, confirmDialog, difficultyBadge } from '../dom.js';
 import { renderWorkspace } from './workspace.js';
-import { availableProblems, getProblem } from '../../problems/index.js';
+import { availableEntries, catalogEntry, loadProblem } from '../../problems/index.js';
 import * as Interview from '../../modes/interview.js';
 import { createBot, BOT_LEVELS } from '../../modes/battle.js';
 import { OA_FORMATS, pickOaProblems } from '../../modes/mock-oa.js';
@@ -41,7 +41,7 @@ export function renderModesHub(root) {
           'AI Mentor',
           'Offline',
           'Side panel inside every practice problem. Asks guiding questions, refuses to hand out solutions. Runs on a scripted hint ladder today; the LLM provider plugs into the same interface behind a backend proxy.',
-          h('a.btn.btn-secondary', { href: `#/problem/${availableProblems()[0].id}` }, 'Open a problem'),
+          h('a.btn.btn-secondary', { href: `#/problem/${availableEntries()[0].id}` }, 'Open a problem'),
         ),
       ),
     ),
@@ -54,6 +54,7 @@ export function renderModesHub(root) {
 // Module-level so leaving and re-entering the route resumes instead of restarting.
 let interview = null;
 let interviewDrafts = null; // survives route changes with the session, reset on a new interview
+let interviewProblems = null; // id -> hydrated problem, loaded before the clock starts
 
 export function renderInterview(root, { store }) {
   if (!interview) return renderInterviewSetup(root, { store });
@@ -62,7 +63,7 @@ export function renderInterview(root, { store }) {
 }
 
 /** Problems a timed session can use: anything with a browser language (SQL problems are their own track). */
-const oaEligible = () => availableProblems().filter((p) => p.languages.some((l) => l.executable && l.id !== 'sql'));
+const oaEligible = () => availableEntries().filter((p) => p.executable.some((l) => l !== 'sql'));
 
 /** Companies with enough on-site problems to fill a mock OA. */
 const MIN_COMPANY_PROBLEMS = 3;
@@ -121,8 +122,9 @@ function renderInterviewSetup(root, { store }) {
   };
   describe();
 
+  let disposed = false;
   const start = h('button.btn.btn-primary.btn-lg', { type: 'button' }, 'Start interview');
-  start.addEventListener('click', () => {
+  start.addEventListener('click', async () => {
     const solvedIds = new Set(Object.entries(store.get().problems).filter(([, p]) => p.status === 'solved').map(([id]) => id));
     const candidates = (companyIds ? eligible.filter((p) => companyIds.includes(p.id)) : eligible).map((p) => ({ id: p.id, difficulty: p.difficulty }));
     // The clock seeds the pick so every OA differs; the pick itself is pure and tested.
@@ -131,6 +133,23 @@ function renderInterviewSetup(root, { store }) {
       toast('No problems available for this setup.', 'warn');
       return;
     }
+    // Load every problem before creating the session: the clock starts in createSession, and
+    // download and test-building time must never count against the candidate.
+    start.disabled = true;
+    start.textContent = 'Loading problems...';
+    let loaded;
+    try {
+      loaded = await Promise.all(problemIds.map(loadProblem));
+    } catch {
+      if (disposed) return;
+      start.disabled = false;
+      start.textContent = 'Start interview';
+      toast('The problems could not be loaded. Check your connection and try again.', 'error');
+      return;
+    }
+    if (disposed) return;
+    interviewProblems = new Map(loaded.map((p) => [p.id, p]));
+    // don't touch / the clock starts here, so it must stay after the await above (load time is not the candidate's)
     interview = Interview.createSession({ problemIds, durationMs: format.minutes * 60 * 1000 });
     interviewDrafts = new Map();
     interview.activeProblemId = problemIds[0];
@@ -166,7 +185,9 @@ function renderInterviewSetup(root, { store }) {
       ),
     ),
   );
-  return () => {};
+  return () => {
+    disposed = true;
+  };
 }
 
 function renderInterviewActive(root, { store }) {
@@ -194,7 +215,7 @@ function renderInterviewActive(root, { store }) {
   const mountProblem = () => {
     cleanupWs?.();
     cleanupWs = renderWorkspace(host, {
-      problem: getProblem(interview.activeProblemId),
+      problem: interviewProblems.get(interview.activeProblemId),
       store,
       session: {
         kind: 'interview',
@@ -264,6 +285,7 @@ function renderInterviewReport(root) {
   const again = h('button.btn.btn-primary', { type: 'button' }, 'New interview');
   again.addEventListener('click', () => {
     interview = null;
+    interviewProblems = null;
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   });
   mount(
@@ -282,8 +304,7 @@ function renderInterviewReport(root) {
         row('Tab switches', String(a.tabSwitches)),
         h('h3', {}, 'Per problem'),
         a.problems.map((p) => {
-          const prob = getProblem(p.id);
-          return row(prob.title, `${Math.round(p.coverage * 100)}% tests${p.solved ? ` · solved at ${Interview.formatClock(p.solveTimeMs)}` : ''}`);
+          return row(catalogEntry(p.id)?.title ?? p.id, `${Math.round(p.coverage * 100)}% tests${p.solved ? ` · solved at ${Interview.formatClock(p.solveTimeMs)}` : ''}`);
         }),
         h('div.mode-actions', {}, again, h('a.btn.btn-ghost', { href: '#/' }, 'Back to problems')),
       ),
@@ -295,7 +316,7 @@ function renderInterviewReport(root) {
 /* ======================= Battle ======================= */
 
 export function renderBattle(root, { store }) {
-  const problems = availableProblems();
+  const problems = availableEntries();
   let level = 'regular';
   let problemId = problems[0].id;
 
@@ -323,8 +344,22 @@ export function renderBattle(root, { store }) {
   const start = h('button.btn.btn-primary.btn-lg', { type: 'button' }, 'Start race');
 
   let cleanup = () => {};
-  start.addEventListener('click', () => {
-    cleanup = startBattle(root, { store, problem: getProblem(problemId), level });
+  let disposed = false;
+  start.addEventListener('click', async () => {
+    start.disabled = true;
+    start.textContent = 'Loading the problem...';
+    let problem;
+    try {
+      problem = await loadProblem(problemId);
+    } catch {
+      if (disposed) return;
+      start.disabled = false;
+      start.textContent = 'Start race';
+      toast('The problem could not be loaded. Check your connection and try again.', 'error');
+      return;
+    }
+    // don't touch / the race clock and the bot start in startBattle: it must stay after the load, which never costs the user
+    if (!disposed) cleanup = startBattle(root, { store, problem, level });
   });
 
   mount(
@@ -345,7 +380,10 @@ export function renderBattle(root, { store }) {
       ),
     ),
   );
-  return () => cleanup();
+  return () => {
+    disposed = true;
+    cleanup();
+  };
 }
 
 function startBattle(root, { store, problem, level }) {

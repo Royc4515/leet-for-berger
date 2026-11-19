@@ -10,7 +10,7 @@ import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { startServer } from '../scripts/serve.mjs';
 import { startFakeRunner } from './fake-runner.mjs';
-import { availableProblems } from '../src/js/problems/index.js';
+import { loadProblem } from '../src/js/problems/index.js';
 
 const args = new Set(process.argv.slice(2));
 const skipPython = args.has('--no-python');
@@ -28,7 +28,21 @@ await page.addInitScript(() => {
   window.LFB_REMOTE_RUNNER_URL = '';
   window.LFB_SUPABASE_URL = '';
   window.LFB_SUPABASE_ANON_KEY = '';
+  // Longest main-thread task, read after the dashboard renders (ADR 0008: it used to be one 12 s task).
+  window.__lfbLongestTask = 0;
+  try {
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) window.__lfbLongestTask = Math.max(window.__lfbLongestTask, e.duration);
+    }).observe({ type: 'longtask', buffered: true });
+  } catch {
+    // longtask is Chromium-only; the number is informational.
+  }
 });
+// Problem modules load one at a time, when a problem opens (ADR 0008); count what the page fetched.
+const PROBLEM_MODULE = /\/problems\/[^/]+\/problem\.js(\?|$)/;
+const problemModules = [];
+page.on('request', (r) => PROBLEM_MODULE.test(r.url()) && problemModules.push(r.url()));
+const DASHBOARD_BUDGET_MS = 4000;
 const errors = [];
 page.on('console', (m) => m.type() === 'error' && errors.push(`console (during step ${step}): ${m.text()}`));
 page.on('pageerror', (e) => errors.push(`pageerror (during step ${step}): ${e.message}${process.env.E2E_STACKS ? '\n' + e.stack : ''}`));
@@ -57,16 +71,21 @@ const expectText = async (sel, re, timeout = 15000) => {
 const setCode = (code) => page.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
 
 try {
-  await check('dashboard renders with stats and problem bank', async () => {
+  await check('dashboard renders with stats and problem bank, without loading any problem module', async () => {
     await page.goto(BASE);
-    await page.waitForSelector('.problem-table tbody tr');
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
+    const { ready, longest } = await page.evaluate(() => ({ ready: performance.now(), longest: window.__lfbLongestTask }));
+    if (problemModules.length) throw new Error(`the dashboard fetched ${problemModules.length} problem modules, e.g. ${problemModules[0]}`);
+    console.log(`  # dashboard ready in ${Math.round(ready)} ms (budget ${DASHBOARD_BUDGET_MS}), longest task ${Math.round(longest)} ms`);
+    if (ready > DASHBOARD_BUDGET_MS) throw new Error(`dashboard took ${Math.round(ready)} ms, budget ${DASHBOARD_BUDGET_MS} ms`);
     await expectText('.stats-row', /Solved/);
     await shot('01-dashboard');
   });
 
-  await check('problem opens with Monaco (vs-dark) and starter code', async () => {
+  await check('problem opens with Monaco (vs-dark) and starter code, loading exactly its own module', async () => {
     await page.click('a.problem-link[href="#/problem/smallest-base-segment"]');
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    if (problemModules.length !== 1 || !problemModules[0].includes('/smallest-base-segment/')) throw new Error(`expected one problem module, fetched: ${problemModules.join(', ')}`);
     const theme = await page.evaluate(() => document.querySelector('.monaco-editor').classList.contains('vs-dark'));
     if (!theme) throw new Error('editor is not vs-dark');
     const code = await page.evaluate(() => window.monaco.editor.getModels()[0].getValue());
@@ -208,7 +227,7 @@ try {
   // Remote runner (ADR 0005): with a runner URL configured, Java compiles on the server and is judged
   // in the page. A local fake stands in for the Worker (real javac when a JDK is installed).
   await check('remote runner: Java reveal + submit is Accepted through a runner endpoint', async () => {
-    const problem = availableProblems().find((p) => p.id === 'pair-sum-target');
+    const problem = await loadProblem('pair-sum-target');
     const fake = await startFakeRunner(PORT + 100, { origin: `http://localhost:${PORT}`, reference: (a) => problem.solveReference(a) });
     // Its own context: the runner URL is read when the page loads, and progress stays separate.
     const remote = await browser.newPage({ viewport: { width: 1440, height: 900 } }).catch((err) => {
@@ -662,6 +681,21 @@ try {
   await check('unknown route shows not found', async () => {
     await page.goto(`${BASE}#/nope`);
     await expectText('.page', /Not found/);
+  });
+
+  await check('unknown problem id shows not found; a problem module that fails to load shows could not load', async () => {
+    await page.goto(`${BASE}#/problem/no-such-problem`);
+    await expectText('.page', /Not found/);
+    // A module that throws while evaluating: the import rejects like a failed download, without the
+    // browser's own network-error log, so the zero-console-errors check below still covers our code.
+    const broken = '**/problems/two-wall-tank/problem.js';
+    await page.route(broken, (route) => route.fulfill({ status: 200, contentType: 'text/javascript', body: 'throw new Error("simulated load failure");' }));
+    try {
+      await page.goto(`${BASE}#/problem/two-wall-tank`);
+      await expectText('.page', /Could not load/);
+    } finally {
+      await page.unroute(broken);
+    }
   });
 
   await check('zero console errors across the whole session', async () => {

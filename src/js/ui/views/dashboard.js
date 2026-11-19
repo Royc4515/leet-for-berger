@@ -1,10 +1,10 @@
 /**
- * Dashboard: progress stats + filterable problem bank.
+ * Dashboard: progress stats + filterable problem bank. Reads only the catalog: no problem module
+ * loads here (docs/adr/0008-lazy-problem-modules.md).
  */
 import { h, mount, difficultyBadge } from '../dom.js';
-import { catalog, TOPICS, DIFFICULTIES } from '../../problems/index.js';
+import { catalog, catalogEntry, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import { stats, dayKey } from '../../state/progress.js';
-import { getProblem } from '../../problems/index.js';
 import { dailyProblem, dailyCandidates, weakSpots } from '../../data/recommend.js';
 import { loadPath } from './path.js';
 
@@ -19,7 +19,7 @@ export function renderDashboard(root, { store }) {
     if (!path) return;
     const state = store.get();
     const dailyId = dailyProblem(dailyCandidates(path), dayKey());
-    const daily = dailyId ? getProblem(dailyId) : null;
+    const daily = dailyId ? catalogEntry(dailyId) : null;
     const dailyDone = daily && state.problems[daily.id]?.status === 'solved';
     const spots = weakSpots(path, state.problems);
     const reason = (s) =>

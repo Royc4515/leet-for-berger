@@ -12,7 +12,7 @@
  * Exit code 0 when every run is Accepted.
  */
 import { readFile } from 'node:fs/promises';
-import { availableProblems } from '../../src/js/problems/index.js';
+import { loadProblem } from '../../src/js/problems/index.js';
 import { buildSuite, judge, comparatorFor } from '../../src/js/engine/harness.js';
 import { RemoteRunner, REMOTE_LANGUAGES } from '../../src/js/engine/runners/remote-runner.js';
 import { LANGUAGES } from '../../src/js/engine/codegen.js';
@@ -43,11 +43,10 @@ const languages = opt('languages', REMOTE_LANGUAGES.join(',')).split(',');
 
 const fetchImpl = (url, init) => fetch(url, { ...init, headers: { ...init.headers, ...headers } });
 const loadText = (url) => readFile(new URL(url), 'utf8');
-const problems = availableProblems();
 let failed = 0;
 
 for (const id of problemIds) {
-  const problem = problems.find((p) => p.id === id);
+  const problem = await loadProblem(id).catch(() => null);
   if (!problem) throw new Error(`No problem ${id}`);
   const suite = buildSuite(problem);
   for (const lang of languages) {
