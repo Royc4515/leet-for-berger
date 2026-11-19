@@ -87,6 +87,8 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [ ] Real-time battle against a person, judged on the server
 
 ### Stage D: content expansion
+- [x] Wix wave: 12 problems, Wix at 35 of its top 50 on the site (PR #20)
+- [ ] Load each problem only when it is opened (the catalog builds every problem's tests at startup; about 10 s on the live site after the Min Stack fix)
 - [x] Write `explanationHtml` (our own prose: the idea, why it works, the pitfall) for the 131 essential problems (PR #18; `tests/explanations.test.js` keeps the format and full coverage)
 - [ ] Growth measurement for all problems (target filled automatically, input generators gradually)
 - [ ] Graphs as objects (Clone Graph) and numbers above 2^53

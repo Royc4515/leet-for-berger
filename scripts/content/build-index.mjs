@@ -268,6 +268,19 @@ const CONTENT_IDS = {
   'game-of-life': ['life-step', 'verified'],
   // n raised to 10^6 with a modulus, so exponential recursion times out.
   'fibonacci-number': ['fibonacci-mod', 'verified'],
+  // Wix wave (stage D)
+  'container-with-most-water': ['two-wall-tank', 'verified'],
+  'alien-dictionary': ['glyph-order', 'verified'],
+  'all-nodes-distance-k-in-binary-tree': ['k-steps-away', 'verified'],
+  'invalid-transactions': ['suspicious-payments', 'verified'],
+  'is-subsequence': ['subsequence-check', 'verified'],
+  'longest-string-chain': ['growing-word-chain', 'verified'],
+  'design-hashset': ['bucket-set', 'verified'],
+  'group-shifted-strings': ['caesar-groups', 'verified'],
+  'intersection-of-two-arrays': ['common-values', 'verified'],
+  'minimum-distance-between-bst-nodes': ['bst-min-gap', 'verified'],
+  'palindrome-pairs': ['palindrome-joins', 'verified'],
+  'employees-earning-more-than-their-managers': ['above-manager-pay', 'verified'],
 };
 
 const WINDOWS = [
