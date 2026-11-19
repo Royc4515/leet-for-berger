@@ -7,6 +7,7 @@
 #   5. reveal_solution needs a signed-in user and marks the problem assisted
 #   6. SQL problems ship exactly one solution, in language sql
 #   7. user_state: a signed-in user reads and writes only their own row; anon sees nothing
+#   8. github_links: a user reads only their own row and cannot write it (the Edge Function does)
 # Needs PostgreSQL server binaries (initdb, pg_ctl) and psql. Usage: bash scripts/db/check-schema.sh
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -40,7 +41,7 @@ create role anon nologin;
 create role authenticated nologin;
 EOF
 $SQL -f db/schema.sql
-grant_sql="grant usage on schema public to anon, authenticated; grant select on all tables in schema public to anon, authenticated; grant insert, update, delete on user_state to authenticated; grant execute on function reveal_solution(text, text) to authenticated;"
+grant_sql="grant usage on schema public to anon, authenticated; grant select on all tables in schema public to anon, authenticated; grant insert, update, delete on user_state to authenticated; grant insert, update, delete on github_links to authenticated; grant execute on function reveal_solution(text, text) to authenticated;"
 $SQL -c "$grant_sql"
 
 node scripts/db/export-sql.mjs > "$WORK/sync.sql"
@@ -85,4 +86,11 @@ if as_role authenticated "$USER_ID" "insert into user_state (user_id, state) val
 [ "$(as_role authenticated "$OTHER_ID" "select count(*) from user_state")" = "0" ] || fail "a user can read another user's state"
 [ "$(as_role anon '' "select count(*) from user_state")" = "0" ] || fail "anon can read user state"
 echo "7. user_state: own row only, anon sees nothing"
+$SQL -c "insert into github_links (user_id, installation_id, repo) values ('$USER_ID', 7, 'roy/practice'), ('$OTHER_ID', 8, 'someone/else');"
+[ "$(as_role authenticated "$USER_ID" "select string_agg(repo, ',') from github_links")" = "roy/practice" ] || fail "a user sees another user's GitHub link"
+if as_role authenticated "$USER_ID" "update github_links set repo = 'evil/repo' where user_id = '$USER_ID'" 2>/dev/null | grep -q .; then :; fi
+[ "$($VAL -c "select repo from github_links where user_id = '$USER_ID'")" = "roy/practice" ] || fail "a user changed their own GitHub link (only the Edge Function may)"
+if as_role authenticated "$USER_ID" "insert into github_links (user_id, installation_id, repo) values ('$USER_ID', 9, 'x/y')" >/dev/null 2>&1; then fail "a user inserted a GitHub link"; fi
+[ "$(as_role anon '' "select count(*) from github_links")" = "0" ] || fail "anon can read GitHub links"
+echo "8. github_links: own row read-only, anon sees nothing"
 echo "All database checks passed."

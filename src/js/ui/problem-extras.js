@@ -12,10 +12,11 @@ const when = (iso) => {
 
 /**
  * @param {{ problem: any, store: any, getLanguage: () => string, languageLabel: (id: string) => string,
- *   loadSolution: (problemId: string, lang: string) => Promise<string>, onLoadCode: (lang: string, code: string) => void }} opts
+ *   loadSolution: (problemId: string, lang: string) => Promise<string>, onLoadCode: (lang: string, code: string) => void,
+ *   canPush?: () => boolean, onPush?: (entry: any) => void }} opts
  * @returns {{ el: HTMLElement, dispose: () => void }}
  */
-export function createProblemExtras({ problem, store, getLanguage, languageLabel, loadSolution, onLoadCode }) {
+export function createProblemExtras({ problem, store, getLanguage, languageLabel, loadSolution, onLoadCode, canPush = () => false, onPush = () => {} }) {
   const walkthroughBody = h('div.walkthrough-body');
   const historyBody = h('div.history-body');
   const historySummary = h('span', {}, 'Submissions');
@@ -85,12 +86,15 @@ export function createProblemExtras({ problem, store, getLanguage, languageLabel
         items.map((s) => {
           const load = h('button.btn.btn-ghost.btn-sm', { type: 'button', disabled: !s.code, title: s.code ? 'Replace the editor content with this code' : 'This code was too long to keep' }, 'Load code');
           load.addEventListener('click', () => s.code && onLoadCode(s.language, s.code));
+          const push = canPush() && s.code && s.verdict === 'Accepted' ? h('button.btn.btn-ghost.btn-sm', { type: 'button', title: entry?.revealed ? 'Marked assisted: the solution was revealed' : 'Commit this code to your GitHub repository' }, 'Push to GitHub') : null;
+          push?.addEventListener('click', () => onPush(s));
           return h(
             'li',
             {},
             h(`span.history-verdict${s.verdict === 'Accepted' ? '.ok' : '.bad'}`, {}, s.verdict),
             h('span.history-meta', {}, `${s.passed}/${s.total} · ${languageLabel(s.language)} · ${when(s.at)}`),
             load,
+            push,
           );
         }),
       ),

@@ -1688,3 +1688,16 @@ body.resizing-y * {
 .site-links a {
   color: var(--muted);
 }
+.account-section {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.account-section-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+.account-section a {
+  color: var(--info);
+}

@@ -7,8 +7,10 @@
 import { createStore, stats } from './state/progress.js';
 import { createAccount } from './auth/account.js';
 import { mountAccountMenu } from './ui/account-menu.js';
+import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
+import { services } from './auth/services.js';
 import { getProblem } from './problems/index.js';
-import { h, mount } from './ui/dom.js';
+import { h, mount, toast } from './ui/dom.js';
 import { renderDashboard } from './ui/views/dashboard.js';
 import { renderWorkspace } from './ui/views/workspace.js';
 import { renderPath } from './ui/views/path.js';
@@ -85,5 +87,27 @@ route();
 
 // Accounts are optional and inert without a Supabase project in config.js (ADR 0006).
 const account = createAccount({ store });
-mountAccountMenu(document.getElementById('account'), account);
+const github = createGitHubSync({ account });
+services.account = account;
+services.github = github.available ? github : null;
+mountAccountMenu(document.getElementById('account'), account, services.github);
 account.start();
+
+// GitHub sync (ADR 0007): load the link on sign-in, and finish connecting when GitHub sends the
+// user back from installing the app (?installation_id=...&setup_action=install).
+let pendingInstall = installationFromUrl(location.search);
+account.subscribe(async (s) => {
+  if (!services.github) return;
+  if (s.status !== 'signed-in') return github.clear();
+  try {
+    if (pendingInstall) {
+      const id = pendingInstall;
+      pendingInstall = null;
+      history.replaceState(null, '', location.pathname + location.hash);
+      const link = await github.connect(id);
+      toast(`Connected. Accepted solutions go to ${link.repo}.`, 'success');
+    } else if (!github.get()) await github.refresh();
+  } catch (err) {
+    toast(`GitHub sync: ${err.message}`, 'error', 6000);
+  }
+});

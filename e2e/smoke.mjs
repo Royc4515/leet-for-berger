@@ -578,7 +578,7 @@ try {
     await page.waitForSelector('.problem-title');
   });
 
-  await check('accounts: hidden without config; with a project, Sign in offers Google and GitHub, a session shows the user', async () => {
+  await check('accounts: hidden without config; Sign in offers Google and GitHub; a session shows the user; GitHub sync pushes an Accepted solve', async () => {
     if (await page.locator('#account button').count()) throw new Error('sign-in shown although accounts are not configured');
     // A separate page (and storage) so the stubbed account never touches the main page's progress.
     const acct = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -588,14 +588,27 @@ try {
     const stub = (signedIn) => `export function createClient() {
       const user = ${signedIn ? "{ id: 'u1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } }" : 'null'};
       const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async () => ({ error: null }) };
-      return { auth: { getSession: async () => ({ data: { session: user ? { user } : null } }), onAuthStateChange: () => ({}), signInWithOAuth: async () => ({}), signOut: async () => ({}) }, from: () => chain };
+      return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: () => ({}), signInWithOAuth: async () => ({}), signOut: async () => ({}) }, from: () => chain };
     }`;
     let signedIn = false;
     await acct.route('**/@supabase/supabase-js@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: stub(signedIn) }));
+    // A fake github-sync Edge Function: linked to one repository, records pushes.
+    const pushes = [];
+    await acct.route('https://example.supabase.co/functions/v1/github-sync/**', async (r) => {
+      const path = new URL(r.request().url()).pathname;
+      const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type' };
+      if (r.request().method() === 'OPTIONS') return r.fulfill({ status: 204, headers: cors });
+      if (path.endsWith('/push')) {
+        pushes.push(JSON.parse(r.request().postData()));
+        return r.fulfill({ contentType: 'application/json', headers: cors, body: '{"ok":true,"repo":"ada/practice","url":"https://github.com/ada/practice/commit/x"}' });
+      }
+      return r.fulfill({ contentType: 'application/json', headers: cors, body: '{"linked":true,"repo":"ada/practice","autoSync":true}' });
+    });
     await acct.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = 'https://example.supabase.co';
       window.LFB_SUPABASE_ANON_KEY = 'public-anon-key';
+      window.LFB_GITHUB_APP_SLUG = 'lfb-sync';
     });
     await acct.goto(`${BASE}#/`);
     await acct.click('#account button:has-text("Sign in")');
@@ -605,16 +618,22 @@ try {
     signedIn = true;
     await acct.reload();
     await acct.waitForSelector('#account .account-name:has-text("Ada")');
-    await acct.waitForSelector('#account button:has-text("Sign out")');
-    // Regression: a signed-in Submit must reach a verdict (the progress sync once threw "Illegal invocation").
+    await acct.click('#account .account-name');
+    await acct.waitForSelector('.account-menu a:has-text("ada/practice")');
+    await acct.waitForSelector('.account-menu button:has-text("Sign out")');
+    if (shotsDir) await acct.screenshot({ path: `${shotsDir}/21-github-sync.png` });
+    // Solve without revealing: the Accepted submit is pushed on its own. Also the regression check
+    // that a signed-in Submit reaches a verdict (the progress sync once threw "Illegal invocation").
     await acct.goto(`${BASE}#/problem/pair-sum-target`);
     await acct.waitForSelector('.monaco-editor', { timeout: 30000 });
     const code = await acct.evaluate(async () => (await fetch('src/js/problems/pair-sum-target/solutions/solution.js')).text());
     await acct.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
     await acct.click('button:has-text("Submit")');
-    await acct.waitForFunction(() => /Accepted/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 30000 }).catch(async () => {
-      throw new Error(`signed-in submit: ${(await acct.locator('.result-head, .console-body').first().textContent().catch(() => '?')).slice(0, 200)}`);
+    await acct.waitForFunction(() => /Accepted/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 30000 }).catch(async (err) => {
+      throw new Error(`no Accepted; console: ${(await acct.locator('.result-head, .console-body').first().textContent().catch(() => '?')).slice(0, 300)}`);
     });
+    await acct.waitForSelector('.toast:has-text("Saved to GitHub: ada/practice")', { timeout: 15000 });
+    if (pushes.length !== 1 || pushes[0].problemId !== 'pair-sum-target' || pushes[0].assisted !== false || !pushes[0].code.includes('function')) throw new Error(`unexpected pushes: ${JSON.stringify(pushes).slice(0, 200)}`);
     await acct.close();
   });
 

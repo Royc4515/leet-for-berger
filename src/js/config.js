@@ -38,16 +38,20 @@ export const AUTH = {
   supabaseUrl: 'https://jezwwmnczliubfmqgutc.supabase.co',
   // Publishable (anon) key: public by design, Row Level Security guards the data.
   supabaseAnonKey: 'sb_publishable_GBa7UHSmKAFQG4vSdxDdzw_Tlmffpwf',
+  // The GitHub App users install to sync solutions (ADR 0007, docs/DEPLOY_GITHUB_SYNC.md).
+  // Empty hides GitHub sync.
+  githubAppSlug: '',
 };
 
 /**
  * Effective auth settings; `window.LFB_SUPABASE_URL` and `window.LFB_SUPABASE_ANON_KEY` override
  * this file (tests, forks).
  * @param {object} [scope]
- * @returns {{ supabaseUrl: string, supabaseAnonKey: string, enabled: boolean }}
+ * @returns {{ supabaseUrl: string, supabaseAnonKey: string, githubAppSlug: string, enabled: boolean }}
  */
 export function authConfig(scope = globalThis) {
   const supabaseUrl = String(scope.LFB_SUPABASE_URL ?? AUTH.supabaseUrl ?? '').trim().replace(/\/+$/, '');
   const supabaseAnonKey = String(scope.LFB_SUPABASE_ANON_KEY ?? AUTH.supabaseAnonKey ?? '').trim();
-  return { supabaseUrl, supabaseAnonKey, enabled: Boolean(supabaseUrl && supabaseAnonKey) };
+  const githubAppSlug = String(scope.LFB_GITHUB_APP_SLUG ?? AUTH.githubAppSlug ?? '').trim();
+  return { supabaseUrl, supabaseAnonKey, githubAppSlug, enabled: Boolean(supabaseUrl && supabaseAnonKey) };
 }

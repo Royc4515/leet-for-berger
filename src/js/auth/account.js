@@ -78,6 +78,13 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
       const { error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo: location.href.split('#')[0] } });
       if (error) set({ error: error.message });
     },
+    /** The signed-in user's access token, for calling Edge Functions; null when signed out. */
+    async accessToken() {
+      if (!client) return null;
+      const { data } = await client.auth.getSession();
+      return data.session?.access_token ?? null;
+    },
+    config,
     async signOut() {
       if (!client) return;
       await sync?.flush();

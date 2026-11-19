@@ -81,7 +81,7 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [x] Supabase setup (free plan, Frankfurt; owner steps in `docs/DEPLOY_AUTH.md`), project `jezwwmnczliubfmqgutc`, Google and GitHub sign-in on
 - [ ] Automatic content sync from CI into Supabase
 - [x] User management (code, PR #18; live once the project exists): sign-in with Google (and GitHub) via Supabase Auth, profile, and progress, drafts and submissions stored on the server and synced across devices. Existing localStorage progress moves to the account on first sign-in
-- [ ] Personal GitHub sync: every Accepted solution is committed to a repo the user picks, one folder per problem with the code and a README with the complexity. Through a GitHub App with access to that one repo only; the token stays on the server, never in the browser
+- [x] Personal GitHub sync (code, PR #20; live once the GitHub App exists, `docs/DEPLOY_GITHUB_SYNC.md`): every Accepted solution is committed to a repo the user picks, one folder per problem with the code and a README with the complexity. Through a GitHub App with access to that one repo only; the token stays on the server, never in the browser
 - [ ] Hidden tests and solutions served only from the server
 - [ ] Real AI mentor that also explains complexity (depends on the budget decision)
 - [ ] Real-time battle against a person, judged on the server
