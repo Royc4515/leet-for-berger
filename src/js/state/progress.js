@@ -6,7 +6,8 @@
  * server without touching the UI.
  */
 
-const STORAGE_KEY = 'lfb:progress:v1';
+/** localStorage key of the progress blob; listed in state/user-data.js so sign-out clears it. */
+export const STORAGE_KEY = 'lfb:progress:v1';
 
 export function emptyState() {
   return { version: 1, problems: {}, activeDays: [], totals: { submissions: 0, accepted: 0 }, drafts: {} };
@@ -139,6 +140,11 @@ export function createStore(initial = load()) {
     subscribe(l) {
       listeners.add(l);
       return () => listeners.delete(l);
+    },
+    /** Back to a guest state after sign-out; the caller clears the stored copies (state/user-data.js). */
+    reset() {
+      state = emptyState();
+      listeners.forEach((l) => l(state));
     },
   };
 }
