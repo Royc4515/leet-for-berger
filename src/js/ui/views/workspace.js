@@ -24,6 +24,8 @@ import { loadDraft, saveDraft, clearDraft } from '../../state/drafts.js';
 import { TOPICS, loadSolution, getProblem } from '../../problems/index.js';
 import { createProblemContext } from '../problem-context.js';
 import { createProblemExtras } from '../problem-extras.js';
+import { services } from '../../auth/services.js';
+import { shouldAutoSync } from '../../auth/github-sync.js';
 import { createMentorPanel } from '../mentor-panel.js';
 
 const LANG_KEY = 'lfb:lang';
@@ -86,6 +88,14 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     showComplexity: allowAssist,
     showFamily: !session,
   });
+  /** Saves one submission to the user's GitHub repository (ADR 0007); the toast says how it went. */
+  function pushToGitHub({ language: lang, code, verdict, passed, total, assisted }) {
+    services.github
+      .push({ problemId: problem.id, title: problem.title, difficulty: problem.difficulty, language: lang, code, verdict, passed, total, assisted })
+      .then((r) => !disposed && toast(`Saved to GitHub: ${r.repo}`, 'success'))
+      .catch((err) => !disposed && toast(`GitHub sync failed: ${err.message}`, 'error', 6000));
+  }
+
   // Practice only: a walkthrough or past code would defeat a timed session.
   const extras = session
     ? null
@@ -95,6 +105,9 @@ export function renderWorkspace(root, { problem, store, session = null }) {
         getLanguage: () => language,
         languageLabel: (id) => languages.find((l) => l.id === id)?.label ?? id,
         loadSolution,
+        canPush: () => Boolean(services.github?.get()?.linked),
+        onPush: (entry) =>
+          pushToGitHub({ language: entry.language, code: entry.code, verdict: entry.verdict, passed: entry.passed, total: entry.total, assisted: Boolean(store.get().problems[problem.id]?.revealed) }),
         onLoadCode: (lang, code) => {
           if (!editor) return;
           if (lang !== language && languages.some((l) => l.id === lang)) {
@@ -365,6 +378,11 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       const executable = languages.find((l) => l.id === language).executable || onServer(language);
       if (kind === 'submit' && executable) {
         store.update((s) => recordSubmission(s, { problemId: problem.id, accepted: result.accepted, detail: { language, verdict: result.verdict, passed: result.passed, total: result.total, code } }));
+        const github = services.github;
+        const revealed = Boolean(store.get().problems[problem.id]?.revealed);
+        if (github && shouldAutoSync({ accepted: result.accepted, revealed, link: github.get(), practice: !session })) {
+          pushToGitHub({ language, code, verdict: result.verdict, passed: result.passed, total: result.total, assisted: false });
+        }
         toast(result.accepted ? 'Accepted. Nice work.' : `${result.verdict}: ${result.passed}/15`, result.accepted ? 'success' : 'error');
       }
       session?.onResult({ kind, result, problemId: problem.id });

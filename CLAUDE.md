@@ -41,7 +41,7 @@ src/js/engine/             PURE judging logic + execution
 src/js/config.js          public site config: remote runner URL (empty = editor-only), Turnstile site key
 src/js/problems/<id>/      problem.js + solutions/ (8 language files, or solution.sql); index.js = catalog, hydrate, loadSolution
 src/js/state/              progress (pure reducers + localStorage), drafts, sync.js (merge across devices)
-src/js/auth/               account.js (Supabase sign-in, inert unless configured), sync-controller.js (ADR 0006)
+src/js/auth/               account.js (Supabase sign-in, inert unless configured), sync-controller.js (ADR 0006), github-sync.js (ADR 0007)
 src/js/modes/              interview.js, battle.js, mock-oa.js (pure session logic and OA problem picking)
 src/js/mentor/             mentor providers (scripted today, remote later)
 src/js/data/taxonomy.js    learning network: 26 topics, 131 subtopics, ladders, validators
@@ -54,13 +54,14 @@ content/                   problem index, ladders, families, sources, AUDIT.md (
 scripts/content/           fetch sources, build index, audit
 scripts/verify/            verifier helpers (harnesses.mjs re-exports engine/programs; sql, growth)
 deploy/cloudflare-worker/  Worker in front of the runner: CORS, rate limit, size caps, secret (wrangler.toml)
+deploy/supabase/functions/ Edge Functions: github-sync (core.js is unit-tested in Node, index.ts is the Deno entry)
 deploy/piston/             VM kit: Piston image, runtime packages, gate, compose, setup.sh, smoke.mjs, dev/
 db/schema.sql              PostgreSQL schema (ADR 0002); scripts/db/ = git -> database sync + checks
 src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler (Monaco's TS service), resizer, results console
 src/js/ui/views/           dashboard, workspace, path, companies, modes (hub, interview, battle)
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test
-docs/                      ARCHITECTURE, PROBLEM_FORMAT, ROADMAP, PLAN, DEPLOY_RUNNER, DEPLOY_AUTH, adr/
+docs/                      ARCHITECTURE, PROBLEM_FORMAT, ROADMAP, PLAN, DEPLOY_RUNNER, DEPLOY_AUTH, DEPLOY_GITHUB_SYNC, adr/
 ```
 
 Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR). Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.

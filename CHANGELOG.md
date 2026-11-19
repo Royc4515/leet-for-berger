@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Fixed
+- The site took about 18 s to show the problem list (measured on the live site): Min Stack's hidden-test generator counted pops by rescanning the whole operation list on every iteration, O(n^2) at 10^5 operations, and every problem builds its tests when the catalog is imported. A running count builds identical tests (same SHA-256) in 0.15 s instead of 11 s; the catalog import went from 26.6 s to 15 s (Node, this container). Loading problems only when opened is the next step.
 - Signed in, every Submit failed with "Internal error: Illegal invocation": the progress sync called `setTimeout` as a method of another object, which browsers reject (Node does not, so the unit tests passed). The e2e test now submits while signed in.
 
 ### Changed
@@ -12,6 +13,10 @@
 - First Match Index is Medium (was Easy): with our limits it needs KMP.
 
 ### Added
+- GitHub sync is on: `githubAppSlug` names the GitHub App (Leet-For-Berger Sync); the github-sync Edge Function is deployed and its secrets are set in Supabase.
+- 12 problems Wix asks, each with a statement in our own words, 15 tests, solutions in all 8 languages (or one SQL query), hints and a walkthrough: Two Wall Tank, Glyph Order, K Steps Away, Suspicious Payments, Subsequence Check, Growing Word Chain, Bucket Set, Caesar Groups, Common Values, BST Min Gap, Palindrome Joins, Above Manager Pay. Wix now has 35 of its top 50 problems on the site (was 23); 145 problems in all.
+- GitHub sync (ADR 0007): through a GitHub App installed on one repository of the user's, a Supabase Edge Function (`deploy/supabase/functions/github-sync`) commits each Accepted solution with a README, one commit per push; automatic after Accepted in practice, by hand (Submissions, "Push to GitHub") for assisted solves, which the README marks. The function verifies the installation belongs to the signed-in GitHub account and grants exactly one repository; the App key and tokens never reach the browser. `github_links` is readable by its owner only and written only by the function. Hidden until `githubAppSlug` is set; owner steps in `docs/DEPLOY_GITHUB_SYNC.md`.
+- The account menu (signed in) holds GitHub sync and Sign out, and closes on navigation, an outside click or Escape.
 - Accounts are live: `src/js/config.js` points at the Supabase project (Frankfurt) with its publishable key. Google sign-in is limited to test users until the consent screen is published, which needs the privacy page live.
 - Privacy Policy page (`privacy.html`), linked from the home page and the sign-in menu: what stays in the browser, what is stored on sign-in (provider id, name, email, progress with the last 10 submissions' code), what the code server logs (time, language, duration, result, IP; rotating log), third-party hosts, and deletion on request. Google requires it before the sign-in app can be published. The Pages workflow now copies it, and `tests/ci.test.js` fails if a top-level page is left out of the deploy.
 - Explanations for all 131 essential problems, shown at the top of the walkthrough after a solve: the idea, why it works, the complexity of the shipped solution and the common pitfall, written for our version of each problem. `tests/explanations.test.js` checks the four sections, length, a big-O, no em dashes, no mention of other sites, and that every essential problem has one.

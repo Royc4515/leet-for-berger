@@ -189,6 +189,17 @@ create table user_state (
   constraint user_state_size check (pg_column_size(state) < 2000000)
 );
 
+-- GitHub sync (ADR 0007): which GitHub App installation and repository a user syncs solutions to.
+-- Written only by the github-sync Edge Function (service role) after it verified the installation
+-- belongs to the user's GitHub account; the user may only read their own row.
+create table github_links (
+  user_id          uuid primary key references auth.users on delete cascade,
+  installation_id  bigint not null,
+  repo             text not null check (repo ~ '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'),
+  auto_sync        boolean not null default true,
+  updated_at       timestamptz not null default now()
+);
+
 create table solves (
   user_id            uuid not null references profiles on delete cascade,
   problem_slug       text not null references problem_content,
@@ -218,6 +229,7 @@ alter table profiles enable row level security;
 alter table submissions enable row level security;
 alter table solves enable row level security;
 alter table user_state enable row level security;
+alter table github_links enable row level security;
 
 -- Catalog and content are public to read; only the sync job (service role) writes them.
 create policy read_all on topics for select using (true);
@@ -242,6 +254,7 @@ create policy own_profile on profiles for all using (user_id = auth.uid()) with 
 create policy own_submissions on submissions for select using (user_id = auth.uid());
 create policy own_solves on solves for select using (user_id = auth.uid());
 create policy own_state on user_state for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy own_github_link on github_links for select using (user_id = auth.uid());
 
 -- "Reveal Solution": the only client path to a solution. Marks the problem assisted, then returns
 -- the code. security definer so it can read the solutions table that clients cannot.

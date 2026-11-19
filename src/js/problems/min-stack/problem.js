@@ -99,10 +99,13 @@ function decreasingThenUnwind(n) {
     ops.push('push');
     args.push([pushes - i]);
   }
+  // A running count, not ops.filter(): rescanning the list made this O(n^2), 9 s at n = 10^5 on
+  // every page load (every problem module builds its tests when the catalog is imported).
+  let pops = 0;
   while (ops.length + 2 <= n && pushes > 0) {
     ops.push('pop', 'getMin');
     args.push([], []);
-    if (ops.filter((o) => o === 'pop').length >= pushes - 1) break;
+    if (++pops >= pushes - 1) break;
   }
   return [ops, args];
 }
