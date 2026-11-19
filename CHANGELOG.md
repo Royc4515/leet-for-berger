@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+- Companies are ordered for a job search in Israel (`content/israel-hiring.json`, pure logic in `src/js/data/israel-hiring.js`): major employers first (by rankIL, tier, problem count), then those with an Israel office, then the rest. A filter ("Hiring in Israel", the default, "Top in Israel", "All") and a "Major in Israel" / "Israel office" badge sit on every card, and alias spellings (X/Twitter, Snap/Snapchat, Citi/Citigroup...) show as one company with merged problem lists. The Pages workflow now also ships `content/israel-hiring.json`.
+- The mock OA company picker is a searchable chip list with the same ordering and filter, instead of a select of 176 names; the selected company is clearly marked.
+- The 1v1 Battle problem picker shows each problem with title, difficulty and topics, filters by difficulty, topic and title, and has a Random button (`src/js/modes/battle-picker.js`). Battle rules are unchanged.
+
 ### Fixed
 - The dashboard took about 12 s to show the problem list (one 12.4 s main-thread task, 205 requests, 745 KB gzipped on the live site): `problems/index.js` imported all 145 problem modules, and each builds its 10 hidden tests at import. Problems now load only when opened (ADR 0008): a generated catalog (`src/js/problems/catalog.js`, `node scripts/content/build-catalog.mjs`) feeds the dashboard, learning path, companies and mode setups, and `loadProblem(id)` imports one module on demand. Locally the dashboard is ready in about 0.3 s (was about 14 s) and fetches no problem module. Interview and battle start their clocks only after the problems have loaded. A problem that fails to load shows "Could not load". Tests and scripts use `await loadAllProblems()`; `tests/catalog.test.js` fails on a stale catalog, and the e2e test checks that the dashboard loads no problem module and a problem page exactly one.
 - Signing out left the account's progress, drafts and submissions on the device and on screen. Sign-out now pushes the latest progress, then clears every per-user local store and re-renders as a guest. If the push fails you stay signed in and nothing is cleared. The list of per-user keys lives in `state/user-data.js`, and a unit test fails when a source file persists a key the list misses (ADR 0006 amended).

@@ -28,6 +28,8 @@ jobs:
           mkdir _site
           cp index.html privacy.html _site/
           cp -r src _site/
+          # Israel hiring ratings: src/js/data/israel-hiring.js reads them at runtime.
+          mkdir _site/content && cp content/israel-hiring.json _site/content/
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
