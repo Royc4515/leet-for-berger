@@ -1,0 +1,1296 @@
+{
+ "_doc": "Hiring relevance for software engineers in Israel, per company in the problem metadata. israel: major (hundreds+ engineers / recognised R&D center or HQ), present (smaller R&D site that hires engineers), none (no Israeli engineering hiring; sales-only counts as none). tier: 1 top global, 2 strong tech, 3 other. source: URL for every major/present. unverified: true on a none entry means no source was found, so none is a default, not a finding (set only for tier 1-2 companies where an Israeli site is plausible). rankIL: 1 = largest Israeli engineering headcount, only where sourced. aliasOf: another spelling of the same company in the metadata. Checked 2026-11, see content/israel-hiring.md.",
+ "checked": "2026-11",
+ "allowed": {
+  "israel": [
+   "major",
+   "present",
+   "none"
+  ],
+  "tier": [
+   1,
+   2,
+   3
+  ]
+ },
+ "companies": {
+  "Accenture": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Accolite": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Acko": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Acorns": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Adobe": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Affirm": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Agoda": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Airbnb": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Airwallex": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Akamai": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/ctechnews/article/byh1bufb11l"
+  },
+  "Akuna Capital": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Amazon": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "AMD": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1000651071"
+  },
+  "Amdocs": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/Amdocs"
+  },
+  "American Express": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Anduril": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Apollo.io": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Apple": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Applied Intuition": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "AQR Capital Management": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Arcesium": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Arista Networks": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Asana": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Atlassian": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Audible": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Aurora": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Autodesk": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Avito": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Axon": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Baidu": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Barclays": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Bcg": {
+   "israel": "none",
+   "tier": 3
+  },
+  "BitGo": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "BlackRock": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Bloomberg": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "BNY Mellon": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Booking.com": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Box": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "ByteDance": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "C3 Ai": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Cadence": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Canonical": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Capgemini": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Capital One": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Careem": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Check Point": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/Check_Point"
+  },
+  "Cisco": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Citadel": {
+   "israel": "none",
+   "tier": 1,
+   "unverified": true
+  },
+  "Citi": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.jpost.com/israel-news/citibanks-israeli-innovation-ensures-bank-stays-ahead-of-rivals-576441",
+   "aliasOf": "Citigroup"
+  },
+  "Citigroup": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.jpost.com/israel-news/citibanks-israeli-innovation-ensures-bank-stays-ahead-of-rivals-576441",
+   "aliasOf": "Citi"
+  },
+  "Clevertap": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Cloudflare": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Cognizant": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Coinbase": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Compass": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Confluent": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Couchbase": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Coupang": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Coursera": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Criteo": {
+   "israel": "none",
+   "tier": 3
+  },
+  "CrowdStrike": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://jobs.accel.com/companies/crowdstrike/jobs/92454154-software-engineer-cloud-identity-protection-hybrid-isr"
+  },
+  "CVENT": {
+   "israel": "none",
+   "tier": 3
+  },
+  "CyberArk": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/CyberArk"
+  },
+  "Databricks": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Datadog": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://careers.datadoghq.com/detail/8098863/"
+  },
+  "DE Shaw": {
+   "israel": "none",
+   "tier": 1,
+   "unverified": true
+  },
+  "Delhivery": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Dell": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Deloitte": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Deutsche Bank": {
+   "israel": "none",
+   "tier": 3
+  },
+  "DevRev": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Directi": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Disney": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Docusign": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "DoorDash": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "DP world": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Dream11": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Dropbox": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Duolingo": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "eBay": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "EPAM Systems": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Epic Systems": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Expedia": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Fast": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Fiverr": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/Fiverr"
+  },
+  "Flexport": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Flipkart": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Fractal Analytics": {
+   "israel": "none",
+   "tier": 3
+  },
+  "FreshWorks": {
+   "israel": "none",
+   "tier": 3
+  },
+  "GE Healthcare": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Geico": {
+   "israel": "none",
+   "tier": 3
+  },
+  "General Motors": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Gojek": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Goldman Sachs": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Google": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Grab": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Grammarly": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Graviton": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Harness": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "HashedIn": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Hbo": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true,
+   "aliasOf": "Warnermedia"
+  },
+  "HCL": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Hive": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Hopper": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Htc": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Huawei": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Hubspot": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Hudson River Trading": {
+   "israel": "none",
+   "tier": 1,
+   "unverified": true
+  },
+  "Hulu": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "IBM": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "IMC": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Infosys": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "InMobi": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Innovaccer": {
+   "israel": "none",
+   "tier": 3
+  },
+  "instabase": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Instacart": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Intel": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Intuit": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "IXL": {
+   "israel": "none",
+   "tier": 3
+  },
+  "J.P. Morgan": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://careers.jpmorgan.com/cn/en/about-us/locations/tel-aviv"
+  },
+  "Jane Street": {
+   "israel": "none",
+   "tier": 1,
+   "unverified": true
+  },
+  "JFrog": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/JFrog"
+  },
+  "josh technology": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Juspay": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Karat": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Lg Electronics": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Lime": {
+   "israel": "none",
+   "tier": 3
+  },
+  "LinkedIn": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "LTI": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Lucid": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Lyft": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "MakeMyTrip": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Marqeta": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Mastercard": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://builtin.com/articles/israel-multinational-companies"
+  },
+  "MathWorks": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Media.net": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Meesho": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Meta": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Micro1": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Microsoft": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Microstrategy": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Millennium": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Mitsogo": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Mixpanel": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Mobileye": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/Mobileye"
+  },
+  "Moloco": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "monday.com": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/Monday.com"
+  },
+  "MongoDB": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://mongodb.com/blog/post/unleashing-innovation-start-up-nation-inside-mongodb-israel"
+  },
+  "Morgan Stanley": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Motive": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Myntra": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Nagarro": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Navan": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://builtin.com/articles/israel-multinational-companies",
+   "aliasOf": "Tripactions"
+  },
+  "NetApp": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://jobs.netapp.com/job/Tel-Aviv-Software-Engineer/1351750200"
+  },
+  "Netflix": {
+   "israel": "none",
+   "tier": 1,
+   "unverified": true
+  },
+  "Netskope": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Newsbreak": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Nielsen": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Nike": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Nokia": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Nuro": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Nutanix": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Nvidia": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://www.jewishnews.co.uk/nvidia-set-to-become-israels-largest-tech-employer/",
+   "rankIL": 1
+  },
+  "Nykaa": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Okta": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.okta.com/ja-jp/blog/author/rafael-sherbu-cohen/"
+  },
+  "OpenAI": {
+   "israel": "none",
+   "tier": 1,
+   "unverified": true
+  },
+  "opentext": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Oracle": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Oscar Health": {
+   "israel": "none",
+   "tier": 3
+  },
+  "oyo": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Ozon": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Palantir": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://builtinlondon.uk/articles/israel-multinational-companies"
+  },
+  "Palo Alto Networks": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.duns100.co.il/en/rating/High_Tech/Best_HighTech_Companies_to_work_for/2025"
+  },
+  "PayPal": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "PayPay": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Paytm": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "PhonePe": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Pinterest": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Plaid": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Pocket Gems": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "PornHub": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Publicis Sapient": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Pure Storage": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Qualcomm": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Quora": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Rakuten": {
+   "israel": "none",
+   "tier": 3
+  },
+  "razorpay": {
+   "israel": "none",
+   "tier": 3
+  },
+  "redbus": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Reddit": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Remitly": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Revolut": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Riot Games": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Rippling": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Robinhood": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Roblox": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Roku": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Rubrik": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.duns100.co.il/en/rating/High_Tech/Best_HighTech_Companies_to_work_for/2025"
+  },
+  "Salesforce": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Samsung": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "SAP": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Sentry": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "ServiceNow": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Shopee": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Siemens": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "SIG": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Sigmoid": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Snap": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://builtin.com/articles/israel-multinational-companies",
+   "aliasOf": "Snapchat"
+  },
+  "Snapchat": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://builtin.com/articles/israel-multinational-companies",
+   "aliasOf": "Snap"
+  },
+  "Snowflake": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "SoFi": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Spacex": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Splunk": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Spotify": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Sprinklr": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Square": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Squarepoint Capital": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Stripe": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Swiggy": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Taboola": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/Taboola"
+  },
+  "tcs": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Tekion": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Tesla": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Texas Instruments": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "TikTok": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Tinkoff": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Tracxn": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Tripactions": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://builtin.com/articles/israel-multinational-companies",
+   "aliasOf": "Navan"
+  },
+  "Turing": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Twilio": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Twitter": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true,
+   "aliasOf": "X"
+  },
+  "Two Sigma": {
+   "israel": "none",
+   "tier": 1,
+   "unverified": true
+  },
+  "Uber": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Udemy": {
+   "israel": "none",
+   "tier": 3
+  },
+  "UiPath": {
+   "israel": "none",
+   "tier": 3
+  },
+  "UKG": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Upstart": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Urban Company": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Verily": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Verizon": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Verkada": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Virtu Financial": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Visa": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "VK": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Walmart Labs": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Warnermedia": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true,
+   "aliasOf": "Hbo"
+  },
+  "Wayfair": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Waymo": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Wells Fargo": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "WeRide": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Whatnot": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "WinZO": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Wipro": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Wise": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Wissen": {
+   "israel": "none",
+   "tier": 3,
+   "aliasOf": "Wissen Technology"
+  },
+  "Wissen Technology": {
+   "israel": "none",
+   "tier": 3,
+   "aliasOf": "Wissen"
+  },
+  "Wix": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.ynetnews.com/business/article/ryt113f9xfx"
+  },
+  "Wiz": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/Wiz,_Inc."
+  },
+  "Workday": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Works Applications": {
+   "israel": "none",
+   "tier": 3
+  },
+  "X": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true,
+   "aliasOf": "Twitter"
+  },
+  "Yahoo": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Yandex": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://en.wikipedia.org/wiki/List_of_multinational_companies_with_research_and_development_centres_in_Israel"
+  },
+  "Yelp": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Zenefits": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Zepto": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Zeta": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Zip": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Zoho": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Zomato": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Zoom": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Zopsmart": {
+   "israel": "none",
+   "tier": 3
+  },
+  "ZS Associates": {
+   "israel": "none",
+   "tier": 3
+  },
+  "ZScaler": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.zscaler.com/de/careers/israel-benefits"
+  }
+ }
+}
