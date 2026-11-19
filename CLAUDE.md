@@ -39,7 +39,7 @@ src/js/engine/             PURE judging logic + execution
   workers/sql-worker.js    executes user SQL via sql.js (SQLite wasm); sql-core.js is shared with the verifier
   sql.js                   SQL problems: schema validation, starter, result-set judging (ADR 0003)
 src/js/config.js          public site config: remote runner URL (empty = editor-only), Turnstile site key
-src/js/problems/<id>/      problem.js + solutions/ (8 language files, or solution.sql); index.js = catalog, hydrate, loadSolution
+src/js/problems/<id>/      problem.js + solutions/ (8 language files, or solution.sql); index.js = catalog + loadProblem (lazy, ADR 0008); catalog.js is generated (scripts/content/build-catalog.mjs); hydrate.js
 src/js/state/              progress (pure reducers + localStorage), drafts, sync.js (merge across devices)
 src/js/auth/               account.js (Supabase sign-in, inert unless configured), sync-controller.js (ADR 0006), github-sync.js (ADR 0007)
 src/js/modes/              interview.js, battle.js, mock-oa.js (pure session logic and OA problem picking)
@@ -47,7 +47,7 @@ src/js/mentor/             mentor providers (scripted today, remote later)
 src/js/data/taxonomy.js    learning network: 26 topics, 131 subtopics, ladders, validators
 src/js/data/families.js    problem families, pickVersion per company, distinctProblems
 src/js/data/problem-meta.js companies, best known complexity, family per shipped problem (-> problem-meta.json, scripts/content/build-meta.mjs)
-src/js/data/company-sets.js practice by company: per-company problem lists, one row per family (-> company-sets.json, same script)
+src/js/data/company-sets.js practice by company: per-company problem lists, one row per family (-> company-sets.json, same script, which also merges content/israel-hiring.json via scripts/content/israel-companies.mjs: aliases collapsed, Israel fields, display order)
 src/js/data/learning-path.js essential path: 131 problems by tier and topic, easy to hard (-> essential-path.json, same script)
 src/js/data/recommend.js   problem of the day, weak spots from progress
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md)

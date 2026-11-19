@@ -1,0 +1,1295 @@
+{
+ "_doc": "Hiring relevance for software engineers in Israel, per company in the problem metadata. israel: major (roughly 500+ people in Israel, or an Israeli HQ whose main R&D is in Israel), present (an Israeli engineering site that hires engineers, smaller), none (no Israeli engineering hiring found; sales-only offices, closed R&D centers and investment arms count as none). tier: 1 top global, 2 strong tech, 3 other. source: URL for every major/present; on a none entry it documents a closure or a sales-only office. unverified: true on a none entry means it was not individually checked or the evidence was inconclusive, so none is a default, not a finding. rankIL: order inside major by Israeli headcount from the cited source (approximate, 1 = largest). aliasOf: another spelling of the same company in the metadata. Checked 2026-11, see content/israel-hiring.md.",
+ "checked": "2026-11",
+ "allowed": {
+  "israel": [
+   "major",
+   "present",
+   "none"
+  ],
+  "tier": [
+   1,
+   2,
+   3
+  ]
+ },
+ "companies": {
+  "Accenture": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Accolite": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Acko": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Acorns": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Adobe": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/articles/0,7340,L-3757711,00.html"
+  },
+  "Affirm": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Agoda": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Airbnb": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Airwallex": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Akamai": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/ctechnews/article/byh1bufb11l",
+   "rankIL": 22
+  },
+  "Akuna Capital": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Amazon": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://calcalistech.com/ctech/articles/0,7340,L-3851049,00.html",
+   "rankIL": 13
+  },
+  "AMD": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1000651071"
+  },
+  "Amdocs": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/ctechnews/article/u4qmp07cv",
+   "rankIL": 3
+  },
+  "American Express": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Anduril": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Apollo.io": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Apple": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://www.timesofisrael.com/apple-to-open-new-development-center-in-jerusalem",
+   "rankIL": 9
+  },
+  "Applied Intuition": {
+   "israel": "none",
+   "tier": 2
+  },
+  "AQR Capital Management": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Arcesium": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Arista Networks": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Asana": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Atlassian": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Audible": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Aurora": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Autodesk": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://autodesktlv.com/about"
+  },
+  "Avito": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Axon": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Baidu": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Barclays": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Bcg": {
+   "israel": "none",
+   "tier": 3
+  },
+  "BitGo": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "BlackRock": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Bloomberg": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://bloomberg.avature.net/careers/JobDetail/2026-Software-Engineer-Tel-Aviv/14230"
+  },
+  "BNY Mellon": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Booking.com": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://careers.booking.com/locations/tel-aviv/"
+  },
+  "Box": {
+   "israel": "none",
+   "tier": 2
+  },
+  "ByteDance": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://www.themuse.com/jobs/tiktok/ecommerce-brand-partnerships-manager-global-business-solutions-israel"
+  },
+  "C3 Ai": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Cadence": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.timesofisrael.com/israeli-talent-very-important-for-cadence-business-ceo-says/"
+  },
+  "Canonical": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Capgemini": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Capital One": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Careem": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Check Point": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.ynetnews.com/business/article/sy70id00bxl",
+   "rankIL": 6
+  },
+  "Cisco": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/ctechnews/article/h1cjws5xwx",
+   "rankIL": 21
+  },
+  "Citadel": {
+   "israel": "none",
+   "tier": 1
+  },
+  "Citi": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://jobs.citi.com/job/tel-aviv/genai-engineer-innovation-labs/287/83576262208",
+   "aliasOf": "Citigroup"
+  },
+  "Citigroup": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://jobs.citi.com/job/tel-aviv/genai-engineer-innovation-labs/287/83576262208",
+   "aliasOf": "Citi"
+  },
+  "Clevertap": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Cloudflare": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://builtin.com/job/senior-sales-manager-israel/8543027"
+  },
+  "Cognizant": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Coinbase": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001392736"
+  },
+  "Compass": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Confluent": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Couchbase": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Coupang": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Coursera": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Criteo": {
+   "israel": "none",
+   "tier": 3
+  },
+  "CrowdStrike": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/ctechnews/article/hyvm00ez0gl",
+   "rankIL": 25
+  },
+  "CVENT": {
+   "israel": "none",
+   "tier": 3
+  },
+  "CyberArk": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001535229",
+   "rankIL": 18
+  },
+  "Databricks": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://www.databricks.com/company/newsroom/press-releases/databricks-expands-israel-and-announces-appointment-yannis-daubin"
+  },
+  "Datadog": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://careers.datadoghq.com/detail/8098863/"
+  },
+  "DE Shaw": {
+   "israel": "none",
+   "tier": 1,
+   "unverified": true
+  },
+  "Delhivery": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Dell": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.ynetnews.com/article/mkxuo1oz7",
+   "rankIL": 16
+  },
+  "Deloitte": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Deutsche Bank": {
+   "israel": "none",
+   "tier": 3
+  },
+  "DevRev": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Directi": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Disney": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Docusign": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://hubcareers-docusign.icims.com/jobs/29034/software-engineer/job"
+  },
+  "DoorDash": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "DP world": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Dream11": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Dropbox": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://www.timesofisrael.com/us-cloud-storage-giant-dropbox-to-close-rd-operations-leave-israel/"
+  },
+  "Duolingo": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "eBay": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001511565"
+  },
+  "EPAM Systems": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Epic Systems": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Expedia": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Fast": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Fiverr": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001521884",
+   "rankIL": 27
+  },
+  "Flexport": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Flipkart": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Fractal Analytics": {
+   "israel": "none",
+   "tier": 3
+  },
+  "FreshWorks": {
+   "israel": "none",
+   "tier": 3
+  },
+  "GE Healthcare": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://en.globes.co.il/en/article-1001318884"
+  },
+  "Geico": {
+   "israel": "none",
+   "tier": 3
+  },
+  "General Motors": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://www.peoplematters.in/news/performance-management/general-motors-to-lay-off-hundreds-amid-cruise-shutdown-and-restructuring-45451"
+  },
+  "Gojek": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Goldman Sachs": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://pwm.gs.com/emea/en-gb/about-us/locations/emea/tel-aviv"
+  },
+  "Google": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://en.globes.co.il/en/article-Google-Israel-RD-head-Yossi-Matias-moving-to-global-role-1001477138",
+   "rankIL": 10
+  },
+  "Grab": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Grammarly": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Graviton": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Harness": {
+   "israel": "none",
+   "tier": 2
+  },
+  "HashedIn": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Hbo": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true,
+   "aliasOf": "Warnermedia"
+  },
+  "HCL": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Hive": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Hopper": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Htc": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Huawei": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://calcalistech.com/ctechnews/article/bkda5rme6"
+  },
+  "Hubspot": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Hudson River Trading": {
+   "israel": "none",
+   "tier": 1,
+   "unverified": true
+  },
+  "Hulu": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "IBM": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.timesofisrael.com/ibm-to-fire-dozens-at-tel-aviv-rd-center/",
+   "rankIL": 11
+  },
+  "IMC": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Infosys": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://en.globes.co.il/en/article-indias-infosys-expanding-israeli-operations-report-1001035301"
+  },
+  "InMobi": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Innovaccer": {
+   "israel": "none",
+   "tier": 3
+  },
+  "instabase": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Instacart": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Intel": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.intel.com/content/www/us/en/corporate-responsibility/intel-in-israel.html",
+   "rankIL": 2
+  },
+  "Intuit": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://intuit.com/careers/locations/israel",
+   "rankIL": 24
+  },
+  "IXL": {
+   "israel": "none",
+   "tier": 3
+  },
+  "J.P. Morgan": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/ctechnews/article/hk4lupsfa"
+  },
+  "Jane Street": {
+   "israel": "none",
+   "tier": 1
+  },
+  "JFrog": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001366230"
+  },
+  "josh technology": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Juspay": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Karat": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Lg Electronics": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Lime": {
+   "israel": "none",
+   "tier": 3
+  },
+  "LinkedIn": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://www.ynetnews.com/business/article/s1svah00ufl"
+  },
+  "LTI": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Lucid": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Lyft": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "MakeMyTrip": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Marqeta": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Mastercard": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://builtin.com/job/rd-full-stack-engineer-1/3340322"
+  },
+  "MathWorks": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Media.net": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Meesho": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Meta": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://en.globes.co.il/en/article-1001540895",
+   "rankIL": 17
+  },
+  "Micro1": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Microsoft": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://www.calcalistech.com/ctechnews/article/b1viij11zle",
+   "rankIL": 4
+  },
+  "Microstrategy": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Millennium": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Mitsogo": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Mixpanel": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Mobileye": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.timesofisrael.com/struggling-mobileye-to-lay-off-hundreds-of-workers-mostly-in-israel/",
+   "rankIL": 5
+  },
+  "Moloco": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "monday.com": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://monday.com/l/wp-content/uploads/2026/05/Equal-Pay-Public-Report-Eng.pdf",
+   "rankIL": 12
+  },
+  "MongoDB": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://mongodb.com/blog/post/unleashing-innovation-start-up-nation-inside-mongodb-israel"
+  },
+  "Morgan Stanley": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://www.morganstanley.com/about-us/global-offices/israel"
+  },
+  "Motive": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Myntra": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Nagarro": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Navan": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://investors.navan.com/news-releases/news-release-details/tripactions-expands-its-global-footprint-israel-office",
+   "aliasOf": "Tripactions"
+  },
+  "NetApp": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://jobs.netapp.com/job/Tel-Aviv-Backend-Developer/1382458300/"
+  },
+  "Netflix": {
+   "israel": "none",
+   "tier": 1
+  },
+  "Netskope": {
+   "israel": "none",
+   "tier": 3,
+   "source": "https://www.netskope.com/de/press-releases/netskope-launches-newedge-data-center-tel-aviv"
+  },
+  "Newsbreak": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Nielsen": {
+   "israel": "none",
+   "tier": 3,
+   "source": "https://www.vccafe.com/size-matters-nielsen-winds-down-israeli-rd-operations-to-focus-on-india/"
+  },
+  "Nike": {
+   "israel": "none",
+   "tier": 3,
+   "source": "https://www.calcalistech.com/ctechnews/article/b1zgb7tao"
+  },
+  "Nokia": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.haaretz.com/haaretz-labels/2024-07-21/ty-article-labels/nokia-behind-the-scenes-this-is-how-the-finnish-telecommunications-giant/00000190-d4ad-decf-a7b2-d5bf3b2f0000"
+  },
+  "Nuro": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Nutanix": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://jobs.anitab.org/companies/nutanix/jobs/64743596-advisory-systems-engineer"
+  },
+  "Nvidia": {
+   "israel": "major",
+   "tier": 1,
+   "source": "https://en.globes.co.il/en/article-1001548177",
+   "rankIL": 1
+  },
+  "Nykaa": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Okta": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001519918"
+  },
+  "OpenAI": {
+   "israel": "none",
+   "tier": 1,
+   "source": "https://en.globes.co.il/en/article-1001550880"
+  },
+  "opentext": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Oracle": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001290055"
+  },
+  "Oscar Health": {
+   "israel": "none",
+   "tier": 3
+  },
+  "oyo": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Ozon": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Palantir": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-what-is-palantir-doing-in-israel-1001468876"
+  },
+  "Palo Alto Networks": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.timesofisrael.com/in-second-biggest-exit-in-israeli-history-palo-alto-buys-cyberark-for-25-billion/",
+   "rankIL": 8
+  },
+  "PayPal": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001554314"
+  },
+  "PayPay": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Paytm": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "PhonePe": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Pinterest": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Plaid": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Pocket Gems": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "PornHub": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Publicis Sapient": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Pure Storage": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Qualcomm": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://calcalistech.com/ctechnews/article/rytzpacjs",
+   "rankIL": 19
+  },
+  "Quora": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Rakuten": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://viber.com/en/careers/backend-developer-java"
+  },
+  "razorpay": {
+   "israel": "none",
+   "tier": 3
+  },
+  "redbus": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Reddit": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Remitly": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001533975"
+  },
+  "Revolut": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Riot Games": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Rippling": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Robinhood": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Roblox": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Roku": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Rubrik": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001520540"
+  },
+  "Salesforce": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/ctechnews/article/ryjjvov6fx",
+   "rankIL": 15
+  },
+  "Samsung": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://semiconductor.samsung.com/sirc/",
+   "rankIL": 26
+  },
+  "SAP": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/ctechnews/article/rklvysfdzl",
+   "rankIL": 20
+  },
+  "Sentry": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "ServiceNow": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.ynetnews.com/business/article/r1z11dpnpwx"
+  },
+  "Shopee": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Siemens": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.themuse.com/jobs/siemensdigitalindustriessoftware/senior-software-engineer-cc"
+  },
+  "SIG": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://sig.com/who-we-are/office-locations"
+  },
+  "Sigmoid": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Snap": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/ctechnews/article/hjkgl7mei",
+   "aliasOf": "Snapchat"
+  },
+  "Snapchat": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/ctechnews/article/hjkgl7mei",
+   "aliasOf": "Snap"
+  },
+  "Snowflake": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://builtin.com/job/senior-sales-engineer/7012455"
+  },
+  "SoFi": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Spacex": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Splunk": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://techsalesjobs.jobboardly.com/jobs/account-executive-mod-israel-1e862db9"
+  },
+  "Spotify": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Sprinklr": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Square": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Squarepoint Capital": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Stripe": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://www.calcalistech.com/articles/0,7340,L-3926338,00.html"
+  },
+  "Swiggy": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Taboola": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001540177",
+   "rankIL": 23
+  },
+  "tcs": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Tekion": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Tesla": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Texas Instruments": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://builtin.com/job/experienced-digital-design-engineer/9660889"
+  },
+  "TikTok": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://www.themuse.com/jobs/tiktok/ecommerce-brand-partnerships-manager-global-business-solutions-israel"
+  },
+  "Tinkoff": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Tracxn": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Tripactions": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://investors.navan.com/news-releases/news-release-details/tripactions-expands-its-global-footprint-israel-office",
+   "aliasOf": "Navan"
+  },
+  "Turing": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Twilio": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Twitter": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true,
+   "aliasOf": "X"
+  },
+  "Two Sigma": {
+   "israel": "none",
+   "tier": 1,
+   "unverified": true
+  },
+  "Uber": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://finance.yahoo.com/news/uber-continues-global-expansion-launch-124421772.html"
+  },
+  "Udemy": {
+   "israel": "none",
+   "tier": 3
+  },
+  "UiPath": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://www.calcalistech.com/ctech/articles/0,7340,L-3770552,00.html"
+  },
+  "UKG": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Upstart": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Urban Company": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Verily": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-alphabet-closing-verily-health-data-israel-r-d-center-1001483002"
+  },
+  "Verizon": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Verkada": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Virtu Financial": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Visa": {
+   "israel": "none",
+   "tier": 2,
+   "source": "https://www.timesofisrael.com/credit-card-giant-visa-opens-israeli-rd-center/"
+  },
+  "VK": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Walmart Labs": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://tech.walmart.com/content/walmart-global-tech/en_us/careers.html"
+  },
+  "Warnermedia": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true,
+   "aliasOf": "Hbo"
+  },
+  "Wayfair": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Waymo": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Wells Fargo": {
+   "israel": "none",
+   "tier": 2
+  },
+  "WeRide": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Whatnot": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "WinZO": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Wipro": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Wise": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Wissen": {
+   "israel": "none",
+   "tier": 3,
+   "aliasOf": "Wissen Technology"
+  },
+  "Wissen Technology": {
+   "israel": "none",
+   "tier": 3,
+   "aliasOf": "Wissen"
+  },
+  "Wix": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-1001531388",
+   "rankIL": 7
+  },
+  "Wiz": {
+   "israel": "major",
+   "tier": 2,
+   "source": "https://www.jns.org/israel-news/google-closes-record-32-billion-deal-for-israeli-cybersecurity-firm-wiz",
+   "rankIL": 14
+  },
+  "Workday": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://calcalistech.com/ctechnews/article/hjtsokjnt"
+  },
+  "Works Applications": {
+   "israel": "none",
+   "tier": 3
+  },
+  "X": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true,
+   "aliasOf": "Twitter"
+  },
+  "Yahoo": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://en.globes.co.il/en/article-yahoo-expanding-israel-rd-centers-under-new-head-1001419189"
+  },
+  "Yandex": {
+   "israel": "present",
+   "tier": 3,
+   "source": "https://en.globes.co.il/en/article-1001406519"
+  },
+  "Yelp": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Zenefits": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Zepto": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Zeta": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Zip": {
+   "israel": "none",
+   "tier": 3
+  },
+  "Zoho": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Zomato": {
+   "israel": "none",
+   "tier": 2,
+   "unverified": true
+  },
+  "Zoom": {
+   "israel": "none",
+   "tier": 2
+  },
+  "Zopsmart": {
+   "israel": "none",
+   "tier": 3
+  },
+  "ZS Associates": {
+   "israel": "none",
+   "tier": 3
+  },
+  "ZScaler": {
+   "israel": "present",
+   "tier": 2,
+   "source": "https://www.ynetnews.com/business/article/sjapmefaa"
+  }
+ }
+}

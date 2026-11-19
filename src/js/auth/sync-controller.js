@@ -32,11 +32,11 @@ export function createSyncController({ store, backend, debounceMs = 2000, timers
 
   async function syncNow() {
     const id = userId;
-    if (!id) return;
+    if (!id) return false;
     onStatus('syncing');
     try {
       const remote = await backend.load(id);
-      if (id !== userId) return; // signed out (or switched user) while loading
+      if (id !== userId) return false; // signed out (or switched user) while loading
       const merged = mergeProgress(store.get(), remote);
       if (merged !== store.get()) {
         // Our own write: do not schedule another sync for it.
@@ -49,8 +49,10 @@ export function createSyncController({ store, backend, debounceMs = 2000, timers
       }
       await backend.save(id, stripLocalOnly(merged));
       onStatus('synced');
+      return true;
     } catch (err) {
       onStatus('error', err?.message ?? String(err));
+      return false;
     }
   }
 
@@ -80,6 +82,18 @@ export function createSyncController({ store, backend, debounceMs = 2000, timers
         enqueue(syncNow);
       }
       return chain;
+    },
+    /**
+     * Cancels any pending debounce and syncs right now. Sign-out uses it so the latest local
+     * progress is on the server before the device copy is cleared.
+     * @returns {Promise<boolean>} true when the server holds the merged state
+     */
+    pushNow() {
+      if (timer) {
+        timers.clear(timer);
+        timer = null;
+      }
+      return enqueue(syncNow);
     },
     dispose() {
       unsubscribe();

@@ -2,7 +2,7 @@
  * Header control for accounts: "Sign in" (Google or GitHub) when signed out, the user and
  * "Sign out" when signed in, nothing when accounts are not configured.
  */
-import { h, mount } from './dom.js';
+import { h, mount, confirmDialog, toast } from './dom.js';
 import { newRepoUrl } from '../auth/github-sync.js';
 
 const SYNC_LABEL = { idle: '', syncing: 'Syncing...', synced: 'Progress synced', error: 'Sync failed' };
@@ -27,6 +27,23 @@ export function mountAccountMenu(host, account, github = null) {
     }
     return ghEl;
   };
+  const confirmSignOut = async () => {
+    const ok = await confirmDialog({
+      title: 'Sign out?',
+      body: 'Your progress stays in your account and is removed from this device.',
+      confirmLabel: 'Sign out',
+      danger: true,
+    });
+    if (!ok || (await account.signOut())) return;
+    if (!account.get().user) return;
+    const anyway = await confirmDialog({
+      title: 'Sign out without saving?',
+      body: 'Your latest progress could not be saved to your account. Signing out now removes it from this device.',
+      confirmLabel: 'Sign out anyway',
+      danger: true,
+    });
+    if (anyway) await account.signOut({ force: true });
+  };
   const render = (s) => {
     if (s.status === 'off') return mount(host);
     if (s.status === 'loading') return mount(host, h('span.account-note', {}, ''));
@@ -46,7 +63,7 @@ export function mountAccountMenu(host, account, github = null) {
       return mount(host, h('div.account', {}, toggle, menu));
     }
     const who = s.user.name ?? s.user.email ?? 'Signed in';
-    const panel = h('div.account-menu', { hidden: !open, role: 'menu' }, ghSection(), h('button.btn.btn-ghost.btn-sm', { type: 'button', role: 'menuitem', onClick: () => account.signOut() }, 'Sign out'));
+    const panel = h('div.account-menu', { hidden: !open, role: 'menu' }, ghSection(), s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null, h('button.btn.btn-ghost.btn-sm', { type: 'button', role: 'menuitem', onClick: confirmSignOut }, 'Sign out'));
     const toggle = h('button.btn.btn-ghost.btn-sm.account-name', { type: 'button', title: s.user.email ?? '', 'aria-haspopup': 'menu', 'aria-expanded': String(open) }, who);
     toggle.addEventListener('click', () => {
       open = panel.hidden;
@@ -112,7 +129,23 @@ function githubSection(github) {
     h('p.hint-text', {}, 'Syncing to ', h('a', { href: `https://github.com/${link.repo}`, target: '_blank', rel: 'noopener' }, link.repo)),
     h('label.switch', { for: 'gh-auto' }, auto, h('span', {}, 'After every Accepted')),
     h('p.hint-text', {}, 'Solved after revealing the solution? Push it by hand from Submissions; it is marked assisted.'),
-    h('button.btn.btn-ghost.btn-sm', { type: 'button', role: 'menuitem', onClick: () => github.disconnect() }, 'Disconnect'),
+    h(
+      'button.btn.btn-ghost.btn-sm',
+      {
+        type: 'button',
+        role: 'menuitem',
+        onClick: async () => {
+          const ok = await confirmDialog({
+            title: 'Disconnect GitHub?',
+            body: `New solutions will stop being saved to ${link.repo}. Nothing in the repository is deleted.`,
+            confirmLabel: 'Disconnect',
+            danger: true,
+          });
+          if (ok) github.disconnect().catch((err) => toast(`GitHub sync: ${err.message}`, 'error', 6000));
+        },
+      },
+      'Disconnect',
+    ),
   );
 }
 

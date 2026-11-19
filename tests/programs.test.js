@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { availableProblems } from '../src/js/problems/index.js';
+import { loadAllProblems } from '../src/js/problems/index.js';
 import { buildSuite } from '../src/js/engine/harness.js';
 import { isSql } from '../src/js/engine/sql.js';
 import * as browserBuild from '../src/js/engine/programs/build.js';
@@ -31,9 +31,9 @@ test('program modules are browser-safe: no Node built-ins, no Buffer, no process
   }
 });
 
-test('every native program is identical whether built for the verifier or the browser', () => {
+test('every native program is identical whether built for the verifier or the browser', async () => {
   let n = 0;
-  for (const problem of availableProblems()) {
+  for (const problem of await loadAllProblems()) {
     if (isSql(problem.signature)) continue;
     const args = buildSuite(problem).map((t) => t.args);
     for (const lang of browserBuild.NATIVE_LANGUAGES) {

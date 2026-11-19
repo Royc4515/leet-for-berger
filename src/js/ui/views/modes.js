@@ -3,12 +3,14 @@
  */
 import { h, mount, toast, confirmDialog, difficultyBadge } from '../dom.js';
 import { renderWorkspace } from './workspace.js';
-import { availableProblems, getProblem } from '../../problems/index.js';
+import { availableEntries, catalogEntry, loadProblem, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import * as Interview from '../../modes/interview.js';
 import { createBot, BOT_LEVELS } from '../../modes/battle.js';
 import { OA_FORMATS, pickOaProblems } from '../../modes/mock-oa.js';
 import { expandRows } from '../../data/company-sets.js';
-import { loadSets } from './companies.js';
+import { loadRankedCompanies, israelFilterControl, israelBadgeEl } from './companies.js';
+import { filterRanked, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
+import { filterProblems, usedTopics, pickRandom } from '../../modes/battle-picker.js';
 
 /* ======================= Hub ======================= */
 
@@ -41,7 +43,7 @@ export function renderModesHub(root) {
           'AI Mentor',
           'Offline',
           'Side panel inside every practice problem. Asks guiding questions, refuses to hand out solutions. Runs on a scripted hint ladder today; the LLM provider plugs into the same interface behind a backend proxy.',
-          h('a.btn.btn-secondary', { href: `#/problem/${availableProblems()[0].id}` }, 'Open a problem'),
+          h('a.btn.btn-secondary', { href: `#/problem/${availableEntries()[0].id}` }, 'Open a problem'),
         ),
       ),
     ),
@@ -54,6 +56,7 @@ export function renderModesHub(root) {
 // Module-level so leaving and re-entering the route resumes instead of restarting.
 let interview = null;
 let interviewDrafts = null; // survives route changes with the session, reset on a new interview
+let interviewProblems = null; // id -> hydrated problem, loaded before the clock starts
 
 export function renderInterview(root, { store }) {
   if (!interview) return renderInterviewSetup(root, { store });
@@ -62,7 +65,7 @@ export function renderInterview(root, { store }) {
 }
 
 /** Problems a timed session can use: anything with a browser language (SQL problems are their own track). */
-const oaEligible = () => availableProblems().filter((p) => p.languages.some((l) => l.executable && l.id !== 'sql'));
+const oaEligible = () => availableEntries().filter((p) => p.executable.some((l) => l !== 'sql'));
 
 /** Companies with enough on-site problems to fill a mock OA. */
 const MIN_COMPANY_PROBLEMS = 3;
@@ -72,7 +75,11 @@ function renderInterviewSetup(root, { store }) {
   const eligibleIds = new Set(eligible.map((p) => p.id));
   let format = OA_FORMATS[1];
   let companyIds = null; // null = any company
+  let companyName = '';
+  let companySlug = ''; // '' = any company
   const companyOf = new Map();
+  let ranked = [];
+  const cf = { filter: DEFAULT_ISRAEL_FILTER, query: '' };
 
   const formatGroup = h(
     'div.chip-group',
@@ -94,20 +101,59 @@ function renderInterviewSetup(root, { store }) {
       ),
     ),
   );
-  const company = h('select.select', { 'aria-label': 'Company', disabled: true }, h('option', { value: '' }, 'Any company'));
-  company.addEventListener('change', () => {
-    companyIds = company.value ? companyOf.get(company.value) : null;
-    describe();
+  const companyList = h('div.chip-group.company-chips', { role: 'group', 'aria-label': 'Company' });
+  const companyHint = h('p.hint-text', { role: 'status' }, 'Loading companies...');
+  const chip = (slug, name, text, badge) =>
+    h(
+      'button.chip.company-chip',
+      {
+        type: 'button',
+        'data-slug': slug,
+        'aria-pressed': String(slug === companySlug),
+        onClick: () => {
+          companySlug = slug;
+          companyName = name;
+          companyIds = slug ? companyOf.get(slug) : null;
+          renderCompanies();
+          describe();
+        },
+      },
+      text,
+      badge,
+    );
+  function renderCompanies() {
+    const shown = filterRanked(ranked, cf).filter((c) => companyOf.has(c.slug));
+    const chips = [chip('', '', 'Any company', null)];
+    // The selected company stays visible even when the current filter or search hides it.
+    const selected = companySlug && !shown.some((c) => c.slug === companySlug) ? ranked.find((c) => c.slug === companySlug) : null;
+    for (const c of selected ? [selected, ...shown] : shown) chips.push(chip(c.slug, c.name, `${c.name} (${companyOf.get(c.slug).length})`, c.israel === 'major' ? h('span.il-star', { 'aria-label': 'Major in Israel', title: 'Major in Israel' }, '\u2605') : null));
+    mount(companyList, chips);
+    companyHint.textContent = `${shown.length} ${shown.length === 1 ? 'company' : 'companies'} with enough problems on the site. Optional: draws from the problems that company asks.`;
+  }
+  const companySearch = h('input.search.company-search', { type: 'search', placeholder: 'Search companies', 'aria-label': 'Search companies' });
+  companySearch.addEventListener('input', () => {
+    cf.query = companySearch.value;
+    renderCompanies();
   });
-  loadSets().then((sets) => {
-    if (!sets) return;
-    for (const c of sets.companies) {
-      const ids = [...new Set(expandRows(sets, c).map((r) => r.practice?.contentId).filter((id) => id && eligibleIds.has(id)))];
+  const companyFilter = israelFilterControl(cf.filter, (id) => {
+    cf.filter = id;
+    renderCompanies();
+  });
+  const eligibleIdsOf = (c, sets) => [...new Set(expandRows(sets, c).map((r) => r.practice?.contentId).filter((id) => id && eligibleIds.has(id)))];
+  loadRankedCompanies().then((d) => {
+    if (disposed) return;
+    if (!d) {
+      companyHint.textContent = 'Company data could not be loaded.';
+      return;
+    }
+    ranked = d.ranked;
+    for (const c of ranked) {
+      const ids = eligibleIdsOf(c, d.sets);
       if (ids.length >= MIN_COMPANY_PROBLEMS) companyOf.set(c.slug, ids);
     }
-    for (const c of sets.companies) if (companyOf.has(c.slug)) company.append(h('option', { value: c.slug }, `${c.name}${c.israeli ? ' (IL)' : ''} - ${companyOf.get(c.slug).length} problems`));
-    company.disabled = false;
+    renderCompanies();
   });
+  mount(companyList, chip('', '', 'Any company', null));
 
   const summary = h('div.setup-card-rows');
   const describe = () => {
@@ -116,13 +162,14 @@ function renderInterviewSetup(root, { store }) {
       summary,
       h('div.setup-row', {}, h('span', {}, 'Duration'), h('strong', {}, `${format.minutes}:00`)),
       h('div.setup-row', {}, h('span', {}, 'Problems'), h('strong', {}, format.note)),
-      h('div.setup-row', {}, h('span', {}, 'Drawn from'), h('strong', {}, `${pool.length} problems${companyIds ? ` asked at ${company.selectedOptions[0].textContent.split(' - ')[0]}` : ''}, unsolved first`)),
+      h('div.setup-row', {}, h('span', {}, 'Drawn from'), h('strong', {}, `${pool.length} problems${companyIds ? ` asked at ${companyName}` : ''}, unsolved first`)),
     );
   };
   describe();
 
+  let disposed = false;
   const start = h('button.btn.btn-primary.btn-lg', { type: 'button' }, 'Start interview');
-  start.addEventListener('click', () => {
+  start.addEventListener('click', async () => {
     const solvedIds = new Set(Object.entries(store.get().problems).filter(([, p]) => p.status === 'solved').map(([id]) => id));
     const candidates = (companyIds ? eligible.filter((p) => companyIds.includes(p.id)) : eligible).map((p) => ({ id: p.id, difficulty: p.difficulty }));
     // The clock seeds the pick so every OA differs; the pick itself is pure and tested.
@@ -131,6 +178,23 @@ function renderInterviewSetup(root, { store }) {
       toast('No problems available for this setup.', 'warn');
       return;
     }
+    // Load every problem before creating the session: the clock starts in createSession, and
+    // download and test-building time must never count against the candidate.
+    start.disabled = true;
+    start.textContent = 'Loading problems...';
+    let loaded;
+    try {
+      loaded = await Promise.all(problemIds.map(loadProblem));
+    } catch {
+      if (disposed) return;
+      start.disabled = false;
+      start.textContent = 'Start interview';
+      toast('The problems could not be loaded. Check your connection and try again.', 'error');
+      return;
+    }
+    if (disposed) return;
+    interviewProblems = new Map(loaded.map((p) => [p.id, p]));
+    // don't touch / the clock starts here, so it must stay after the await above (load time is not the candidate's)
     interview = Interview.createSession({ problemIds, durationMs: format.minutes * 60 * 1000 });
     interviewDrafts = new Map();
     interview.activeProblemId = problemIds[0];
@@ -149,8 +213,9 @@ function renderInterviewSetup(root, { store }) {
         h('h3', {}, 'Format'),
         formatGroup,
         h('h3', {}, 'Company'),
-        company,
-        h('p.hint-text', {}, 'Optional. Draws from the problems that company asks, on the site.'),
+        h('div.filters', {}, companyFilter, companySearch),
+        companyList,
+        companyHint,
         summary,
         h('h3', {}, 'Rules'),
         h(
@@ -166,7 +231,9 @@ function renderInterviewSetup(root, { store }) {
       ),
     ),
   );
-  return () => {};
+  return () => {
+    disposed = true;
+  };
 }
 
 function renderInterviewActive(root, { store }) {
@@ -194,7 +261,7 @@ function renderInterviewActive(root, { store }) {
   const mountProblem = () => {
     cleanupWs?.();
     cleanupWs = renderWorkspace(host, {
-      problem: getProblem(interview.activeProblemId),
+      problem: interviewProblems.get(interview.activeProblemId),
       store,
       session: {
         kind: 'interview',
@@ -264,6 +331,7 @@ function renderInterviewReport(root) {
   const again = h('button.btn.btn-primary', { type: 'button' }, 'New interview');
   again.addEventListener('click', () => {
     interview = null;
+    interviewProblems = null;
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   });
   mount(
@@ -282,8 +350,7 @@ function renderInterviewReport(root) {
         row('Tab switches', String(a.tabSwitches)),
         h('h3', {}, 'Per problem'),
         a.problems.map((p) => {
-          const prob = getProblem(p.id);
-          return row(prob.title, `${Math.round(p.coverage * 100)}% tests${p.solved ? ` · solved at ${Interview.formatClock(p.solveTimeMs)}` : ''}`);
+          return row(catalogEntry(p.id)?.title ?? p.id, `${Math.round(p.coverage * 100)}% tests${p.solved ? ` · solved at ${Interview.formatClock(p.solveTimeMs)}` : ''}`);
         }),
         h('div.mode-actions', {}, again, h('a.btn.btn-ghost', { href: '#/' }, 'Back to problems')),
       ),
@@ -295,9 +362,11 @@ function renderInterviewReport(root) {
 /* ======================= Battle ======================= */
 
 export function renderBattle(root, { store }) {
-  const problems = availableProblems();
+  const problems = availableEntries();
   let level = 'regular';
   let problemId = problems[0].id;
+  const pf = { query: '', difficulty: 'all', topic: 'all' };
+  const topicLabel = (id) => TOPICS.find((t) => t.id === id)?.label ?? id;
 
   const levelGroup = h(
     'div.chip-group',
@@ -318,13 +387,103 @@ export function renderBattle(root, { store }) {
       ),
     ),
   );
-  const select = h('select.select', { 'aria-label': 'Problem' }, problems.map((p) => h('option', { value: p.id }, `${p.title} (${p.difficulty})`)));
-  select.addEventListener('change', () => (problemId = select.value));
+  const pickList = h('div.pick-list', { role: 'group', 'aria-label': 'Problem' });
+  const pickCount = h('p.hint-text', { role: 'status' });
+  const selectedLine = h('p.pick-selected');
+  const showSelected = () => {
+    const p = catalogEntry(problemId);
+    mount(selectedLine, 'Selected: ', h('strong', {}, p?.title ?? problemId), ' ', p ? difficultyBadge(p.difficulty) : null);
+  };
+  function renderPicker() {
+    const list = filterProblems(problems, pf);
+    pickCount.textContent = `${list.length} of ${problems.length} problems`;
+    if (!list.length) {
+      mount(pickList, h('p.empty', {}, 'No problems match.'));
+      return;
+    }
+    mount(
+      pickList,
+      list.map((p) =>
+        h(
+          'button.pick-row',
+          {
+            type: 'button',
+            'data-id': p.id,
+            'aria-pressed': String(p.id === problemId),
+            onClick: () => {
+              problemId = p.id;
+              pickList.querySelectorAll('.pick-row').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.id === problemId)));
+              showSelected();
+            },
+          },
+          h('span.pick-title', {}, p.title),
+          difficultyBadge(p.difficulty),
+          h('span.pick-topics', {}, p.topics.map((t) => h('span.tag', {}, topicLabel(t)))),
+        ),
+      ),
+    );
+  }
+  const search = h('input.search.pick-search', { type: 'search', placeholder: 'Search by title', 'aria-label': 'Search problems' });
+  search.addEventListener('input', () => {
+    pf.query = search.value;
+    renderPicker();
+  });
+  const diffGroup = h(
+    'div.chip-group',
+    { role: 'group', 'aria-label': 'Difficulty' },
+    ['all', ...DIFFICULTIES].map((d) =>
+      h(
+        'button.chip',
+        {
+          type: 'button',
+          'data-difficulty': d,
+          'aria-pressed': String(d === pf.difficulty),
+          onClick: () => {
+            pf.difficulty = d;
+            diffGroup.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.difficulty === d)));
+            renderPicker();
+          },
+        },
+        d === 'all' ? 'All difficulties' : d,
+      ),
+    ),
+  );
+  const topicSelect = h('select.select', { 'aria-label': 'Topic' }, h('option', { value: 'all' }, 'All topics'), usedTopics(problems, TOPICS).map((t) => h('option', { value: t.id }, t.label)));
+  topicSelect.addEventListener('change', () => {
+    pf.topic = topicSelect.value;
+    renderPicker();
+  });
+  const random = h('button.btn.btn-secondary.btn-sm', { type: 'button' }, 'Random');
+  random.addEventListener('click', () => {
+    // Random from what the filters show, so "Hard + Graphs" then Random stays inside that set.
+    const p = pickRandom(filterProblems(problems, pf), Math.random());
+    if (!p) return;
+    problemId = p.id;
+    renderPicker();
+    showSelected();
+    pickList.querySelector(`[data-id="${p.id}"]`)?.scrollIntoView({ block: 'nearest' });
+  });
+  showSelected();
+  renderPicker();
   const start = h('button.btn.btn-primary.btn-lg', { type: 'button' }, 'Start race');
 
   let cleanup = () => {};
-  start.addEventListener('click', () => {
-    cleanup = startBattle(root, { store, problem: getProblem(problemId), level });
+  let disposed = false;
+  start.addEventListener('click', async () => {
+    start.disabled = true;
+    start.textContent = 'Loading the problem...';
+    let problem;
+    try {
+      problem = await loadProblem(problemId);
+    } catch {
+      if (disposed) return;
+      start.disabled = false;
+      start.textContent = 'Start race';
+      toast('The problem could not be loaded. Check your connection and try again.', 'error');
+      return;
+    }
+    // don't touch / the race clock and the bot start in startBattle: it must stay after the load, which never costs the user
+    if (!disposed) cleanup = startBattle(root, { store, problem, level });
   });
 
   mount(
@@ -339,13 +498,19 @@ export function renderBattle(root, { store }) {
         h('h3', {}, 'Opponent'),
         levelGroup,
         h('h3', {}, 'Problem'),
-        select,
+        h('div.filters', {}, diffGroup, topicSelect, search, random),
+        pickCount,
+        pickList,
+        selectedLine,
         h('p.hint-text', {}, 'Live peer battles: coming with the server-side judge. Assistance (reveal, mentor) is disabled during a race.'),
         start,
       ),
     ),
   );
-  return () => cleanup();
+  return () => {
+    disposed = true;
+    cleanup();
+  };
 }
 
 function startBattle(root, { store, problem, level }) {

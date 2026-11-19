@@ -10,7 +10,7 @@ import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { startServer } from '../scripts/serve.mjs';
 import { startFakeRunner } from './fake-runner.mjs';
-import { availableProblems } from '../src/js/problems/index.js';
+import { loadProblem } from '../src/js/problems/index.js';
 
 const args = new Set(process.argv.slice(2));
 const skipPython = args.has('--no-python');
@@ -28,7 +28,21 @@ await page.addInitScript(() => {
   window.LFB_REMOTE_RUNNER_URL = '';
   window.LFB_SUPABASE_URL = '';
   window.LFB_SUPABASE_ANON_KEY = '';
+  // Longest main-thread task, read after the dashboard renders (ADR 0008: it used to be one 12 s task).
+  window.__lfbLongestTask = 0;
+  try {
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) window.__lfbLongestTask = Math.max(window.__lfbLongestTask, e.duration);
+    }).observe({ type: 'longtask', buffered: true });
+  } catch {
+    // longtask is Chromium-only; the number is informational.
+  }
 });
+// Problem modules load one at a time, when a problem opens (ADR 0008); count what the page fetched.
+const PROBLEM_MODULE = /\/problems\/[^/]+\/problem\.js(\?|$)/;
+const problemModules = [];
+page.on('request', (r) => PROBLEM_MODULE.test(r.url()) && problemModules.push(r.url()));
+const DASHBOARD_BUDGET_MS = 4000;
 const errors = [];
 page.on('console', (m) => m.type() === 'error' && errors.push(`console (during step ${step}): ${m.text()}`));
 page.on('pageerror', (e) => errors.push(`pageerror (during step ${step}): ${e.message}${process.env.E2E_STACKS ? '\n' + e.stack : ''}`));
@@ -54,19 +68,26 @@ async function check(name, fn) {
 const expectText = async (sel, re, timeout = 15000) => {
   await page.waitForFunction(([s, src]) => new RegExp(src).test(document.querySelector(s)?.textContent ?? ''), [sel, re.source], { timeout });
 };
+const expectDialog = (p, re) =>
+  p.waitForFunction((src) => new RegExp(src).test(document.querySelector('dialog.modal')?.textContent ?? ''), re.source, { timeout: 5000 });
 const setCode = (code) => page.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
 
 try {
-  await check('dashboard renders with stats and problem bank', async () => {
+  await check('dashboard renders with stats and problem bank, without loading any problem module', async () => {
     await page.goto(BASE);
-    await page.waitForSelector('.problem-table tbody tr');
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
+    const { ready, longest } = await page.evaluate(() => ({ ready: performance.now(), longest: window.__lfbLongestTask }));
+    if (problemModules.length) throw new Error(`the dashboard fetched ${problemModules.length} problem modules, e.g. ${problemModules[0]}`);
+    console.log(`  # dashboard ready in ${Math.round(ready)} ms (budget ${DASHBOARD_BUDGET_MS}), longest task ${Math.round(longest)} ms`);
+    if (ready > DASHBOARD_BUDGET_MS) throw new Error(`dashboard took ${Math.round(ready)} ms, budget ${DASHBOARD_BUDGET_MS} ms`);
     await expectText('.stats-row', /Solved/);
     await shot('01-dashboard');
   });
 
-  await check('problem opens with Monaco (vs-dark) and starter code', async () => {
+  await check('problem opens with Monaco (vs-dark) and starter code, loading exactly its own module', async () => {
     await page.click('a.problem-link[href="#/problem/smallest-base-segment"]');
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    if (problemModules.length !== 1 || !problemModules[0].includes('/smallest-base-segment/')) throw new Error(`expected one problem module, fetched: ${problemModules.join(', ')}`);
     const theme = await page.evaluate(() => document.querySelector('.monaco-editor').classList.contains('vs-dark'));
     if (!theme) throw new Error('editor is not vs-dark');
     const code = await page.evaluate(() => window.monaco.editor.getModels()[0].getValue());
@@ -109,6 +130,7 @@ try {
     await shot('18-walkthrough-history');
     await setCode('// replaced');
     await page.click('.history-list li:first-child button:has-text("Load code")');
+    await page.click('dialog.modal button:has-text("Load code")');
     await page.waitForFunction(() => !window.monaco.editor.getModels()[0].getValue().includes('// replaced'));
   });
 
@@ -157,6 +179,16 @@ try {
     await page.press('.mentor-input', 'Enter');
     await expectText('.mentor-log', /won't hand you the solution/);
     await shot('04-mentor');
+    // Regression: Monaco once overflowed its grid column and painted over the panel. The panel's
+    // centre, its toolbar edge and the editor's right edge must all hit the panel or the editor, never cross.
+    const stacking = await page.evaluate(() => {
+      const m = document.querySelector('.mentor').getBoundingClientRect();
+      const hit = document.elementFromPoint(m.left + m.width / 2, m.top + m.height / 2);
+      const editorRight = document.querySelector('.editor-host').getBoundingClientRect().right;
+      return { inside: Boolean(hit?.closest('.mentor')), hit: hit?.className, overlap: editorRight - m.left };
+    });
+    if (!stacking.inside) throw new Error(`mentor panel is covered by ${stacking.hit}`);
+    if (stacking.overlap > 1) throw new Error(`editor extends ${stacking.overlap}px under the mentor panel`);
     await page.click('button[aria-label="Close mentor"]');
   });
 
@@ -208,7 +240,7 @@ try {
   // Remote runner (ADR 0005): with a runner URL configured, Java compiles on the server and is judged
   // in the page. A local fake stands in for the Worker (real javac when a JDK is installed).
   await check('remote runner: Java reveal + submit is Accepted through a runner endpoint', async () => {
-    const problem = availableProblems().find((p) => p.id === 'pair-sum-target');
+    const problem = await loadProblem('pair-sum-target');
     const fake = await startFakeRunner(PORT + 100, { origin: `http://localhost:${PORT}`, reference: (a) => problem.solveReference(a) });
     // Its own context: the runner URL is read when the page loads, and progress stays separate.
     const remote = await browser.newPage({ viewport: { width: 1440, height: 900 } }).catch((err) => {
@@ -331,7 +363,18 @@ try {
   await check('practice by company: search, Israeli filter, company page with practice links', async () => {
     await page.click('nav a[data-nav="companies"]');
     await page.waitForSelector('.company-card', { timeout: 15000 });
-    await page.check('#israeli-only');
+    await page.waitForSelector('.segmented[aria-label="Show companies"]');
+    // Default is "Hiring in Israel": the first card is a major company, with its badge.
+    await expectText('.segmented-btn[aria-pressed="true"]', /Hiring in Israel/);
+    await expectText('.company-card:first-child', /Major in Israel/);
+    const hiringCount = await page.locator('.company-card').count();
+    await shot('15a-companies-hiring');
+    await page.click('.segmented-btn:has-text("Top in Israel")');
+    const topCount = await page.locator('.company-card').count();
+    if (!(topCount > 0 && topCount < hiringCount)) throw new Error(`"Top in Israel" should narrow the list (${topCount} vs ${hiringCount})`);
+    await page.click('.segmented-btn:has-text("All")');
+    const allCount = await page.locator('.company-card').count();
+    if (!(allCount > hiringCount)) throw new Error(`"All" should show more cards than "Hiring in Israel" (${allCount} vs ${hiringCount})`);
     await page.fill('input[aria-label="Search companies"]', 'wix');
     await page.waitForFunction(() => document.querySelectorAll('.company-card').length === 1);
     await shot('15-companies');
@@ -493,8 +536,16 @@ try {
   await check('mock OA: hard format from one company, 3 problems, lockdown, report', async () => {
     await page.goto(`${BASE}#/interview`);
     await page.click('.chip-group[aria-label="Format"] button:has-text("Hard OA")');
-    await page.waitForFunction(() => !document.querySelector('select[aria-label="Company"]').disabled);
-    await page.selectOption('select[aria-label="Company"]', 'google');
+    await page.waitForSelector('.company-chip[data-slug="google"]', { timeout: 15000 });
+    // Search narrows the picker; the selected chip is obvious (aria-pressed).
+    await page.fill('input[aria-label="Search companies"]', 'goog');
+    await page.waitForFunction(() => document.querySelectorAll('.company-chip').length === 2);
+    await page.click('.company-chip[data-slug="google"]');
+    if ((await page.getAttribute('.company-chip[data-slug="google"]', 'aria-pressed')) !== 'true') throw new Error('selected company chip is not pressed');
+    await page.fill('input[aria-label="Search companies"]', '');
+    await page.click('.segmented-btn:has-text("All")');
+    if ((await page.locator('.company-chip').count()) <= 2) throw new Error('"All" should list more companies');
+    await shot('06-oa-setup-picker');
     await expectText('.setup-card', /2 Medium \+ 1 Hard, 90 minutes/);
     await expectText('.setup-card', /asked at Google/);
     await shot('06-oa-setup');
@@ -524,6 +575,26 @@ try {
     await page.waitForSelector('.score-ring');
     if (!(await page.locator('.app-header').isVisible())) throw new Error('nav not restored after interview');
     await shot('08-report');
+  });
+
+  await check('battle setup: problems show difficulty and topics, filters narrow the list', async () => {
+    await page.goto(`${BASE}#/battle`);
+    await page.waitForSelector('.pick-row');
+    await expectText('.pick-row:first-child', /Easy|Medium|Hard/);
+    if (!(await page.locator('.pick-row >> nth=0').locator('.tag').count())) throw new Error('problem row shows no topic');
+    const before = await page.locator('.pick-row').count();
+    await page.click('.chip-group[aria-label="Difficulty"] button:has-text("Hard")');
+    const hard = await page.locator('.pick-row').count();
+    if (!(hard > 0 && hard < before)) throw new Error(`difficulty filter should narrow the list (${hard} vs ${before})`);
+    const nonHard = await page.locator('.pick-row:not(:has(.diff-hard))').count();
+    if (nonHard) throw new Error('hard filter shows other difficulties');
+    await page.fill('input[aria-label="Search problems"]', 'zzzz-no-such-problem');
+    await page.waitForSelector('.pick-list .empty');
+    await page.fill('input[aria-label="Search problems"]', '');
+    await page.click('button:has-text("Random")');
+    await page.waitForSelector('.pick-row[aria-pressed="true"]');
+    await shot('09a-battle-setup');
+    await page.click('.chip-group[aria-label="Difficulty"] button:has-text("All difficulties")');
   });
 
   await check('battle: race banner with two progress bars', async () => {
@@ -586,9 +657,10 @@ try {
     acct.on('console', (m) => m.type() === 'error' && errors.push(`console (account page): ${m.text()}`));
     // A stub stands in for supabase-js: no network, and the test decides whether a session exists.
     const stub = (signedIn) => `export function createClient() {
+      const listeners = [];
       const user = ${signedIn ? "{ id: 'u1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } }" : 'null'};
       const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async () => ({ error: null }) };
-      return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: () => ({}), signInWithOAuth: async () => ({}), signOut: async () => ({}) }, from: () => chain };
+      return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: (cb) => { listeners.push(cb); return {}; }, signInWithOAuth: async () => ({}), signOut: async () => { listeners.forEach((l) => l('SIGNED_OUT', null)); return {}; } }, from: () => chain };
     }`;
     let signedIn = false;
     await acct.route('**/@supabase/supabase-js@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: stub(signedIn) }));
@@ -646,6 +718,42 @@ try {
     });
     await acct.waitForSelector('.toast:has-text("Saved to GitHub: ada/practice")', { timeout: 15000 });
     if (pushes.length !== 1 || pushes[0].problemId !== 'pair-sum-target' || pushes[0].assisted !== false || !pushes[0].code.includes('function')) throw new Error(`unexpected pushes: ${JSON.stringify(pushes).slice(0, 200)}`);
+
+    // Sign-out asks first, keeps everything on Cancel, and clears this user's data on confirm.
+    await acct.goto(`${BASE}#/`);
+    await acct.waitForSelector('#account .account-name:has-text("Ada")');
+    const stored = () => acct.evaluate(() => ({ progress: JSON.parse(localStorage.getItem('lfb:progress:v1') ?? 'null'), drafts: Object.keys(localStorage).filter((k) => k.startsWith('lfb:draft:')) }));
+    await acct.evaluate(() => localStorage.setItem('lfb:draft:v1:pair-sum-target:python', '# unsaved'));
+    if (!(await stored()).progress?.problems?.['pair-sum-target']) throw new Error('expected local progress before sign-out');
+    await acct.click('#account .account-name');
+    await acct.click('.account-menu button:has-text("Sign out")');
+    await acct.waitForSelector('dialog.modal[open]');
+    await expectDialog(acct, /Sign out\?[\s\S]*stays in your account[\s\S]*removed from this device/);
+    if (shotsDir) await acct.screenshot({ path: `${shotsDir}/22-sign-out-confirm.png` });
+    await acct.click('dialog.modal button:has-text("Cancel")');
+    await acct.waitForSelector('dialog.modal', { state: 'detached' });
+    if (!(await stored()).progress?.problems?.['pair-sum-target']) throw new Error('Cancel must keep local progress');
+    if ((await acct.locator('#account .account-name').count()) !== 1) throw new Error('Cancel must keep the session');
+    await acct.keyboard.press('Escape');
+    await acct.click('#account .account-name');
+    await acct.click('.account-menu button:has-text("Sign out")');
+    await acct.waitForSelector('dialog.modal[open]');
+    await acct.keyboard.press('Escape');
+    await acct.waitForSelector('dialog.modal', { state: 'detached' });
+    if (!(await stored()).progress) throw new Error('Escape must cancel');
+    // Disconnecting GitHub asks too, and names the repository.
+    await acct.click('#account .account-name');
+    await acct.click('.account-menu button:has-text("Disconnect")');
+    await expectDialog(acct, /Disconnect GitHub\?[\s\S]*ada\/practice[\s\S]*Nothing in the repository is deleted/);
+    await acct.click('dialog.modal button:has-text("Cancel")');
+    await acct.waitForSelector('dialog.modal', { state: 'detached' });
+    await acct.click('#account .account-name');
+    await acct.click('.account-menu button:has-text("Sign out")');
+    await acct.click('dialog.modal button:has-text("Sign out")');
+    await acct.waitForSelector('#account button:has-text("Sign in")');
+    const after = await stored();
+    if (after.progress && Object.keys(after.progress.problems).length) throw new Error(`progress left on the device: ${JSON.stringify(after.progress).slice(0, 120)}`);
+    if (after.drafts.length) throw new Error(`drafts left on the device: ${after.drafts}`);
     await acct.close();
   });
 
@@ -662,6 +770,21 @@ try {
   await check('unknown route shows not found', async () => {
     await page.goto(`${BASE}#/nope`);
     await expectText('.page', /Not found/);
+  });
+
+  await check('unknown problem id shows not found; a problem module that fails to load shows could not load', async () => {
+    await page.goto(`${BASE}#/problem/no-such-problem`);
+    await expectText('.page', /Not found/);
+    // A module that throws while evaluating: the import rejects like a failed download, without the
+    // browser's own network-error log, so the zero-console-errors check below still covers our code.
+    const broken = '**/problems/two-wall-tank/problem.js';
+    await page.route(broken, (route) => route.fulfill({ status: 200, contentType: 'text/javascript', body: 'throw new Error("simulated load failure");' }));
+    try {
+      await page.goto(`${BASE}#/problem/two-wall-tank`);
+      await expectText('.page', /Could not load/);
+    } finally {
+      await page.unroute(broken);
+    }
   });
 
   await check('zero console errors across the whole session', async () => {

@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
-import { availableProblems, getProblem } from '../src/js/problems/index.js';
+import { loadAllProblems, loadProblem } from '../src/js/problems/index.js';
 import { comparatorFor } from '../src/js/engine/harness.js';
 import { validateGrowth, growthSeed } from '../src/js/engine/growth.js';
 import { compileJs, measureGrowth } from '../scripts/verify/growth.mjs';
@@ -28,7 +28,7 @@ setFlagsFromString('--expose-gc');
 const gc = runInNewContext('gc');
 
 const PILOT = ['pair-sum-target', 'longest-streak', 'top-k-frequent', 'zero-triplets', 'warmer-days', 'subarray-sum-k', 'island-count', 'level-order', 'median-stream', 'rising-chain'];
-const withGrowth = availableProblems().filter((p) => p.growth);
+const withGrowth = (await loadAllProblems()).filter((p) => p.growth);
 const shipped = (id) => readFileSync(join(ROOT, 'src/js/problems', id, 'solutions/solution.js'), 'utf8');
 
 /** Measures up to ATTEMPTS times; stops at the first estimate `accept` likes. */
@@ -49,8 +49,8 @@ const summary = (r) => {
   return `${e.verdict} (${e.bucket ?? '-'}, slope ${e.slope?.toFixed(2) ?? '-'} +- ${e.margin?.toFixed(2) ?? '-'}${e.reason ? `, ${e.reason}` : ''}) in ${Math.round(r.wallMs)} ms [${pts}]`;
 };
 
-test('the pilot problems declare growth', () => {
-  for (const id of PILOT) assert.ok(getProblem(id).growth, `${id} has no growth spec`);
+test('the pilot problems declare growth', async () => {
+  for (const id of PILOT) assert.ok((await loadProblem(id)).growth, `${id} has no growth spec`);
 });
 
 for (const problem of withGrowth) {
@@ -83,12 +83,12 @@ for (const problem of withGrowth) {
 }
 
 // The negative control: a quadratic Pair Sum Target must be called out, not waved through.
-test('a quadratic JavaScript Pair Sum Target measures as slower than target', { skip: !timing && 'JavaScript not in VERIFY_LANGUAGES' }, (t) => {
+test('a quadratic JavaScript Pair Sum Target measures as slower than target', { skip: !timing && 'JavaScript not in VERIFY_LANGUAGES' }, async (t) => {
   const quadratic = `function pairSum(nums, target) {
   for (let i = 0; i < nums.length; i++) for (let j = i + 1; j < nums.length; j++) if (nums[i] + nums[j] === target) return [i, j];
   return [];
 }`;
-  const tries = measureUntil(getProblem('pair-sum-target'), quadratic, (e) => e.verdict === 'slower than target');
+  const tries = measureUntil(await loadProblem('pair-sum-target'), quadratic, (e) => e.verdict === 'slower than target');
   tries.forEach((r, i) => t.diagnostic(`attempt ${i + 1}: ${summary(r)}`));
   const e = tries[tries.length - 1].estimate;
   assert.equal(e.verdict, 'slower than target', tries.map(summary).join(' | '));

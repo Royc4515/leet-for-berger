@@ -9,7 +9,7 @@ import { createAccount } from './auth/account.js';
 import { mountAccountMenu } from './ui/account-menu.js';
 import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
 import { services } from './auth/services.js';
-import { getProblem } from './problems/index.js';
+import { catalogEntry, loadProblem } from './problems/index.js';
 import { h, mount, toast } from './ui/dom.js';
 import { renderDashboard } from './ui/views/dashboard.js';
 import { renderWorkspace } from './ui/views/workspace.js';
@@ -34,13 +34,29 @@ const routes = [
 ];
 
 function renderProblem(root, id) {
-  const problem = getProblem(id);
-  if (!problem) return renderNotFound(root, `Problem "${id}" does not exist or is not published yet.`);
-  return renderWorkspace(root, { problem, store });
+  if (!catalogEntry(id)) return renderNotFound(root, `Problem "${id}" does not exist or is not published yet.`);
+  // The module loads on demand (ADR 0008); the route may change before it arrives.
+  let disposed = false;
+  let cleanupWorkspace = null;
+  mount(root, h('div.page', {}, h('p.page-sub', { role: 'status' }, 'Loading the problem...')));
+  loadProblem(id).then(
+    (problem) => {
+      if (disposed) return;
+      cleanupWorkspace = renderWorkspace(root, { problem, store });
+    },
+    () => {
+      if (disposed) return;
+      renderNotFound(root, `Problem "${id}" could not be loaded. Check your connection and reload.`, 'Could not load');
+    },
+  );
+  return () => {
+    disposed = true;
+    cleanupWorkspace?.();
+  };
 }
 
-function renderNotFound(root, message = 'Page not found.') {
-  mount(root, h('div.page.page-narrow', {}, h('h1', {}, 'Not found'), h('p.page-sub', {}, message), h('a.btn.btn-primary', { href: '#/' }, 'Back to problems')));
+function renderNotFound(root, message = 'Page not found.', title = 'Not found') {
+  mount(root, h('div.page.page-narrow', {}, h('h1', {}, title), h('p.page-sub', {}, message), h('a.btn.btn-primary', { href: '#/' }, 'Back to problems')));
   return () => {};
 }
 
@@ -96,6 +112,12 @@ account.start();
 // GitHub sync (ADR 0007): load the link on sign-in, and finish connecting when GitHub sends the
 // user back from installing the app (?installation_id=...&setup_action=install).
 let pendingInstall = installationFromUrl(location.search);
+// Sign-out clears the user's data (auth/account.js); re-mount the current view so it shows the guest state.
+let wasSignedIn = false;
+account.subscribe((s) => {
+  if (wasSignedIn && s.status === 'signed-out') route();
+  wasSignedIn = s.status === 'signed-in';
+});
 account.subscribe(async (s) => {
   if (!services.github) return;
   if (s.status !== 'signed-in') return github.clear();

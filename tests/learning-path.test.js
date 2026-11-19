@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { buildPath, pathOrder, pathProgress, conceptLabel, TIER_TITLES } from '../src/js/data/learning-path.js';
 import { TOPICS } from '../src/js/data/taxonomy.js';
-import { getProblem } from '../src/js/problems/index.js';
+import { catalogEntry } from '../src/js/problems/index.js';
 
 const topics = [
   { id: 'a', title: 'A', tier: 0, prereqs: [], concepts: ['first', 'second'] },
@@ -52,5 +52,5 @@ test('essential-path.json is fresh: 131 shipped problems, each once', () => {
   const ids = pathOrder(shipped).map((p) => p.id);
   assert.equal(ids.length, 131);
   assert.equal(new Set(ids).size, 131);
-  assert.deepEqual(ids.filter((id) => !getProblem(id)), []);
+  assert.deepEqual(ids.filter((id) => !catalogEntry(id)), []);
 });

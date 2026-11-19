@@ -21,5 +21,5 @@ Ship v0.x as vanilla ES modules served as-is. Monaco and Pyodide load from pinne
 ## Consequences
 
 - No JSX, no reactive state. Views re-render explicitly on store changes.
-- No tree-shaking or minification. Acceptable at current size; revisit if first-load JS (excluding CDN) passes ~150 KB.
+- No tree-shaking or minification. Acceptable at current size; revisit if first-load JS (excluding CDN) passes ~150 KB. (Passed with 145 problem modules; ADR 0008 answered it without a build: problem modules load on demand.)
 - Revisit this ADR when: a backend arrives (Phase 2), or view count passes ~10, or a component needs fine-grained reactivity.

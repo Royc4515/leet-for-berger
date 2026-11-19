@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { TS_COMPILER_OPTIONS, AMBIENT_TYPES, toModuleSource, fromModuleOutput, flattenMessage, compileErrors } from '../src/js/engine/typescript.js';
-import { availableProblems } from '../src/js/problems/index.js';
+import { loadAllProblems } from '../src/js/problems/index.js';
 import { buildSuite, judge, comparatorFor } from '../src/js/engine/harness.js';
 import { isSql } from '../src/js/engine/sql.js';
 import { TypeScriptRunner, TYPE_CHECK_NOTE, NO_COMPILER_MESSAGE } from '../src/js/engine/runners/ts-runner.js';
@@ -78,7 +78,8 @@ function typeCheck(files) {
   return out;
 }
 
-const tsProblems = () => availableProblems().filter((p) => !isSql(p.signature));
+const allProblems = await loadAllProblems();
+const tsProblems = () => allProblems.filter((p) => !isSql(p.signature));
 const solutionOf = (p) => readFileSync(join(ROOT, 'src/js/problems', p.id, 'solutions/solution.ts'), 'utf8');
 
 test('every TypeScript solution type-checks with the browser\'s options and ambient types', { skip }, () => {

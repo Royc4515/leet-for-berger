@@ -2,7 +2,7 @@
  * Below the statement in practice mode: the walkthrough (unlocked by an Accepted submit or a
  * revealed solution) and this problem's submission history.
  */
-import { h, mount, trustedHtml } from './dom.js';
+import { h, mount, trustedHtml, confirmDialog } from './dom.js';
 import { loadProblemMeta } from './problem-context.js';
 
 const when = (iso) => {
@@ -85,7 +85,11 @@ export function createProblemExtras({ problem, store, getLanguage, languageLabel
         {},
         items.map((s) => {
           const load = h('button.btn.btn-ghost.btn-sm', { type: 'button', disabled: !s.code, title: s.code ? 'Replace the editor content with this code' : 'This code was too long to keep' }, 'Load code');
-          load.addEventListener('click', () => s.code && onLoadCode(s.language, s.code));
+          load.addEventListener('click', async () => {
+            if (!s.code) return;
+            const ok = await confirmDialog({ title: 'Load this code?', body: 'It replaces the code in the editor. Ctrl+Z restores what you had.', confirmLabel: 'Load code', danger: true });
+            if (ok) onLoadCode(s.language, s.code);
+          });
           const push = canPush() && s.code && s.verdict === 'Accepted' ? h('button.btn.btn-ghost.btn-sm', { type: 'button', title: entry?.revealed ? 'Marked assisted: the solution was revealed' : 'Commit this code to your GitHub repository' }, 'Push to GitHub') : null;
           push?.addEventListener('click', () => onPush(s));
           return h(
