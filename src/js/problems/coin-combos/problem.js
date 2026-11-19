@@ -108,6 +108,25 @@ export const problem = {
     'Two counts below 10^9 + 7 are added. Does their sum fit in a 32-bit integer before you reduce it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Let <code>ways[a]</code> count the combinations that reach amount <code>a</code>. Add the coins
+    one denomination at a time: for coin <code>c</code>, every amount <code>a &gt;= c</code> gains
+    <code>ways[a - c]</code>. Start with <code>ways[0] = 1</code>, the empty combination.</p>
+    <h4>Why it works</h4>
+    <p>With the coin loop outside, after processing the first <code>k</code> denominations,
+    <code>ways[a]</code> counts combinations that use only those coins. Every combination is therefore
+    built in one fixed coin order, so <code>1 + 2</code> and <code>2 + 1</code> are counted once. Running
+    amounts upward inside the coin loop lets the same coin be reused any number of times.</p>
+    <h4>Complexity</h4>
+    <p>O(amount * coins.length) time and O(amount) space. Recursion over every choice is exponential.</p>
+    <h4>Pitfall</h4>
+    <p>Swapping the loops (amounts outside, coins inside) counts ordered sequences instead of
+    combinations. Reduce modulo <code>10^9 + 7</code> after every addition: the exact counts exceed 64
+    bits, and in 32-bit arithmetic the sum of two reduced values can already overflow.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'change',

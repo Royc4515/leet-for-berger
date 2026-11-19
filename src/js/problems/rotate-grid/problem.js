@@ -98,6 +98,25 @@ export const problem = {
     'Which pairs does a mirror across the main diagonal swap, and how do you avoid swapping each pair twice?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>A clockwise quarter turn is two in-place moves done one after the other: transpose the grid (swap
+    <code>matrix[i][j]</code> with <code>matrix[j][i]</code>), then reverse every row.</p>
+    <h4>Why it works</h4>
+    <p>Rotating clockwise sends the value at row <code>i</code>, column <code>j</code> to row
+    <code>j</code>, column <code>n - 1 - i</code>. The transpose moves it to <code>(j, i)</code>, and
+    reversing row <code>j</code> moves column <code>i</code> to column <code>n - 1 - i</code>. Both
+    moves are made of plain swaps, so no value is overwritten before it is read.</p>
+    <h4>Complexity</h4>
+    <p>O(n^2) time: each cell is touched a constant number of times. O(1) extra space. Writing into a
+    second grid is just as fast but needs O(n^2) extra space, which the statement asks you to avoid.</p>
+    <h4>Pitfall</h4>
+    <p>Running the transpose over every pair <code>(i, j)</code> instead of only <code>j &gt; i</code>:
+    each pair is swapped twice and the grid ends up unchanged. Reversing the order of the rows instead
+    of the values inside each row gives a counterclockwise turn.</p>
+  `,
+
   signature: {
     name: 'rotateGrid',
     params: [{ name: 'matrix', type: 'int[][]' }],

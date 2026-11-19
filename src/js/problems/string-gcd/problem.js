@@ -116,6 +116,26 @@ export const problem = {
     'Once you know a common divisor exists, which one is the longest?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>First check whether any common divisor exists at all: it does exactly when
+    <code>str1 + str2 == str2 + str1</code>. If so, the answer is the prefix of <code>str1</code> whose
+    length is <code>gcd(len(str1), len(str2))</code>; if not, return <code>""</code>.</p>
+    <h4>Why it works</h4>
+    <p>If both strings are repetitions of some <code>x</code>, gluing them in either order gives the
+    same repetition of <code>x</code>, so the two concatenations match. Conversely, when they match,
+    both strings are repetitions of the prefix of gcd length. Any divisor's length must divide both
+    lengths, so it cannot be longer than their gcd, and that prefix is therefore the longest.</p>
+    <h4>Complexity</h4>
+    <p>O(m + n) time to build and compare the two concatenations, plus O(log min(m, n)) for the gcd.
+    O(m + n) space for the concatenations. Trying every candidate prefix length costs much more.</p>
+    <h4>Pitfall</h4>
+    <p>Returning the gcd prefix without the concatenation check. For <code>"AB"</code> and
+    <code>"CD"</code> the gcd of the lengths is 2, yet no string divides both, so the answer must be
+    <code>""</code>.</p>
+  `,
+
   signature: {
     name: 'gcdOfStrings',
     params: [

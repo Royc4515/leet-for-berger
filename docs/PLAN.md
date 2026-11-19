@@ -78,15 +78,16 @@ Recommended order: practice experience first (stage A), since all the content ex
 - [x] Script that fetches complexity and solution sources (PR #9)
 
 ### Stage C: users and server
-- [ ] Supabase setup (free plan) and automatic sync from CI
-- [ ] User management: sign-in with Google (and GitHub) via Supabase Auth, profile, and progress, drafts and submissions stored on the server and synced across devices. Existing localStorage progress moves to the account on first sign-in
+- [x] Supabase setup (free plan, Frankfurt; owner steps in `docs/DEPLOY_AUTH.md`), project `jezwwmnczliubfmqgutc`, Google and GitHub sign-in on
+- [ ] Automatic content sync from CI into Supabase
+- [x] User management (code, PR #18; live once the project exists): sign-in with Google (and GitHub) via Supabase Auth, profile, and progress, drafts and submissions stored on the server and synced across devices. Existing localStorage progress moves to the account on first sign-in
 - [ ] Personal GitHub sync: every Accepted solution is committed to a repo the user picks, one folder per problem with the code and a README with the complexity. Through a GitHub App with access to that one repo only; the token stays on the server, never in the browser
 - [ ] Hidden tests and solutions served only from the server
 - [ ] Real AI mentor that also explains complexity (depends on the budget decision)
 - [ ] Real-time battle against a person, judged on the server
 
 ### Stage D: content expansion
-- [ ] Write `explanationHtml` (our own prose: the idea, why it works, the pitfall) for the 131 essential problems; the walkthrough shows it on top once present
+- [x] Write `explanationHtml` (our own prose: the idea, why it works, the pitfall) for the 131 essential problems (PR #18; `tests/explanations.test.js` keeps the format and full coverage)
 - [ ] Growth measurement for all problems (target filled automatically, input generators gradually)
 - [ ] Graphs as objects (Clone Graph) and numbers above 2^53
 - [ ] Data for the 4 missing Israeli companies: Payoneer, Playtika, AppsFlyer, Gong

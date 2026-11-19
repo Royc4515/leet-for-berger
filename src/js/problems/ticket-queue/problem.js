@@ -92,6 +92,27 @@ export const problem = {
     'What is the largest possible answer, and does it fit in a 32-bit integer?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Do not simulate the line. Count how many tickets each person has bought at the moment person
+    <code>k</code> buys their last one: people at or before <code>k</code> buy up to
+    <code>tickets[k]</code>, people after <code>k</code> buy up to <code>tickets[k] - 1</code>. Each
+    ticket is one second, so the sum is the answer.</p>
+    <h4>Why it works</h4>
+    <p>The line cycles in a fixed order. Person <code>k</code> finishes during round
+    <code>tickets[k]</code>. In that round everyone ahead of them gets a turn before they do, but
+    everyone behind does not, so those people only complete <code>tickets[k] - 1</code> rounds. Nobody
+    buys more than they need, which is where the <code>min</code> with <code>tickets[i]</code> comes in.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time for one pass and O(1) extra space. A literal simulation takes one step per ticket
+    sold, up to about 10^14 steps here.</p>
+    <h4>Pitfall</h4>
+    <p>Overflow. With 10^5 people and up to 10^9 tickets each, the total reaches about 10^14, so
+    the sum must be a 64-bit integer. Using <code>tickets[k]</code> for everyone instead of
+    <code>tickets[k] - 1</code> for the people behind is the other common slip.</p>
+  `,
+
   signature: {
     name: 'timeToBuy',
     params: [

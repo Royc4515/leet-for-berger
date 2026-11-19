@@ -140,6 +140,26 @@ export const problem = {
     'Can the answer overflow a 32-bit integer here? What type should hold it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Scan once, tracking both the largest and the smallest product of a run ending at the current
+    element. Multiplying by a negative number turns the smallest into the largest, so the minimum is
+    worth keeping.</p>
+    <h4>Why it works</h4>
+    <p>The best run ending at <code>i</code> is either <code>nums[i]</code> alone or
+    <code>nums[i]</code> times the best or worst run ending at <code>i - 1</code>. The largest
+    product is one of those three candidates, and so is the smallest. Starting fresh with
+    <code>nums[i]</code> alone also handles a zero, which resets both values.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time and O(1) extra space. Trying every run is O(n^2), about 5 * 10^9 products at
+    n = 10^5.</p>
+    <h4>Pitfall</h4>
+    <p>Compute both new values from the old pair. Updating the maximum first and then using it for the
+    minimum mixes two steps. Products reach 10^15, so use a 64-bit integer, and start the answer at
+    <code>nums[0]</code> since the run is non-empty.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'maxProduct',

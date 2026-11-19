@@ -113,6 +113,27 @@ export const problem = {
     'What is the largest value 2 * nums[j] can take, and does it fit your integer type?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Merge sort the array and count the pairs that cross the middle at each merge. With both halves
+    sorted, the left values above <code>2 * x</code> for a right value <code>x</code> form a suffix of the
+    left half, easy to count.</p>
+    <h4>Why it works</h4>
+    <p>Every pair <code>i &lt; j</code> is split by exactly one merge, where <code>i</code> is in the left
+    half and <code>j</code> in the right. Sorting a half does not change which side an index is on, so
+    counting cross pairs on the sorted halves is exact. As <code>x</code> grows in the right half, the
+    boundary in the left half only moves right, so one two-pointer sweep counts all cross pairs before
+    the merge. The Python version finds each boundary with binary search instead.</p>
+    <h4>Complexity</h4>
+    <p>O(n log n) time with the two-pointer sweep (O(n log^2 n) with binary search), O(n) space. Checking
+    every pair is O(n^2), about 5 * 10^9 pairs at n = 10^5.</p>
+    <h4>Pitfall</h4>
+    <p><code>2 * nums[j]</code> overflows 32 bits for values near 2^31, and the count itself can reach about
+    5 * 10^9: use 64-bit arithmetic for both. Negative values need no special case once the doubling is
+    exact.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'reversePairs',

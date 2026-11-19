@@ -105,6 +105,27 @@ export const problem = {
     'What does your result look like when every value is 0?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Turn the numbers into strings and sort them with a custom rule: <code>a</code> goes before
+    <code>b</code> when the string <code>a + b</code> is greater than <code>b + a</code>. Join the
+    sorted strings.</p>
+    <h4>Why it works</h4>
+    <p><code>a + b</code> and <code>b + a</code> have the same length, so comparing them as strings
+    compares them as numbers. The rule is a consistent order (it is transitive), so a sort can use it,
+    and in the sorted list no swap of two neighbours makes the result larger. Any other arrangement has
+    some neighbouring pair in the worse order, and swapping it gives a larger number.</p>
+    <h4>Complexity</h4>
+    <p>O(n log n) comparisons, each on strings of at most 20 digits, so O(n log n * L) time for numbers
+    of up to L digits. O(n * L) space for the strings and the result.</p>
+    <h4>Pitfall</h4>
+    <p>Two traps. Plain descending order fails, both numeric (<code>9</code> must come before
+    <code>10</code>) and by string (<code>3</code> must come before <code>30</code>, but <code>34</code>
+    before <code>3</code>). And an input of all zeros would give <code>"000"</code>: if the first sorted
+    string is <code>"0"</code>, the answer is <code>"0"</code>.</p>
+  `,
+
   signature: {
     name: 'largestNumber',
     params: [{ name: 'nums', type: 'int[]' }],

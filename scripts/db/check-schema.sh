@@ -6,6 +6,7 @@
 #   4. row level security: anon sees visible test cases only, never hidden ones or solutions
 #   5. reveal_solution needs a signed-in user and marks the problem assisted
 #   6. SQL problems ship exactly one solution, in language sql
+#   7. user_state: a signed-in user reads and writes only their own row; anon sees nothing
 # Needs PostgreSQL server binaries (initdb, pg_ctl) and psql. Usage: bash scripts/db/check-schema.sh
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -39,7 +40,7 @@ create role anon nologin;
 create role authenticated nologin;
 EOF
 $SQL -f db/schema.sql
-grant_sql="grant usage on schema public to anon, authenticated; grant select on all tables in schema public to anon, authenticated; grant execute on function reveal_solution(text, text) to authenticated;"
+grant_sql="grant usage on schema public to anon, authenticated; grant select on all tables in schema public to anon, authenticated; grant insert, update, delete on user_state to authenticated; grant execute on function reveal_solution(text, text) to authenticated;"
 $SQL -c "$grant_sql"
 
 node scripts/db/export-sql.mjs > "$WORK/sync.sql"
@@ -75,4 +76,13 @@ echo "5. reveal_solution: signed-in only, marks the problem assisted"
 
 [ "$($VAL -c "select string_agg(language_id, ',') from solutions where problem_slug = 'combine-two-tables'")" = "sql" ] || fail "a SQL problem must ship exactly one solution, in sql"
 echo "6. SQL problems ship exactly one solution (language sql)"
+OTHER_ID=22222222-2222-2222-2222-222222222222
+$SQL -c "insert into auth.users values ('$OTHER_ID');"
+as_role authenticated "$USER_ID" "insert into user_state (user_id, state) values ('$USER_ID', '{\"version\":1}')" >/dev/null
+as_role authenticated "$USER_ID" "update user_state set state = '{\"version\":1,\"x\":1}' where user_id = '$USER_ID'" >/dev/null
+[ "$(as_role authenticated "$USER_ID" "select state->>'x' from user_state")" = "1" ] || fail "user cannot read back their own state"
+if as_role authenticated "$USER_ID" "insert into user_state (user_id, state) values ('$OTHER_ID', '{}')" >/dev/null 2>&1; then fail "a user wrote another user's state"; fi
+[ "$(as_role authenticated "$OTHER_ID" "select count(*) from user_state")" = "0" ] || fail "a user can read another user's state"
+[ "$(as_role anon '' "select count(*) from user_state")" = "0" ] || fail "anon can read user state"
+echo "7. user_state: own row only, anon sees nothing"
 echo "All database checks passed."

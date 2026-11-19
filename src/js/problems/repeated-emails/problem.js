@@ -108,6 +108,27 @@ export const problem = {
     'An email on three rows: how many times does your query print it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Group the rows of <code>Person</code> by <code>email</code> and keep the groups whose size is
+    greater than one with <code>HAVING COUNT(*) &gt; 1</code>. Return the email, renamed to
+    <code>Email</code>.</p>
+    <h4>Why it works</h4>
+    <p><code>GROUP BY</code> turns all rows with the same email into one group and one output row, so a
+    repeated email is reported once no matter how many rows share it. <code>COUNT(*)</code> is that
+    group's row count, and <code>HAVING</code> filters groups after aggregation, which is where the
+    count exists. Emails are lowercase and never <code>NULL</code>, so plain equality groups them
+    correctly.</p>
+    <h4>Complexity</h4>
+    <p>O(n) with hash aggregation, or O(n log n) when the engine sorts to group, for n rows. Space is
+    O(d) for d distinct emails.</p>
+    <h4>Pitfall</h4>
+    <p>Putting the count in <code>WHERE</code>, which runs before grouping and cannot see aggregates.
+    A self-join on equal emails with different ids also finds the repeats, but an email on three rows
+    then comes back several times unless you add <code>DISTINCT</code>.</p>
+  `,
+
   signature,
 
   visibleTests: visibleArgs.map((args) => ({ args, expected: reference(...args) })),

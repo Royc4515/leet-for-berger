@@ -103,6 +103,27 @@ export const problem = {
     'If the result had to live in nums1 with spare room at the end, why is filling from the back safe?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Keep one read index into each array. The smallest value not yet written is always at one of the
+    two fronts, so compare them, take the smaller one and advance that index. When one array runs out,
+    append what is left of the other.</p>
+    <h4>Why it works</h4>
+    <p>Invariant: the output holds the smallest <code>i + j</code> values of both inputs, in order. Each
+    front is the smallest remaining value of its own sorted array, so the smaller front is the smallest
+    remaining value overall. The leftover tail is sorted and every value in it is at least the last
+    value written. Taking <code>nums1</code> on ties with <code>&lt;=</code> keeps the merge stable.</p>
+    <h4>Complexity</h4>
+    <p>O(m + n) time: each value is compared and copied once. O(m + n) space for the returned array.
+    Sorting the concatenation costs O((m + n) log(m + n)), and inserting values one at a time into a
+    growing sorted array is quadratic.</p>
+    <h4>Pitfall</h4>
+    <p>Forgetting the leftovers after the main loop, which silently drops the tail of the longer array.
+    Either input can also be empty from the start. For the in-place follow-up, fill <code>nums1</code>
+    from the back: filling from the front overwrites values that have not been read yet.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'mergeSorted',

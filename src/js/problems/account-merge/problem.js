@@ -185,6 +185,27 @@ export const problem = {
     'Once the groups are known, how do you collect each group\'s emails without repeats, and in what order?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Accounts are nodes; sharing an email connects them. Use union-find over account indexes:
+    remember the first account that listed each email, and union every later account with it. Then
+    collect each group's emails, sort, and sort the entries.</p>
+    <h4>Why it works</h4>
+    <p>Two accounts that share an email are joined directly, and a chain of shared emails is joined
+    step by step, so each union-find set is exactly one person. Iterating the email-to-owner map visits
+    each distinct email once, which removes duplicates inside an account and across accounts. Names
+    are never used to merge.</p>
+    <h4>Complexity</h4>
+    <p>O(E log E) for E emails in total: unions are nearly O(1) each, and sorting the emails and the
+    entries dominates. O(E) space. Repeatedly merging pairs of accounts until nothing changes is
+    quadratic or worse at 10^4 accounts.</p>
+    <h4>Pitfall</h4>
+    <p>Two people with the same name are different unless an email links them. The output order is by
+    character code, so <code>"McDonald"</code> comes before <code>"Mcafee"</code>; a locale-aware
+    comparison sorts them the other way.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'accountsMerge',

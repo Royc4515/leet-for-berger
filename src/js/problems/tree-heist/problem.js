@@ -147,6 +147,26 @@ export const problem = {
     'Can each node return both answers to its parent at once, so nothing is computed twice?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Let each node return two totals for its subtree: the best when the node is taken and the
+    best when it is skipped. Taken means both children are skipped; skipped means each child picks
+    whichever of its own two totals is larger.</p>
+    <h4>Why it works</h4>
+    <p>The only rule links a node to its parent, so once you know whether a node is taken, its two
+    subtrees are independent problems. Returning both outcomes from one post-order call gives the
+    parent everything it needs, and the answer is the larger of the root's two totals.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: each node is visited once and does constant work. O(h) space for the recursion,
+    with h at most 500. Recursing on grandchildren without a memo recomputes subtrees exponentially
+    often.</p>
+    <h4>Pitfall</h4>
+    <p>Taking alternate levels is not the answer: a skipped node does not force its children to be
+    taken, and sometimes the best plan skips two levels in a row. Let each child choose freely
+    when its parent is skipped.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it
   // (src/js/engine/codegen.js). Solutions live in ./solutions, one file per language.
   signature: {

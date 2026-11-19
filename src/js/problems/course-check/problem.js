@@ -161,6 +161,25 @@ export const problem = {
     'If you keep taking available courses until none are left, what does the number taken tell you?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Every course can be finished exactly when the prerequisite graph has no directed cycle. Take
+    courses whose prerequisites are all done, one at a time, and count how many you manage to take.</p>
+    <h4>Why it works</h4>
+    <p>Keep an in-degree per course: the number of unfinished prerequisites. Courses at
+    <code>0</code> are available. Taking one lowers the in-degree of every course that needs it, and any
+    that reach <code>0</code> join the queue. A course on a cycle always waits on another course of the
+    same cycle, so it never reaches <code>0</code>. The answer is <code>taken == numCourses</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(V + E) time: each course is queued once and each pair is followed once. O(V + E) space for the
+    adjacency lists and the queue. Rescanning every pair until nothing changes is O(V * E).</p>
+    <h4>Pitfall</h4>
+    <p>A recursive DFS cycle check goes as deep as the longest chain, and chains here reach
+    10^5 courses, past the stack limit in Python and the browser. Also note that <code>[a, a]</code> is
+    allowed: a course that needs itself is a cycle of length one.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'canFinish',

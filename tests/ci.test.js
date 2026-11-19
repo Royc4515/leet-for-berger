@@ -12,3 +12,10 @@ test('CI verify matrix covers every solution language plus SQL', () => {
   const matrix = line[1].split(',').map((s) => s.trim()).sort();
   assert.deepEqual(matrix, [...LANGUAGES.map((l) => l.id), 'sql'].sort());
 });
+
+test('Pages publishes every top-level HTML page', async () => {
+  const { readFileSync, readdirSync } = await import('node:fs');
+  const pages = readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8');
+  const html = readdirSync(new URL('..', import.meta.url)).filter((f) => f.endsWith('.html'));
+  for (const f of html) assert.match(pages, new RegExp(`cp [^\\n]*\\b${f.replace('.', '\\.')}\\b`), `${f} is not copied into the Pages site`);
+});

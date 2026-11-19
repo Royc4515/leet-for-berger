@@ -92,6 +92,28 @@ export const problem = {
     'If you keep asking for the parent until you reach row 1, what do you need to count along the way?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Never build a row. Symbol <code>k</code> of row <code>n</code> was produced by symbol
+    <code>ceil(k / 2)</code> of the row above: it is the same as its parent when <code>k</code> is odd and
+    the opposite when <code>k</code> is even. Follow that chain of parents up to row 1, counting flips.</p>
+    <h4>Why it works</h4>
+    <p>Each parent becomes two children, and the first child always copies it (<code>0</code> gives
+    <code>01</code>, <code>1</code> gives <code>10</code>) while the second always flips it. Row 1 is
+    <code>0</code>, so the answer is <code>0</code> flipped once per even position on the chain, which is
+    the parity of the flip count. Note that <code>n</code> itself never enters the loop: it only bounds
+    <code>k</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time, since <code>k</code> roughly halves each step and starts at most at
+    <code>2^(n - 1)</code>, so there are at most 29 steps. O(1) space. Building row 30 would take 2^29
+    symbols.</p>
+    <h4>Pitfall</h4>
+    <p>Positions are 1-based. Halving with <code>k / 2</code> rounded down sends odd positions to the wrong
+    parent; the parent of <code>k</code> is <code>(k + 1) / 2</code> rounded down. Mixing a 0-based formula
+    with the 1-based <code>k</code> gives the same off-by-one.</p>
+  `,
+
   signature: {
     name: 'kthGrammar',
     params: [

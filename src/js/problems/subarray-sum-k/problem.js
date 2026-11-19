@@ -100,6 +100,26 @@ export const problem = {
     'What must the map hold before the first element, so subarrays that start at index 0 are counted?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Keep a running prefix sum. A subarray ending at the current element sums to <code>k</code>
+    exactly when some earlier prefix equals <code>prefix - k</code>. A hash map from prefix value to how
+    often it has occurred gives that count in O(1), and the answer adds it up.</p>
+    <h4>Why it works</h4>
+    <p>The sum of <code>nums[i..j]</code> is <code>prefix[j + 1] - prefix[i]</code>, so each earlier
+    prefix equal to <code>prefix - k</code> marks one distinct start position. The map starts as
+    <code>{0: 1}</code>, the empty prefix, so subarrays that start at index 0 count. Looking up before
+    inserting the current prefix keeps the empty subarray out when <code>k</code> is <code>0</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time with constant-time map operations. O(n) space for up to n + 1 distinct prefix values.
+    Checking every subarray is O(n^2), about 5 * 10^9 sums at n = 10^5.</p>
+    <h4>Pitfall</h4>
+    <p>Reaching for a sliding window: with negative values, extending the window can lower the sum, so
+    the shrink rule breaks. And the count can reach about 5 * 10^9 (many zeros with <code>k = 0</code>),
+    so the counter must be a 64-bit integer.</p>
+  `,
+
   signature: {
     name: 'subarraySum',
     params: [

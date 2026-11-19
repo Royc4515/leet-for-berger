@@ -157,6 +157,26 @@ export const problem = {
     'How many rounds does a limit of k stops allow?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>At most <code>k</code> stops means at most <code>k + 1</code> flights. Run Bellman-Ford for exactly
+    <code>k + 1</code> rounds: after round <code>j</code>, <code>dist</code> holds the cheapest cost to each
+    city using at most <code>j</code> flights.</p>
+    <h4>Why it works</h4>
+    <p>A route with <code>j + 1</code> flights is a route with <code>j</code> flights plus one more. Each
+    round extends every best <code>j</code>-flight cost by one flight. To make a round add only one
+    flight, every flight reads its source cost from a copy of the previous round. If a round changes
+    nothing, later rounds cannot either, so the loop stops early.</p>
+    <h4>Complexity</h4>
+    <p>O(k * E) time: up to <code>k + 1</code> passes over the flights. O(n) space for the two cost
+    arrays. Enumerating every route is exponential on a dense graph.</p>
+    <h4>Pitfall</h4>
+    <p>Relaxing in place lets one round chain several flights listed in route order, breaking the stop
+    limit. A plain Dijkstra on cost alone is also wrong: the cheapest way into a city may have used
+    too many flights, while a pricier one with fewer flights still reaches <code>dst</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'findCheapestPrice',

@@ -90,6 +90,25 @@ export const problem = {
     'What should you start the answer at so an all-negative array still returns a real element?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Scan once, keeping the best sum of a run that ends at the current element. That run either
+    extends the previous one or starts fresh here, and it starts fresh exactly when the previous
+    best is negative.</p>
+    <h4>Why it works</h4>
+    <p>Every run ends somewhere. If the best run ending at <code>i - 1</code> has sum
+    <code>r</code>, the best run ending at <code>i</code> is <code>max(r, 0) + nums[i]</code>: a
+    negative prefix only lowers the total. Taking the maximum of these values over all positions
+    covers every possible run.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time and O(1) extra space: two numbers updated per element. Trying every start is O(n^2),
+    about 5 * 10^9 sums at n = 10^5.</p>
+    <h4>Pitfall</h4>
+    <p>The run must be non-empty. Starting the answer at <code>0</code> returns 0 for an
+    all-negative array; start it at <code>nums[0]</code> so the answer is a real element.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'maxSubArray',

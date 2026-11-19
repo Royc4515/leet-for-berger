@@ -164,6 +164,27 @@ export const problem = {
     'What does your language do for -7 / 2, and is that truncation toward zero?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Scan the tokens with a stack of values. A number is pushed. An operator pops two values, applies
+    itself to them and pushes the result. When the tokens run out, the one value on the stack is the
+    answer.</p>
+    <h4>Why it works</h4>
+    <p>In postfix form the two operands of an operator are exactly the two values computed just before
+    it, and those are the two most recent entries on the stack. The value popped first was pushed last,
+    so it is the right operand: for <code>-</code> and <code>/</code> compute <code>a op b</code> where
+    <code>b</code> is the first pop.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: constant work per token. O(n) space for the stack, for example when many numbers come
+    before the operators.</p>
+    <h4>Pitfall</h4>
+    <p>Division must truncate toward zero. Python's <code>//</code> floors, so <code>-7 // 2</code>
+    gives <code>-4</code> instead of <code>-3</code>; divide the absolute values and restore the sign.
+    Two other slips: swapping the operands of <code>-</code> or <code>/</code>, and spotting operators
+    by their first character, which treats <code>"-3"</code> as a minus sign.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'evalPostfix',

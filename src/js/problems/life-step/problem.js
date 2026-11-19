@@ -123,6 +123,28 @@ export const problem = {
     'How do you handle neighbours that would fall outside the board without special cases everywhere?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Update the board in place, using two transitional values that still remember the current
+    generation: <code>2</code> means alive now and dead next, <code>-1</code> means dead now and alive
+    next. A final pass turns <code>2</code> into <code>0</code> and <code>-1</code> into
+    <code>1</code>.</p>
+    <h4>Why it works</h4>
+    <p>Every rule must read only the current generation. With this encoding a cell is alive now exactly
+    when its value is greater than <code>0</code>, whether or not it has already been rewritten, so
+    cells counted later still see the old states. The 3 x 3 scan is clipped to the board, which treats
+    cells outside it as dead, and the count starts at minus the cell's own state because the scan
+    includes the cell itself.</p>
+    <h4>Complexity</h4>
+    <p>O(m * n) time: at most 9 reads per cell. O(1) extra space. Copying the board first is equally
+    fast and simpler, at O(m * n) extra space.</p>
+    <h4>Pitfall</h4>
+    <p>Writing the new <code>0</code> or <code>1</code> straight into the board. Cells scanned
+    afterwards then count neighbours that already belong to the next generation, which breaks the rule
+    that every cell changes at the same time.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'nextGeneration',

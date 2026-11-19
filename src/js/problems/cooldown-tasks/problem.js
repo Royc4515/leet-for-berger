@@ -109,6 +109,27 @@ export const problem = {
     'When there are so many different tasks that the gaps overflow, can the answer ever be less than the number of tasks?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Only the counts matter. If the most frequent kind runs <code>x</code> times, it needs <code>x
+    - 1</code> frames of <code>n + 1</code> slots, then a last frame with one slot for every kind
+    that ties for <code>x</code>. The answer is the larger of that and the number of tasks.</p>
+    <h4>Why it works</h4>
+    <p>Consecutive runs of the busiest kind are <code>n + 1</code> slots apart, so <code>(x - 1) *
+    (n + 1)</code> slots come before its last run, and every other kind with count <code>x</code>
+    also needs a run in that last frame. All other tasks fit into the gaps in round-robin order. If
+    they overflow the gaps, the frames can be widened with no idle slot at all, and the length is
+    just the number of tasks.</p>
+    <h4>Complexity</h4>
+    <p>O(tasks.length) time to count and O(1) space for 26 counters. Simulating slot by slot can
+    take about 10^7 steps.</p>
+    <h4>Pitfall</h4>
+    <p>Dropping the <code>max</code> with the number of tasks. With many kinds the formula
+    undercounts: <code>"AABBCCDD"</code> with <code>n = 1</code> gives <code>1 * 2 + 4 = 6</code>,
+    yet 8 tasks need 8 slots.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'leastInterval',

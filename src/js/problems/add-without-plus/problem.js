@@ -105,6 +105,26 @@ export const problem = {
     'In your language, what happens to a value that grows past 32 bits, or to a negative number shifted left?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Split addition into two parts: <code>a ^ b</code> adds each column without carrying, and
+    <code>(a &amp; b) &lt;&lt; 1</code> is the carry, moved one column left. Add those two the same way and
+    repeat until the carry is <code>0</code>.</p>
+    <h4>Why it works</h4>
+    <p>At every step <code>a + b</code> (wrapped to 32 bits) stays equal to the original sum, because
+    <code>x + y = (x ^ y) + ((x &amp; y) &lt;&lt; 1)</code>. Each round pushes the lowest carry at least one
+    column higher, so after at most 32 rounds every carry has moved past bit 31 and fallen off, which is
+    exactly the two's complement wrap the statement asks for.</p>
+    <h4>Complexity</h4>
+    <p>O(32) time, so O(1): each round clears at least one more low column of carries. O(1) space.</p>
+    <h4>Pitfall</h4>
+    <p>Languages without fixed 32-bit integers break the termination argument. In Python a negative carry
+    grows forever unless you mask both values with <code>0xFFFFFFFF</code> each round, and then convert a
+    result with bit 31 set back to a negative number. In C and C++ use unsigned types, since signed
+    overflow is undefined, and in Go use <code>uint32</code> because <code>int</code> is 64 bits.</p>
+  `,
+
   signature: {
     name: 'getSum',
     params: [

@@ -170,6 +170,27 @@ export const problem = {
     'Is the answer the finish time of the last course processed, or something else?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>A course finishes at its own duration plus the latest finish among its prerequisites. Compute these
+    finish times in topological order, and the answer is the largest one.</p>
+    <h4>Why it works</h4>
+    <p>Courses run in parallel, so the only thing delaying a course is its slowest prerequisite. Kahn's
+    algorithm processes a course only after all its prerequisites, so when course <code>i</code> leaves the
+    queue its finish time <code>f[i]</code> is final, and it updates each follower with
+    <code>max(f[j], f[i] + time[j])</code>. The total time is the heaviest path in this DAG, which is the
+    maximum finish time over all courses.</p>
+    <h4>Complexity</h4>
+    <p>O(n + m) time: each course is queued once and each relation is followed once. O(n + m) space.
+    A DFS without memoization re-explores shared prerequisites and becomes exponential on layered
+    graphs.</p>
+    <h4>Pitfall</h4>
+    <p>Summing every duration ignores parallelism, and counting courses on the longest chain ignores
+    durations. A memoized recursive DFS is correct but goes 5 * 10^4 calls deep on a chain. Courses are
+    numbered from <code>1</code>, so shift indexes by one.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'minimumTime',

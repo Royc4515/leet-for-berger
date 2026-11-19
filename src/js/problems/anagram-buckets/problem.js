@@ -110,6 +110,26 @@ export const problem = {
     'How do you keep the groups in first-appearance order in your language?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Give every word a key that is the same for all its anagrams: its letters sorted. Group words
+    by that key in an insertion-ordered hash map, then return the map's lists.</p>
+    <h4>Why it works</h4>
+    <p>Two words are anagrams exactly when they hold the same letters with the same counts, which is
+    exactly when their sorted letters are equal. So the key never splits a true group and never
+    merges two different ones. The map is created in input order and each list is appended in input
+    order, which matches the required ordering: groups by their first word, words inside a group as
+    given.</p>
+    <h4>Complexity</h4>
+    <p>O(n * k log k) time for n words of length up to k, from sorting each word. O(n * k) space for
+    the keys and groups. A 26-letter count as the key would make it O(n * k).</p>
+    <h4>Pitfall</h4>
+    <p>Output order. Grouping with an unordered map, or sorting the groups afterwards, returns the
+    right groups in the wrong order. Empty strings are valid words and all share the empty key, so
+    they form one group too.</p>
+  `,
+
   signature: {
     name: 'groupAnagrams',
     params: [{ name: 'words', type: 'string[]' }],

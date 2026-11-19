@@ -111,6 +111,27 @@ export const problem = {
     'At speed 1 with 10^4 piles of 10^9, how big is the hour count, and does it fit in your integer type?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Binary search on the answer. For a speed <code>k</code>, the hours needed are the sum of
+    <code>ceil(pile / k)</code> over all piles, and that total only goes down as <code>k</code> grows. Search
+    <code>k</code> between <code>1</code> and the largest pile for the first speed that fits in
+    <code>h</code> hours.</p>
+    <h4>Why it works</h4>
+    <p>If speed <code>k</code> finishes in time, every faster speed does too, so "fast enough" flips from
+    false to true exactly once. The upper bound always works: at the largest pile's size, each pile takes
+    one hour, and <code>h</code> is at least the number of piles. Keeping <code>r = mid</code> on success
+    and <code>l = mid + 1</code> on failure converges on the first true value.</p>
+    <h4>Complexity</h4>
+    <p>O(n log M) time, where M is the largest pile: about 30 checks of O(n) each. O(1) extra space.
+    Trying every speed from 1 upward could be O(n * M).</p>
+    <h4>Pitfall</h4>
+    <p>Overflow in the hour count. At speed 1, 10^4 piles of 10^9 need 10^13 hours, far past 32 bits, and a
+    wrapped sum can look small enough and pick a speed that is too slow. Sum in 64 bits, and compute the
+    ceiling with integers as <code>(pile + k - 1) / k</code> rather than through floats.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'minEatingSpeed',

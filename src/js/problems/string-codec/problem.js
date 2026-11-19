@@ -200,6 +200,28 @@ export const problem = {
     'How do you move through the encoded string without copying the unread rest of it on every step?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Frame each string by its length: <code>encode</code> writes <code>length#string</code> for
+    every item and joins the pieces once. <code>decode</code> reads digits up to the first
+    <code>#</code>, takes that many characters as the next string, and jumps past them.</p>
+    <h4>Why it works</h4>
+    <p>The decoder never looks inside a string to find its end, it counts characters. So
+    <code>#</code>, digits or spaces inside the data are harmless, and an empty string is simply
+    <code>0#</code>. At each step the index sits at the start of a length, the first <code>#</code>
+    after it ends that length (digits never contain <code>#</code>), and the next frame starts right
+    after the copied characters.</p>
+    <h4>Complexity</h4>
+    <p>O(L) time per call for total length L, since each character is written or read a constant
+    number of times. O(L) space for the result.</p>
+    <h4>Pitfall</h4>
+    <p>Searching for the separator from the wrong place, or with <code>lastIndexOf</code>: only the
+    first <code>#</code> after the current index ends the length. A second trap is slicing the decoded
+    prefix off the input on every step, which copies the rest each time and turns the decoder
+    quadratic. Move an index instead.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

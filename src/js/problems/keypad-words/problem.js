@@ -91,6 +91,25 @@ export const problem = {
     'What should an empty input return: no strings, or one empty string?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Build the answers one digit at a time. Start from a list holding the empty string, and for each
+    digit replace every partial string with its extensions by each letter of that digit.</p>
+    <h4>Why it works</h4>
+    <p>After processing <code>i</code> digits the list holds every possible string for those digits,
+    exactly once. Looping over the existing prefixes on the outside and the new letters on the
+    inside keeps the list sorted: prefixes are already in order, and letters on each key are in
+    alphabetical order, so the first digit varies slowest.</p>
+    <h4>Complexity</h4>
+    <p>O(4^n * n) time and space: up to 4 letters per digit gives up to 4^n strings of length n. With
+    n at most 8, that is at most 65,536 strings, and the output itself is that large.</p>
+    <h4>Pitfall</h4>
+    <p>Empty input returns an empty list, not a list with one empty string. Starting the build from
+    <code>[""]</code> gives <code>[""]</code> for no digits unless you check for that case
+    first.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'letterCombinations',

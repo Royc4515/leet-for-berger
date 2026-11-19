@@ -107,6 +107,26 @@ export const problem = {
     'Would scanning from right to left make the decision simpler?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Scan left to right and look only at the next symbol. If the current symbol is worth less than
+    the one after it, subtract its value; otherwise add it.</p>
+    <h4>Why it works</h4>
+    <p>In a standard numeral, symbols appear from largest to smallest except in the six subtractive
+    pairs, and in each pair the smaller symbol sits directly before the larger one. So "smaller than
+    my right neighbour" identifies exactly the left half of a pair. Subtracting it and then adding its
+    partner gives, for example, <code>-1 + 5 = 4</code> for <code>IV</code>, the value the pair
+    stands for.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time, one comparison per symbol. O(1) space for the fixed table of seven values.</p>
+    <h4>Pitfall</h4>
+    <p>Reading past the end: the last symbol has no right neighbour and is always added, so guard the
+    lookahead with <code>i + 1 &lt; n</code>. Comparing with the previous symbol instead of the next
+    one also works, but then you must undo the earlier addition, which is easy to get wrong by a
+    factor of two.</p>
+  `,
+
   signature: {
     name: 'romanToInt',
     params: [{ name: 's', type: 'string' }],

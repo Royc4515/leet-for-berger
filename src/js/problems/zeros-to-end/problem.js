@@ -90,6 +90,27 @@ export const problem = {
     'Once all non-zero values are placed, what belongs in the remaining slots?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>A read index visits every value while a write index marks where the next non-zero value belongs.
+    Each non-zero value is placed at the write slot (swapped there in Python, copied there in
+    JavaScript) and the write index steps forward. Everything from the write index onward ends up as
+    zeros.</p>
+    <h4>Why it works</h4>
+    <p>Invariant: the slots before <code>write</code> hold exactly the non-zero values seen so far, in
+    their original order, because they are placed in the order they are read. <code>write</code> never
+    passes <code>read</code>, so no value is overwritten before it has been read. When the scan ends,
+    the number of slots from <code>write</code> to the end equals the number of zeros.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: one pass, plus at most one fill pass for the copy version. O(1) extra space. Deleting
+    each zero and shifting the tail is O(n^2), billions of moves when half of 10^5 values are zero.</p>
+    <h4>Pitfall</h4>
+    <p>Removing zeros by shifting, or bubbling each zero to the end with neighbour swaps. Both pass the
+    small examples and time out on long inputs with many zeros. Also remember that only <code>0</code>
+    moves: negative values stay in place.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'moveZeroes',

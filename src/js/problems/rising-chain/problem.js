@@ -98,6 +98,27 @@ export const problem = {
     'For a strictly increasing chain, should a value equal to a tail replace it or go after it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Keep an array <code>tails</code> where <code>tails[k]</code> is the smallest value that can end
+    a strictly increasing subsequence of length <code>k + 1</code>. For each element, binary search
+    the first tail that is greater than or equal to it and replace that tail, or append if there is
+    none. The answer is the length of <code>tails</code>.</p>
+    <h4>Why it works</h4>
+    <p>The tails are strictly increasing, which is what makes the binary search valid. Replacing a tail
+    with a smaller value keeps the same length but makes it easier to extend later, and appending
+    happens exactly when the element extends the longest chain so far. <code>tails</code> is not
+    itself a subsequence, only its length is meaningful.</p>
+    <h4>Complexity</h4>
+    <p>O(n log n) time: one binary search per element. O(n) space for <code>tails</code>. The classic
+    DP over all earlier elements is O(n^2), 10^10 steps at n = 10^5.</p>
+    <h4>Pitfall</h4>
+    <p>Search for the first tail <code>&gt;= x</code>, not <code>&gt; x</code>. With the strict
+    version an equal value is appended after itself, so runs of duplicates are counted as
+    increasing.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'lengthOfLis',

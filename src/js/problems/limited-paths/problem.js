@@ -174,6 +174,25 @@ export const problem = {
     'Which structure answers "are these two nodes connected?" while edges are only ever added?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Answer the queries offline, sorted by <code>limit</code>. Sort the edges by length and sweep: before
+    each query, add to a union-find every edge strictly shorter than its limit, then check whether
+    <code>p</code> and <code>q</code> are in the same set.</p>
+    <h4>Why it works</h4>
+    <p>For one query, the usable edges are exactly those shorter than its limit, and the question is
+    whether <code>p</code> and <code>q</code> are connected using them. A larger limit allows a superset of
+    edges, so in increasing limit order the union-find only ever grows, which is the one thing it does
+    well. Sorting query indexes rather than queries keeps track of where each answer goes.</p>
+    <h4>Complexity</h4>
+    <p>O(E log E + Q log Q) for the two sorts, plus nearly O(1) per union and find. O(V + E + Q) space.
+    A separate search per query is O(Q * (V + E)), too slow at 10^5 each.</p>
+    <h4>Pitfall</h4>
+    <p>The comparison is strict: an edge whose length equals the limit is not usable. Also, return the
+    answers in the original query order, not the sorted one.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'distanceLimitedPathsExist',

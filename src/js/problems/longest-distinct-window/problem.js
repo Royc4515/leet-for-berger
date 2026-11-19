@@ -102,6 +102,27 @@ export const problem = {
     'In "abba", where is the left edge when you reach the last "a", and where was the first "a"?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Keep a window <code>s[l..r]</code> with no repeated character. Extend <code>r</code> one character
+    at a time, and whenever the new character now appears twice, move <code>l</code> right, dropping
+    characters, until it appears once. Record the window length after each step.</p>
+    <h4>Why it works</h4>
+    <p>If <code>s[l..r]</code> has no repeats, neither does any window inside it, so the best window ending
+    at <code>r</code> starts at the smallest valid <code>l</code>. That smallest <code>l</code> never
+    moves left as <code>r</code> grows, so shrinking only from the left finds it for every
+    <code>r</code>, and the longest of those windows is the answer.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: each character enters the window once and leaves at most once. O(1) extra space, a fixed count
+    table indexed by ASCII code. Checking every substring would be O(n^2) or worse.</p>
+    <h4>Pitfall</h4>
+    <p>The common faster variant jumps <code>l</code> to one past the last index of the repeated
+    character. That index may already be left of the window, as with the second <code>a</code> in
+    <code>"abba"</code>, so take <code>max(l, last + 1)</code> or the window moves backwards. Also return
+    <code>0</code> for the empty string.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'lengthOfLongestSubstring',

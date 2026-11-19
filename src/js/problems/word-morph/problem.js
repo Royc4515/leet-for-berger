@@ -171,6 +171,26 @@ export const problem = {
     'How do you make sure a word is never queued twice, and what can you do with it once it is queued?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Words are nodes and two words are linked when they differ in one letter. BFS from
+    <code>beginWord</code> finds the fewest steps. Neighbors come from changing each position to each of
+    26 letters and checking a hash set, not from comparing pairs of words.</p>
+    <h4>Why it works</h4>
+    <p>BFS expands the chain one level at a time, so the first time <code>endWord</code> is generated it
+    is at the smallest possible depth. Removing a word from the set when it is queued marks it visited:
+    a later route to it would be at least as long.</p>
+    <h4>Complexity</h4>
+    <p>O(N * L * 26) candidate words for N dictionary words of length L, each hashed in O(L).
+    O(N * L) space for the set and queue. Comparing every pair of words costs O(N^2 * L), about
+    2 * 10^8 pairs at N = 2 * 10^4.</p>
+    <h4>Pitfall</h4>
+    <p>The count includes both ends, so a one-step change has length <code>2</code>. If
+    <code>endWord</code> is not in the list, the answer is <code>0</code> even if it is one letter away.
+    And <code>beginWord</code> need not be in the list.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'ladderLength',

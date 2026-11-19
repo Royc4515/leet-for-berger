@@ -92,6 +92,27 @@ export const problem = {
     'How many of those earlier answers do you actually need to keep at any moment?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Scan the houses left to right, keeping the best total for the prefix so far and for the prefix
+    one house shorter. At each house, either skip it and keep the best so far, or take it on top of
+    the best that ends two houses back.</p>
+    <h4>Why it works</h4>
+    <p>The best plan for the first <code>i + 1</code> houses either skips house <code>i</code>, in
+    which case it is the best plan for the first <code>i</code>, or takes it, which forbids house
+    <code>i - 1</code> and leaves the best plan for the first <code>i - 1</code>. So
+    <code>best(i) = max(best(i - 1), best(i - 2) + nums[i])</code>, and only the last two values
+    matter.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time and O(1) extra space. Plain recursion tries both choices at every house and is
+    exponential.</p>
+    <h4>Pitfall</h4>
+    <p>Comparing the sum of even positions with the sum of odd positions fails on inputs like
+    <code>[2, 1, 1, 2]</code>, where the best plan skips two houses in a row. With up to 10^5 houses,
+    keep it iterative: a recursive version runs out of stack.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'rob',

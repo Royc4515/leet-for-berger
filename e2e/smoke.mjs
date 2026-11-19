@@ -23,8 +23,11 @@ const browser = await chromium.launch({ channel: process.env.PW_CHANNEL || undef
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 // src/js/config.js points at the live runner; the smoke test must not depend on it or spend its
 // free quota, so the main page runs with the runner unset (editor-only), as a fork without one would.
+// Same for accounts: the main page runs without the live Supabase project; a stubbed step covers sign-in.
 await page.addInitScript(() => {
   window.LFB_REMOTE_RUNNER_URL = '';
+  window.LFB_SUPABASE_URL = '';
+  window.LFB_SUPABASE_ANON_KEY = '';
 });
 const errors = [];
 page.on('console', (m) => m.type() === 'error' && errors.push(`console (during step ${step}): ${m.text()}`));
@@ -217,6 +220,8 @@ try {
     try {
       await remote.addInitScript((url) => {
         window.LFB_REMOTE_RUNNER_URL = url;
+        window.LFB_SUPABASE_URL = '';
+        window.LFB_SUPABASE_ANON_KEY = '';
       }, `http://localhost:${PORT + 100}`);
       await remote.goto(`${BASE}#/problem/pair-sum-target`);
       await remote.waitForSelector('.monaco-editor', { timeout: 30000 });
@@ -541,6 +546,10 @@ try {
   // Its own page: the blocked CDN request is logged as a failed resource, which is the point here.
   await check('without Monaco, TypeScript reports honestly that it needs the editor and nothing crashes', async () => {
     const offline = await browser.newPage();
+    await offline.addInitScript(() => {
+      window.LFB_SUPABASE_URL = '';
+      window.LFB_SUPABASE_ANON_KEY = '';
+    });
     const offlineErrors = [];
     offline.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && offlineErrors.push(m.text()));
     offline.on('pageerror', (e) => offlineErrors.push(e.message));
@@ -567,6 +576,46 @@ try {
     await page.click('.today-card .problem-link');
     await page.waitForFunction((h) => location.hash === h, href);
     await page.waitForSelector('.problem-title');
+  });
+
+  await check('accounts: hidden without config; with a project, Sign in offers Google and GitHub, a session shows the user', async () => {
+    if (await page.locator('#account button').count()) throw new Error('sign-in shown although accounts are not configured');
+    // A separate page (and storage) so the stubbed account never touches the main page's progress.
+    const acct = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    acct.on('pageerror', (e) => errors.push(`account page: ${e.message}`));
+    // A stub stands in for supabase-js: no network, and the test decides whether a session exists.
+    const stub = (signedIn) => `export function createClient() {
+      const user = ${signedIn ? "{ id: 'u1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } }" : 'null'};
+      const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async () => ({ error: null }) };
+      return { auth: { getSession: async () => ({ data: { session: user ? { user } : null } }), onAuthStateChange: () => ({}), signInWithOAuth: async () => ({}), signOut: async () => ({}) }, from: () => chain };
+    }`;
+    let signedIn = false;
+    await acct.route('**/@supabase/supabase-js@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: stub(signedIn) }));
+    await acct.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = 'https://example.supabase.co';
+      window.LFB_SUPABASE_ANON_KEY = 'public-anon-key';
+    });
+    await acct.goto(`${BASE}#/`);
+    await acct.click('#account button:has-text("Sign in")');
+    await acct.waitForSelector('.account-menu button:has-text("Continue with Google")');
+    await acct.waitForSelector('.account-menu button:has-text("Continue with GitHub")');
+    if (shotsDir) await acct.screenshot({ path: `${shotsDir}/19-sign-in.png` });
+    signedIn = true;
+    await acct.reload();
+    await acct.waitForSelector('#account .account-name:has-text("Ada")');
+    await acct.waitForSelector('#account button:has-text("Sign out")');
+    await acct.close();
+  });
+
+  await check('privacy policy: linked from the home page, loads, lists what is stored and how to delete it', async () => {
+    await page.goto(`${BASE}#/`);
+    await page.click('footer.site-links a:has-text("Privacy Policy")');
+    await page.waitForSelector('article.legal h1');
+    await expectText('article.legal', /Deleting your data/);
+    await expectText('article.legal', /IP address/);
+    await shot('20-privacy');
+    await page.goto(`${BASE}#/`);
   });
 
   await check('unknown route shows not found', async () => {

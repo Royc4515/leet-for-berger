@@ -125,6 +125,27 @@ export const problem = {
     'What should happen when a closer arrives and nothing is open, and what must be true when the string ends?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Push every opening bracket onto a stack. On a closing bracket, pop the top and check that it is
+    the opener of the same kind. The string is valid when every pop matches and the stack is empty at
+    the end.</p>
+    <h4>Why it works</h4>
+    <p>The bracket that must close next is always the most recently opened one that is still open: last
+    in, first out. The stack holds the open brackets in the order they were opened, so its top is the
+    only bracket a closer is allowed to match. Any other closer means the nesting crosses, as in
+    <code>([)]</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: one push or pop per character. O(n) space in the worst case, a string made only of
+    openers.</p>
+    <h4>Pitfall</h4>
+    <p>The two edge cases at the ends. A closer that arrives when the stack is empty must give
+    <code>false</code>, not a crash or a skipped check, and openers still on the stack when the string
+    ends, as in <code>((</code>, also mean <code>false</code>. Counters per kind cannot replace the
+    stack, because they ignore order.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'isValid',

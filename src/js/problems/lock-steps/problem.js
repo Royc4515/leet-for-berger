@@ -137,6 +137,27 @@ export const problem = {
     'What should happen when the starting code itself is a dead end?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Treat each of the 10^4 codes as a node with 8 neighbours (4 wheels, each turned up or down).
+    Breadth-first search from <code>"0000"</code> finds the fewest moves to <code>target</code>,
+    never stepping onto a dead end.</p>
+    <h4>Why it works</h4>
+    <p>BFS visits codes in order of distance, so the first time it reaches <code>target</code>, the
+    number of moves is the minimum. Dead ends are marked blocked before the search starts, and
+    visited codes are marked in the same array, so each code enters the queue at most once and no
+    path passes through a dead end.</p>
+    <h4>Complexity</h4>
+    <p>O(10^4 * 8) moves examined plus O(deadends.length) to read the dead ends, and O(10^4) space.
+    Codes are stored as integers, so each check is an array read; scanning the dead-end list for
+    every code would cost up to 5000 steps per check.</p>
+    <h4>Pitfall</h4>
+    <p>The start. If <code>target</code> is <code>"0000"</code> the answer is 0, and if
+    <code>"0000"</code> is a dead end nothing can move, so the answer is -1. Also handle the wrap:
+    turning 0 down gives 9, so use <code>(d + 9) % 10</code> rather than <code>d - 1</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'openLock',

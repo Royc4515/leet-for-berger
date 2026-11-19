@@ -153,6 +153,25 @@ export const problem = {
     'Where in that queue should a cell reached at no extra cost go?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Treat moving onto an empty cell as cost 0 and onto an obstacle as cost 1. The answer is a shortest
+    path with only 0 and 1 weights, which a 0-1 BFS solves with a double-ended queue instead of a
+    heap.</p>
+    <h4>Why it works</h4>
+    <p>Pushing 0-cost moves to the front and 1-cost moves to the back keeps the deque sorted by distance,
+    with at most two distinct values in it at a time. So cells come out in nondecreasing distance, just
+    as in Dijkstra. A cell is queued again only on a strict improvement, so outdated entries do no harm.</p>
+    <h4>Complexity</h4>
+    <p>O(rows * cols) time: each cell is popped a constant number of times and has four neighbors. O(rows * cols)
+    space for distances and the deque. Dijkstra with a heap also passes, with an extra log factor.</p>
+    <h4>Pitfall</h4>
+    <p>Do not mark a cell final when it is first pushed: a 0-cost route found later must still win.
+    Moving only right and down misses routes that wind back, and plain BFS counts steps rather than
+    obstacles. The start cell is empty and costs nothing.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'minimumObstacles',

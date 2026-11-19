@@ -121,6 +121,24 @@ export const problem = {
     'Without recursion: if you visit the tree one level at a time, what does the number of levels tell you?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>A tree is one node taller than its taller subtree. Recurse: the empty tree has height
+    <code>0</code>, and any other node has height <code>1 + max(left, right)</code>.</p>
+    <h4>Why it works</h4>
+    <p>The longest root-to-leaf path goes through the root and then continues down whichever
+    subtree has the longer path. The recursion computes that for every subtree from the bottom up,
+    and the base case of 0 makes a leaf count as exactly one node.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: each node is visited once. O(h) extra space for the call stack, where the height
+    h is at most 500 here, so the recursion is safe in every language.</p>
+    <h4>Pitfall</h4>
+    <p>Height counts nodes, not edges, so a single node has height 1 and the empty tree has height
+    0. Returning <code>-1</code> or <code>0</code> for a leaf, following only the left spine, or
+    taking the minimum of the two subtrees all give wrong answers.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it
   // (src/js/engine/codegen.js). Solutions live in ./solutions, one file per language.
   signature: {

@@ -118,6 +118,26 @@ export const problem = {
     'Do [1,4] and [4,5] overlap under the rules here? Does your comparison agree?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Sort the ranges by start, then sweep once. Each range either overlaps the last merged range,
+    which then extends its end, or begins a new merged range.</p>
+    <h4>Why it works</h4>
+    <p>After sorting, every later range starts at or after the current one. If the next range starts
+    after the current merged end, no later range can reach back to it either, so the current merged
+    range is final. Ranges are closed, so a range starting exactly at the merged end still overlaps,
+    which is why the test is <code>start &lt;= end</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(n log n) time for the sort; the sweep itself is O(n). O(n) space for the sorted copy and the
+    output.</p>
+    <h4>Pitfall</h4>
+    <p>Setting the merged end to the new range's end instead of the larger of the two ends. A long range
+    can swallow the next one: <code>[1, 10]</code> followed by <code>[2, 3]</code> must stay <code>[1,
+    10]</code>. Using <code>&lt;</code> instead of <code>&lt;=</code> keeps touching ranges like
+    <code>[1, 4]</code> and <code>[4, 5]</code> apart.</p>
+  `,
+
   signature: {
     name: 'merge',
     params: [{ name: 'intervals', type: 'int[][]' }],

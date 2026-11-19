@@ -96,6 +96,27 @@ export const problem = {
     'Which lengths do you add to the answer, and where do you take the modulus so nothing overflows?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Different step sequences always build different strings, so count step sequences by total
+    length: <code>f[i] = f[i - zero] + f[i - one]</code> with <code>f[0] = 1</code>. The answer is
+    the sum of <code>f[low..high]</code>.</p>
+    <h4>Why it works</h4>
+    <p>Take two sequences and the first step where they differ: up to that point the strings agree,
+    and then one appends <code>'0'</code> while the other appends <code>'1'</code> at the same
+    position. So strings of length <code>i</code> correspond one to one with sequences whose blocks
+    add up to <code>i</code>, and the last block is either <code>zero</code> zeros or
+    <code>one</code> ones.</p>
+    <h4>Complexity</h4>
+    <p>O(high) time and O(high) space, one table entry per length. Listing the strings themselves
+    grows exponentially.</p>
+    <h4>Pitfall</h4>
+    <p>The counts grow like Fibonacci numbers, so reduce modulo 10^9 + 7 at every table entry and at
+    every addition to the running sum, not once at the end. Lengths below <code>low</code> still
+    have to be computed; they are just not added to the answer.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'countGoodStrings',

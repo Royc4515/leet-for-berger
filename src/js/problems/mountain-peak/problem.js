@@ -106,6 +106,27 @@ export const problem = {
     'With lo < hi, can mid + 1 ever run past the end of the array?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Binary search on the slope. Compare <code>nums[mid]</code> with <code>nums[mid + 1]</code>: if the
+    next value is larger, <code>mid</code> is on the rising side and the peak is to its right; otherwise
+    the peak is <code>mid</code> or somewhere to its left.</p>
+    <h4>Why it works</h4>
+    <p>The search keeps the peak inside <code>[left, right]</code>. On the rising side every index up to
+    <code>mid</code> is below the peak, so <code>left = mid + 1</code> is safe. On the falling side
+    <code>mid</code> may itself be the peak, so it stays: <code>right = mid</code>. The range shrinks every
+    step and stops when <code>left == right</code>, which is the peak. Since the array is a single
+    mountain, that index is unique, including the edge cases where the peak is the first or last
+    index.</p>
+    <h4>Complexity</h4>
+    <p>O(log n) time, O(1) space. A linear scan for the maximum is O(n).</p>
+    <h4>Pitfall</h4>
+    <p>Writing <code>right = mid - 1</code> on the falling side can skip the peak when <code>mid</code> is
+    the peak. And the loop must be <code>left &lt; right</code>: that keeps <code>mid &lt; right</code>, so
+    <code>mid + 1</code> is always a valid index, even for a one-element array.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'findPeakElement',

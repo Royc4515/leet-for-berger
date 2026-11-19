@@ -106,6 +106,27 @@ export const problem = {
     'When only one row or one column is left, which of your four sweeps would read it a second time?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Keep four walls, <code>top</code>, <code>bottom</code>, <code>left</code> and <code>right</code>,
+    around the part of the grid not yet visited. Read the top row left to right, the right column
+    downward, the bottom row right to left and the left column upward, then move all four walls one step
+    inward.</p>
+    <h4>Why it works</h4>
+    <p>Each sweep reads one side of the current layer, and each starts one cell past the corner the
+    previous sweep already took, so every corner is read once. After the walls move inward, the
+    unvisited cells form the next inner layer, so the same four sweeps continue the clockwise order
+    until the walls cross.</p>
+    <h4>Complexity</h4>
+    <p>O(m * n) time: every cell is read exactly once. O(1) extra space besides the output array.</p>
+    <h4>Pitfall</h4>
+    <p>The last layer of a non-square grid can be a single row or a single column. The first two sweeps
+    already read it, and running the bottom and left sweeps as well reads it a second time, backwards.
+    The shipped solution runs those two only while <code>top &lt; bottom</code> and <code>left &lt;
+    right</code>.</p>
+  `,
+
   signature: {
     name: 'spiralOrder',
     params: [{ name: 'matrix', type: 'int[][]' }],

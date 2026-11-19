@@ -194,6 +194,25 @@ export const problem = {
     'If you store minimums as differences from the value, what happens at the edges of the 32-bit range?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Store every entry as a pair: its value and the minimum of the stack from the bottom up to and
+    including that entry. <code>getMin</code> reads the minimum stored in the top pair.</p>
+    <h4>Why it works</h4>
+    <p>Only the top of a stack changes, so while an entry sits on the stack the elements below it stay
+    the same, and so does their minimum. The snapshot taken at <code>push</code> therefore stays
+    correct. Popping an entry exposes the pair below, whose snapshot is exactly the minimum of what
+    remains.</p>
+    <h4>Complexity</h4>
+    <p>O(1) time for <code>push</code>, <code>pop</code>, <code>top</code> and <code>getMin</code>: each
+    is a single stack operation plus one comparison. O(n) space for n entries, two numbers each.</p>
+    <h4>Pitfall</h4>
+    <p>Keeping one variable for the current minimum. When that element is popped, the next smallest
+    value is lost and finding it again takes a full scan. The trick of storing differences from the
+    minimum instead of pairs can overflow near the ends of the 32-bit range.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

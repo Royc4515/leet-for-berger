@@ -152,6 +152,7 @@ export function renderDashboard(root, { store }) {
           tableBody,
         ),
       ),
+      h('footer.site-links', {}, h('a', { href: 'privacy.html' }, 'Privacy Policy')),
     ),
   );
   renderStats();

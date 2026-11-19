@@ -162,6 +162,24 @@ export const problem = {
     'If every value is negative, what is the answer, and does your starting value for the maximum allow it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Post-order recursion where each node reports the best downward chain starting at it: its value
+    plus the better child chain, with a negative chain counted as 0. At each node, also try the path
+    that bends there and uses both child chains, and keep the best sum seen.</p>
+    <h4>Why it works</h4>
+    <p>Every path has one highest node, where it may bend. Through that node the best path is its
+    value plus the best chain down each side, and a chain with a negative sum is better left out.
+    Trying every node as the bend covers every path, including ones that miss the root.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: one visit per node. O(h) space for the recursion, with h at most 500.</p>
+    <h4>Pitfall</h4>
+    <p>Two mistakes are common. The value returned to the parent must use one side only, since a
+    path cannot fork. And the answer must start at the root's value or minus infinity, not 0,
+    because in an all-negative tree the best path is the single largest node.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it
   // (src/js/engine/codegen.js). Solutions live in ./solutions, one file per language.
   signature: {

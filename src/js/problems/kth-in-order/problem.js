@@ -141,6 +141,27 @@ export const problem = {
     'How would you do the same walk with your own stack instead of the call stack?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>An in-order walk of a binary search tree (left subtree, node, right subtree) visits the values
+    in ascending order. Walk in order, count each node as it is visited, and stop at the
+    <code>k</code>-th one.</p>
+    <h4>Why it works</h4>
+    <p>Every value in a node's left subtree is smaller than the node, and every value on the right is
+    larger, so finishing the left subtree first and the right subtree last lists everything sorted.
+    The <code>k</code>-th node visited is therefore the <code>k</code>-th smallest, and nothing after
+    it needs to be seen.</p>
+    <h4>Complexity</h4>
+    <p>O(h + k) time: the walk descends at most h nodes to the minimum, then visits k nodes. O(h)
+    space for the stack, with h at most 500. Collecting and sorting every value would be O(n log
+    n).</p>
+    <h4>Pitfall</h4>
+    <p>The counter must be shared across the whole walk. Passing it by value into each recursive
+    call means every subtree counts from its own copy and never reaches <code>k</code>. Also count
+    from 1, not 0.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it
   // (src/js/engine/codegen.js). Solutions live in ./solutions, one file per language.
   signature: {

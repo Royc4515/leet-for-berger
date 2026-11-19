@@ -104,6 +104,26 @@ export const problem = {
     'Describe a subproblem by its two border balloons. In what order must the subproblems be solved?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Pad the row with a <code>1</code> at each end. For two borders <code>i &lt; j</code>, let
+    <code>f[i][j]</code> be the most coins from popping every balloon strictly between them. Choose the
+    balloon <code>k</code> popped <strong>last</strong> in that range: it earns
+    <code>arr[i] * arr[k] * arr[j]</code>, plus <code>f[i][k] + f[k][j]</code>.</p>
+    <h4>Why it works</h4>
+    <p>While <code>k</code> is still standing, it separates the two sides, so pops on the left never
+    see a balloon on the right. When <code>k</code> is finally popped, its neighbors are exactly the
+    borders <code>i</code> and <code>j</code>. The two sides are independent subproblems, and trying
+    every <code>k</code> covers every order. Fill intervals so that shorter ones are done first.</p>
+    <h4>Complexity</h4>
+    <p>O(n^3) time: O(n^2) intervals, O(n) choices of <code>k</code> each. O(n^2) space. Trying every
+    pop order is O(n!).</p>
+    <h4>Pitfall</h4>
+    <p>Choosing the balloon popped <em>first</em> does not split the problem, because its neighbors
+    change afterwards. Greedy rules such as popping the smallest first also fail.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'maxCoins',

@@ -110,6 +110,26 @@ export const problem = {
     'Is there a way to compare the positions where each character first appears instead?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Walk both strings in step and keep two maps: <code>fwd</code> from each character of <code>s</code>
+    to the character it became in <code>t</code>, and <code>back</code> from each character of
+    <code>t</code> to its source. Any position that disagrees with an earlier pairing ends the check.</p>
+    <h4>Why it works</h4>
+    <p>Isomorphism needs a bijection. <code>fwd</code> enforces "one source, one target": the same
+    <code>s</code> character can never map to two different <code>t</code> characters.
+    <code>back</code> enforces the other direction: two different source characters can never share a
+    target. If every position passes both checks, the pairs seen so far form a one-to-one mapping
+    that turns <code>s</code> into <code>t</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time, one pass with constant-time map operations. O(k) space for k distinct characters,
+    at most 95 here since the strings are printable ASCII.</p>
+    <h4>Pitfall</h4>
+    <p>Using only the forward map. It accepts <code>s = "ab"</code>, <code>t = "aa"</code>, because
+    <code>a</code> and <code>b</code> each get one target, yet both land on <code>a</code>.</p>
+  `,
+
   signature: {
     name: 'isIsomorphic',
     params: [

@@ -93,6 +93,26 @@ export const problem = {
     'What does n & (n - 1) remove, and how many times can you do it before n is 0?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Repeatedly apply <code>n &amp; (n - 1)</code>, which clears the lowest 1 bit, and count how many
+    times you can do it before <code>n</code> reaches <code>0</code>.</p>
+    <h4>Why it works</h4>
+    <p>Subtracting 1 turns the lowest set bit into <code>0</code> and every <code>0</code> below it into
+    <code>1</code>, leaving higher bits alone. ANDing with the original keeps the higher bits and zeroes
+    everything from that lowest set bit down. Each step removes exactly one 1 bit, so the number of steps
+    is the population count.</p>
+    <h4>Complexity</h4>
+    <p>O(k) time where k is the number of 1 bits, at most 32 steps. O(1) space. Checking every bit
+    position one by one always costs 32 steps.</p>
+    <h4>Pitfall</h4>
+    <p>Values from <code>2^31</code> up have the top bit set. Treated as a signed 32-bit number they turn
+    negative, and a loop that shifts right with sign extension or tests <code>n &gt; 0</code> never ends
+    or stops early. That is why <code>n</code> arrives as a 64-bit integer; in JavaScript,
+    <code>n &gt;&gt;&gt; 0</code> keeps the 32 bits unsigned.</p>
+  `,
+
   signature: {
     name: 'hammingWeight',
     params: [{ name: 'n', type: 'long' }],

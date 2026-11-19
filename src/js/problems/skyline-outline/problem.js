@@ -141,6 +141,27 @@ export const problem = {
     'Removing a finished building from a heap is slow; what if you only remove it once it reaches the top?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The height can only change at a building edge. Sweep the distinct edge coordinates in order, keep
+    every started building in a max-heap by height, and drop finished buildings only when they reach the
+    top. Record a point whenever the current top height differs from the last one recorded.</p>
+    <h4>Why it works</h4>
+    <p>At coordinate <code>x</code>, the outline height is the tallest building with
+    <code>left &lt;= x &lt; right</code>. Buildings are pushed once their left edge is reached. A finished
+    building buried in the heap does no harm, because only the top decides the height; it is removed as
+    soon as it surfaces. Handling all edges at one <code>x</code> before reading the height gives one
+    point per <code>x</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(n log n) time: sorting the edges plus one push and at most one pop per building. O(n) space.
+    Removing finished buildings by searching the heap is O(n^2) on 10^5 nested buildings.</p>
+    <h4>Pitfall</h4>
+    <p>When one building ends exactly where another of equal height starts, the outline does not change,
+    so no point is added and there is no dip to <code>0</code>. Likewise, push every building that starts
+    at <code>x</code> before reading the height, or one <code>x</code> gets two points.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'getSkyline',

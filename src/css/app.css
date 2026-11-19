@@ -140,6 +140,9 @@ pre {
 }
 .header-right {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .streak-chip {
   padding: 4px 10px;
@@ -1619,4 +1622,69 @@ body.resizing-y * {
   color: var(--muted);
   font-size: 12px;
   flex: 1;
+}
+
+/* ---------- Account ---------- */
+.account-host {
+  display: flex;
+  align-items: center;
+}
+.account {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.account-name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.account-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+.account-note.bad {
+  color: var(--bad);
+}
+.account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 50;
+  display: grid;
+  gap: 8px;
+  width: 240px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+}
+.account-menu[hidden] {
+  display: none;
+}
+
+/* ---------- Static pages (privacy) ---------- */
+.legal {
+  line-height: 1.6;
+}
+.legal h2 {
+  font-size: 17px;
+  margin: 24px 0 8px;
+}
+.legal ul {
+  padding-left: 20px;
+}
+.legal a {
+  color: var(--info);
+}
+.site-links {
+  margin: 28px 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.site-links a {
+  color: var(--muted);
 }

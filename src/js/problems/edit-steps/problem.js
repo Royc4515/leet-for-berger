@@ -120,6 +120,28 @@ export const problem = {
     'To fill one row of the table, which rows do you actually need to keep?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Let <code>dp[i][j]</code> be the fewest edits that turn the first <code>i</code> letters of
+    <code>word1</code> into the first <code>j</code> letters of <code>word2</code>. Look at the last
+    letter of each prefix: if they match it costs nothing, otherwise pick the cheapest of replace,
+    delete or insert.</p>
+    <h4>Why it works</h4>
+    <p>Some optimal edit sequence handles the two last letters in one of four ways: keep them (they
+    match), replace one with the other, delete the last letter of <code>word1</code>, or insert the last
+    letter of <code>word2</code>. Each leaves a smaller prefix pair, read from <code>dp[i-1][j-1]</code>,
+    <code>dp[i-1][j]</code> or <code>dp[i][j-1]</code>. The base cases are <code>dp[i][0] = i</code>
+    and <code>dp[0][j] = j</code>.</p>
+    <h4>Complexity</h4>
+    <p>O(m * n) time, one cell per prefix pair. The table only reads the previous row, so the solution
+    keeps one row: O(n) space. Plain recursion over the three choices is exponential.</p>
+    <h4>Pitfall</h4>
+    <p>Counting mismatched positions ignores shifts: <code>"abc"</code> to <code>"bc"</code> is one
+    deletion, not three changes. Also remember the empty-prefix row and column, and that either word
+    may be empty.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'minDistance',

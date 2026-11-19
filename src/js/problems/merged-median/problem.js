@@ -128,6 +128,30 @@ export const problem = {
     'Two middle values near 2^31 - 1: does their sum fit in the type you add them in?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>The two middle values are the k-th smallest of the union for <code>k = (m + n + 1) / 2</code> and
+    <code>k = (m + n + 2) / 2</code>, rounded down; they coincide when the total is odd. Find each one
+    without merging by comparing the <code>(k/2)</code>-th remaining value of each array and discarding
+    the smaller side's first <code>k/2</code> values.</p>
+    <h4>Why it works</h4>
+    <p>Say <code>x</code>, the <code>(k/2)</code>-th remaining value of <code>nums1</code>, is smaller
+    than <code>y</code>, the one of <code>nums2</code>. Only the <code>k/2 - 1</code> values before
+    <code>x</code> and the <code>k/2 - 1</code> before <code>y</code> can sit below <code>x</code>, so
+    <code>x</code> ranks at most <code>k - 1</code>, and so does everything before it. Those
+    <code>k/2</code> values can be dropped while looking for the <code>(k - k/2)</code>-th smallest of
+    the rest. A side with fewer than <code>k/2</code> values left counts as infinity, so the other side
+    drops instead. Adding the two results gives twice the median, as the statement asks.</p>
+    <h4>Complexity</h4>
+    <p>O(log(m + n)) time, since <code>k</code> halves each step, and O(log(m + n)) stack depth for the
+    recursion. Merging is O(m + n).</p>
+    <h4>Pitfall</h4>
+    <p>The two middle values can both be near <code>2^31 - 1</code>, so their sum needs 64 bits. Returning
+    the median as a float or adding in a 32-bit int loses the exact answer. Also handle one array being
+    empty.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'medianTimesTwo',

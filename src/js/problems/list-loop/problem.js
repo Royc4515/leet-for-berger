@@ -93,6 +93,26 @@ export const problem = {
     'Picture two runners on a circular track, one twice as fast. What must eventually happen?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Walk the list with two pointers from the head: <code>slow</code> moves one node per step and
+    <code>fast</code> moves two. If they ever land on the same node, the list loops; if <code>fast</code>
+    reaches the end, it does not.</p>
+    <h4>Why it works</h4>
+    <p>Without a loop, <code>fast</code> runs off the end and the walk stops. With a loop, both pointers
+    eventually enter it, and from then on <code>fast</code> closes the gap to <code>slow</code> by exactly
+    one node per step. A gap that shrinks by one each step cannot jump over zero, so they meet within one
+    lap of the loop.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: <code>slow</code> takes at most about n steps before the meeting or the end. O(1) extra
+    space, two pointers. A set of visited nodes is also O(n) time but O(n) space.</p>
+    <h4>Pitfall</h4>
+    <p>Compare node identity, not values: two different nodes can hold the same value, so a set of seen
+    values reports loops that are not there. Also check both <code>fast</code> and <code>fast.next</code>
+    before jumping two nodes, which covers the empty list and lists of odd and even length.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it
   // (src/js/engine/codegen.js). Solutions live in ./solutions, one file per language.
   signature: {

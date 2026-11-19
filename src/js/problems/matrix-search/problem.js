@@ -118,6 +118,28 @@ export const problem = {
     'Given a position i in the virtual list, which row and column hold it?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Read row after row and the matrix is one sorted list of <code>m * n</code> values. Binary search
+    that virtual list directly, mapping position <code>i</code> to cell <code>(i / n, i % n)</code> with
+    integer division, without copying anything.</p>
+    <h4>Why it works</h4>
+    <p>Each row is sorted and each row starts above the previous row's last value, so the row-by-row order
+    is non-decreasing. The search finds the first position whose value is <code>&gt;= target</code>; if
+    the target is anywhere in the matrix, that position holds it, so one final comparison answers the
+    question. A target that falls in the gap between two rows lands on the next row's first value and
+    correctly fails.</p>
+    <h4>Complexity</h4>
+    <p>O(log(m * n)) time, about 17 steps for a 300 x 300 matrix. O(1) space. Scanning every cell is
+    O(m * n).</p>
+    <h4>Pitfall</h4>
+    <p>Convert positions with the column count <code>n</code>, not the row count <code>m</code>: on a
+    square matrix both work, so the bug only shows up on single-row, single-column or other non-square
+    shapes. In JavaScript, use <code>Math.floor(i / n)</code>, since <code>/</code> alone gives a
+    fraction.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'searchMatrix',

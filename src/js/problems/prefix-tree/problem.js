@@ -196,6 +196,27 @@ export const problem = {
     'What is the only difference between search and startsWith once you have walked down the tree?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Store words as paths in a tree of letters. Each node stands for one prefix and links each
+    letter to the node of that prefix plus the letter. A mark on a node says an inserted word ends
+    there.</p>
+    <h4>Why it works</h4>
+    <p><code>insert</code> walks down, creating missing children, and marks the last node. Walking a
+    query's letters reaches the node of exactly that prefix if and only if some inserted word starts
+    with it. So <code>startsWith</code> needs only the node to exist, and <code>search</code> also
+    needs the end mark.</p>
+    <h4>Complexity</h4>
+    <p>O(length of the argument) per call, however many words are stored; O(total inserted length)
+    nodes of space. The JavaScript solution gives each node 26 child slots; the Python one uses a
+    dict per node with <code>'$'</code> as the end mark.</p>
+    <h4>Pitfall</h4>
+    <p>Treating "the path exists" as "the word was inserted". After <code>insert("apple")</code>,
+    <code>search("app")</code> is <code>false</code>; only <code>startsWith("app")</code> is
+    <code>true</code>.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

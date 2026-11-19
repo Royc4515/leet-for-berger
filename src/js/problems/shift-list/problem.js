@@ -97,6 +97,28 @@ export const problem = {
     'What should happen when the list is empty, before you reduce k by its length?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Count the length <code>n</code>, reduce <code>k</code> to <code>k % n</code>, then cut the list once:
+    the last <code>k</code> nodes become the front, and the old tail links to the old head. Two pointers
+    <code>k</code> nodes apart find the cut in one walk.</p>
+    <h4>Why it works</h4>
+    <p>Rotating by <code>n</code> places returns the same list, so only <code>k % n</code> matters, and if it
+    is <code>0</code> nothing changes. Moving <code>fast</code> <code>k</code> nodes ahead and then advancing
+    both until <code>fast</code> is the tail leaves <code>slow</code> exactly <code>k</code> nodes before the
+    end, on the node just before the new head. Detaching after <code>slow</code> and attaching the old head
+    after <code>fast</code> gives the rotated list.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time, two walks over the list. O(1) extra space. Rotating one step at a time costs O(n) per
+    step, which with <code>k</code> up to 2 * 10^9 is hopeless, and still O(n^2) after reducing
+    <code>k</code>.</p>
+    <h4>Pitfall</h4>
+    <p>Handle the empty list before computing <code>k % n</code>, or it divides by zero. The other common
+    slip is cutting one node off: the new tail is the node <code>n - k</code> from the start, counting from
+    1, and the new head is the one after it.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'rotateRight',

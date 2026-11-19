@@ -40,7 +40,8 @@ src/js/engine/             PURE judging logic + execution
   sql.js                   SQL problems: schema validation, starter, result-set judging (ADR 0003)
 src/js/config.js          public site config: remote runner URL (empty = editor-only), Turnstile site key
 src/js/problems/<id>/      problem.js + solutions/ (8 language files, or solution.sql); index.js = catalog, hydrate, loadSolution
-src/js/state/              progress (pure reducers + localStorage), drafts
+src/js/state/              progress (pure reducers + localStorage), drafts, sync.js (merge across devices)
+src/js/auth/               account.js (Supabase sign-in, inert unless configured), sync-controller.js (ADR 0006)
 src/js/modes/              interview.js, battle.js, mock-oa.js (pure session logic and OA problem picking)
 src/js/mentor/             mentor providers (scripted today, remote later)
 src/js/data/taxonomy.js    learning network: 26 topics, 131 subtopics, ladders, validators
@@ -59,7 +60,7 @@ src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler 
 src/js/ui/views/           dashboard, workspace, path, companies, modes (hub, interview, battle)
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test
-docs/                      ARCHITECTURE, PROBLEM_FORMAT, ROADMAP, DEPLOY_RUNNER, adr/
+docs/                      ARCHITECTURE, PROBLEM_FORMAT, ROADMAP, PLAN, DEPLOY_RUNNER, DEPLOY_AUTH, adr/
 ```
 
 Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR). Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
@@ -73,7 +74,7 @@ Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR).
 5. **Hidden tests are deterministic.** Generated inputs use the seeded `mulberry32`, never `Math.random()`.
 6. **Pure modules stay pure.** `engine/harness.js`, `engine/codegen.js`, `data/*.js`, `state/progress.js`, `modes/*.js`, `mentor/mentor.js` have no DOM access and take time as a parameter (`now`) so they are unit-testable. Do not read `Date.now()` inside a reducer without a `now` override. (This already caused one bug: tab-switch tracking.)
 7. **Every view returns a cleanup function.** Monaco instances, intervals and listeners leak otherwise.
-8. **CDN versions are pinned** (Monaco 0.52.2, Pyodide 0.27.2, sql.js 1.13.0, which must equal the `sql.js` devDependency). Upgrading is a deliberate task with an e2e run, not a drive-by.
+8. **CDN versions are pinned** (Monaco 0.52.2, Pyodide 0.27.2, sql.js 1.13.0, which must equal the `sql.js` devDependency, supabase-js 2.118.0). Upgrading is a deliberate task with an e2e run, not a drive-by.
 9. **Zero console errors.** The e2e test enforces it.
 10. **No secrets in the client.** This is a static site. LLM keys, solution vaults and real judging for competitive modes require the backend (ROADMAP Phase 2-3).
 11. **Every shipped solution is verified.** Each algorithm problem has a solution file per language (8); each SQL problem has exactly one, `solutions/solution.sql` (ADR 0003). `tests/solutions.test.js` runs all of them against the 15 cases, and each language must finish all 15 within one case's `timeLimitMs`; CI requires every toolchain (`REQUIRE_ALL_LANGUAGES=1`). Starter code is generated from the signature, never hand-written.

@@ -222,6 +222,29 @@ export const problem = {
     'A key was evicted and then added again. What should its use count be?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Group keys by use count. For each count keep its keys in recency order, and track
+    <code>minCount</code>, the smallest count that has any keys. Eviction removes the oldest key of
+    the <code>minCount</code> group.</p>
+    <h4>Why it works</h4>
+    <p>A use moves a key from group <code>c</code> to the newest end of group <code>c + 1</code>, so
+    inside a group arrival order is last-use order and the oldest is the least recently used of the
+    least used. <code>minCount</code> changes in only two ways: it rises by one when the moved key
+    was the last in the <code>minCount</code> group, and it resets to 1 when a new key arrives,
+    since a new key always has the smallest count.</p>
+    <h4>Complexity</h4>
+    <p>O(1) average per call, O(capacity) space. Python keeps an ordered dict per count; JavaScript
+    uses a doubly linked list per count, because reading the first key of a <code>Map</code> after
+    many deletions is not constant time there. Scanning for the minimum on every eviction would be
+    O(capacity).</p>
+    <h4>Pitfall</h4>
+    <p><code>put</code> on a key that is already stored is a use: update the value and raise its
+    count. Forgetting that bump, or letting an evicted key keep its old count when it is added
+    again, evicts the wrong entry.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

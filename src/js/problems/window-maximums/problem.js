@@ -100,6 +100,28 @@ export const problem = {
     'How do you know when the current front candidate has slid out of the window?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Keep a deque of indices whose values strictly decrease from front to back. Each new value first
+    evicts from the back every index whose value is no larger, then joins; the front is the window
+    maximum once any index that slid out on the left is dropped.</p>
+    <h4>Why it works</h4>
+    <p>If an earlier value is no larger than a later one in the same window, the later one outlives it in
+    every future window, so the earlier value can never be a maximum again and is safe to discard. What
+    remains is decreasing, so the front holds the largest value whose index is still inside the window.
+    Indices enter in order, so only the front can fall out of range.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time: each index is pushed once and popped at most once. O(k) space for the deque, plus the
+    output. Rescanning every window is O(n * k), about 2.5 * 10^9 comparisons at <code>n = 10^5</code>
+    and <code>k = n / 2</code>.</p>
+    <h4>Pitfall</h4>
+    <p>Store indices, not values: an index tells you directly when the front has left the window, while a
+    value-only deque breaks easily on duplicate values. In JavaScript, popping the front with
+    <code>Array.shift</code> is O(n) per call and quietly makes the whole scan quadratic; use a head
+    index instead.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'maxSlidingWindow',

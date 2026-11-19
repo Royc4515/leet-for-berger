@@ -95,6 +95,25 @@ export const problem = {
     'If there is no such value, what do you need to count?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Never compute the product. Keep only its sign: start at <code>1</code>, flip it for every
+    negative value, and return <code>0</code> as soon as a zero shows up.</p>
+    <h4>Why it works</h4>
+    <p>The magnitude of a nonzero factor never changes the sign of a product, only its own sign does.
+    A single zero makes the whole product zero wherever it sits. Without zeros, each negative factor
+    flips the sign once, so the result is negative exactly when the count of negatives is odd, which
+    is what the running flip tracks.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time, one pass that may stop early at a zero. O(1) extra space.</p>
+    <h4>Pitfall</h4>
+    <p>Multiplying the values out. With up to 1000 factors of size 100, a fixed-width integer
+    overflows and wraps (32 copies of <code>2</code> already give <code>0</code> in 32 bits), and a
+    floating-point product saturates to <code>Infinity</code>, after which a later zero gives
+    <code>NaN</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'productSign',

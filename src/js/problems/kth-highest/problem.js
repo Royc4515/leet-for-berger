@@ -93,6 +93,27 @@ export const problem = {
     'What happens to your partitioning when the input is already sorted, or every value is equal?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Quickselect. The k-th largest is the value at index <code>n - k</code> in ascending order.
+    Partition around a pivot, then continue only in the part that contains that index.</p>
+    <h4>Why it works</h4>
+    <p>Hoare partitioning splits <code>[l, r]</code> into <code>[l, j]</code>, all values
+    <code>&lt;=</code> the pivot, and <code>[j + 1, r]</code>, all values <code>&gt;=</code> it. The
+    value that sorting would place at the target index lies in whichever part contains that index,
+    so the other part is dropped. Selecting by position is what makes duplicates count
+    separately.</p>
+    <h4>Complexity</h4>
+    <p>O(n) average time, O(1) extra space (a loop, no recursion), O(n^2) in the worst case. Sorting
+    is O(n log n); a min-heap of the k largest is O(n log k).</p>
+    <h4>Pitfall</h4>
+    <p>Pivot choice and equal values. A first-element pivot is quadratic on sorted input, and a
+    partition that sends every equal value to one side is quadratic on an array of one repeated
+    value. The middle element as pivot plus Hoare's scans, which stop on equal values from both
+    sides, keep both cases balanced.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'findKthLargest',

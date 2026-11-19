@@ -177,6 +177,26 @@ export const problem = {
     'What if the last element moved into the hole left by the removed one? What must you update?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Keep the values in a dense array, so <code>getRandom</code> can pick a uniform random index,
+    and a hash map from each value to its array index, so membership and removal are O(1).</p>
+    <h4>Why it works</h4>
+    <p>The two structures always agree: <code>index[v]</code> is where <code>v</code> sits in the
+    array. <code>insert</code> appends and records the position. <code>remove</code> moves the last
+    value into the hole and updates that value's index, so the array stays gap-free and every member
+    owns exactly one slot. A uniform index is then a uniform member.</p>
+    <h4>Complexity</h4>
+    <p>O(1) average per operation (hash map work plus changes at the end of the array), O(n) space.
+    Removing from the middle by shifting elements would be O(n).</p>
+    <h4>Pitfall</h4>
+    <p>Removing the value that is already last in the array. Deleting its map entry and then
+    recording "the last value now lives at index <code>i</code>" writes the removed value straight
+    back into the map. Move the last value only when the hole is not at the end, as the solution
+    does.</p>
+  `,
+
   // Neutral class signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     kind: 'class',

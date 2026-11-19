@@ -98,6 +98,27 @@ export const problem = {
     'While scanning left to right, how do you notice that you are standing somewhere you could never have arrived?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Scan left to right, keeping the farthest index reachable so far. At each index, extend it
+    with <code>i + nums[i]</code>. If the scan ever stands on an index beyond that reach, the last
+    index cannot be reached.</p>
+    <h4>Why it works</h4>
+    <p>Reachable indices always form a prefix: if you can reach index <code>r</code>, a shorter
+    jump from the same place reaches every index before it. So one number describes the whole set.
+    The scan only fails at an index beyond everything the earlier indices can reach, and since every
+    move goes forward, nothing can land there. Reaching past the end is fine: a shorter jump lands
+    exactly on the last index.</p>
+    <h4>Complexity</h4>
+    <p>O(n) time and O(1) extra space. Trying every jump length from every cell is O(n * max jump),
+    up to 10^10 here.</p>
+    <h4>Pitfall</h4>
+    <p>A <code>0</code> is only a trap if the reach stops at it. Check the reach before using the
+    current cell, and remember that an array of length 1 is already at the end, so it is
+    <code>true</code> whatever its value.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'canJump',

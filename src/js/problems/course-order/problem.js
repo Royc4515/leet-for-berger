@@ -207,6 +207,26 @@ export const problem = {
     'Which data structure gives you the smallest available course quickly while courses keep being added?',
   ],
 
+  // Walkthrough prose, shown after a solve (docs/PROBLEM_FORMAT.md).
+  explanationHtml: `
+    <h4>Idea</h4>
+    <p>Run the same "take an available course" process as for a cycle check, but always take the
+    <strong>smallest</strong> available course. A min-heap of available courses gives it in O(log V).</p>
+    <h4>Why it works</h4>
+    <p>The first position of the answer must be some course with no unfinished prerequisites, and the
+    smallest such course is the best possible first entry. Taking it only releases courses, it never
+    makes another course unavailable, so the greedy choice never blocks a smaller option later. Repeat
+    for every position. If a cycle exists, its courses are never released and the order comes out
+    short, so return <code>[]</code>.</p>
+    <h4>Complexity</h4>
+    <p>O((V + E) log V) time: every course is pushed and popped once, and each pair lowers one
+    in-degree. O(V + E) space. Scanning all courses for the smallest available one at every step is
+    O(V^2), too slow at 10^5.</p>
+    <h4>Pitfall</h4>
+    <p>A plain FIFO queue still produces a valid order, but not the smallest one, so it fails here.
+    The comparison is numeric: course <code>10</code> comes after <code>9</code>.</p>
+  `,
+
   // Neutral signature: starter code and harnesses for all 8 languages are generated from it.
   signature: {
     name: 'findOrder',
