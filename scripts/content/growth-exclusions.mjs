@@ -70,22 +70,18 @@ export const GROWTH_EXCLUSIONS = {
  * scripts/content/growth-coverage.mjs groups them by input shape for the next batches.
  */
 export const GROWTH_PENDING = [
-  'account-merge', 'anagram-arrangements', 'anagram-buckets', 'asteroid-collision', 'balanced-cuts',
-  'balloon-pop', 'best-run-product', 'best-run-sum', 'caesar-groups', 'circle-elimination', 'coin-combos',
-  'column-sweep', 'common-values', 'cookie-match', 'cooldown-tasks', 'covering-window', 'crack-palindrome',
-  'dictionary-split', 'digit-list-sum', 'dna-repeats', 'dominant-value', 'doubled-array', 'eating-speed',
-  'equal-after-deletes', 'fewest-coins', 'fibonacci-mod', 'fizz-buzz-list', 'gap-in-range', 'glyph-order',
+  'account-merge', 'anagram-arrangements', 'anagram-buckets', 'caesar-groups', 'circle-elimination',
+  'column-sweep', 'cooldown-tasks', 'covering-window', 'crack-palindrome', 'dictionary-split',
+  'digit-list-sum', 'dna-repeats', 'fibonacci-mod', 'fizz-buzz-list', 'gap-in-range', 'glyph-order',
   'good-string-count', 'growing-word-chain', 'hill-rearrange', 'isomorphic-strings', 'jump-reach',
-  'justify-lines', 'king-path', 'kth-highest', 'largest-concat', 'life-step', 'list-loop', 'lone-number',
-  'longest-distinct-window', 'merge-sorted', 'next-arrangement', 'no-adjacent-repeat', 'notify-recipients',
-  'obstacle-clearing', 'overlap-trim', 'palindrome-joins', 'paren-depth', 'plain-arithmetic', 'point-wiring',
-  'postfix-eval', 'prefix-score-sum', 'prime-count', 'product-cap-subarrays', 'product-sign',
-  'random-link-copy', 'range-bookings', 'range-cover', 'rank-boost', 'ring-shift', 'roman-numeral-value',
-  'rotate-grid', 'same-letters', 'shared-prefix', 'skyline-block', 'skyline-outline', 'smaller-count',
-  'smallest-base-segment', 'spiral-order', 'stair-paths', 'street-heist', 'string-gcd', 'string-multiply',
-  'subsequence-check', 'suspicious-payments', 'ticket-queue', 'trade-cooldown', 'two-wall-tank',
-  'typeahead-hints', 'undo-running-xor', 'unfold-brackets', 'unique-prefix', 'uphill-path', 'vowel-window',
-  'widest-palindrome', 'word-morph', 'word-order-flip', 'zero-rows-cols', 'zeros-to-end',
+  'justify-lines', 'king-path', 'life-step', 'list-loop', 'lone-number', 'longest-distinct-window',
+  'no-adjacent-repeat', 'notify-recipients', 'obstacle-clearing', 'overlap-trim', 'palindrome-joins',
+  'paren-depth', 'plain-arithmetic', 'point-wiring', 'postfix-eval', 'prefix-score-sum', 'prime-count',
+  'random-link-copy', 'range-bookings', 'range-cover', 'ring-shift', 'roman-numeral-value', 'rotate-grid',
+  'same-letters', 'shared-prefix', 'skyline-outline', 'smallest-base-segment', 'spiral-order', 'stair-paths',
+  'string-gcd', 'string-multiply', 'subsequence-check', 'suspicious-payments', 'trade-cooldown',
+  'typeahead-hints', 'unfold-brackets', 'uphill-path', 'vowel-window', 'widest-palindrome', 'word-morph',
+  'word-order-flip', 'zero-rows-cols',
 ];
 
 /**

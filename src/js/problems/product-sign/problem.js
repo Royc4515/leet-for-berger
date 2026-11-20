@@ -8,6 +8,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 /**
  * Reference: 0 on any zero, otherwise the parity of the negative count.
@@ -146,6 +147,17 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). No zero anywhere, because a zero ends the loop early; signs are random.
+  growth: {
+    target: 'n',
+    n: 'nums.length',
+    sizes: [32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000],
+    input: (n, seed) => {
+      const rng = mulberry32(seed);
+      return [Array.from({ length: n }, () => (rng() < 0.5 ? -1 : 1) * randInt(rng, 1, 100))];
+    },
+  },
 };
 
 export default problem;

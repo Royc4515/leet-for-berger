@@ -10,6 +10,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100;
 const MAX_V = 1000000000;
@@ -157,6 +158,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Random values up to 10^9 mean nine-digit strings in the comparator, so every comparison builds two concatenations. Length may pass the statement limit of 100.
+  growth: {
+    target: 'n log n',
+    n: 'nums.length',
+    sizes: [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: 0, max: 1e9 })],
+  },
 };
 
 export default problem;

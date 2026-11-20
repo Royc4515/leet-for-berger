@@ -9,6 +9,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const MAX_V = 2147483647;
@@ -155,6 +156,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). n children and n cookies with random sizes: both copies are sorted with a comparator and the matching pass walks both. Values stay below 2^31.
+  growth: {
+    target: 'n log n',
+    n: 'g.length',
+    sizes: [16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: 1, max: 2147483647 }), intArray(n, mulberry32(seed + 1), { min: 1, max: 2147483647 })],
+  },
 };
 
 export default problem;

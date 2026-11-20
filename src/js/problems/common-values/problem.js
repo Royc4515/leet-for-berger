@@ -9,6 +9,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const MAX_V = 1000000000;
@@ -186,6 +187,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Both arrays draw from the same range of 4n values, so a good share of the values are common and the final sort has k = Theta(n) values to order.
+  growth: {
+    target: 'n log n',
+    n: 'nums1.length',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: -2 * n, max: 2 * n }), intArray(n, mulberry32(seed + 1), { min: -2 * n, max: 2 * n })],
+  },
 };
 
 export default problem;
