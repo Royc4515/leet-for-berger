@@ -30,6 +30,13 @@
 - Hill Rearrange (Hard, recursion): the largest string reachable by swapping neighboring balanced substrings; strings up to 1000 characters.
 - Paren Depth (Easy, counting): the deepest bracket nesting of an expression of up to 10^5 characters.
 
+### Added: wave F2-2
+- Rank Boost (LeetCode 2592, Medium, Nvidia): the most positions a reordering of an array can win with a strictly larger value, values up to 10^9; sort and sweep with two pointers, with tie-heavy and all-equal inputs at 10^5 values.
+- Flag Sort (LeetCode 75 idea, Medium): sort an array of 0, 1 and 2 in one pass with three pointers; returns the array instead of rewriting it in place, and 10^5 values rule out quadratic sorts.
+- Squeeze Runs (LeetCode 443 idea, Medium, family string-compression): run-length encode a string (count only when above 1, multi-digit counts); returns the string instead of writing into the character array and returning a length.
+- Same Letters (LeetCode 242, Easy): are two strings rearrangements of each other; one 26-counter table, with set, sum-of-codes and length-only traps and 10^5-character inputs.
+- Crack Palindrome (LeetCode 1328, Medium, Dell and Nvidia): change one letter of a palindrome so it is the smallest non-palindrome, or "" when impossible; the odd-length middle is the trap.
+
 ### Added
 - Companies are ordered for a job search in Israel (`content/israel-hiring.json`, merged into `src/js/data/company-sets.json` at build time by `scripts/content/israel-companies.mjs`; the browser only filters, in `src/js/data/israel-hiring.js`): major employers first (by rankIL, tier, problem count), then those with an Israel office, then the rest. A filter ("Hiring in Israel", the default, "Top in Israel", "All") and a "Major in Israel" / "Israel office" badge sit on every card, and alias spellings (X/Twitter, Snap/Snapchat, Citi/Citigroup...) show as one company with merged problem lists.
 - The mock OA company picker is a searchable chip list with the same ordering and filter, instead of a select of 176 names; the selected company is clearly marked.

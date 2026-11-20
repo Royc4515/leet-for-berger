@@ -311,6 +311,14 @@ const CONTENT_IDS = {
   'remove-duplicates-from-sorted-array': ['unique-prefix', 'verified'],
   'missing-number': ['gap-in-range', 'verified'],
   'find-the-longest-equal-subarray': ['equal-after-deletes', 'verified'],
+  // Wave F2-2, group A
+  'maximize-greatness-of-an-array': ['rank-boost', 'verified'],
+  // Returns the sorted array instead of rewriting it in place.
+  'sort-colors': ['flag-sort', 'verified'],
+  // Returns the compressed string instead of writing into the character array and returning a length.
+  'string-compression': ['squeeze-runs', 'verified'],
+  'valid-anagram': ['same-letters', 'verified'],
+  'break-a-palindrome': ['crack-palindrome', 'verified'],
 };
 
 const WINDOWS = [

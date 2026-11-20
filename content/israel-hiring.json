@@ -1078,6 +1078,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Target": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Tekion": {
    "israel": "none",
    "tier": 3
@@ -1188,6 +1193,11 @@
   "VK": {
    "israel": "none",
    "tier": 3
+  },
+  "VMware": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Walmart Labs": {
    "israel": "present",
