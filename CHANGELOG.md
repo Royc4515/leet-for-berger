@@ -30,6 +30,13 @@
 - Hill Rearrange (Hard, recursion): the largest string reachable by swapping neighboring balanced substrings; strings up to 1000 characters.
 - Paren Depth (Easy, counting): the deepest bracket nesting of an expression of up to 10^5 characters.
 
+### Added: wave F2-2
+- Checkpoint Array (LeetCode 1146 idea, Medium, design): an array with point writes, checkpoints and reads of any past checkpoint; 10^5 calls on 10^5 slots, so copying the array per checkpoint fails.
+- Ring Queue (LeetCode 622 idea, Medium, design): a fixed-capacity queue on one array with push, pop, front, back, isEmpty and isFull; capacity up to 10^5 and 10^5 calls; wrap-around, empty versus full and the capacity-minus-one trap are what the tests probe.
+- Message Throttle (LeetCode 359 idea, Easy, design): show a message at most once per cooldown; the cooldown is a constructor argument instead of a fixed 10 seconds, and refused calls must not extend the ban.
+- Plain Arithmetic (LeetCode 227 idea, Medium, stack): evaluate +, -, *, / with no brackets, up to 3 * 10^5 characters; every product, quotient and running total fits in 32 bits, and a negative stored term must still divide by truncation (Python floor division is a trap).
+- Skyline Block (LeetCode 84 idea, Hard, monotonic stack): the largest rectangle inside a histogram of up to 10^5 bars; areas reach 10^9.
+
 ### Added
 - Companies are ordered for a job search in Israel (`content/israel-hiring.json`, merged into `src/js/data/company-sets.json` at build time by `scripts/content/israel-companies.mjs`; the browser only filters, in `src/js/data/israel-hiring.js`): major employers first (by rankIL, tier, problem count), then those with an Israel office, then the rest. A filter ("Hiring in Israel", the default, "Top in Israel", "All") and a "Major in Israel" / "Israel office" badge sit on every card, and alias spellings (X/Twitter, Snap/Snapchat, Citi/Citigroup...) show as one company with merged problem lists.
 - The mock OA company picker is a searchable chip list with the same ordering and filter, instead of a select of 176 names; the selected company is clearly marked.

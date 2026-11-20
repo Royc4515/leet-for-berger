@@ -311,6 +311,13 @@ const CONTENT_IDS = {
   'remove-duplicates-from-sorted-array': ['unique-prefix', 'verified'],
   'missing-number': ['gap-in-range', 'verified'],
   'find-the-longest-equal-subarray': ['equal-after-deletes', 'verified'],
+  // Wave F2-2, group C
+  'snapshot-array': ['checkpoint-array', 'verified'],
+  'design-circular-queue': ['ring-queue', 'verified'],
+  // The cooldown is a constructor argument instead of the fixed 10 seconds.
+  'logger-rate-limiter': ['message-throttle', 'verified'],
+  'basic-calculator-ii': ['plain-arithmetic', 'verified'],
+  'largest-rectangle-in-histogram': ['skyline-block', 'verified'],
 };
 
 const WINDOWS = [
