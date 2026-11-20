@@ -135,6 +135,15 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). n is the limit itself:
+  // the sieve marks multiples up to n, trial division of every number is about n * sqrt(n) / log n.
+  // The ladder stops at the statement's own limit, 5 * 10^6.
+  growth: {
+    target: 'n log n',
+    n: 'n (the limit)',
+    sizes: [312500, 625000, 1250000, 2500000, 5000000],
+    input: (n) => [n],
+  },
 };
 
 export default problem;

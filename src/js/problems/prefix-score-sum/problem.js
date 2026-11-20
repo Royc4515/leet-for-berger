@@ -169,6 +169,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). All one letter: every
+  // suffix scores n - i, so comparing each suffix with the prefix is n^2 / 2 steps, the Z-function n.
+  growth: {
+    target: 'n',
+    n: 's.length',
+    sizes: [16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    input: (n) => ['a'.repeat(n)],
+  },
 };
 
 export default problem;

@@ -10,6 +10,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 const WINDOW = 10;
 
@@ -161,6 +162,18 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). One random block of
+  // 4000 bases repeated to length n: at most 4000 distinct windows, each seen many times, so the
+  // answer stays at most 4000 strings and the sort does not dominate; one slice and one map update per window.
+  growth: {
+    target: 'n',
+    n: 's.length',
+    sizes: [16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => {
+      const block = charString(Math.min(n, 4000), mulberry32(seed), { alphabet: 'ACGT' });
+      return [block.repeat(Math.ceil(n / block.length)).slice(0, n)];
+    },
+  },
 };
 
 export default problem;

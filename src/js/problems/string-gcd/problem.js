@@ -7,6 +7,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 /**
  * Greatest common divisor of two non-negative integers.
@@ -174,6 +175,19 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Both strings are whole
+  // copies of one random 3-letter base, of lengths 3k and 3(k - 1): they share a divisor string, so
+  // the concatenation test compares the full n + n characters instead of failing at the first one.
+  growth: {
+    target: 'n',
+    n: 'str1.length (str2.length about the same)',
+    sizes: [250000, 500000, 1000000, 2000000, 4000000, 8000000],
+    input: (n, seed) => {
+      const base = charString(3, mulberry32(seed), { alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' });
+      const k = Math.max(2, Math.floor(n / 3));
+      return [base.repeat(k), base.repeat(k - 1)];
+    },
+  },
 };
 
 export default problem;

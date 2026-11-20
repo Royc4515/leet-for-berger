@@ -12,6 +12,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 const MOD = 1000000007n;
 
@@ -201,6 +202,24 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Words of 1 to 12 random
+  // letters joined by single spaces, about n characters in all: every character multiplies both products.
+  growth: {
+    target: 'n',
+    n: 's.length',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000],
+    input: (n, seed) => {
+      const rng = mulberry32(seed);
+      const words = [];
+      let len = 0;
+      while (len < n) {
+        const w = charString(1 + Math.floor(rng() * 12), rng);
+        words.push(w);
+        len += w.length + 1;
+      }
+      return [words.join(' ')];
+    },
+  },
 };
 
 export default problem;

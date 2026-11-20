@@ -9,6 +9,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 /**
  * Reference O(n) solution via the KMP prefix function.
@@ -138,6 +139,19 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). A random 7-letter base
+  // repeated to length n: the string is built from whole copies, so the answer is the base and the
+  // prefix function runs the full length with long borders (a "contains the base" shortcut finds
+  // nothing early).
+  growth: {
+    target: 'n',
+    n: 's.length',
+    sizes: [32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    input: (n, seed) => {
+      const base = charString(7, mulberry32(seed));
+      return [base.repeat(Math.floor(n / 7))];
+    },
+  },
 };
 
 export default problem;

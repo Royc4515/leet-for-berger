@@ -168,6 +168,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). All 'a': the first half
+  // holds nothing to lower, so the scan covers n / 2 letters and then the last letter is raised.
+  growth: {
+    target: 'n',
+    n: 'palindrome.length',
+    sizes: [1000000, 2000000, 4000000, 8000000, 16000000, 32000000],
+    input: (n) => ['a'.repeat(n)],
+  },
 };
 
 export default problem;
