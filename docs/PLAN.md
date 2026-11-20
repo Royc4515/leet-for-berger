@@ -32,7 +32,7 @@ Platform, practice modes and accounts are done. What limits the site now is how 
 |---|---|---|
 | Platform | Done: editor, 15 cases, 8 languages live, dashboard in 0.3 s (ADR 0008) | Small speed steps (F1) |
 | Practice | Done: paths, company practice by Israel hiring, mock OA, daily, weak spots, walkthroughs, battle vs bot | - |
-| Content | 165 problems (131 essential + 34 company problems) | Company waves (F2), growth for all (F3) |
+| Content | 185 problems (131 essential + 54 company problems) | Company waves (F2), growth for all (F3) |
 | Accounts | Done: Google and GitHub sign-in, synced progress, GitHub sync of solutions | Owner check of GitHub sync |
 | AI mentor | Scripted hint ladder | Real LLM mentor (F4, needs a budget decision) |
 | Design | Current look | Dedicated design session (F5) |
@@ -64,7 +64,8 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
 - [x] **F1. Last speed steps (small, one PR):** load views only when opened, and load supabase-js only with a stored session, an auth callback, or a click on Sign in. Fresh `#/`: 50 to 19 local modules, 62 to 22 requests, supabase-js 7 to 0
 - [ ] **F2. Company waves by hiring in Israel (main work, repeating):** each wave adds 15 to 20 of the most-asked problems we lack for the next companies in `content/israel-hiring.json` rank order (Nvidia, Intel, Amdocs, Microsoft, Mobileye, Check Point, Wix, Palo Alto Networks, Apple, Google, ...), counting a family once. Same bar as today: our own wording, 15 cases, 8 verified languages, explanation, family links. Graphs as objects and numbers above 2^53 are built when the first wave needs them, not before
   - [x] Wave 1: 20 problems for Nvidia, Intel, Microsoft, Wix, Palo Alto Networks, Apple and Google (Unfold Brackets, Balanced Pairs, Dotted Quads, Hill Rearrange, Paren Depth, Rot Spread, BST Check, List Mirror, Stone Smash, Streak Watch, Word Order Flip, Digit Flip, Mirror Bits, Next Arrangement, Ring Shift, Sudoku Check, Dominant Value, Unique Prefix, Gap in Range, Equal After Deletes); 145 -> 165 problems. Intel's whole list and Microsoft's top 30 are now covered
-  - [ ] Wave 2: next picks are Nvidia's remaining top 30 (Maximize Greatness, Min Operations to 0, Prefix Xor), Majority Element II, Valid Anagram, Sort Colors, Largest Rectangle, then Apple, Google and Meta
+  - [x] Wave 2: 20 problems (Rank Boost, Flag Sort, Squeeze Runs, Same Letters, Crack Palindrome, Zero by Powers, Undo Running Xor, Fizz Buzz List, Base Four Check, Product Cap Subarrays, Checkpoint Array, Ring Queue, Message Throttle, Plain Arithmetic, Skyline Block, Dictionary Split, Balanced Cuts, Column Sweep, Typeahead Hints, King Path); 165 -> 185. Top 30 now: Nvidia 28/30, Microsoft 30/30, Wix 30/30, Palo Alto 25/30, Apple 29/30
+  - [ ] Wave 3: Meta's gaps (Valid Word Abbreviation, Sum Root to Leaf, Merge Strings Alternately, Remove Nth Node), Palo Alto's (Job Scheduling and others), Qualcomm, Salesforce, Cisco; graphs (Evaluate Division), Capacity to Ship Packages. Blocked until supported: Visible Points (float geometry), Sparse Vector dot product (class-typed argument), Min Cost to Hire K Workers (float result)
 - [ ] **F3. Growth measurement for every problem:** complexity feedback is a core promise and covers 10 problems. Fill targets automatically from the best known complexity and add input generators per problem; new wave problems ship with it
 - [ ] **F4. Real AI mentor:** an LLM behind a Supabase Edge Function with a hard monthly cap, using the system prompt already in `src/js/mentor/mentor.js`. Starts only after the budget decision below
 - [ ] **F5. Design session:** after F1, F3 and the first three F2 waves. A dedicated session (Fable 5.2): a plan per screen, then execution per screen

@@ -311,6 +311,36 @@ const CONTENT_IDS = {
   'remove-duplicates-from-sorted-array': ['unique-prefix', 'verified'],
   'missing-number': ['gap-in-range', 'verified'],
   'find-the-longest-equal-subarray': ['equal-after-deletes', 'verified'],
+  // Wave F2-2, group A
+  'maximize-greatness-of-an-array': ['rank-boost', 'verified'],
+  // Returns the sorted array instead of rewriting it in place.
+  'sort-colors': ['flag-sort', 'verified'],
+  // Returns the compressed string instead of writing into the character array and returning a length.
+  'string-compression': ['squeeze-runs', 'verified'],
+  'valid-anagram': ['same-letters', 'verified'],
+  'break-a-palindrome': ['crack-palindrome', 'verified'],
+  // Wave F2-2, group B
+  'minimum-operations-to-reduce-an-integer-to-0': ['zero-by-powers', 'verified'],
+  'find-the-original-array-of-prefix-xor': ['undo-running-xor', 'verified'],
+  // Limit raised to 10^5 so the answer is a long string array.
+  'fizz-buzz': ['fizz-buzz-list', 'verified'],
+  'power-of-four': ['base-four-check', 'verified'],
+  // The answer is returned as a 64-bit integer: with n up to 10^5 it can reach 5 * 10^9.
+  'subarray-product-less-than-k': ['product-cap-subarrays', 'verified'],
+  // Wave F2-2, group C
+  'snapshot-array': ['checkpoint-array', 'verified'],
+  'design-circular-queue': ['ring-queue', 'verified'],
+  // The cooldown is a constructor argument instead of the fixed 10 seconds.
+  'logger-rate-limiter': ['message-throttle', 'verified'],
+  'basic-calculator-ii': ['plain-arithmetic', 'verified'],
+  'largest-rectangle-in-histogram': ['skyline-block', 'verified'],
+  // Wave F2-2, group D
+  'word-break': ['dictionary-split', 'verified'],
+  // The array can have 10^4 values, so the O(n^2 * k) table times out and the answer needs 64 bits.
+  'split-array-largest-sum': ['balanced-cuts', 'verified'],
+  'binary-tree-vertical-order-traversal': ['column-sweep', 'verified'],
+  'search-suggestions-system': ['typeahead-hints', 'verified'],
+  'shortest-path-in-binary-matrix': ['king-path', 'verified'],
 };
 
 const WINDOWS = [

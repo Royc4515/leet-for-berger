@@ -14,6 +14,11 @@
   ]
  },
  "companies": {
+  "6sense": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Accenture": {
    "israel": "none",
    "tier": 3
@@ -92,6 +97,11 @@
   "Apollo.io": {
    "israel": "none",
    "tier": 3
+  },
+  "AppFolio": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Apple": {
    "israel": "major",
@@ -327,9 +337,19 @@
    "tier": 1,
    "unverified": true
   },
+  "Deepmind": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Delhivery": {
    "israel": "none",
    "tier": 3
+  },
+  "Deliveroo": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Dell": {
    "israel": "major",
@@ -812,6 +832,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Optiver": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Oracle": {
    "israel": "present",
    "tier": 2,
@@ -820,6 +845,11 @@
   "Oscar Health": {
    "israel": "none",
    "tier": 3
+  },
+  "Otter.ai": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "oyo": {
    "israel": "none",
@@ -839,6 +869,11 @@
    "tier": 2,
    "source": "https://www.timesofisrael.com/in-second-biggest-exit-in-israeli-history-palo-alto-buys-cyberark-for-25-billion/",
    "rankIL": 8
+  },
+  "Patreon": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "PayPal": {
    "israel": "present",
@@ -935,6 +970,11 @@
    "israel": "none",
    "tier": 2
   },
+  "Rivian": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Robinhood": {
    "israel": "none",
    "tier": 2
@@ -942,6 +982,11 @@
   "Roblox": {
    "israel": "none",
    "tier": 2,
+   "unverified": true
+  },
+  "Rokt": {
+   "israel": "none",
+   "tier": 3,
    "unverified": true
   },
   "Roku": {
@@ -1026,6 +1071,11 @@
    "israel": "none",
    "tier": 2
   },
+  "Sonatus": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Spacex": {
    "israel": "none",
    "tier": 2,
@@ -1054,6 +1104,11 @@
    "tier": 2,
    "unverified": true
   },
+  "StackAdapt": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Stripe": {
    "israel": "none",
    "tier": 2,
@@ -1078,6 +1133,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Target": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Tekion": {
    "israel": "none",
    "tier": 3
@@ -1091,6 +1151,11 @@
    "israel": "present",
    "tier": 2,
    "source": "https://builtin.com/job/experienced-digital-design-engineer/9660889"
+  },
+  "thoughtspot": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "TikTok": {
    "israel": "none",
@@ -1134,6 +1199,11 @@
    "israel": "none",
    "tier": 2,
    "source": "https://finance.yahoo.com/news/uber-continues-global-expansion-launch-124421772.html"
+  },
+  "UBS": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Udemy": {
    "israel": "none",
@@ -1188,6 +1258,11 @@
   "VK": {
    "israel": "none",
    "tier": 3
+  },
+  "VMware": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Walmart Labs": {
    "israel": "present",
@@ -1280,9 +1355,19 @@
    "tier": 3,
    "source": "https://en.globes.co.il/en/article-1001406519"
   },
+  "Yatra": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Yelp": {
    "israel": "none",
    "tier": 2,
+   "unverified": true
+  },
+  "Yugabyte": {
+   "israel": "none",
+   "tier": 3,
    "unverified": true
   },
   "Zenefits": {
@@ -1315,6 +1400,11 @@
   "Zoom": {
    "israel": "none",
    "tier": 2
+  },
+  "Zoox": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Zopsmart": {
    "israel": "none",

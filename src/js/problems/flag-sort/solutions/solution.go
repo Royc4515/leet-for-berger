@@ -1,0 +1,19 @@
+// O(n) time, O(1) extra space, one pass. [0, lo) holds 0s, [lo, mid) holds 1s, (hi, end] holds 2s,
+// and [mid, hi] is still unknown.
+func flagSort(nums []int) []int {
+	lo, mid, hi := 0, 0, len(nums)-1
+	for mid <= hi {
+		if nums[mid] == 0 {
+			nums[lo], nums[mid] = nums[mid], nums[lo]
+			lo++
+			mid++
+		} else if nums[mid] == 1 {
+			mid++
+		} else {
+			nums[mid], nums[hi] = nums[hi], nums[mid]
+			// mid stays: the value that just arrived from the right end has not been inspected.
+			hi--
+		}
+	}
+	return nums
+}
