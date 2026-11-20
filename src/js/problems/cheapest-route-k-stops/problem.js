@@ -116,6 +116,32 @@ const hiddenArgs = [
   chainWithShortcuts(19),
 ];
 
+/**
+ * n cities on a chain 0 -> 1 -> ... -> n - 1 (price 1), plus about 2n flights that never beat it, with
+ * k = n - 1: every round extends the best route by one city, so none of the n rounds can stop early.
+ */
+function growthFlights(n, rnd) {
+  const flights = [];
+  const seen = new Set();
+  for (let v = 1; v < n; v++) {
+    flights.push([v - 1, v, 1]);
+    seen.add((v - 1) * n + v);
+  }
+  while (flights.length < 3 * n - 3) {
+    const u = Math.floor(rnd() * n);
+    const v = Math.floor(rnd() * n);
+    if (u === v || seen.has(u * n + v)) continue;
+    seen.add(u * n + v);
+    // Any route into v costs at least |v - u| + 1 through the chain, so this flight never improves anything.
+    flights.push([u, v, Math.abs(v - u) + 1 + Math.floor(rnd() * 100)]);
+  }
+  for (let i = flights.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [flights[i], flights[j]] = [flights[j], flights[i]];
+  }
+  return flights;
+}
+
 export const problem = {
   id: 'cheapest-route-k-stops',
   title: 'Cheapest Route Within K Stops',
@@ -231,6 +257,12 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1], args[2], args[3], args[4]),
+  growth: {
+    target: 'n^2',
+    n: 'cities (k = n - 1 and flights = 3n)',
+    sizes: [250, 500, 1000, 2000, 4000, 8000],
+    input: (n, seed) => [n, growthFlights(n, mulberry32(seed)), 0, n - 1, n - 1],
+  },
 };
 
 export default problem;

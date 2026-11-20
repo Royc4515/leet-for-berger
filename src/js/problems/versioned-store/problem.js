@@ -14,6 +14,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 const MAX_CALLS = 200000;
 const MAX_TIME = 10000000;
@@ -307,6 +308,31 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n log n',
+    n: 'number of calls (8 keys, about half of the calls are set)',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    // Timestamps rise by one per set, so each key's versions stay sorted and get binary-searches the whole history.
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const keys = Array.from({ length: 8 }, (_, i) => `key${i}`);
+      const ops = ['TimeMap'];
+      const args = [[]];
+      let time = 0;
+      while (ops.length < n) {
+        const key = keys[randInt(rnd, 0, keys.length - 1)];
+        if (time === 0 || rnd() < 0.5) {
+          time++;
+          ops.push('set');
+          args.push([key, `v${randInt(rnd, 0, 63)}`, time]);
+        } else {
+          ops.push('get');
+          args.push([key, randInt(rnd, 1, time)]);
+        }
+      }
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;

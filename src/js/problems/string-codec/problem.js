@@ -17,6 +17,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString, randInt } from '../../engine/growth-inputs.js';
 
 /** Encodes a list in the prescribed format. */
 function encode(strs) {
@@ -274,6 +275,23 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'total characters in the list (strings of 0 to 40 printable characters; one encode and one decode)',
+    sizes: [16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const alphabet = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).join('');
+      const text = charString(n, rnd, { alphabet });
+      const strs = [];
+      for (let at = 0; at < n; ) {
+        const len = Math.min(randInt(rnd, 0, 40), n - at);
+        strs.push(text.slice(at, at + len));
+        at += len;
+      }
+      return [['Codec', 'encode', 'decode'], [[], [strs], [strs.map((s) => `${s.length}#${s}`).join('')]]];
+    },
+  },
 };
 
 export default problem;

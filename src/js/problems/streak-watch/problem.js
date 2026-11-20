@@ -16,6 +16,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 const MAX_OPS = 100000;
 const MAX_VAL = 1000000000;
@@ -197,6 +198,21 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'number of calls (k = 1000, readings equal the target 99.9% of the time)',
+    sizes: [16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const ops = ['StreakWatch'];
+      const args = [[5, 1000]];
+      while (ops.length < n) {
+        ops.push('observe');
+        args.push([rnd() < 0.999 ? 5 : randInt(rnd, 6, 100)]);
+      }
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;

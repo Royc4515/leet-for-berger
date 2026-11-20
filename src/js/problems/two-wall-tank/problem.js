@@ -10,6 +10,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const MAX_H = 10000;
@@ -172,6 +173,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Random heights: the two pointers drop one wall per step until they meet, so every wall is visited.
+  growth: {
+    target: 'n',
+    n: 'heights.length',
+    sizes: [32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: 0, max: 1e4 })],
+  },
 };
 
 export default problem;

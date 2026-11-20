@@ -12,6 +12,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_N = 300;
 const MAX_V = 100;
@@ -156,6 +157,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Interval DP over every (i, j) pair with every split point: about n^3 / 6 steps. Values stay in 0..100; the length passes the statement limit of 300 because 300 balloons take only a few milliseconds.
+  growth: {
+    target: 'n^3',
+    n: 'nums.length',
+    sizes: [64, 100, 160, 256, 410, 656],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: 0, max: 100 })],
+  },
 };
 
 export default problem;

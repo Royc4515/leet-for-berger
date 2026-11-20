@@ -13,6 +13,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { edgeList, randInt } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const MAX_E = 100000;
@@ -234,6 +235,22 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1], args[2]),
+  growth: {
+    target: 'n log n',
+    n: 'nodes = edges = queries',
+    sizes: [4000, 8000, 16000, 32000, 64000, 128000, 256000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const edges = edgeList(n, n, rnd, { weights: [1, MAX_W] });
+      const queries = [];
+      while (queries.length < n) {
+        const p = randInt(rnd, 0, n - 1);
+        const q = randInt(rnd, 0, n - 1);
+        if (p !== q) queries.push([p, q, randInt(rnd, 1, MAX_W)]);
+      }
+      return [n, edges, queries];
+    },
+  },
 };
 
 export default problem;

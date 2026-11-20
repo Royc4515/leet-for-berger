@@ -14,6 +14,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MOD = 1_000_000_007;
 const MAX_AMOUNT = 5000;
@@ -168,6 +169,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). The target is amount * coins.length. amount is capped at 5000 and 300 coins take only a few milliseconds, so the coin count grows (distinct denominations in 1..5000, up to every value): amount stays 5000 and every coin sweeps about half the table.
+  growth: {
+    target: 'n',
+    n: 'coins.length',
+    sizes: [313, 625, 1250, 2500, 5000],
+    input: (n, seed) => [5000, intArray(n, mulberry32(seed), { min: 1, max: 5000, distinct: true })],
+  },
 };
 
 export default problem;

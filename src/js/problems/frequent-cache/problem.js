@@ -14,6 +14,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 const MAX_CAPACITY = 100000;
 const MAX_KEY = 100000;
@@ -307,6 +308,27 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'number of calls (capacity 5000, keys 0..10000, so the cache stays full)',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const ops = ['LfuCache'];
+      const args = [[5000]];
+      while (ops.length < n) {
+        const key = randInt(rnd, 0, 10000);
+        if (rnd() < 0.5) {
+          ops.push('get');
+          args.push([key]);
+        } else {
+          ops.push('put');
+          args.push([key, randInt(rnd, 0, MAX_VALUE)]);
+        }
+      }
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;

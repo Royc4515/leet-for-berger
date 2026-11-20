@@ -21,8 +21,13 @@ function minLargestPart(nums, k) {
   };
   // No cap below the largest value can hold that value, and the total always fits in one part.
   // Totals reach 10^10, which a double holds exactly.
-  let low = Math.max(...nums);
-  let high = nums.reduce((a, b) => a + b, 0);
+  // A loop instead of Math.max(...nums): spreading tens of thousands of arguments risks the call stack limit.
+  let low = 0;
+  let high = 0;
+  for (const v of nums) {
+    if (v > low) low = v;
+    high += v;
+  }
   while (low < high) {
     const mid = Math.floor((low + high) / 2);
     if (fits(mid)) high = mid;

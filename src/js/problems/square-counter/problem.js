@@ -16,6 +16,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 const MAX_COORD = 1000;
 const MAX_CALLS = 50000;
@@ -265,6 +266,22 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'number of calls (98% add, 2% count; points in 4 columns, so a count scans at most 1001 points)',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    // A count walks the distinct points of its column: the coordinate limit bounds that at 1001, so the cost per call stops growing once the columns fill.
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const ops = ['SquareCounter'];
+      const args = [[]];
+      while (ops.length < n) {
+        ops.push(rnd() < 0.98 ? 'add' : 'count');
+        args.push([[randInt(rnd, 0, 3), randInt(rnd, 0, MAX_COORD)]]);
+      }
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;
