@@ -19,6 +19,14 @@
 ### Changed
 - The growth verifier (`tests/growth-solutions.test.js`) checks each problem in its own worker thread that loads only that problem, as the browser does. Loading all problems first kept about 1.5 GB alive, and collecting it during timed calls bent the curves; the file now passes without retries on the 30 problems and runs in about 65 s instead of about 120 s.
 
+### Added: wave F2-3
+- Drop From Tail (LeetCode 19 idea, Medium): remove the n-th node from the end of a linked list in one pass, lists up to 10^5 nodes; two pointers n apart behind a placeholder node, with the head, the tail, equal values and 10^5-node lists in the tests.
+- Tidy Path (LeetCode 71 idea, Medium): canonical form of an absolute Unix path, limit raised from 3000 to 10^5 characters so repeated string replacement is too slow; a stack of names, where `...` and `.hidden` are ordinary names and `..` at the root does nothing.
+- Text To Int (LeetCode 8 idea, Medium): the atoi parser with a 32-bit clamp, text raised from 200 to 10^5 characters; the result is always inside int32, so only the running value needs a guard, with both bounds, 4294967297 and 10^5-digit runs in the tests.
+- Shoreline View (LeetCode 1762 idea, Medium): which buildings see the sea past the last one (strictly taller than everything to the right), indices increasing; a monotonic stack, with a strictly decreasing row of 10^5 where every building has a view.
+- Digit Path Total (LeetCode 129 idea, Medium, family root-to-leaf): sum of the numbers read along root-to-leaf paths, tree input like BST Check; height at most 10 and a guaranteed 32-bit total (the longest path in the tests reads 2147483647), and trees whose total would overflow have their top levels zeroed.
+- Each ships with a growth spec (ADR 0004), 8 verified solutions and a unit test showing the classic wrong answers fail.
+
 ### Added: wave F2-2 (20 problems asked by companies hiring in Israel, docs/PLAN.md F2)
 - Zero By Powers (LeetCode 2571 idea, Medium): fewest +-2^k steps from n to 0, n up to 10^9; counting 1 bits and subtracting the largest power both fail, and the bit rule (carry through a run of 1s) is O(log n).
 - Undo Running Xor (LeetCode 2433 idea, Medium): recover an array from its running XORs, 10^5 values up to 10^9; neighbor XOR in O(n), where rebuilding each prefix needs about 5 * 10^9 XORs.

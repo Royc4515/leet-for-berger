@@ -341,6 +341,14 @@ const CONTENT_IDS = {
   'binary-tree-vertical-order-traversal': ['column-sweep', 'verified'],
   'search-suggestions-system': ['typeahead-hints', 'verified'],
   'shortest-path-in-binary-matrix': ['king-path', 'verified'],
+  // Wave F2-3, group B
+  'remove-nth-node-from-end-of-list': ['drop-from-tail', 'verified'],
+  'simplify-path': ['tidy-path', 'verified'],
+  // The result is already inside int32; only the running value needs a guard, and the text can be 10^5 characters.
+  'string-to-integer-atoi': ['text-to-int', 'verified'],
+  'buildings-with-an-ocean-view': ['shoreline-view', 'verified'],
+  // Height at most 10 and a guaranteed 32-bit total, so every harness can sum in an int.
+  'sum-root-to-leaf-numbers': ['digit-path-total', 'verified'],
 };
 
 const WINDOWS = [
