@@ -73,8 +73,8 @@ export const GROWTH_EXCLUSIONS = {
 export const GROWTH_PENDING = [
   'bucket-map', 'column-sweep', 'course-finish-time', 'dictionary-split', 'digit-list-sum', 'fizz-buzz-list',
   'gap-in-range', 'grid-duel', 'hill-rearrange', 'jump-reach', 'justify-lines', 'list-loop', 'lone-number',
-  'prefix-tree', 'random-link-copy', 'ring-shift', 'rotate-grid', 'ticket-itinerary', 'trade-cooldown',
-  'two-color-check', 'unfold-brackets', 'word-order-flip',
+  'prefix-tree', 'random-link-copy', 'ring-shift', 'rotate-grid', 'start-value-floor', 'ticket-itinerary',
+  'trade-cooldown', 'two-color-check', 'unfold-brackets', 'word-order-flip',
 ];
 
 /**

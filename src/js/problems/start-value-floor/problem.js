@@ -8,7 +8,6 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
-import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const MAX_ABS = 10000;
@@ -150,16 +149,6 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
-
-  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Seeded noise in the
-  // full value range: one pass over the numbers, the answer stays near 10^4 * sqrt(n). The ladder
-  // stops at 4096000: copying a larger array into the worker for every run takes longer than the budget.
-  growth: {
-    target: 'n',
-    n: 'nums.length',
-    sizes: [64000, 128000, 256000, 512000, 1024000, 2048000, 4096000],
-    input: (n, seed) => [intArray(n, mulberry32(seed), { min: -MAX_ABS, max: MAX_ABS })],
-  },
 };
 
 export default problem;
