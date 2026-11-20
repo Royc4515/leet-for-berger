@@ -173,9 +173,49 @@ growth: {
 },
 ```
 
-Pilot problems: Pair Sum Target, Longest Streak, Top K Frequent, Zero Triplets (`n^2`), Warmer Days, Subarray Sum K, Island Count (grid, n = cells), Level Order (TreeNode), Median Stream (design, n = calls), Rising Chain (`n log n`).
+Pilot problems: Pair Sum Target, Longest Streak, Top K Frequent, Zero Triplets (`n^2`), Warmer Days, Subarray Sum K, Island Count (grid, n = cells), Level Order (TreeNode), Median Stream (design, n = calls), Rising Chain (`n log n`). Examples per input shape since F3: Rain Trap and Window Maximums (int array), Bracket Check and First Match Index (string), Edit Steps (`n^2`, two strings), Rot Spread (grid), Merge Ranges and Meeting Room Minimizer (intervals), Course Order (edge list), Tree Height and BST Check (tree), Reverse List and Merge Many Lists (linked lists), Recent Cache (design).
 
 The estimate is coarse: `n` and `n log n` both read as linear, `n^2` and `n^2 log n` as quadratic. Pick the target from the statement's "Target complexity" line.
+
+### Coverage and exclusions
+
+Every problem is in exactly one state, and `tests/growth-coverage.test.js` fails otherwise:
+
+- **covered**: it has a valid `growth` spec;
+- **excluded**: it is listed in `scripts/content/growth-exclusions.mjs` (`GROWTH_EXCLUSIONS`) with a reason and a one-line why, or excluded by kind (SQL);
+- **pending**: it is on `GROWTH_PENDING`, the F3 backlog. The list may only shrink: the test holds a ceiling, and a pending problem that gains `growth` must leave the list (lower the ceiling in the same change). New problems ship covered or excluded, never pending.
+
+Exclusion reasons (the whole policy, one place):
+
+| Reason | When | Examples |
+|---|---|---|
+| `sql` | SQL problems: the query runs in sql.js, ADR 0004 times functions and classes | all SQL problems, by kind |
+| `fixed-size` | the input cannot grow: one machine integer, a fixed board, a fixed state space | Bit Count, Digit Flip, Sudoku Check, Lock Steps |
+| `output-bound` | the answer lists every combination, so the output size decides the time | Subset Builder, All Orderings, Keypad Words, Balanced Pairs |
+| `backtracking` | exponential search on a tiny n, or time that depends on the contents more than the size | Grid Word, Board Words, Visit All Nodes |
+| `sublinear` | the target is O(log n): one call takes microseconds, under the 1 ms the estimator needs | Rotated Search, Target Range, Mountain Peak |
+
+Design problems are in scope (n = calls), and so are problems whose n is a value (Prime Count), as long as the value can grow to measurable times within its constraint.
+
+`node scripts/content/growth-coverage.mjs` lists the pending problems grouped by input shape, with our target, the best known complexity (`src/js/data/problem-meta.json`) and a suggested target, so a spec starts from data. `--all` adds covered and excluded problems, `--markdown` prints the grouped list for docs/PLAN.md, and ids limit the report. It never writes problem files: the author confirms the target with the verifier.
+
+### Input helpers
+
+`src/js/engine/growth-inputs.js` builds the common shapes in O(n) from `mulberry32(seed)`, in the judge's JSON forms. Each takes the size first and the generator second, and options carry the problem's rules:
+
+| Helper | Builds |
+|---|---|
+| `intArray(n, rng, { min, max, distinct, sorted })` | n integers; `distinct` draws without replacement, `sorted` ascending |
+| `charString(n, rng, { alphabet })` | a string of n characters |
+| `stringList(n, rng, { minLen, maxLen, alphabet, distinct })` | n strings |
+| `grid(n, rng, { rows, cols, cells, weights, as })`, `intGrid(n, rng, { min, max })` | about n cells, square unless rows or cols is given; `as: 'strings'` joins rows |
+| `levelTree(n, rng, { shape, maxHeight, min, max, bst })` | a level-order tree with nulls; `complete`, or `random` (height about 4.3 ln n, capped by `maxHeight`); `bst` assigns distinct values in in-order order |
+| `linkedList(n, rng, opts)` | a list's values, head first (same options as `intArray`) |
+| `intervals(n, rng, { min, max, minLength, maxLength, sorted, disjoint })` | n `[start, end]` pairs |
+| `edgeList(nodes, edges, rng, { directed, acyclic, connected, weights, oneBased })` | no self loops or duplicates; `acyclic` is a DAG, `connected` starts from a spanning tree |
+| `randInt`, `shuffle`, `gridShape` | small building blocks |
+
+Use them when the shape is generic; keep the problem's own generator when it encodes a rule the helpers do not know (Product Except Self keeps every product in 32 bits, Rot Spread's snake makes the answer about n / 2 minutes, Recent Cache's session fills the cache first).
 
 ### Writing a good generator
 
@@ -191,16 +231,18 @@ The estimate is coarse: `n` and `n log n` both read as linear, `n^2` and `n^2 lo
 
 - A doubling ladder, strictly ascending, at least 4 sizes spanning at least 8x. Start low enough that a naive solution one class above the target still gets 3 or 4 sizes before it is stopped at about 1 s per call (Zero Triplets starts at 250 so a cubic solution is measured), and end where the shipped JavaScript solution takes roughly 5 to 200 ms.
 - Only sizes whose median takes at least 1 ms count, and the slope is read on the largest 4 of them.
+- Code that allocates an object per element (pairs, small arrays) reads steeper than linear once a call's allocations outgrow the young generation, around 3 * 10^4 to 10^5 objects in Node: Merge Ranges copies and sorts n pairs and read 1.45 at 10^5 to 2.5 * 10^5, so its ladder stops at 64000. If even the sizes under that step are too fast to time (Column Sweep), leave the problem pending and say so in docs/PLAN.md rather than loosening anything.
 - Measure with the verifier while you tune: `VERIFY_LANGUAGES=javascript node --test tests/growth-solutions.test.js` prints each size's median and the slope.
 
 ### Checklist for adding `growth` to a problem
 
-1. Read the statement's "Target complexity" and pick the `target` string; write `n` as the user would name it.
-2. Write `input(n, seed)` from the guidelines above, reusing the problem's own seeded generators; add a comment saying why the input is a worst case.
+1. Read the statement's "Target complexity" and pick the `target` string (`node scripts/content/growth-coverage.mjs <id>` suggests one); write `n` as the user would name it.
+2. Write `input(n, seed)` from the guidelines above, with the input helpers or the problem's own seeded generators; add a comment saying why the input is a worst case.
 3. Choose `sizes` (doubling, 5 to 200 ms for the shipped JS solution at the top).
-4. Run `VERIFY_LANGUAGES=javascript node --test tests/growth-solutions.test.js`: spec valid, input deterministic and judged like a real case, shipped solution `matches`. If it reads inconclusive, look at the printed medians: a dip or jump at one size is JIT or GC noise (rerun), a curve that bends up at the top is memory growth (lower the top size), times under 1 ms need larger sizes.
+4. Run `VERIFY_LANGUAGES=javascript node --test tests/growth-solutions.test.js`: spec valid, input deterministic and judged like a real case, shipped solution `matches`. Each problem runs in its own worker thread that loads only that problem, as in the browser. If it reads inconclusive, look at the printed medians: a dip or jump at one size is JIT or GC noise (rerun), a curve that bends up at the top is memory growth (lower the top size), times under 1 ms need larger sizes. Never loosen the target to make it pass; if the shipped solution is slower than its target, that is a finding.
 5. Optional but recommended: time a deliberately naive solution and confirm it reads `slower than target`.
-6. `npm test` and, if the problem is in the e2e test, `npm run test:e2e`.
+6. Remove the id from `GROWTH_PENDING` and lower `PENDING_CEILING` in `tests/growth-coverage.test.js`.
+7. `npm test` and, if the problem is in the e2e test, `npm run test:e2e`.
 
 ## Test design checklist
 
