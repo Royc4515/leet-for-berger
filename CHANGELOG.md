@@ -2,18 +2,33 @@
 
 ## [Unreleased]
 
-### Fixed
-- Phone layout: every page scrolled sideways at 390px (scrollWidth about 550) because the body grid's implicit column grew to the header's max-content width and pushed the page past the viewport, clipping company chips and statements. The column is now pinned to the viewport and the header nav scrolls sideways on its own. The mobile e2e step asserts no horizontal overflow on the main routes.
-
-### Added
-- Startup-graph guard (`tests/startup-graph.test.js`): walks the static imports from `main.js` and fails if views, problem modules, the engine or runners creep into the first-load graph, or the graph grows past a cap.
-
-### Added: wave F2-2
+### Added: wave F2-2 (20 problems asked by companies hiring in Israel, docs/PLAN.md F2)
 - Zero By Powers (LeetCode 2571 idea, Medium): fewest +-2^k steps from n to 0, n up to 10^9; counting 1 bits and subtracting the largest power both fail, and the bit rule (carry through a run of 1s) is O(log n).
 - Undo Running Xor (LeetCode 2433 idea, Medium): recover an array from its running XORs, 10^5 values up to 10^9; neighbor XOR in O(n), where rebuilding each prefix needs about 5 * 10^9 XORs.
 - Fizz Buzz List (LeetCode 412 idea, Easy): the classic warm-up with n raised to 10^5 and the answer a string array; the check order is the only trap.
 - Base Four Check (LeetCode 342 idea, Easy): is a signed 32-bit int a power of four; one-bit test plus an even-position mask, with the extremes -2^31 and 2^31 - 1 in the tests.
 - Product Cap Subarrays (LeetCode 713 idea, Medium): count subarrays with product below k for 10^5 values up to 10^4 and k up to 10^9; a sliding window whose 64-bit product stays under 10^13, and the count (up to 5,000,050,000) is returned as a 64-bit integer.
+- Dictionary Split (LeetCode 139 idea, Medium, family word-break): can a text of up to 2000 letters be cut into dictionary words, each reusable; a prefix table, with `aaa...ab` at full length ruling out plain recursion and small dictionaries ruling out longest-first and shortest-first.
+- Balanced Cuts (LeetCode 410 idea, Hard, family split-array-largest-sum): cut up to 10^4 non-negative values into k parts to minimize the largest sum; binary search on the answer, with limits raised so the O(n^2 k) table times out and the answer is a 64-bit `long` (sums reach 10^10).
+- Column Sweep (LeetCode 314 idea, Medium, family vertical-order): a binary tree read column by column, top-down, ties left to right (not by value); tree input like BST Check, trees up to 10^4 nodes and height 500, including a tree where a depth-first walk orders a column wrongly.
+- Typeahead Hints (LeetCode 1268 idea, Medium): up to three dictionary-order suggestions after each typed letter, from up to 5 * 10^4 names; sort once and binary search (or a trie), with lists where every name shares a long prefix.
+- King Path (LeetCode 1091 idea, Medium): shortest route in cells across an n x n grid with eight-direction moves, up to 300 x 300; BFS by waves, with a winding corridor of about 45,000 cells and blocked-corner cases.
+- Rank Boost (LeetCode 2592, Medium, Nvidia): the most positions a reordering of an array can win with a strictly larger value, values up to 10^9; sort and sweep with two pointers, with tie-heavy and all-equal inputs at 10^5 values.
+- Flag Sort (LeetCode 75 idea, Medium): sort an array of 0, 1 and 2 in one pass with three pointers; returns the array instead of rewriting it in place, and 10^5 values rule out quadratic sorts.
+- Squeeze Runs (LeetCode 443 idea, Medium, family string-compression): run-length encode a string (count only when above 1, multi-digit counts); returns the string instead of writing into the character array and returning a length.
+- Same Letters (LeetCode 242, Easy): are two strings rearrangements of each other; one 26-counter table, with set, sum-of-codes and length-only traps and 10^5-character inputs.
+- Crack Palindrome (LeetCode 1328, Medium, Dell and Nvidia): change one letter of a palindrome so it is the smallest non-palindrome, or "" when impossible; the odd-length middle is the trap.
+- Checkpoint Array (LeetCode 1146 idea, Medium, design): an array with point writes, checkpoints and reads of any past checkpoint; 10^5 calls on 10^5 slots, so copying the array per checkpoint fails.
+- Ring Queue (LeetCode 622 idea, Medium, design): a fixed-capacity queue on one array with push, pop, front, back, isEmpty and isFull; capacity up to 10^5 and 10^5 calls; wrap-around, empty versus full and the capacity-minus-one trap are what the tests probe.
+- Message Throttle (LeetCode 359 idea, Easy, design): show a message at most once per cooldown; the cooldown is a constructor argument instead of a fixed 10 seconds, and refused calls must not extend the ban.
+- Plain Arithmetic (LeetCode 227 idea, Medium, stack): evaluate +, -, *, / with no brackets, up to 3 * 10^5 characters; every product, quotient and running total fits in 32 bits, and a negative stored term must still divide by truncation (Python floor division is a trap).
+- Skyline Block (LeetCode 84 idea, Hard, monotonic stack): the largest rectangle inside a histogram of up to 10^5 bars; areas reach 10^9.
+
+### Fixed
+- Phone layout: every page scrolled sideways at 390px (scrollWidth about 550) because the body grid's implicit column grew to the header's max-content width and pushed the page past the viewport, clipping company chips and statements. The column is now pinned to the viewport and the header nav scrolls sideways on its own. The mobile e2e step asserts no horizontal overflow on the main routes.
+
+### Added
+- Startup-graph guard (`tests/startup-graph.test.js`): walks the static imports from `main.js` and fails if views, problem modules, the engine or runners creep into the first-load graph, or the graph grows past a cap.
 
 ### Added: wave F2-1 (20 problems asked by companies hiring in Israel, docs/PLAN.md F2)
 - Word Order Flip (LeetCode 151 idea, Medium): reverse the order of the words in a line with sloppy spacing; 10^5 characters, so split-and-reverse leaves empty words and prepending is quadratic.
@@ -36,18 +51,6 @@
 - Dotted Quads (Medium, backtracking): every way to insert three dots into a digit string to form a valid address, in dictionary order.
 - Hill Rearrange (Hard, recursion): the largest string reachable by swapping neighboring balanced substrings; strings up to 1000 characters.
 - Paren Depth (Easy, counting): the deepest bracket nesting of an expression of up to 10^5 characters.
-
-### Added: wave F2-2
-- Rank Boost (LeetCode 2592, Medium, Nvidia): the most positions a reordering of an array can win with a strictly larger value, values up to 10^9; sort and sweep with two pointers, with tie-heavy and all-equal inputs at 10^5 values.
-- Flag Sort (LeetCode 75 idea, Medium): sort an array of 0, 1 and 2 in one pass with three pointers; returns the array instead of rewriting it in place, and 10^5 values rule out quadratic sorts.
-- Squeeze Runs (LeetCode 443 idea, Medium, family string-compression): run-length encode a string (count only when above 1, multi-digit counts); returns the string instead of writing into the character array and returning a length.
-- Same Letters (LeetCode 242, Easy): are two strings rearrangements of each other; one 26-counter table, with set, sum-of-codes and length-only traps and 10^5-character inputs.
-- Crack Palindrome (LeetCode 1328, Medium, Dell and Nvidia): change one letter of a palindrome so it is the smallest non-palindrome, or "" when impossible; the odd-length middle is the trap.
-- Checkpoint Array (LeetCode 1146 idea, Medium, design): an array with point writes, checkpoints and reads of any past checkpoint; 10^5 calls on 10^5 slots, so copying the array per checkpoint fails.
-- Ring Queue (LeetCode 622 idea, Medium, design): a fixed-capacity queue on one array with push, pop, front, back, isEmpty and isFull; capacity up to 10^5 and 10^5 calls; wrap-around, empty versus full and the capacity-minus-one trap are what the tests probe.
-- Message Throttle (LeetCode 359 idea, Easy, design): show a message at most once per cooldown; the cooldown is a constructor argument instead of a fixed 10 seconds, and refused calls must not extend the ban.
-- Plain Arithmetic (LeetCode 227 idea, Medium, stack): evaluate +, -, *, / with no brackets, up to 3 * 10^5 characters; every product, quotient and running total fits in 32 bits, and a negative stored term must still divide by truncation (Python floor division is a trap).
-- Skyline Block (LeetCode 84 idea, Hard, monotonic stack): the largest rectangle inside a histogram of up to 10^5 bars; areas reach 10^9.
 
 ### Added
 - Companies are ordered for a job search in Israel (`content/israel-hiring.json`, merged into `src/js/data/company-sets.json` at build time by `scripts/content/israel-companies.mjs`; the browser only filters, in `src/js/data/israel-hiring.js`): major employers first (by rankIL, tier, problem count), then those with an Israel office, then the rest. A filter ("Hiring in Israel", the default, "Top in Israel", "All") and a "Major in Israel" / "Israel office" badge sit on every card, and alias spellings (X/Twitter, Snap/Snapchat, Citi/Citigroup...) show as one company with merged problem lists.

@@ -846,6 +846,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Otter.ai": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "oyo": {
    "israel": "none",
    "tier": 3
@@ -1066,6 +1071,11 @@
    "israel": "none",
    "tier": 2
   },
+  "Sonatus": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Spacex": {
    "israel": "none",
    "tier": 2,
@@ -1189,6 +1199,11 @@
    "israel": "none",
    "tier": 2,
    "source": "https://finance.yahoo.com/news/uber-continues-global-expansion-launch-124421772.html"
+  },
+  "UBS": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Udemy": {
    "israel": "none",
@@ -1348,6 +1363,11 @@
   "Yelp": {
    "israel": "none",
    "tier": 2,
+   "unverified": true
+  },
+  "Yugabyte": {
+   "israel": "none",
+   "tier": 3,
    "unverified": true
   },
   "Zenefits": {
