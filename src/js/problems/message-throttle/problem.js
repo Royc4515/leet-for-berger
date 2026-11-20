@@ -19,6 +19,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 const MAX_CALLS = 100000;
 const MAX_TIME = 1000000000;
@@ -253,6 +254,24 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'number of calls (1000 distinct messages, cooldown 50, time moves forward by 0 to 3 per call)',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const names = Array.from({ length: 1000 }, (_, i) => 'm' + String.fromCharCode(97 + (i % 26), 97 + (Math.floor(i / 26) % 26), 97 + Math.floor(i / 676)));
+      const ops = ['MessageThrottle'];
+      const args = [[50]];
+      let time = 0;
+      while (ops.length < n) {
+        time += randInt(rnd, 0, 3);
+        ops.push('allow');
+        args.push([time, names[randInt(rnd, 0, names.length - 1)]]);
+      }
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;

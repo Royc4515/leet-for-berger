@@ -10,6 +10,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 const INT_MIN = -2147483648;
 const INT_MAX = 2147483647;
@@ -273,6 +274,34 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'number of calls',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    // Pushes lead (50%) so the stack stays non-empty and grows; pop, top and getMin follow the rules.
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const ops = ['MinStack'];
+      const args = [[]];
+      let size = 0;
+      while (ops.length < n) {
+        const r = rnd();
+        if (size === 0 || r < 0.5) {
+          ops.push('push');
+          args.push([randInt(rnd, -2147483648, 2147483647)]);
+          size++;
+        } else if (r < 0.7) {
+          ops.push('pop');
+          args.push([]);
+          size--;
+        } else {
+          ops.push(r < 0.85 ? 'top' : 'getMin');
+          args.push([]);
+        }
+      }
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;

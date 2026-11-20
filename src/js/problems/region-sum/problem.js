@@ -11,6 +11,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intGrid, randInt } from '../../engine/growth-inputs.js';
 
 const MAX_DIM = 200;
 const MAX_ABS = 10000;
@@ -261,6 +262,26 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'number of calls (a fixed 200 x 200 matrix, so building it is a constant)',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const matrix = intGrid(MAX_DIM * MAX_DIM, rnd, { rows: MAX_DIM, cols: MAX_DIM, min: -MAX_ABS, max: MAX_ABS });
+      const ops = ['NumMatrix'];
+      const args = [[matrix]];
+      while (ops.length < n) {
+        const r1 = randInt(rnd, 0, MAX_DIM - 1);
+        const r2 = randInt(rnd, r1, MAX_DIM - 1);
+        const c1 = randInt(rnd, 0, MAX_DIM - 1);
+        const c2 = randInt(rnd, c1, MAX_DIM - 1);
+        ops.push('sumRegion');
+        args.push([r1, c1, r2, c2]);
+      }
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;

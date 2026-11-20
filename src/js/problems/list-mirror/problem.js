@@ -14,6 +14,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { linkedList } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 
@@ -73,6 +74,13 @@ const hiddenInputs = [
   broken(palindrome(47, MAX_N), 1),
   palindrome(53, MAX_N),
 ];
+
+/** A palindrome of n digits: the comparison never finds a mismatch, so every pair is checked. */
+function growthPalindrome(n, rnd) {
+  const half = linkedList(Math.floor(n / 2), rnd, { min: 0, max: 9 });
+  const middle = n % 2 === 1 ? [Math.floor(rnd() * 10)] : [];
+  return [...half, ...middle, ...half.slice().reverse()];
+}
 
 export const problem = {
   id: 'list-mirror',
@@ -170,6 +178,12 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  growth: {
+    target: 'n',
+    n: 'number of nodes',
+    sizes: [16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    input: (n, seed) => [growthPalindrome(n, mulberry32(seed))],
+  },
 };
 
 export default problem;

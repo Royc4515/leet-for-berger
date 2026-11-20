@@ -12,6 +12,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray, randInt } from '../../engine/growth-inputs.js';
 
 const INT_MIN = -2147483648;
 const INT_MAX = 2147483647;
@@ -253,6 +254,35 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'number of calls (values drawn from a pool of 50000)',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const pool = intArray(50000, rnd, { min: -2147483648, max: 2147483647, distinct: true });
+      const members = new Set();
+      const ops = ['RandomizedSet'];
+      const args = [[]];
+      while (ops.length < n) {
+        const v = pool[randInt(rnd, 0, pool.length - 1)];
+        const r = rnd();
+        if (r < 0.35) {
+          ops.push('insert');
+          args.push([v]);
+          members.add(v);
+        } else if (r < 0.6) {
+          ops.push('remove');
+          args.push([v]);
+          members.delete(v);
+        } else if (members.size > 0) {
+          ops.push('getRandom');
+          args.push([]);
+        }
+      }
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;
