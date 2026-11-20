@@ -235,6 +235,34 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1], args[2]),
+
+  // A connected dictionary of n six-letter words (each new word differs from a random earlier one
+  // by one letter, letters a to y) and an end word of z's that has no neighbour: the search must
+  // visit every word before it gives up. Word length stays fixed, so n is the word count; comparing
+  // every pair of words for neighbours is n^2.
+  growth: {
+    target: 'n',
+    n: 'wordList.length',
+    sizes: [1000, 2000, 4000, 8000, 16000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const pick = (k) => Math.floor(rnd() * k);
+      const len = 6;
+      const words = ['a'.repeat(len)];
+      const seen = new Set(words);
+      while (words.length < n) {
+        const base = words[pick(words.length)];
+        const at = pick(len);
+        const word = base.slice(0, at) + String.fromCharCode(97 + pick(25)) + base.slice(at + 1);
+        if (!seen.has(word)) {
+          seen.add(word);
+          words.push(word);
+        }
+      }
+      const end = 'z'.repeat(len);
+      return [words[0], end, shuffle([...words.slice(1), end], rnd)];
+    },
+  },
 };
 
 export default problem;

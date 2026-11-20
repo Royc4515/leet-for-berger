@@ -162,6 +162,20 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // A square grid of n cells: the walk reads every cell once. Rows are built with Array.from:
+  // packed arrays copy about 4 times faster than holey ones, and every timed call pays for a copy
+  // of the grid outside the clock.
+  growth: {
+    target: 'n',
+    n: 'matrix.length * matrix[0].length',
+    sizes: [131072, 262144, 524288, 1048576, 2097152],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const side = Math.round(Math.sqrt(n));
+      return [Array.from({ length: side }, () => Array.from({ length: side }, () => Math.floor(rnd() * (2 * MAX_ABS + 1)) - MAX_ABS))];
+    },
+  },
 };
 
 export default problem;

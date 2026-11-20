@@ -71,14 +71,10 @@ export const GROWTH_EXCLUSIONS = {
  * scripts/content/growth-coverage.mjs groups them by input shape for the next batches.
  */
 export const GROWTH_PENDING = [
-  'account-merge', 'anagram-buckets', 'bucket-map', 'caesar-groups', 'column-sweep', 'course-finish-time',
-  'dictionary-split', 'digit-list-sum', 'fizz-buzz-list', 'gap-in-range', 'glyph-order',
-  'growing-word-chain', 'hill-rearrange', 'jump-reach', 'justify-lines', 'king-path', 'life-step',
-  'list-loop', 'lone-number', 'notify-recipients', 'obstacle-clearing', 'overlap-trim', 'palindrome-joins',
-  'point-wiring', 'postfix-eval', 'prefix-tree', 'random-link-copy', 'range-bookings', 'range-cover',
-  'ring-shift', 'rotate-grid', 'shared-prefix', 'skyline-outline', 'spiral-order', 'suspicious-payments',
-  'ticket-itinerary', 'trade-cooldown', 'two-color-check', 'typeahead-hints', 'unfold-brackets',
-  'uphill-path', 'word-morph', 'word-order-flip', 'zero-rows-cols',
+  'bucket-map', 'column-sweep', 'course-finish-time', 'dictionary-split', 'digit-list-sum', 'fizz-buzz-list',
+  'gap-in-range', 'hill-rearrange', 'jump-reach', 'justify-lines', 'list-loop', 'lone-number', 'prefix-tree',
+  'random-link-copy', 'ring-shift', 'rotate-grid', 'ticket-itinerary', 'trade-cooldown', 'two-color-check',
+  'unfold-brackets', 'word-order-flip',
 ];
 
 /**

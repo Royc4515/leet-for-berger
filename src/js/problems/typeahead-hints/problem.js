@@ -235,6 +235,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Distinct names that all start with the same 22 letters, and a search word that follows them
+  // for 28 letters: sorting compares long shared stretches and every prefix has matches to read.
+  // Scanning the whole list for every prefix is n * 28.
+  growth: {
+    target: 'n log n',
+    n: 'products.length',
+    sizes: [4000, 8000, 16000, 32000, 64000, 128000],
+    input: (n, seed) => [sharedPrefixNames(seed, n, 'abcdefghijklmnopqrstuvwxyz'), `${'z'.repeat(22)}abcdef`],
+  },
 };
 
 export default problem;

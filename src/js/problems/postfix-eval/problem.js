@@ -237,6 +237,22 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // All operands first, then alternating + and -: the stack grows to n / 2 and no token ends the
+  // run early, and the values stay below 200 * n / 2. An evaluator that rescans for the first
+  // operator and splices the three tokens out is n^2 on this shape.
+  growth: {
+    target: 'n',
+    n: 'tokens.length',
+    sizes: [32000, 64000, 128000, 256000, 512000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const operands = n >> 1;
+      const tokens = Array.from({ length: operands }, () => String(Math.floor(rnd() * (2 * MAX_OPERAND + 1)) - MAX_OPERAND));
+      for (let i = 1; i < operands; i++) tokens.push(i % 2 ? '+' : '-');
+      return [tokens];
+    },
+  },
 };
 
 export default problem;

@@ -181,6 +181,17 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // A square board of n cells at 50% density: every cell counts its 8 neighbours.
+  growth: {
+    target: 'n',
+    n: 'board.length * board[0].length',
+    sizes: [32768, 65536, 131072, 262144, 524288],
+    input: (n, seed) => {
+      const side = Math.round(Math.sqrt(n));
+      return [randomBoard(seed, side, side, 0.5)];
+    },
+  },
 };
 
 export default problem;

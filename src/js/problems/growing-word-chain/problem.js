@@ -225,6 +225,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Words of 8 to 16 letters over a two-letter alphabet, so many words are one letter longer than
+  // another and every word looks up all its predecessors. Word length stays at most 16, so n is the
+  // word count (the length sort is the n log n part); comparing every pair of words is n^2.
+  growth: {
+    target: 'n log n',
+    n: 'words.length',
+    sizes: [1000, 2000, 4000, 8000, 16000],
+    input: (n, seed) => [randomWords(seed, n, 'ab', 8, MAX_LEN)],
+  },
 };
 
 export default problem;
