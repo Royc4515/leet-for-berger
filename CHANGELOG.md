@@ -7,6 +7,13 @@
 - The mock OA company picker is a searchable chip list with the same ordering and filter, instead of a select of 176 names; the selected company is clearly marked.
 - The 1v1 Battle problem picker shows each problem with title, difficulty and topics, filters by difficulty, topic and title, and has a Random button (`src/js/modes/battle-picker.js`). Battle rules are unchanged.
 
+#### Wave F2-1
+- Unfold Brackets (Medium, stack): expand nested `k[text]` groups; counts up to 300, decoded length up to 10^5, one shared output buffer.
+- Balanced Pairs (Medium, backtracking): every well-formed arrangement of n bracket pairs in dictionary order; adds a `maxDepth` nesting limit (n up to 11, 58786 strings).
+- Dotted Quads (Medium, backtracking): every way to insert three dots into a digit string to form a valid address, in dictionary order.
+- Hill Rearrange (Hard, recursion): the largest string reachable by swapping neighboring balanced substrings; strings up to 1000 characters.
+- Paren Depth (Easy, counting): the deepest bracket nesting of an expression of up to 10^5 characters.
+
 ### Fixed
 - The dashboard took about 12 s to show the problem list (one 12.4 s main-thread task, 205 requests, 745 KB gzipped on the live site): `problems/index.js` imported all 145 problem modules, and each builds its 10 hidden tests at import. Problems now load only when opened (ADR 0008): a generated catalog (`src/js/problems/catalog.js`, `node scripts/content/build-catalog.mjs`) feeds the dashboard, learning path, companies and mode setups, and `loadProblem(id)` imports one module on demand. Locally the dashboard is ready in about 0.3 s (was about 14 s) and fetches no problem module. Interview and battle start their clocks only after the problems have loaded. A problem that fails to load shows "Could not load". Tests and scripts use `await loadAllProblems()`; `tests/catalog.test.js` fails on a stale catalog, and the e2e test checks that the dashboard loads no problem module and a problem page exactly one.
 - Signing out left the account's progress, drafts and submissions on the device and on screen. Sign-out now pushes the latest progress, then clears every per-user local store and re-renders as a guest. If the push fails you stay signed in and nothing is cleared, unless you then choose "Sign out anyway". The list of per-user keys lives in `state/user-data.js`, and a unit test fails when a source file persists a key the list misses (ADR 0006 amended).

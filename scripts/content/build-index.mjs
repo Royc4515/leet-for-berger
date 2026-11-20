@@ -281,6 +281,13 @@ const CONTENT_IDS = {
   'minimum-distance-between-bst-nodes': ['bst-min-gap', 'verified'],
   'palindrome-pairs': ['palindrome-joins', 'verified'],
   'employees-earning-more-than-their-managers': ['above-manager-pay', 'verified'],
+  // Wave F2-1
+  'decode-string': ['unfold-brackets', 'verified'],
+  // Adds a nesting limit, so the hidden tests have many distinct inputs (n alone has 11 values).
+  'generate-parentheses': ['balanced-pairs', 'verified'],
+  'restore-ip-addresses': ['dotted-quads', 'verified'],
+  'special-binary-string': ['hill-rearrange', 'verified'],
+  'maximum-nesting-depth-of-the-parentheses': ['paren-depth', 'verified'],
 };
 
 const WINDOWS = [
