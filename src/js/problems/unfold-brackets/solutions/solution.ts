@@ -1,7 +1,9 @@
 // O(n + m) time for input length n and output length m: one shared buffer, and a closing bracket
-// repeats only the slice written since its opening bracket.
+// repeats only the part written since its opening bracket. The buffer is an array of characters,
+// not a string: slicing a string built by `+=` makes the engine flatten all of it first, which
+// turns every closing bracket into a copy of the whole output so far (quadratic).
 function unfoldBrackets(s: string): string {
-  let out = '';
+  const out: string[] = []; // one character per slot, joined once at the end
   const starts: number[] = []; // where each open group begins in out
   const counts: number[] = []; // how many times each open group repeats
   let k = 0;
@@ -15,11 +17,14 @@ function unfoldBrackets(s: string): string {
       k = 0;
     } else if (ch === ']') {
       const start = starts.pop() as number;
+      const end = out.length;
       // The group is already in the buffer once, so add count - 1 more copies.
-      out += out.slice(start).repeat((counts.pop() as number) - 1);
+      for (let r = (counts.pop() as number) - 1; r > 0; r--) {
+        for (let i = start; i < end; i++) out.push(out[i]);
+      }
     } else {
-      out += ch;
+      out.push(ch);
     }
   }
-  return out;
+  return out.join('');
 }

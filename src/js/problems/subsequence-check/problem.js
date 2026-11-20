@@ -7,6 +7,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 const MAX_LEN = 100000;
 
@@ -178,6 +179,18 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). s has n / 10 random
+  // letters and t has n: s matches only about 1 in 26 positions of t, so it is never completed and
+  // the scan of t runs to the end.
+  growth: {
+    target: 'n',
+    n: 't.length (s.length is n / 10)',
+    sizes: [128000, 256000, 512000, 1024000, 2048000, 4096000],
+    input: (n, seed) => {
+      const rng = mulberry32(seed);
+      return [charString(Math.max(1, Math.floor(n / 10)), rng), charString(n, rng)];
+    },
+  },
 };
 
 export default problem;

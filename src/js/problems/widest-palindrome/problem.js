@@ -181,6 +181,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). All one letter: every
+  // substring is a palindrome, the worst case for expanding around each center (n^2) and for the
+  // O(n^3) check-every-substring approach. The shipped Manacher solution is linear, which is
+  // inside the n^2 target; the target stays the statement's.
+  growth: {
+    target: 'n^2',
+    n: 's.length',
+    sizes: [16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n) => ['a'.repeat(n)],
+  },
 };
 
 export default problem;

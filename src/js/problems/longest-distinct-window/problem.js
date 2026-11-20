@@ -11,6 +11,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 
@@ -156,6 +157,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Random printable ASCII:
+  // repeats are frequent, so the left edge keeps moving and every character enters and leaves.
+  growth: {
+    target: 'n',
+    n: 's.length',
+    sizes: [32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    input: (n, seed) => [charString(n, mulberry32(seed), { alphabet: Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).join('') })],
+  },
 };
 
 export default problem;

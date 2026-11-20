@@ -139,6 +139,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). n is the number of
+  // players and k = 3 (the usual step): simulating the circle with removals is n * k steps or
+  // worse, the recurrence is n. The ladder passes the statement's 10^5 because one call takes
+  // under a millisecond at that size.
+  growth: {
+    target: 'n',
+    n: 'n (players)',
+    sizes: [250000, 500000, 1000000, 2000000, 4000000, 8000000, 16000000],
+    input: (n) => [n, 3],
+  },
 };
 
 export default problem;
