@@ -13,7 +13,6 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
-import { edgeList, intArray } from '../../engine/growth-inputs.js';
 
 const MAX_N = 50000;
 const MAX_M = 50000;
@@ -241,15 +240,6 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1], args[2]),
-  growth: {
-    target: 'n',
-    n: 'n = number of courses = relations.length',
-    sizes: [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000],
-    input: (n, seed) => {
-      const rnd = mulberry32(seed);
-      return [n, edgeList(n, n, rnd, { directed: true, acyclic: true, oneBased: true }), intArray(n, rnd, { min: 1, max: MAX_T })];
-    },
-  },
 };
 
 /** Kahn's algorithm leaves some course unprocessed exactly when there is a cycle. */

@@ -13,7 +13,6 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
-import { randInt } from '../../engine/growth-inputs.js';
 
 const MAX_CALLS = 100000;
 const MAX_LEN = 2000;
@@ -270,31 +269,6 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
-  growth: {
-    target: 'n',
-    n: 'number of calls (words of 6 letters from a-e, so the trie stops growing and each call costs the same)',
-    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
-    input: (n, seed) => {
-      const rnd = mulberry32(seed);
-      const word = (len) => Array.from({ length: len }, () => 'abcde'[randInt(rnd, 0, 4)]).join('');
-      const ops = ['Trie'];
-      const args = [[]];
-      while (ops.length < n) {
-        const r = rnd();
-        if (r < 0.4) {
-          ops.push('insert');
-          args.push([word(6)]);
-        } else if (r < 0.7) {
-          ops.push('search');
-          args.push([word(6)]);
-        } else {
-          ops.push('startsWith');
-          args.push([word(randInt(rnd, 1, 6))]);
-        }
-      }
-      return [ops, args];
-    },
-  },
 };
 
 export default problem;

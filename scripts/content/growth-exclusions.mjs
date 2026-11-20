@@ -70,18 +70,18 @@ export const GROWTH_EXCLUSIONS = {
  * scripts/content/growth-coverage.mjs groups them by input shape for the next batches.
  */
 export const GROWTH_PENDING = [
-  'account-merge', 'anagram-arrangements', 'anagram-buckets', 'caesar-groups', 'circle-elimination',
-  'column-sweep', 'cooldown-tasks', 'covering-window', 'crack-palindrome', 'dictionary-split',
-  'digit-list-sum', 'dna-repeats', 'fibonacci-mod', 'fizz-buzz-list', 'gap-in-range', 'glyph-order',
-  'good-string-count', 'growing-word-chain', 'hill-rearrange', 'isomorphic-strings', 'jump-reach',
-  'justify-lines', 'king-path', 'life-step', 'list-loop', 'lone-number', 'longest-distinct-window',
-  'no-adjacent-repeat', 'notify-recipients', 'obstacle-clearing', 'overlap-trim', 'palindrome-joins',
-  'paren-depth', 'plain-arithmetic', 'point-wiring', 'postfix-eval', 'prefix-score-sum', 'prime-count',
-  'random-link-copy', 'range-bookings', 'range-cover', 'ring-shift', 'roman-numeral-value', 'rotate-grid',
-  'same-letters', 'shared-prefix', 'skyline-outline', 'smallest-base-segment', 'spiral-order', 'stair-paths',
-  'string-gcd', 'string-multiply', 'subsequence-check', 'suspicious-payments', 'trade-cooldown',
-  'typeahead-hints', 'unfold-brackets', 'uphill-path', 'vowel-window', 'widest-palindrome', 'word-morph',
-  'word-order-flip', 'zero-rows-cols',
+  'account-merge', 'anagram-arrangements', 'anagram-buckets', 'bucket-map', 'caesar-groups',
+  'circle-elimination', 'column-sweep', 'cooldown-tasks', 'course-finish-time', 'covering-window',
+  'crack-palindrome', 'dictionary-split', 'digit-list-sum', 'dna-repeats', 'fibonacci-mod', 'fizz-buzz-list',
+  'gap-in-range', 'glyph-order', 'good-string-count', 'growing-word-chain', 'hill-rearrange',
+  'isomorphic-strings', 'jump-reach', 'justify-lines', 'king-path', 'life-step', 'list-loop', 'lone-number',
+  'longest-distinct-window', 'no-adjacent-repeat', 'notify-recipients', 'obstacle-clearing', 'overlap-trim',
+  'palindrome-joins', 'paren-depth', 'plain-arithmetic', 'point-wiring', 'postfix-eval', 'prefix-score-sum',
+  'prefix-tree', 'prime-count', 'random-link-copy', 'range-bookings', 'range-cover', 'ring-shift',
+  'roman-numeral-value', 'rotate-grid', 'same-letters', 'shared-prefix', 'skyline-outline',
+  'smallest-base-segment', 'spiral-order', 'stair-paths', 'string-gcd', 'string-multiply',
+  'subsequence-check', 'suspicious-payments', 'trade-cooldown', 'typeahead-hints', 'unfold-brackets',
+  'uphill-path', 'vowel-window', 'widest-palindrome', 'word-morph', 'word-order-flip', 'zero-rows-cols',
 ];
 
 /**
