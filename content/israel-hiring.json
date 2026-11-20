@@ -184,6 +184,11 @@
    "tier": 2,
    "source": "https://bloomberg.avature.net/careers/JobDetail/2026-Software-Engineer-Tel-Aviv/14230"
   },
+  "Blue Origin": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Bnp Paribas": {
    "israel": "none",
    "tier": 3,
@@ -516,6 +521,11 @@
   "HCL": {
    "israel": "none",
    "tier": 3
+  },
+  "Helix": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Hive": {
    "israel": "none",

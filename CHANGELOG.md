@@ -19,6 +19,13 @@
 ### Changed
 - The growth verifier (`tests/growth-solutions.test.js`) checks each problem in its own worker thread that loads only that problem, as the browser does. Loading all problems first kept about 1.5 GB alive, and collecting it during timed calls bent the curves; the file now passes without retries on the 30 problems and runs in about 65 s instead of about 120 s.
 
+### Added: wave F2-3
+- Interleave Words (LeetCode 1768 idea, Easy): weave two words letter by letter and append the longer one's tail; lengths raised to 10^5 so the answer is built with an array or builder, with a growth estimate.
+- Abbreviation Match (LeetCode 408 idea, Easy): decide whether a shorthand with digit runs fits a word; numbers up to 9 digits so expanding them times out, leading zeros are invalid, with a growth estimate.
+- Matching Bit Blocks (LeetCode 696 idea, Easy): count substrings of k equal bits followed by k of the other bit; n raised to 10^5 so a scan from every start times out, run lengths in O(n), with a growth estimate.
+- Start Value Floor (LeetCode 1413 idea, Easy): smallest positive start that keeps a running total at 1 or more; 10^5 values up to 10^4 make the answer about 10^9, so trying starts one by one times out, with a growth estimate.
+- Flip Budget Run (LeetCode 1004 idea, Medium): longest run of ones after at most k flips (a variable window with at most k zeros); n raised to 10^5 so extending from every start times out, with a growth estimate.
+
 ### Added: wave F2-2 (20 problems asked by companies hiring in Israel, docs/PLAN.md F2)
 - Zero By Powers (LeetCode 2571 idea, Medium): fewest +-2^k steps from n to 0, n up to 10^9; counting 1 bits and subtracting the largest power both fail, and the bit rule (carry through a run of 1s) is O(log n).
 - Undo Running Xor (LeetCode 2433 idea, Medium): recover an array from its running XORs, 10^5 values up to 10^9; neighbor XOR in O(n), where rebuilding each prefix needs about 5 * 10^9 XORs.

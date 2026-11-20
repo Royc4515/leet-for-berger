@@ -341,6 +341,16 @@ const CONTENT_IDS = {
   'binary-tree-vertical-order-traversal': ['column-sweep', 'verified'],
   'search-suggestions-system': ['typeahead-hints', 'verified'],
   'shortest-path-in-binary-matrix': ['king-path', 'verified'],
+  // Wave F2-3, group A
+  'merge-strings-alternately': ['interleave-words', 'verified'],
+  // Word and shorthand up to 10^5 characters, numbers up to 9 digits: expanding a number into letters times out.
+  'valid-word-abbreviation': ['abbrev-match', 'verified'],
+  // Limit raised to 10^5 so checking every substring times out.
+  'count-binary-substrings': ['matching-bit-blocks', 'verified'],
+  // The array can have 10^5 values up to 10^4 in size, so trying start values one by one times out.
+  'minimum-value-to-get-positive-step-by-step-sum': ['start-value-floor', 'verified'],
+  // Limit raised to 10^5 so extending from every start times out.
+  'max-consecutive-ones-iii': ['flip-budget-run', 'verified'],
 };
 
 const WINDOWS = [
