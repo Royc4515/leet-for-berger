@@ -14,6 +14,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_LEN = 100000;
 const MAX_VAL = 100000;
@@ -171,6 +172,17 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). A non-increasing array behind a smaller first value: the pivot scan runs the whole length and the suffix reversal swaps n / 2 pairs.
+  growth: {
+    target: 'n',
+    n: 'nums.length',
+    sizes: [512000, 1024000, 2048000, 4096000, 8192000],
+    input: (n, seed) => {
+      const rest = intArray(n - 1, mulberry32(seed), { min: 2, max: 1e5, sorted: true }).reverse();
+      return [[1, ...rest]];
+    },
+  },
 };
 
 export default problem;

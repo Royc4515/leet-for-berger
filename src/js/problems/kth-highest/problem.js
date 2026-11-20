@@ -8,6 +8,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 /**
  * Reference: sort descending and index. Simple on purpose, since it doubles as the oracle that
@@ -154,6 +155,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Random values in the statement range (many duplicates at large n) with k in the middle, the hardest rank for the selection.
+  growth: {
+    target: 'n log n',
+    n: 'nums.length',
+    sizes: [32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: -1e4, max: 1e4 }), (n >> 1) + 1],
+  },
 };
 
 export default problem;

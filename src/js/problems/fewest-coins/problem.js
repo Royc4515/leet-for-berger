@@ -8,6 +8,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_COINS = 12;
 const MAX_COIN = 2147483647;
@@ -160,6 +161,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). The target is amount * coins.length. amount is capped at 10^4 and one call with 12 coins is under a millisecond, so the number of coins grows instead (the length may pass the statement limit): amount stays 10^4, coins are random in 1..10^4, and every coin sweeps about half the table.
+  growth: {
+    target: 'n',
+    n: 'coins.length',
+    sizes: [500, 1000, 2000, 4000, 8000, 16000, 32000, 64000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: 1, max: 10000 }), 10000],
+  },
 };
 
 export default problem;

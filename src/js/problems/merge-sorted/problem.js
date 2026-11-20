@@ -10,6 +10,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 /**
  * Reference: two read heads, always take the smaller front value.
@@ -165,6 +166,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Two random sorted arrays of n values each interleave all the way, so neither pointer finishes early and the tail loops stay short.
+  growth: {
+    target: 'n',
+    n: 'nums1.length + nums2.length',
+    sizes: [32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: -1e9, max: 1e9, sorted: true }), intArray(n, mulberry32(seed + 1), { min: -1e9, max: 1e9, sorted: true })],
+  },
 };
 
 export default problem;

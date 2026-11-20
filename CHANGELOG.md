@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Growth feedback for 28 more problems (F3 batch A): ticket-queue, merge-sorted, zeros-to-end, asteroid-collision, largest-concat, smaller-count, eating-speed, kth-highest, best-run-sum, cookie-match, fewest-coins, street-heist, best-run-product, balloon-pop, coin-combos, doubled-array, product-sign, two-wall-tank, common-values, next-arrangement, dominant-value, equal-after-deletes, unique-prefix, rank-boost, product-cap-subarrays, undo-running-xor, skyline-block, balanced-cuts. Balanced Cuts' JavaScript solution now finds the largest value with a loop instead of `Math.max(...nums)`, so its input can pass the argument-count limit.
+
 ### Added: growth estimates for 20 more problems (stage F3, step 1)
 - Growth specs (ADR 0004) for Product Except Self, Rain Trap, Window Maximums, Double Inversions, Stone Smash, Flag Sort, Bracket Check, First Match Index, Squeeze Runs, Rot Spread, Edit Steps (`n^2`), Tree Height, BST Check, Best Tree Path, Reverse List, Merge Many Lists, Merge Ranges, Meeting Room Minimizer, Course Order and Recent Cache: 10 -> 30 problems. Each input is a worst case for the naive solution (a window half the array, a nest of brackets, `aaa...a` against `aaa...ab`, a snake-shaped grid, n / 32 lists, shuffled disjoint ranges, a cache filled before it is used), and every shipped JavaScript solution measures `matches`.
 - Input helpers for growth specs (`src/js/engine/growth-inputs.js`, pure, seeded): int arrays (range, distinct, sorted), strings, string lists, grids, level-order trees (complete or random with a height cap, optionally a BST), linked lists, intervals and edge lists (connected, DAG, weighted). Unit tests in `tests/growth-inputs.test.js`.

@@ -8,6 +8,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const MAX_ABS = 10000;
@@ -141,6 +142,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Random signs: the running sum resets often and the best run keeps changing, and the single pass reads everything.
+  growth: {
+    target: 'n',
+    n: 'nums.length',
+    sizes: [1024000, 2048000, 4096000, 8192000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: -1e4, max: 1e4 })],
+  },
 };
 
 export default problem;

@@ -10,6 +10,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_N = 10000;
 const MAX_PILE = 1000000000;
@@ -172,6 +173,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Piles up to 10^9 and h = 2n put the answer in the middle of the search range, so the binary search runs all ~30 steps. The log factor is of a value (at most 10^9), so n is the only size that grows.
+  growth: {
+    target: 'n',
+    n: 'piles.length',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: 1, max: 1e9 }), 2 * n],
+  },
 };
 
 export default problem;

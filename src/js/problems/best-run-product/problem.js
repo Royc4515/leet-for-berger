@@ -193,6 +193,17 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Values are mostly +-1 with a +-10 opening each zero-separated stretch of 1000, so every subarray product stays far below the 10^15 bound while signs keep flipping.
+  growth: {
+    target: 'n',
+    n: 'nums.length',
+    sizes: [32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000],
+    input: (n, seed) => {
+      const rng = mulberry32(seed);
+      return [Array.from({ length: n }, (_, i) => (i % 1000 === 999 ? 0 : (rng() < 0.5 ? -1 : 1) * (i % 1000 === 0 ? 10 : 1)))];
+    },
+  },
 };
 
 export default problem;
