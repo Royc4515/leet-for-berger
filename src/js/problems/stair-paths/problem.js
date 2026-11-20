@@ -116,6 +116,15 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). n is the number of
+  // stairs: the loop runs n steps with a modulo each. The ladder passes the statement's 10^6
+  // because one call takes about 5 ms at that size; the answer stays correct modulo 10^9 + 7.
+  growth: {
+    target: 'n',
+    n: 'n (stairs)',
+    sizes: [500000, 1000000, 2000000, 4000000, 8000000, 16000000],
+    input: (n) => [n],
+  },
 };
 
 export default problem;

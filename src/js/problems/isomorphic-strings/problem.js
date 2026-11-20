@@ -7,6 +7,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString, shuffle } from '../../engine/growth-inputs.js';
 
 /**
  * Reference: forward and backward character maps.
@@ -169,6 +170,25 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). t is s with every
+  // character renamed through one seeded permutation of the 95 printable characters: the strings
+  // are isomorphic, so both maps are filled and checked for the whole length (no early false).
+  growth: {
+    target: 'n',
+    n: 's.length',
+    sizes: [16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => {
+      const rng = mulberry32(seed);
+      const alphabet = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i));
+      const s = charString(n, rng, { alphabet: alphabet.join('') });
+      const perm = shuffle([...alphabet], rng);
+      const rename = new Map(alphabet.map((c, i) => [c, perm[i]]));
+      const parts = new Array(n);
+      for (let i = 0; i < n; i++) parts[i] = rename.get(s[i]);
+      const t = parts.join('');
+      return [s, t];
+    },
+  },
 };
 
 export default problem;

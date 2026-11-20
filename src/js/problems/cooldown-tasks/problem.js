@@ -9,6 +9,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 /**
  * Reference: the frame formula.
@@ -170,6 +171,14 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Random tasks with the
+  // largest cooldown (100): slot-by-slot simulation does about n * 100 / 26 idle steps, counting does n.
+  growth: {
+    target: 'n',
+    n: 'tasks.length',
+    sizes: [64000, 128000, 256000, 512000, 1024000, 2048000, 4096000],
+    input: (n, seed) => [charString(n, mulberry32(seed), { alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' }), 100],
+  },
 };
 
 export default problem;

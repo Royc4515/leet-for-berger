@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Growth feedback for 23 more problems (F3 batch B): smallest-base-segment, isomorphic-strings, string-multiply, string-gcd, longest-distinct-window, covering-window, vowel-window, cooldown-tasks, no-adjacent-repeat, widest-palindrome, dna-repeats, prefix-score-sum, anagram-arrangements, subsequence-check, paren-depth, crack-palindrome, same-letters, plain-arithmetic, prime-count, circle-elimination, stair-paths, good-string-count, fibonacci-mod. Roman Numeral Value is excluded as fixed-size; Fizz Buzz List, Hill Rearrange, Unfold Brackets and Word Order Flip stay pending (allocation-bound, recursion limit, quadratic string building, allocation jumps).
+
 - Growth feedback for 29 more problems (F3 batch D): course-check, two-color-check, extra-link, limited-paths, cheapest-route-k-stops, ticket-itinerary, signal-spread, course-finish-time, tree-heist, k-steps-away, shift-list, list-mirror, min-stack, region-sum, tree-codec, frequent-cache, versioned-store, bucket-map, hit-window, prefix-tree, string-codec, square-counter, bucket-set, nested-flatten, random-pool, streak-watch, checkpoint-array, message-throttle, ring-queue. Kth In Order and BST Min Gap are excluded (distinct values cap the tree at 10^4 and 10^5 nodes); Column Sweep, Digit List Sum, List Loop and Random Link Copy stay pending (allocation per node bends the curve before the calls take 3 ms).
 
 ### Added: growth estimates for 20 more problems (stage F3, step 1)

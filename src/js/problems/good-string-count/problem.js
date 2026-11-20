@@ -151,6 +151,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1], args[2], args[3]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). n = high, low = high / 2,
+  // blocks of 2 zeros or 3 ones: the table runs over every length up to high, and the answer
+  // counts lengths from low to high. The ladder passes the statement's 10^5 because one call takes
+  // about a millisecond at that size.
+  growth: {
+    target: 'n',
+    n: 'high',
+    sizes: [250000, 500000, 1000000, 2000000, 4000000, 8000000],
+    input: (n) => [Math.floor(n / 2), n, 2, 3],
+  },
 };
 
 export default problem;

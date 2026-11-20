@@ -12,6 +12,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -176,6 +177,19 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). s is random over 52
+  // letters and t holds n / 100 lowercase letters, which s covers many times over: the window grows
+  // and shrinks all along s instead of the scan ending early or never covering t.
+  growth: {
+    target: 'n',
+    n: 's.length (t.length is n / 100)',
+    sizes: [32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    input: (n, seed) => {
+      const rng = mulberry32(seed);
+      const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      return [charString(n, rng, { alphabet: letters }), charString(Math.max(1, Math.floor(n / 100)), rng)];
+    },
+  },
 };
 
 export default problem;

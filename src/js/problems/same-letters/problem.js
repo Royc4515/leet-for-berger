@@ -7,6 +7,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 const MAX_LEN = 100000;
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz';
@@ -191,6 +192,19 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). t equals s, a
+  // rearrangement of it: every counter pair is touched and the answer is true, so no length or
+  // count check ends the call early. (A reversed copy built 4 * 10^6 temporary elements, and
+  // collecting them bent the timed curve.)
+  growth: {
+    target: 'n',
+    n: 's.length (t.length the same)',
+    sizes: [64000, 128000, 256000, 512000, 1024000, 2048000, 4096000],
+    input: (n, seed) => {
+      const s = charString(n, mulberry32(seed));
+      return [s, s];
+    },
+  },
 };
 
 export default problem;

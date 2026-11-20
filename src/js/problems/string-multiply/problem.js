@@ -163,6 +163,23 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Both numbers have n
+  // digits (no leading zero, no zero factor), so the schoolbook loop runs all n * n digit products.
+  growth: {
+    target: 'n^2',
+    n: 'num1.length (num2.length the same)',
+    sizes: [500, 1000, 2000, 4000, 8000],
+    input: (n, seed) => {
+      const rng = mulberry32(seed);
+      const digits = () => {
+        const d = new Array(n);
+        d[0] = 1 + Math.floor(rng() * 9);
+        for (let i = 1; i < n; i++) d[i] = Math.floor(rng() * 10);
+        return d.join('');
+      };
+      return [digits(), digits()];
+    },
+  },
 };
 
 export default problem;

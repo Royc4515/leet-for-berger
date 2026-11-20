@@ -275,6 +275,41 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Numbers of 1 to 3
+  // digits (never a leading zero) joined mostly by + and -, with an occasional product or quotient
+  // of two 1 or 2 digit numbers and spaces around some tokens. Running totals stay near 10^5, far
+  // inside 32 bits, and no division is by zero.
+  growth: {
+    target: 'n',
+    n: 's.length',
+    sizes: [32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    input: (n, seed) => {
+      const rng = mulberry32(seed);
+      const num = (digits) => {
+        const hi = 10 ** digits - 1;
+        const lo = digits === 1 ? 1 : 10 ** (digits - 1);
+        return String(lo + Math.floor(rng() * (hi - lo + 1)));
+      };
+      const parts = [num(2)];
+      let len = parts[0].length;
+      while (len < n) {
+        const r = rng();
+        let op;
+        let operand;
+        if (r < 0.1) {
+          op = rng() < 0.5 ? '*' : '/';
+          operand = num(1 + Math.floor(rng() * 2));
+        } else {
+          op = rng() < 0.5 ? '+' : '-';
+          operand = num(1 + Math.floor(rng() * 3));
+        }
+        const piece = (rng() < 0.2 ? ' ' : '') + op + (rng() < 0.2 ? ' ' : '') + operand;
+        parts.push(piece);
+        len += piece.length;
+      }
+      return [parts.join('')];
+    },
+  },
 };
 
 export default problem;
