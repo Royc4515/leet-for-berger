@@ -184,6 +184,11 @@
    "tier": 2,
    "source": "https://bloomberg.avature.net/careers/JobDetail/2026-Software-Engineer-Tel-Aviv/14230"
   },
+  "Blue Origin": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Bnp Paribas": {
    "israel": "none",
    "tier": 3,
@@ -201,6 +206,11 @@
   "Box": {
    "israel": "none",
    "tier": 2
+  },
+  "Broadcom": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "ByteDance": {
    "israel": "none",
@@ -517,6 +527,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Helix": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Hive": {
    "israel": "none",
    "tier": 3
@@ -631,6 +646,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Liftoff": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Lime": {
    "israel": "none",
    "tier": 3
@@ -671,6 +691,11 @@
   "MathWorks": {
    "israel": "none",
    "tier": 2,
+   "unverified": true
+  },
+  "Mcdonalds": {
+   "israel": "none",
+   "tier": 3,
    "unverified": true
   },
   "Media.net": {
@@ -778,6 +803,11 @@
   "Newsbreak": {
    "israel": "none",
    "tier": 3
+  },
+  "Niantic": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Nielsen": {
    "israel": "none",
@@ -907,9 +937,19 @@
    "tier": 2,
    "unverified": true
   },
+  "Pony.ai": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "PornHub": {
    "israel": "none",
    "tier": 3
+  },
+  "Porter": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Publicis Sapient": {
    "israel": "none",
@@ -1076,9 +1116,19 @@
    "tier": 3,
    "unverified": true
   },
+  "Sony": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Spacex": {
    "israel": "none",
    "tier": 2,
+   "unverified": true
+  },
+  "Spinny": {
+   "israel": "none",
+   "tier": 3,
    "unverified": true
   },
   "Splunk": {
@@ -1117,6 +1167,11 @@
   "Swiggy": {
    "israel": "none",
    "tier": 2,
+   "unverified": true
+  },
+  "Symantec": {
+   "israel": "none",
+   "tier": 3,
    "unverified": true
   },
   "Taboola": {
@@ -1226,6 +1281,11 @@
   "Urban Company": {
    "israel": "none",
    "tier": 3
+  },
+  "Valve": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Verily": {
    "israel": "none",

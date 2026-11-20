@@ -341,6 +341,44 @@ const CONTENT_IDS = {
   'binary-tree-vertical-order-traversal': ['column-sweep', 'verified'],
   'search-suggestions-system': ['typeahead-hints', 'verified'],
   'shortest-path-in-binary-matrix': ['king-path', 'verified'],
+  // Wave F2-3, group B
+  'remove-nth-node-from-end-of-list': ['drop-from-tail', 'verified'],
+  'simplify-path': ['tidy-path', 'verified'],
+  // The result is already inside int32; only the running value needs a guard, and the text can be 10^5 characters.
+  'string-to-integer-atoi': ['text-to-int', 'verified'],
+  'buildings-with-an-ocean-view': ['shoreline-view', 'verified'],
+  // Height at most 10 and a guaranteed 32-bit total, so every harness can sum in an int.
+  'sum-root-to-leaf-numbers': ['digit-path-total', 'verified'],
+  // Wave F2-3, group A
+  'merge-strings-alternately': ['interleave-words', 'verified'],
+  // Word and shorthand up to 10^5 characters, numbers up to 9 digits: expanding a number into letters times out.
+  'valid-word-abbreviation': ['abbrev-match', 'verified'],
+  // Limit raised to 10^5 so checking every substring times out.
+  'count-binary-substrings': ['matching-bit-blocks', 'verified'],
+  // The array can have 10^5 values up to 10^4 in size, so trying start values one by one times out.
+  'minimum-value-to-get-positive-step-by-step-sum': ['start-value-floor', 'verified'],
+  // Limit raised to 10^5 so extending from every start times out.
+  'max-consecutive-ones-iii': ['flip-budget-run', 'verified'],
+  // Wave F2-3, group C
+  // The original is randomized; this is its deterministic core: the draws are given, and each answer is the index whose prefix interval holds the draw.
+  'random-pick-with-weight': ['weighted-draw-lookup', 'verified'],
+  // The answer is returned as a 64-bit integer: with n up to 10^5 the pair count can reach 4,999,950,000.
+  'count-the-number-of-fair-pairs': ['bounded-sum-pairs', 'verified'],
+  // Board size raised to 10^5 (a stored board would not fit), so line counters replace scanning.
+  'design-tic-tac-toe': ['grid-duel', 'verified'],
+  // Posts carry an explicit timestamp, and the tie order for equal timestamps is stated (the later call is more recent).
+  'design-twitter': ['mini-feed', 'verified'],
+  // Limits raised (n to 10^5, weights to 10^4) so trying every limit upward times out.
+  'capacity-to-ship-packages-within-d-days': ['daily-load-limit', 'verified'],
+  // Wave F2-3, group D
+  'power-grid-maintenance': ['backup-station', 'verified'],
+  // The array can have 10^5 numbers, so a search over every order of picks cannot finish.
+  'delete-and-earn': ['value-harvest', 'verified'],
+  'count-ways-to-group-overlapping-ranges': ['range-groups', 'verified'],
+  // Limit raised to 10^5 jobs so the quadratic DP times out.
+  'maximum-profit-in-job-scheduling': ['best-job-selection', 'verified'],
+  // Limit raised to 10^5 nodes so trying every start node times out.
+  'collect-coins-in-a-tree': ['coin-sweep', 'verified'],
 };
 
 const WINDOWS = [
@@ -368,7 +406,7 @@ const REPORTED_FREQUENCY = 50;
 const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice', 'hand-picked'];
 
 /** Problems authored on purpose although no selection rule picks them (few companies, no list). */
-const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray']);
+const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray', 'collect-coins-in-a-tree']);
 
 const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
 

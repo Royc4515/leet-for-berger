@@ -236,6 +236,8 @@ Use them when the shape is generic; keep the problem's own generator when it enc
 
 ### Checklist for adding `growth` to a problem
 
+
+Judge the ladder against an idiomatic solution too, not only the shipped one: if a plain comparator sort over pair objects or a Map per element bends where a tuned shipped solution does not, cap the ladder below that bend, so a correct user solution never reads `slower than target`.
 1. Read the statement's "Target complexity" and pick the `target` string (`node scripts/content/growth-coverage.mjs <id>` suggests one); write `n` as the user would name it.
 2. Write `input(n, seed)` from the guidelines above, with the input helpers or the problem's own seeded generators; add a comment saying why the input is a worst case.
 3. Choose `sizes` (doubling, 5 to 200 ms for the shipped JS solution at the top).
