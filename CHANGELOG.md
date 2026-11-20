@@ -8,6 +8,11 @@
 - Mirror Bits (LeetCode 190 idea, Easy): reverse all 32 bits of a value; input and output are 64-bit integers in [0, 2^32) so the top bit is never a sign.
 - Next Arrangement (LeetCode 31 idea, Medium): next permutation with repeated values allowed; returns the array instead of rewriting it in place.
 - Ring Shift (LeetCode 189 idea, Medium): rotate an array right by k up to 10^9; returns the array instead of rewriting it in place.
+- Sudoku Check (Medium, group D): is a partly filled 9x9 board free of repeats in rows, columns and 3x3 boxes; one pass with bitmasks, own statement, 15 tests (full grids, single conflicts of each kind, a box-only clash, a valid but unsolvable board), 8 solutions.
+- Dominant Value (Easy, family majority-element): the value filling more than half of an array of up to 10^5; the vote trick in O(1) space, with majorities hidden at the tail, head and spread out.
+- Unique Prefix (Easy, family dedupe-sorted-array): returns the distinct values of a sorted array as an array instead of mutating it and returning a count, so every language judges the same value.
+- Gap in Range (Easy): the one number missing from 0..n in an array of n distinct values; xor or sum in O(1) space, with the missing number at both ends of the range.
+- Equal After Deletes (Medium, Palo Alto Networks): longest equal stretch after at most k deletions, values in 1..n; a non-shrinking sliding window. The index selects it through a new `wave2.extraSlugs` entry in `content/selection.json` and `content/subtopics.json` places it in sliding-window.
 
 ### Added
 - Companies are ordered for a job search in Israel (`content/israel-hiring.json`, merged into `src/js/data/company-sets.json` at build time by `scripts/content/israel-companies.mjs`; the browser only filters, in `src/js/data/israel-hiring.js`): major employers first (by rankIL, tier, problem count), then those with an Israel office, then the rest. A filter ("Hiring in Israel", the default, "Top in Israel", "All") and a "Major in Israel" / "Israel office" badge sit on every card, and alias spellings (X/Twitter, Snap/Snapchat, Citi/Citigroup...) show as one company with merged problem lists.

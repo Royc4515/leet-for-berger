@@ -304,6 +304,13 @@ const CONTENT_IDS = {
   'next-permutation': ['next-arrangement', 'verified'],
   // Returns the rotated array instead of rewriting it in place.
   'rotate-array': ['ring-shift', 'verified'],
+  // Wave F2-1, group D
+  'valid-sudoku': ['sudoku-check', 'verified'],
+  'majority-element': ['dominant-value', 'verified'],
+  // Returns the deduplicated prefix as an array instead of mutating and returning its length.
+  'remove-duplicates-from-sorted-array': ['unique-prefix', 'verified'],
+  'missing-number': ['gap-in-range', 'verified'],
+  'find-the-longest-equal-subarray': ['equal-after-deletes', 'verified'],
 };
 
 const WINDOWS = [
@@ -331,7 +338,7 @@ const REPORTED_FREQUENCY = 50;
 const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice', 'hand-picked'];
 
 /** Problems authored on purpose although no selection rule picks them (few companies, no list). */
-const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream']);
+const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray']);
 
 const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
