@@ -150,7 +150,7 @@ export const problem = {
   growth: {
     target: 'n',
     n: 'number of nodes',
-    sizes: [16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    sizes: [16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000],
     input: (n, seed) => [linkedList(n, mulberry32(seed), { min: -5000, max: 5000 })],
   },
 };
