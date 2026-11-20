@@ -359,6 +359,17 @@ const CONTENT_IDS = {
   'minimum-value-to-get-positive-step-by-step-sum': ['start-value-floor', 'verified'],
   // Limit raised to 10^5 so extending from every start times out.
   'max-consecutive-ones-iii': ['flip-budget-run', 'verified'],
+  // Wave F2-3, group C
+  // The original is randomized; this is its deterministic core: the draws are given, and each answer is the index whose prefix interval holds the draw.
+  'random-pick-with-weight': ['weighted-draw-lookup', 'verified'],
+  // The answer is returned as a 64-bit integer: with n up to 10^5 the pair count can reach 4,999,950,000.
+  'count-the-number-of-fair-pairs': ['bounded-sum-pairs', 'verified'],
+  // Board size raised to 10^5 (a stored board would not fit), so line counters replace scanning.
+  'design-tic-tac-toe': ['grid-duel', 'verified'],
+  // Posts carry an explicit timestamp, and the tie order for equal timestamps is stated (the later call is more recent).
+  'design-twitter': ['mini-feed', 'verified'],
+  // Limits raised (n to 10^5, weights to 10^4) so trying every limit upward times out.
+  'capacity-to-ship-packages-within-d-days': ['daily-load-limit', 'verified'],
 };
 
 const WINDOWS = [
