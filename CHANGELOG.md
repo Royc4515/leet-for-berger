@@ -8,6 +8,13 @@
 ### Added
 - Startup-graph guard (`tests/startup-graph.test.js`): walks the static imports from `main.js` and fails if views, problem modules, the engine or runners creep into the first-load graph, or the graph grows past a cap.
 
+### Added: wave F2-2
+- Dictionary Split (LeetCode 139 idea, Medium, family word-break): can a text of up to 2000 letters be cut into dictionary words, each reusable; a prefix table, with `aaa...ab` at full length ruling out plain recursion and small dictionaries ruling out longest-first and shortest-first.
+- Balanced Cuts (LeetCode 410 idea, Hard, family split-array-largest-sum): cut up to 10^4 non-negative values into k parts to minimize the largest sum; binary search on the answer, with limits raised so the O(n^2 k) table times out and the answer is a 64-bit `long` (sums reach 10^10).
+- Column Sweep (LeetCode 314 idea, Medium, family vertical-order): a binary tree read column by column, top-down, ties left to right (not by value); tree input like BST Check, trees up to 10^4 nodes and height 500, including a tree where a depth-first walk orders a column wrongly.
+- Typeahead Hints (LeetCode 1268 idea, Medium): up to three dictionary-order suggestions after each typed letter, from up to 5 * 10^4 names; sort once and binary search (or a trie), with lists where every name shares a long prefix.
+- King Path (LeetCode 1091 idea, Medium): shortest route in cells across an n x n grid with eight-direction moves, up to 300 x 300; BFS by waves, with a winding corridor of about 45,000 cells and blocked-corner cases.
+
 ### Added: wave F2-1 (20 problems asked by companies hiring in Israel, docs/PLAN.md F2)
 - Word Order Flip (LeetCode 151 idea, Medium): reverse the order of the words in a line with sloppy spacing; 10^5 characters, so split-and-reverse leaves empty words and prepending is quadratic.
 - Digit Flip (LeetCode 7 idea, Medium): reverse the digits of a signed 32-bit integer, 0 when the result leaves the 32-bit range; every language needs a 64-bit intermediate or a pre-check.

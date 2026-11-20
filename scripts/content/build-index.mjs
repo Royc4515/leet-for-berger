@@ -311,6 +311,13 @@ const CONTENT_IDS = {
   'remove-duplicates-from-sorted-array': ['unique-prefix', 'verified'],
   'missing-number': ['gap-in-range', 'verified'],
   'find-the-longest-equal-subarray': ['equal-after-deletes', 'verified'],
+  // Wave F2-2, group D
+  'word-break': ['dictionary-split', 'verified'],
+  // The array can have 10^4 values, so the O(n^2 * k) table times out and the answer needs 64 bits.
+  'split-array-largest-sum': ['balanced-cuts', 'verified'],
+  'binary-tree-vertical-order-traversal': ['column-sweep', 'verified'],
+  'search-suggestions-system': ['typeahead-hints', 'verified'],
+  'shortest-path-in-binary-matrix': ['king-path', 'verified'],
 };
 
 const WINDOWS = [
