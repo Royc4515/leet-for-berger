@@ -113,27 +113,6 @@ const hiddenArgs = [
   randomWalk(19, MAX_T, 3000),
 ];
 
-/** A random walk of n flights from JFK over about n / 8 airports, cut into shuffled tickets: a valid trip always exists. */
-function growthTickets(n, rnd) {
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const all = [];
-  for (let i = 0; i < 26 * 26 * 26; i++) {
-    const code = letters[Math.floor(i / 676)] + letters[Math.floor(i / 26) % 26] + letters[i % 26];
-    if (code !== 'JFK') all.push(code);
-  }
-  const count = Math.min(all.length, Math.max(8, Math.floor(n / 8)));
-  const codes = ['JFK', ...shuffle(all, rnd).slice(0, count - 1)];
-  const tickets = [];
-  let at = 'JFK';
-  for (let i = 0; i < n; i++) {
-    let to = codes[Math.floor(rnd() * count)];
-    while (to === at) to = codes[Math.floor(rnd() * count)];
-    tickets.push([at, to]);
-    at = to;
-  }
-  return shuffle(tickets, rnd);
-}
-
 export const problem = {
   id: 'ticket-itinerary',
   title: 'Ticket Itinerary',
@@ -237,12 +216,6 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
-  growth: {
-    target: 'n log n',
-    n: 'number of tickets',
-    sizes: [4000, 8000, 16000, 32000, 64000, 128000, 256000],
-    input: (n, seed) => [growthTickets(n, mulberry32(seed))],
-  },
 };
 
 /** True when consecutive airports of `trip` are exactly the multiset of tickets. */

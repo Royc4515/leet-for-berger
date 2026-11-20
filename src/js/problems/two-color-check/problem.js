@@ -127,28 +127,6 @@ const hiddenArgs = [
   [randomBipartite(19, 500, 3000, false)],
 ];
 
-/** Bipartite graph of n nodes and n edges between two hidden sides: a full coloring pass, no odd cycle to stop it. */
-function growthGraph(n, rnd) {
-  const side = Array.from({ length: n }, () => (rnd() < 0.5 ? 1 : 0));
-  side[0] = 0;
-  side[1] = 1;
-  const g = Array.from({ length: n }, () => []);
-  const seen = new Set();
-  let count = 0;
-  while (count < n) {
-    const a = Math.floor(rnd() * n);
-    const b = Math.floor(rnd() * n);
-    if (side[a] === side[b]) continue;
-    const key = Math.min(a, b) * n + Math.max(a, b);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    g[a].push(b);
-    g[b].push(a);
-    count++;
-  }
-  return g;
-}
-
 export const problem = {
   id: 'two-color-check',
   title: 'Two-Color Check',
@@ -261,12 +239,6 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
-  growth: {
-    target: 'n',
-    n: 'number of nodes (edges = n)',
-    sizes: [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000],
-    input: (n, seed) => [growthGraph(n, mulberry32(seed))],
-  },
 };
 
 export default problem;

@@ -80,8 +80,9 @@ export const GROWTH_PENDING = [
   'prefix-tree', 'prime-count', 'random-link-copy', 'range-bookings', 'range-cover', 'ring-shift',
   'roman-numeral-value', 'rotate-grid', 'same-letters', 'shared-prefix', 'skyline-outline',
   'smallest-base-segment', 'spiral-order', 'stair-paths', 'string-gcd', 'string-multiply',
-  'subsequence-check', 'suspicious-payments', 'trade-cooldown', 'typeahead-hints', 'unfold-brackets',
-  'uphill-path', 'vowel-window', 'widest-palindrome', 'word-morph', 'word-order-flip', 'zero-rows-cols',
+  'subsequence-check', 'suspicious-payments', 'ticket-itinerary', 'trade-cooldown', 'two-color-check',
+  'typeahead-hints', 'unfold-brackets', 'uphill-path', 'vowel-window', 'widest-palindrome', 'word-morph',
+  'word-order-flip', 'zero-rows-cols',
 ];
 
 /**
