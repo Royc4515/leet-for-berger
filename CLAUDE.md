@@ -27,6 +27,7 @@ src/js/engine/             PURE judging logic + execution
   codegen.js               8 languages, neutral signature (function or class) -> names, types, starter code
   adapters.js              JSON <-> ListNode/TreeNode/class dispatch for JS, TS, Python (browser + verifier)
   structures.js            tree/list helpers for problem references and generators
+  growth-inputs.js         seeded input generators for growth specs (ADR 0004); coverage: scripts/content/growth-coverage.mjs, exclusions: growth-exclusions.mjs
   runners/index.js         language -> runner registry
   runners/worker-runner.js generic Web Worker runner, per-case watchdog
   runners/ts-runner.js     TypeScript: compile (injected compiler), then run as JS

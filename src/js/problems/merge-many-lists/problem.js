@@ -12,6 +12,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { linkedList } from '../../engine/growth-inputs.js';
 
 const MAX_K = 10000;
 const MAX_TOTAL = 200000;
@@ -173,6 +174,20 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). n nodes in n / 32 sorted
+  // lists of 32: k grows with n, so merging the lists one by one into a growing result is
+  // N * k = n^2 / 32, and scanning all heads for the smallest is the same, while a heap or
+  // pairwise rounds stay at N log k.
+  growth: {
+    target: 'n log n',
+    n: 'total number of nodes (k = n / 32 lists)',
+    sizes: [4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      return [Array.from({ length: Math.max(1, Math.floor(n / 32)) }, () => linkedList(32, rnd, { min: -MAX_ABS, max: MAX_ABS, sorted: true }))];
+    },
+  },
 };
 
 export default problem;

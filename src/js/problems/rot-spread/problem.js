@@ -204,6 +204,17 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). The snake: one fresh path
+  // through about half the cells, rotten at its start, so the answer is about n / 2 minutes and
+  // rescanning the grid every minute is n^2 / 2, while the BFS visits each cell once. Fixed shape:
+  // the seed is not needed.
+  growth: {
+    target: 'n',
+    n: 'rows * cols',
+    sizes: [16384, 32768, 65536, 131072, 262144, 524288, 1048576],
+    input: (n) => [snakeGrid(Math.round(Math.sqrt(n)))],
+  },
 };
 
 export default problem;

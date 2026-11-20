@@ -15,6 +15,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { levelTree } from '../../engine/growth-inputs.js';
 import { treeFromLevel, levelFromTree, bstFromInsertions, checkLevelArray } from '../../engine/structures.js';
 
 const MAX_NODES = 10000;
@@ -250,6 +251,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). A valid random BST, so
+  // the answer is true and every node is checked; comparing each node with its whole subtree (the
+  // fix for checking children only) is n * h.
+  growth: {
+    target: 'n',
+    n: 'number of nodes',
+    sizes: [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000],
+    input: (n, seed) => [levelTree(n, mulberry32(seed), { shape: 'random', maxHeight: MAX_HEIGHT, min: INT_MIN, max: INT_MAX, bst: true })],
+  },
 };
 
 export default problem;

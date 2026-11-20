@@ -8,6 +8,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_LEN = 100000;
 
@@ -174,6 +175,15 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Random colors in equal
+  // shares; repeatedly moving a value to its place by shifting (insertion sort) is n^2 on them.
+  growth: {
+    target: 'n',
+    n: 'nums.length',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: 0, max: 2 })],
+  },
 };
 
 export default problem;

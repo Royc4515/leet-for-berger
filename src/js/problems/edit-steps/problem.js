@@ -11,6 +11,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 const MAX_LEN = 500;
 
@@ -180,6 +181,19 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Two random words of
+  // length n over 4 letters: the table has n^2 cells whatever the words are, and plain recursion
+  // without memoization is exponential.
+  growth: {
+    target: 'n^2',
+    n: 'word1.length = word2.length',
+    sizes: [125, 250, 500, 1000, 2000, 4000, 8000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      return [charString(n, rnd, { alphabet: 'abcd' }), charString(n, rnd, { alphabet: 'abcd' })];
+    },
+  },
 };
 
 export default problem;

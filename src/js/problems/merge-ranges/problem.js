@@ -10,6 +10,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intervals } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const MAX_V = 1000000000;
@@ -173,6 +174,19 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Disjoint ranges, shuffled:
+  // nothing merges, so the output is as long as the input, and merging pairs until nothing changes
+  // compares every pair.
+  growth: {
+    target: 'n log n',
+    n: 'intervals.length',
+    sizes: [1000, 2000, 4000, 8000, 16000, 32000, 64000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      return [shuffle(rnd, intervals(n, rnd, { min: 0, max: MAX_V, maxLength: 500, disjoint: true }))];
+    },
+  },
 };
 
 export default problem;

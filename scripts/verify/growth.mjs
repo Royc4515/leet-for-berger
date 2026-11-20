@@ -2,7 +2,37 @@
 // It compiles the code the way src/js/engine/workers/js-worker.js does (same adapter from
 // engine/adapters.js) and feeds the samples to the same estimator as the browser
 // (engine/growth.js), so a target that passes here means the same thing in the app.
+import { Worker } from 'node:worker_threads';
 import { estimateGrowth, shouldMeasureNext, median, growthSeed } from '../../src/js/engine/growth.js';
+
+/**
+ * Whether a problem module's source declares `growth`, read from the text so the verifier can
+ * find its problems without importing all of them (tests/growth-coverage.test.js checks that this
+ * agrees with the loaded modules).
+ * @param {string} source contents of a problem.js
+ * @returns {boolean}
+ */
+export function declaresGrowth(source) {
+  return /^ {2}growth: \{/m.test(source);
+}
+
+/**
+ * Runs the growth checks of one problem in a fresh worker thread (scripts/verify/growth-worker.mjs):
+ * spec errors, determinism and arity of the input, agreement with the reference on the smallest
+ * input, and, with `timing`, up to `attempts` measurements until one is the verdict wanted.
+ * @param {{ id: string, code: string, timing: boolean, attempts: number, want: 'target' | 'slower' }} task
+ *   want 'target': matches (or inconclusive with inconclusiveOk); 'slower': slower than target
+ * @returns {Promise<{ errors: string[], classKind: string|null, deterministic?: boolean, arity?: number, expectedArity?: number, agrees?: boolean,
+ *   tries: { estimate: import('../../src/js/engine/growth.js').GrowthEstimate, medians: {n: number, ms: number}[], wallMs: number }[] }>}
+ */
+export function checkGrowthInWorker(task) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('./growth-worker.mjs', import.meta.url), { workerData: task });
+    worker.once('message', resolve);
+    worker.once('error', reject);
+    worker.once('exit', (code) => code !== 0 && reject(new Error(`growth worker for ${task.id} exited with code ${code}`)));
+  });
+}
 
 /**
  * Compiles user or solution code the way the worker does for a growth run: `prepare` turns JSON

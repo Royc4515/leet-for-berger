@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added: growth estimates for 20 more problems (stage F3, step 1)
+- Growth specs (ADR 0004) for Product Except Self, Rain Trap, Window Maximums, Double Inversions, Stone Smash, Flag Sort, Bracket Check, First Match Index, Squeeze Runs, Rot Spread, Edit Steps (`n^2`), Tree Height, BST Check, Best Tree Path, Reverse List, Merge Many Lists, Merge Ranges, Meeting Room Minimizer, Course Order and Recent Cache: 10 -> 30 problems. Each input is a worst case for the naive solution (a window half the array, a nest of brackets, `aaa...a` against `aaa...ab`, a snake-shaped grid, n / 32 lists, shuffled disjoint ranges, a cache filled before it is used), and every shipped JavaScript solution measures `matches`.
+- Input helpers for growth specs (`src/js/engine/growth-inputs.js`, pure, seeded): int arrays (range, distinct, sorted), strings, string lists, grids, level-order trees (complete or random with a height cap, optionally a BST), linked lists, intervals and edge lists (connected, DAG, weighted). Unit tests in `tests/growth-inputs.test.js`.
+- Growth coverage report (`node scripts/content/growth-coverage.mjs`): problems without `growth` grouped by input shape, with our target, the best known complexity and a suggested target; read-only.
+- One exclusion policy (`scripts/content/growth-exclusions.mjs`, docs/PROBLEM_FORMAT.md): SQL, fixed-size inputs, output-bound enumerations, backtracking searches and O(log n) targets, 33 problems with a reason each. `tests/growth-coverage.test.js` requires every problem to be covered, excluded or on the pending list, and the pending list (122) can only shrink.
+
+### Changed
+- The growth verifier (`tests/growth-solutions.test.js`) checks each problem in its own worker thread that loads only that problem, as the browser does. Loading all problems first kept about 1.5 GB alive, and collecting it during timed calls bent the curves; the file now passes without retries on the 30 problems and runs in about 65 s instead of about 120 s.
+
 ### Added: wave F2-2 (20 problems asked by companies hiring in Israel, docs/PLAN.md F2)
 - Zero By Powers (LeetCode 2571 idea, Medium): fewest +-2^k steps from n to 0, n up to 10^9; counting 1 bits and subtracting the largest power both fail, and the bit rule (carry through a run of 1s) is O(log n).
 - Undo Running Xor (LeetCode 2433 idea, Medium): recover an array from its running XORs, 10^5 values up to 10^9; neighbor XOR in O(n), where rebuilding each prefix needs about 5 * 10^9 XORs.

@@ -11,6 +11,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { edgeList } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const MAX_E = 100000;
@@ -267,6 +268,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). A random DAG with as many
+  // prerequisites as courses, so every course is taken and nothing stops early; scanning all
+  // courses for the smallest available one before each pick is V^2.
+  growth: {
+    target: 'n log n',
+    n: 'numCourses = prerequisites.length',
+    sizes: [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000],
+    input: (n, seed) => [n, edgeList(n, n, mulberry32(seed), { directed: true, acyclic: true })],
+  },
 };
 
 export default problem;

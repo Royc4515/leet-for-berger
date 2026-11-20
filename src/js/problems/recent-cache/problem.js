@@ -284,6 +284,17 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). n calls: n / 2 puts fill
+  // a cache of capacity n / 2, then n / 2 random gets and puts evict and refresh keys all over it,
+  // so keeping recency in an array (search, splice) is n^2 / 4. The ladder stops at the 2 * 10^5
+  // call limit, where the capacity reaches its own limit of 10^5.
+  growth: {
+    target: 'n',
+    n: 'number of calls',
+    sizes: [3125, 6250, 12500, 25000, 50000, 100000, 200000],
+    input: (n, seed) => fullSession(seed, n / 2, n / 2, 0.5),
+  },
 };
 
 export default problem;
