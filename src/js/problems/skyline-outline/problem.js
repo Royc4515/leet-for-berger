@@ -200,6 +200,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Buildings sorted by left edge over a span of 4 * n, up to n wide and up to 10^9 high: about a
+  // quarter of them are standing at any x, so the heap stays deep. Scanning every building at
+  // every edge is n^2.
+  growth: {
+    target: 'n log n',
+    n: 'buildings.length',
+    sizes: [4000, 8000, 16000, 32000, 64000],
+    input: (n, seed) => randomCity(seed, n, 4 * n, n, 1e9),
+  },
 };
 
 export default problem;

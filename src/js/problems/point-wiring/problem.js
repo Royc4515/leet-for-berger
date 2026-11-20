@@ -192,6 +192,15 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Distinct random points in the full coordinate range: Prim without a heap scans every point
+  // n times, so time is quadratic. A sorted list of all pair wires is n^2 log n.
+  growth: {
+    target: 'n^2',
+    n: 'points.length',
+    sizes: [250, 500, 1000, 2000, 4000],
+    input: (n, seed) => randomPoints(seed, n, MAX_C),
+  },
 };
 
 export default problem;

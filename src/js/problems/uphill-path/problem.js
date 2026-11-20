@@ -206,6 +206,19 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // A square grid of n cells with random 31-bit values: the shipped solution sorts all cells (the
+  // n log n term) and then settles each once. A search from every cell without memoization is
+  // n^2 on grids with long climbs.
+  growth: {
+    target: 'n log n',
+    n: 'matrix.length * matrix[0].length',
+    sizes: [8192, 16384, 32768, 65536, 131072],
+    input: (n, seed) => {
+      const side = Math.round(Math.sqrt(n));
+      return [randomGrid(seed, side, side, MAX_VAL)];
+    },
+  },
 };
 
 export default problem;

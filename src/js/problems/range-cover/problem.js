@@ -180,6 +180,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Lists of 25 sorted values in [-10^5, 10^5], n / 25 of them: the window has to span every list,
+  // so it runs to the end of the merged order. The list length stays fixed and k grows with n; a
+  // scan that looks at every list for every value is n * k.
+  growth: {
+    target: 'n log n',
+    n: 'total values in nums',
+    sizes: [8000, 16000, 32000, 64000, 128000],
+    input: (n, seed) => [randomLists(seed, Math.max(1, Math.round(n / 25)), 25, -MAX_V, MAX_V, true)],
+  },
 };
 
 export default problem;

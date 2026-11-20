@@ -204,6 +204,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Words of 50 letters, each a random shift of one of n / 4 base words: every word is normalized
+  // letter by letter and joins a group. Word length stays fixed, so n is the word count; comparing
+  // every pair of words for a common shift is n^2.
+  growth: {
+    target: 'n',
+    n: 'words.length',
+    sizes: [1000, 2000, 4000, 8000, 16000],
+    input: (n, seed) => [shiftedWords(seed, n, Math.max(1, n >> 2), MAX_LEN, MAX_LEN)],
+  },
 };
 
 export default problem;
