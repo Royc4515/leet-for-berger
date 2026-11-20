@@ -281,6 +281,13 @@ const CONTENT_IDS = {
   'minimum-distance-between-bst-nodes': ['bst-min-gap', 'verified'],
   'palindrome-pairs': ['palindrome-joins', 'verified'],
   'employees-earning-more-than-their-managers': ['above-manager-pay', 'verified'],
+  // Wave F2-1, group D
+  'valid-sudoku': ['sudoku-check', 'verified'],
+  'majority-element': ['dominant-value', 'verified'],
+  // Returns the deduplicated prefix as an array instead of mutating and returning its length.
+  'remove-duplicates-from-sorted-array': ['unique-prefix', 'verified'],
+  'missing-number': ['gap-in-range', 'verified'],
+  'find-the-longest-equal-subarray': ['equal-after-deletes', 'verified'],
 };
 
 const WINDOWS = [
@@ -563,7 +570,8 @@ async function main() {
     }
     if (p.companies.size >= wave2.minCompanies || companyTop.has(p.slug)) why.push('company-common');
     if (companyVersions.has(p.slug)) why.push('company-version');
-    if (israeliTop.has(p.slug)) why.push('israeli-company');
+    // extraSlugs: asked by a company hiring in Israel that the top-30 rule missed (selection.json).
+    if (israeliTop.has(p.slug) || wave2.extraSlugs?.includes(p.slug)) why.push('israeli-company');
     if (wave2.platformLists.some((l) => p.lists.includes(l))) why.push('platform-practice');
     return why;
   };

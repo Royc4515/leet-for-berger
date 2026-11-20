@@ -19,6 +19,7 @@
   "topCompanies": 20,
   "topPerCompany": 30,
   "israeliTopPerCompany": 30,
+  "extraSlugs": ["find-the-longest-equal-subarray"],
   "platformLists": [
    "codility-lessons",
    "original"

@@ -116,6 +116,7 @@
   "exclusive-time-of-functions": "stack/simulation",
   "factorial-trailing-zeroes": "math-basics/prime-sieve",
   "find-all-anagrams-in-a-string": "sliding-window/window-frequency-map",
+  "find-the-longest-equal-subarray": "sliding-window/variable-window",
   "find-all-numbers-disappeared-in-an-array": "arrays-hashing/in-place-indexing",
   "find-customer-referee": "sql/select-filter",
   "find-k-closest-elements": "binary-search/lower-upper-bound",
