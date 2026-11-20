@@ -8,6 +8,13 @@
 ### Added
 - Startup-graph guard (`tests/startup-graph.test.js`): walks the static imports from `main.js` and fails if views, problem modules, the engine or runners creep into the first-load graph, or the graph grows past a cap.
 
+### Added: wave F2-2
+- Zero By Powers (LeetCode 2571 idea, Medium): fewest +-2^k steps from n to 0, n up to 10^9; counting 1 bits and subtracting the largest power both fail, and the bit rule (carry through a run of 1s) is O(log n).
+- Undo Running Xor (LeetCode 2433 idea, Medium): recover an array from its running XORs, 10^5 values up to 10^9; neighbor XOR in O(n), where rebuilding each prefix needs about 5 * 10^9 XORs.
+- Fizz Buzz List (LeetCode 412 idea, Easy): the classic warm-up with n raised to 10^5 and the answer a string array; the check order is the only trap.
+- Base Four Check (LeetCode 342 idea, Easy): is a signed 32-bit int a power of four; one-bit test plus an even-position mask, with the extremes -2^31 and 2^31 - 1 in the tests.
+- Product Cap Subarrays (LeetCode 713 idea, Medium): count subarrays with product below k for 10^5 values up to 10^4 and k up to 10^9; a sliding window whose 64-bit product stays under 10^13, and the count (up to 5,000,050,000) is returned as a 64-bit integer.
+
 ### Added: wave F2-1 (20 problems asked by companies hiring in Israel, docs/PLAN.md F2)
 - Word Order Flip (LeetCode 151 idea, Medium): reverse the order of the words in a line with sloppy spacing; 10^5 characters, so split-and-reverse leaves empty words and prepending is quadratic.
 - Digit Flip (LeetCode 7 idea, Medium): reverse the digits of a signed 32-bit integer, 0 when the result leaves the 32-bit range; every language needs a 64-bit intermediate or a pre-check.

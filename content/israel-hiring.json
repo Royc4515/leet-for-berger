@@ -14,6 +14,11 @@
   ]
  },
  "companies": {
+  "6sense": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Accenture": {
    "israel": "none",
    "tier": 3
@@ -1279,6 +1284,11 @@
    "israel": "present",
    "tier": 3,
    "source": "https://en.globes.co.il/en/article-1001406519"
+  },
+  "Yatra": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Yelp": {
    "israel": "none",

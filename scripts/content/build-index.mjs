@@ -311,6 +311,14 @@ const CONTENT_IDS = {
   'remove-duplicates-from-sorted-array': ['unique-prefix', 'verified'],
   'missing-number': ['gap-in-range', 'verified'],
   'find-the-longest-equal-subarray': ['equal-after-deletes', 'verified'],
+  // Wave F2-2, group B
+  'minimum-operations-to-reduce-an-integer-to-0': ['zero-by-powers', 'verified'],
+  'find-the-original-array-of-prefix-xor': ['undo-running-xor', 'verified'],
+  // Limit raised to 10^5 so the answer is a long string array.
+  'fizz-buzz': ['fizz-buzz-list', 'verified'],
+  'power-of-four': ['base-four-check', 'verified'],
+  // The answer is returned as a 64-bit integer: with n up to 10^5 it can reach 5 * 10^9.
+  'subarray-product-less-than-k': ['product-cap-subarrays', 'verified'],
 };
 
 const WINDOWS = [
