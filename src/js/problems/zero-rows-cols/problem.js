@@ -178,6 +178,18 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // A square grid of n cells of random 32-bit values with three zeros: both passes read every
+  // cell. Few zeros keep the marker rows and columns from clearing most of the grid.
+  growth: {
+    target: 'n',
+    n: 'matrix.length * matrix[0].length',
+    sizes: [262144, 524288, 1048576, 2097152, 4194304],
+    input: (n, seed) => {
+      const side = Math.round(Math.sqrt(n));
+      return [gridWithZeros(seed, side, side, [], 3)];
+    },
+  },
 };
 
 export default problem;

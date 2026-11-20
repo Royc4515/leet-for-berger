@@ -163,6 +163,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Words of 16 letters drawn from n / 4 shuffled base words, so every word has a few anagrams
+  // to join and all of them cost the same to key. Word length stays fixed, so n is the word count;
+  // comparing every pair of words for anagrams is n^2.
+  growth: {
+    target: 'n',
+    n: 'words.length',
+    sizes: [1000, 2000, 4000, 8000, 16000],
+    input: (n, seed) => [shuffledWords(seed, n, Math.max(1, n >> 6), 16, 'abcdefghijklmnopqrstuvwxyz')],
+  },
 };
 
 export default problem;

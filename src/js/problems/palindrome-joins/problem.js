@@ -255,6 +255,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Distinct words of up to 50 letters over three letters, built as stems and their mirrored
+  // partners with palindromic middles, so the palindrome checks run deep and pairs exist. Word
+  // length stays at most 50, so n is the word count; trying every ordered pair is n^2.
+  growth: {
+    target: 'n',
+    n: 'words.length',
+    sizes: [1000, 2000, 4000, 8000, 16000],
+    input: (n, seed) => [mirroredWords(seed, n)],
+  },
 };
 
 export default problem;

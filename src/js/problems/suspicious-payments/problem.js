@@ -241,6 +241,30 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // One customer per 8 records on average (names are distinct base-26 strings), cities and minutes
+  // random, so records meet within their own name group and the group sizes stay bounded. Comparing
+  // every record with every other one is n^2.
+  growth: {
+    target: 'n log n',
+    n: 'payments.length',
+    sizes: [2000, 4000, 8000, 16000, 32000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const pick = (k) => Math.floor(rnd() * k);
+      const people = Math.max(1, n >> 3);
+      const names = Array.from({ length: people }, (_, i) => {
+        let name = '';
+        let v = i;
+        do {
+          name += String.fromCharCode(97 + (v % 26));
+          v = Math.floor(v / 26);
+        } while (v > 0);
+        return name;
+      });
+      return [Array.from({ length: n }, () => `${names[pick(people)]},${pick(MAX_MINUTE + 1)},${pick(AMOUNT_LIMIT + 1)},${CITIES[pick(CITIES.length)]}`)];
+    },
+  },
 };
 
 export default problem;

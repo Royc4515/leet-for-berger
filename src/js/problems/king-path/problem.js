@@ -197,6 +197,24 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // A winding route: open corridors 7 rows wide, each closed from the next by a wall row with one
+  // gap, alternately at the right and left end (n x n, n = 8k + 1). The route is about n^2 / 8
+  // cells of corridor long, so the wave search visits every open cell and time is quadratic in the
+  // side. Fixed shape: the seed is not needed. Trying routes one by one is far worse. Rows are
+  // built with Array.from: packed arrays copy about 4 times faster than holey ones, and every
+  // timed call pays for a copy of the grid outside the clock.
+  growth: {
+    target: 'n^2',
+    n: 'grid.length',
+    sizes: [129, 257, 513, 1025, 2049],
+    input: (n) => [
+      Array.from({ length: n }, (_, r) => {
+        const gap = (r - 7) % 16 === 0 ? n - 1 : 0;
+        return Array.from({ length: n }, (_, c) => (r % 8 === 7 && c !== gap ? 1 : 0));
+      }),
+    ],
+  },
 };
 
 export default problem;

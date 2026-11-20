@@ -9,6 +9,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 const MAX_WORDS = 10000;
 const MAX_TOTAL = 1000000;
@@ -161,6 +162,19 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // 1000 words that agree everywhere except the last letter of the last one: the scan reads every
+  // letter, and trying each prefix length with a whole-prefix comparison is n^2 / 1000.
+  growth: {
+    target: 'n',
+    n: 'total length of strs',
+    sizes: [262144, 524288, 1048576, 2097152, 4194304, 8388608],
+    input: (n, seed) => {
+      const count = 1000;
+      const base = charString(Math.floor(n / count) - 1, mulberry32(seed));
+      return [Array.from({ length: count }, (_, i) => base + (i === count - 1 ? 'b' : 'a'))];
+    },
+  },
 };
 
 export default problem;

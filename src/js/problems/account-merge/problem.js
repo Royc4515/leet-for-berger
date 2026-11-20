@@ -247,6 +247,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // n / 4 people, each owning 4 email addresses spread over their accounts of 1 to 9 listed
+  // emails: accounts of one person chain together, so every merge and the final sorts happen.
+  // Merging accounts pairwise is n^2.
+  growth: {
+    target: 'n log n',
+    n: 'accounts.length',
+    sizes: [1000, 2000, 4000, 8000, 16000],
+    input: (n, seed) => [randomCase(seed, n, Math.max(1, n >> 2), 4)],
+  },
 };
 
 export default problem;

@@ -177,6 +177,24 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // One booking per 16 flights, each over a random range of flights with 1 to 1000 seats (totals
+  // stay inside 32 bits): the answer has n entries and the ranges are long, so adding every booking
+  // to every flight it covers is about n^2 / 48.
+  growth: {
+    target: 'n',
+    n: 'n (flights; bookings.length = n / 16)',
+    sizes: [512000, 1024000, 2048000, 4096000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const bookings = Array.from({ length: n >> 4 }, () => {
+        const a = 1 + Math.floor(rnd() * n);
+        const b = 1 + Math.floor(rnd() * n);
+        return [Math.min(a, b), Math.max(a, b), 1 + Math.floor(rnd() * 1000)];
+      });
+      return [bookings, n];
+    },
+  },
 };
 
 export default problem;

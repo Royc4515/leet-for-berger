@@ -208,6 +208,19 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // A square grid of n cells with 40% obstacles and open corners: the 0-1 search reaches most of
+  // the grid before it settles the far corner. Cells beyond the statement's 10^5 are fine, only
+  // the shape counts.
+  growth: {
+    target: 'n',
+    n: 'rows * cols',
+    sizes: [32768, 65536, 131072, 262144, 524288],
+    input: (n, seed) => {
+      const side = Math.round(Math.sqrt(n));
+      return randomGrid(seed, side, side, 0.4);
+    },
+  },
 };
 
 export default problem;

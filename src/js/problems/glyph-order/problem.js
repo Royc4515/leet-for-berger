@@ -252,6 +252,27 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Words of 25 letters in strictly increasing order of a secret alphabet (a 25-letter stem and a
+  // five-digit counter written in that alphabet): the list is valid, so nothing stops early, every
+  // pair shares 20 or more letters before it differs, and every letter is read. The work is the
+  // total letter count, so n is the word count at a fixed word length.
+  growth: {
+    target: 'n',
+    n: 'words.length',
+    sizes: [16000, 32000, 64000, 128000],
+    input: (n, seed) => {
+      const order = secretOrder(mulberry32(seed));
+      const stem = order.slice(0, 20);
+      return [
+        Array.from({ length: n }, (_, i) => {
+          let tail = '';
+          for (let v = i, k = 0; k < 5; k++, v = Math.floor(v / 26)) tail = order[v % 26] + tail;
+          return stem + tail;
+        }),
+      ];
+    },
+  },
 };
 
 export default problem;

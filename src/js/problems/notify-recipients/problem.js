@@ -222,6 +222,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+
+  // n users in up to 4 of n / 10 groups, and n requests, half of them for whole groups: groups
+  // average 20 members and are asked for again and again, so walking a group per request is
+  // n * 20 * n / 2 while indexing once is linear.
+  growth: {
+    target: 'n log n',
+    n: 'users.length',
+    sizes: [4000, 8000, 16000, 32000, 64000],
+    input: (n, seed) => randomCase(seed, n, Math.max(1, Math.floor(n / 10)), 4, n, 0.5),
+  },
 };
 
 export default problem;

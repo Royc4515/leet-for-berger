@@ -155,6 +155,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Random intervals of length 1 to 100 inside the coordinate range, so many overlap and the
+  // greedy pass keeps about a fixed share. Trying every subset order or an n x n compatibility
+  // table is quadratic or worse.
+  growth: {
+    target: 'n log n',
+    n: 'intervals.length',
+    sizes: [4000, 8000, 16000, 32000, 64000],
+    input: (n, seed) => [randomIntervals(seed, n, 100)],
+  },
 };
 
 export default problem;
