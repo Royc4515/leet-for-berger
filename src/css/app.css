@@ -47,6 +47,9 @@ body {
 
 body {
   display: grid;
+  /* An implicit auto column grows to the widest child's max-content (the header, 550px on a phone)
+     and drags <main> past the viewport. Pin it to the viewport. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: var(--header-h) minmax(0, 1fr);
   background: var(--bg);
   color: var(--text);
@@ -122,6 +125,10 @@ pre {
 .nav {
   display: flex;
   gap: 4px;
+  /* Shrinks and scrolls sideways on a phone instead of widening the header. */
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 .nav a {
   padding: 6px 12px;
@@ -141,6 +148,7 @@ pre {
 .header-right {
   margin-left: auto;
   display: flex;
+  flex: none;
   align-items: center;
   gap: 10px;
 }
@@ -1278,6 +1286,11 @@ body.resizing-y * {
   .nav a {
     padding: 6px 8px;
     white-space: nowrap;
+  }
+  /* Fade the right edge so the clipped links read as scrollable. */
+  .nav {
+    -webkit-mask-image: linear-gradient(to right, #000 85%, transparent);
+    mask-image: linear-gradient(to right, #000 85%, transparent);
   }
   .streak-chip {
     white-space: nowrap;

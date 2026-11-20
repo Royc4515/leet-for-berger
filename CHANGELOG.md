@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- Phone layout: every page scrolled sideways at 390px (scrollWidth about 550) because the body grid's implicit column grew to the header's max-content width and pushed the page past the viewport, clipping company chips and statements. The column is now pinned to the viewport and the header nav scrolls sideways on its own. The mobile e2e step asserts no horizontal overflow on the main routes.
+
 ### Added
 - Startup-graph guard (`tests/startup-graph.test.js`): walks the static imports from `main.js` and fails if views, problem modules, the engine or runners creep into the first-load graph, or the graph grows past a cap.
 

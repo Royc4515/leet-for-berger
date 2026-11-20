@@ -633,6 +633,15 @@ try {
     await page.goto(`${BASE}#/problem/smallest-base-segment`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     await shot('10-mobile');
+    // The page must never scroll sideways on a phone: anything wider than the viewport is clipped
+    // for the reader (company chips, statement). Wide content scrolls inside its own container.
+    for (const route of ['#/', '#/problem/smallest-base-segment', '#/path', '#/companies', '#/companies/google', '#/modes']) {
+      await page.goto(`${BASE}${route}`);
+      await page.waitForSelector('#view > *', { timeout: 30000 });
+      await page.waitForTimeout(500);
+      const { scrollWidth, innerWidth } = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }));
+      if (scrollWidth > innerWidth) throw new Error(`${route} overflows at 390px: scrollWidth ${scrollWidth} > ${innerWidth}`);
+    }
     await page.setViewportSize({ width: 1440, height: 900 });
   });
 
