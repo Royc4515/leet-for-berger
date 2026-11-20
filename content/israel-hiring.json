@@ -174,6 +174,11 @@
    "tier": 2,
    "source": "https://bloomberg.avature.net/careers/JobDetail/2026-Software-Engineer-Tel-Aviv/14230"
   },
+  "Bnp Paribas": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "BNY Mellon": {
    "israel": "none",
    "tier": 3
@@ -381,6 +386,11 @@
    "tier": 2,
    "unverified": true
   },
+  "EarnIn": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "eBay": {
    "israel": "none",
    "tier": 2,
@@ -528,6 +538,11 @@
   "IMC": {
    "israel": "none",
    "tier": 3
+  },
+  "Impetus": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Infosys": {
    "israel": "present",
@@ -778,6 +793,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Odoo": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Okta": {
    "israel": "present",
    "tier": 2,
@@ -870,6 +890,11 @@
    "source": "https://calcalistech.com/ctechnews/article/rytzpacjs",
    "rankIL": 19
   },
+  "Quince": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Quora": {
    "israel": "none",
    "tier": 2,
@@ -934,6 +959,11 @@
    "tier": 2,
    "source": "https://www.calcalistech.com/ctechnews/article/ryjjvov6fx",
    "rankIL": 15
+  },
+  "Samsara": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Samsung": {
    "israel": "major",
@@ -1044,6 +1074,10 @@
    "israel": "none",
    "tier": 3
   },
+  "Tech Mahindra": {
+   "israel": "none",
+   "tier": 3
+  },
   "Tekion": {
    "israel": "none",
    "tier": 3
@@ -1141,6 +1175,10 @@
    "israel": "none",
    "tier": 2,
    "unverified": true
+  },
+  "Virtusa": {
+   "israel": "none",
+   "tier": 3
   },
   "Visa": {
    "israel": "none",

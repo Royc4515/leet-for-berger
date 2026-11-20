@@ -281,6 +281,36 @@ const CONTENT_IDS = {
   'minimum-distance-between-bst-nodes': ['bst-min-gap', 'verified'],
   'palindrome-pairs': ['palindrome-joins', 'verified'],
   'employees-earning-more-than-their-managers': ['above-manager-pay', 'verified'],
+  // Wave F2-1, group B
+  'rotting-oranges': ['rot-spread', 'verified'],
+  'validate-binary-search-tree': ['bst-check', 'verified'],
+  'palindrome-linked-list': ['list-mirror', 'verified'],
+  'last-stone-weight': ['stone-smash', 'verified'],
+  'find-consecutive-integers-from-a-data-stream': ['streak-watch', 'verified'],
+  // Wave F2-1, group A
+  'decode-string': ['unfold-brackets', 'verified'],
+  // Adds a nesting limit, so the hidden tests have many distinct inputs (n alone has 11 values).
+  'generate-parentheses': ['balanced-pairs', 'verified'],
+  'restore-ip-addresses': ['dotted-quads', 'verified'],
+  'special-binary-string': ['hill-rearrange', 'verified'],
+  'maximum-nesting-depth-of-the-parentheses': ['paren-depth', 'verified'],
+  // Wave F2-1, group C
+  'reverse-words-in-a-string': ['word-order-flip', 'verified'],
+  // Typed as 32-bit int in and out; the reversal itself needs a 64-bit intermediate.
+  'reverse-integer': ['digit-flip', 'verified'],
+  // Input and output are 64-bit integers in [0, 2^32), so the top bit is not a sign in any language.
+  'reverse-bits': ['mirror-bits', 'verified'],
+  // Returns the next arrangement instead of rewriting the array in place, so every harness can judge it.
+  'next-permutation': ['next-arrangement', 'verified'],
+  // Returns the rotated array instead of rewriting it in place.
+  'rotate-array': ['ring-shift', 'verified'],
+  // Wave F2-1, group D
+  'valid-sudoku': ['sudoku-check', 'verified'],
+  'majority-element': ['dominant-value', 'verified'],
+  // Returns the deduplicated prefix as an array instead of mutating and returning its length.
+  'remove-duplicates-from-sorted-array': ['unique-prefix', 'verified'],
+  'missing-number': ['gap-in-range', 'verified'],
+  'find-the-longest-equal-subarray': ['equal-after-deletes', 'verified'],
 };
 
 const WINDOWS = [
@@ -305,7 +335,10 @@ const RECENCY_ORDER = ['30d', '3m', '6m', 'older', 'reported'];
 const REPORTED_FREQUENCY = 50;
 
 /** Reasons that only add coverage; a problem selected for these alone is wave 2. */
-const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice'];
+const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice', 'hand-picked'];
+
+/** Problems authored on purpose although no selection rule picks them (few companies, no list). */
+const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray']);
 
 const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -565,6 +598,7 @@ async function main() {
     if (companyVersions.has(p.slug)) why.push('company-version');
     if (israeliTop.has(p.slug)) why.push('israeli-company');
     if (wave2.platformLists.some((l) => p.lists.includes(l))) why.push('platform-practice');
+    if (HAND_PICKED.has(p.slug)) why.push('hand-picked');
     return why;
   };
 
