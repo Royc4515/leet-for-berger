@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- Startup-graph guard (`tests/startup-graph.test.js`): walks the static imports from `main.js` and fails if views, problem modules, the engine or runners creep into the first-load graph, or the graph grows past a cap.
+
 ### Added: wave F2-1 (20 problems asked by companies hiring in Israel, docs/PLAN.md F2)
 - Word Order Flip (LeetCode 151 idea, Medium): reverse the order of the words in a line with sloppy spacing; 10^5 characters, so split-and-reverse leaves empty words and prepending is quadratic.
 - Digit Flip (LeetCode 7 idea, Medium): reverse the digits of a signed 32-bit integer, 0 when the result leaves the 32-bit range; every language needs a 64-bit intermediate or a pre-check.
