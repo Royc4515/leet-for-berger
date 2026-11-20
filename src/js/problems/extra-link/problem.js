@@ -118,6 +118,35 @@ const hiddenArgs = [
   [randomCase(13, MAX_N)],
 ];
 
+/** A random tree on labels 1..n, then one extra link that closes the only cycle, placed last so no early exit. */
+function growthEdges(n, rnd) {
+  const label = Array.from({ length: n }, (_, i) => i + 1);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [label[i], label[j]] = [label[j], label[i]];
+  }
+  const edge = (a, b) => (a < b ? [a, b] : [b, a]);
+  const seen = new Set();
+  const edges = [];
+  for (let i = 1; i < n; i++) {
+    const j = Math.floor(rnd() * i);
+    edges.push(edge(label[i], label[j]));
+    seen.add(Math.min(label[i], label[j]) * (n + 1) + Math.max(label[i], label[j]));
+  }
+  for (let i = edges.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [edges[i], edges[j]] = [edges[j], edges[i]];
+  }
+  for (;;) {
+    const a = 1 + Math.floor(rnd() * n);
+    const b = 1 + Math.floor(rnd() * n);
+    if (a !== b && !seen.has(Math.min(a, b) * (n + 1) + Math.max(a, b))) {
+      edges.push(edge(a, b));
+      return edges;
+    }
+  }
+}
+
 export const problem = {
   id: 'extra-link',
   title: 'Extra Link',
@@ -232,6 +261,12 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+  growth: {
+    target: 'n',
+    n: 'number of links (edges.length = n)',
+    sizes: [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000],
+    input: (n, seed) => [growthEdges(n, mulberry32(seed))],
+  },
 };
 
 export default problem;

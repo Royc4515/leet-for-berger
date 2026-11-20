@@ -17,6 +17,7 @@
 
 import { mulberry32 } from '../../engine/rng.js';
 import { treeFromLevel, levelFromTree, bstFromInsertions, checkLevelArray } from '../../engine/structures.js';
+import { levelTree } from '../../engine/growth-inputs.js';
 
 const MAX_NODES = 10000;
 const MAX_HEIGHT = 500;
@@ -184,6 +185,36 @@ const hiddenArgs = [
   session([randomTree(139, 500)], [randomTree(149, 500), randomTree(151, 500), randomTree(157, 500)]),
 ];
 
+/** Pre-order text of a level-order tree, with "#" for a missing child, as serialize writes it. */
+function growthPreorder(level) {
+  const val = [];
+  const left = [];
+  const right = [];
+  let pos = 1;
+  val.push(level[0]);
+  for (let i = 0; i < val.length; i++) {
+    for (const side of [left, right]) {
+      if (pos < level.length && level[pos] !== null) {
+        side[i] = val.length;
+        val.push(level[pos]);
+      } else side[i] = -1;
+      pos++;
+    }
+  }
+  const out = [];
+  const stack = [0];
+  while (stack.length) {
+    const i = stack.pop();
+    if (i === -1) {
+      out.push('#');
+      continue;
+    }
+    out.push(String(val[i]));
+    stack.push(right[i], left[i]);
+  }
+  return out.join(',');
+}
+
 export const problem = {
   id: 'tree-codec',
   title: 'Tree Codec',
@@ -323,6 +354,15 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'number of nodes (one serialize and one deserialize call)',
+    sizes: [4000, 8000, 16000, 32000, 64000, 128000, 256000],
+    input: (n, seed) => {
+      const tree = levelTree(n, mulberry32(seed), { shape: 'random', maxHeight: MAX_HEIGHT, min: -MAX_ABS, max: MAX_ABS });
+      return [['Codec', 'serialize', 'deserialize'], [[], [tree], [growthPreorder(tree)]]];
+    },
+  },
 };
 
 export default problem;

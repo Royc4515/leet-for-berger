@@ -19,6 +19,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 const MAX_CAP = 100000;
 const MAX_CALLS = 100000;
@@ -272,6 +273,27 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'number of calls (capacity 5000)',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const ops = ['RingQueue'];
+      const args = [[5000]];
+      while (ops.length < n) {
+        const r = rnd();
+        if (r < 0.4) {
+          ops.push('push');
+          args.push([randInt(rnd, 0, MAX_VAL)]);
+        } else {
+          ops.push(r < 0.65 ? 'pop' : r < 0.75 ? 'front' : r < 0.85 ? 'back' : r < 0.92 ? 'isEmpty' : 'isFull');
+          args.push([]);
+        }
+      }
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;

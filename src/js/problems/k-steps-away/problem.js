@@ -14,6 +14,7 @@
 
 import { mulberry32 } from '../../engine/rng.js';
 import { treeFromLevel, levelFromTree, bstFromInsertions, checkLevelArray } from '../../engine/structures.js';
+import { levelTree } from '../../engine/growth-inputs.js';
 
 const MAX_NODES = 10000;
 const MAX_HEIGHT = 300;
@@ -260,6 +261,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1], args[2]),
+  growth: {
+    target: 'n log n',
+    n: 'number of nodes (target is the root, k = 20)',
+    // Distinct values in 0..10^5 cap the tree at 100001 nodes.
+    sizes: [6250, 12500, 25000, 50000, 100000],
+    input: (n, seed) => {
+      const tree = levelTree(n, mulberry32(seed), { shape: 'random', maxHeight: MAX_HEIGHT, min: 0, max: MAX_VAL, bst: true });
+      return [tree, tree[0], 20];
+    },
+  },
 };
 
 /**

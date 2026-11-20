@@ -12,6 +12,7 @@
 
 import { mulberry32 } from '../../engine/rng.js';
 import { checkNestedList } from '../../engine/structures.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 const MAX_INTS = 50000;
 const MAX_V = 1000000;
@@ -133,6 +134,25 @@ const hiddenArgs = [
   drainOps(randomNested(11, 5000, MAX_DEPTH), { seed: 11, repeat: 0.2 }),
 ];
 
+/** A nested list holding exactly `count` integers: some empty lists, sublists up to 4 levels deep. */
+function growthNested(count, depth, rnd) {
+  const list = [];
+  let left = count;
+  while (left > 0) {
+    const r = rnd();
+    if (depth === 0 || r < 0.6) {
+      list.push(randInt(rnd, -MAX_V, MAX_V));
+      left--;
+    } else if (r < 0.7) list.push([]);
+    else {
+      const size = Math.min(left, randInt(rnd, 1, 8));
+      list.push(growthNested(size, depth - 1, rnd));
+      left -= size;
+    }
+  }
+  return list;
+}
+
 export const problem = {
   id: 'nested-flatten',
   title: 'Nested Flattener',
@@ -240,6 +260,21 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n',
+    n: 'number of calls (hasNext then next for each integer)',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const count = Math.floor((n - 2) / 2);
+      const ops = ['NestedIterator'];
+      const args = [[growthNested(count, 4, rnd)]];
+      for (let i = 0; i < count; i++) ops.push('hasNext', 'next');
+      ops.push('hasNext');
+      while (args.length < ops.length) args.push([]);
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;

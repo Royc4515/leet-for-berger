@@ -17,6 +17,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 const MAX_LEN = 100000;
 const MAX_CALLS = 100000;
@@ -303,6 +304,32 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1]),
+  growth: {
+    target: 'n log n',
+    n: 'number of calls (length 10000; 50% set, 5% snap, 45% get)',
+    sizes: [8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const ops = ['CheckpointArray', 'snap'];
+      const args = [[10000], []];
+      let snaps = 1;
+      while (ops.length < n) {
+        const r = rnd();
+        if (r < 0.5) {
+          ops.push('set');
+          args.push([randInt(rnd, 0, 9999), randInt(rnd, 0, MAX_VAL)]);
+        } else if (r < 0.55) {
+          ops.push('snap');
+          args.push([]);
+          snaps++;
+        } else {
+          ops.push('get');
+          args.push([randInt(rnd, 0, 9999), randInt(rnd, 0, snaps - 1)]);
+        }
+      }
+      return [ops, args];
+    },
+  },
 };
 
 export default problem;

@@ -12,6 +12,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { randInt } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const MAX_E = 200000;
@@ -255,6 +256,23 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0], args[1], args[2]),
+  growth: {
+    target: 'n log n',
+    n: 'nodes (links = 3n)',
+    sizes: [4000, 8000, 16000, 32000, 64000, 128000, 256000],
+    // Every node is reachable from node 1 (each node has a link from an earlier one), so Dijkstra settles all n nodes.
+    input: (n, seed) => {
+      const rnd = mulberry32(seed);
+      const times = [];
+      for (let v = 2; v <= n; v++) times.push([randInt(rnd, 1, v - 1), v, randInt(rnd, 0, MAX_W)]);
+      while (times.length < 3 * n) {
+        const u = randInt(rnd, 1, n);
+        const v = randInt(rnd, 1, n);
+        if (u !== v) times.push([u, v, randInt(rnd, 0, MAX_W)]);
+      }
+      return [times, n, 1];
+    },
+  },
 };
 
 export default problem;
