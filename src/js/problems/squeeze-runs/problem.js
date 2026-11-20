@@ -161,6 +161,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Short random runs (1 to 3
+  // characters), so the output is about as long as the input: building it by copying the string
+  // so far at every run is n^2.
+  growth: {
+    target: 'n',
+    n: 's.length',
+    sizes: [4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => [randomRuns(seed, n, 3)],
+  },
 };
 
 export default problem;

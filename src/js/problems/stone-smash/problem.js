@@ -14,6 +14,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { intArray } from '../../engine/growth-inputs.js';
 
 const MAX_N = 100000;
 const MAX_W = 1000000000;
@@ -184,6 +185,16 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). Distinct random weights:
+  // no smash ends in a tie early, so about n smashes run, and re-sorting or scanning for the two
+  // heaviest before each one is n^2 (log n).
+  growth: {
+    target: 'n log n',
+    n: 'stones.length',
+    sizes: [2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000],
+    input: (n, seed) => [intArray(n, mulberry32(seed), { min: 1, max: MAX_W, distinct: true })],
+  },
 };
 
 export default problem;

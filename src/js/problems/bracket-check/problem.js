@@ -7,6 +7,7 @@
  */
 
 import { mulberry32 } from '../../engine/rng.js';
+import { charString } from '../../engine/growth-inputs.js';
 
 const PAIRS = { ')': '(', ']': '[', '}': '{' };
 
@@ -180,6 +181,20 @@ export const problem = {
 
   /** Custom inputs have no author-provided answer, so the reference supplies it. */
   solveReference: (args) => reference(args[0]),
+
+  // Growth estimate after Accepted (docs/adr/0004-complexity-feedback.md). One nest of n / 2 random
+  // openers, then their closers: valid, so nothing stops early, and deleting matched pairs ("()")
+  // until none are left removes one pair per pass, n^2 / 4 in all.
+  growth: {
+    target: 'n',
+    n: 's.length',
+    sizes: [4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000],
+    input: (n, seed) => {
+      const opens = charString(n / 2, mulberry32(seed), { alphabet: '([{' });
+      const closes = [...opens].reverse().map((c) => ({ '(': ')', '[': ']', '{': '}' })[c]);
+      return [opens + closes.join('')];
+    },
+  },
 };
 
 export default problem;
