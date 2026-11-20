@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Wave F2-1
+- Word Order Flip (LeetCode 151 idea, Medium): reverse the order of the words in a line with sloppy spacing; 10^5 characters, so split-and-reverse leaves empty words and prepending is quadratic.
+- Digit Flip (LeetCode 7 idea, Medium): reverse the digits of a signed 32-bit integer, 0 when the result leaves the 32-bit range; every language needs a 64-bit intermediate or a pre-check.
+- Mirror Bits (LeetCode 190 idea, Easy): reverse all 32 bits of a value; input and output are 64-bit integers in [0, 2^32) so the top bit is never a sign.
+- Next Arrangement (LeetCode 31 idea, Medium): next permutation with repeated values allowed; returns the array instead of rewriting it in place.
+- Ring Shift (LeetCode 189 idea, Medium): rotate an array right by k up to 10^9; returns the array instead of rewriting it in place.
+
 ### Added
 - Companies are ordered for a job search in Israel (`content/israel-hiring.json`, merged into `src/js/data/company-sets.json` at build time by `scripts/content/israel-companies.mjs`; the browser only filters, in `src/js/data/israel-hiring.js`): major employers first (by rankIL, tier, problem count), then those with an Israel office, then the rest. A filter ("Hiring in Israel", the default, "Top in Israel", "All") and a "Major in Israel" / "Israel office" badge sit on every card, and alias spellings (X/Twitter, Snap/Snapchat, Citi/Citigroup...) show as one company with merged problem lists.
 - The mock OA company picker is a searchable chip list with the same ordering and filter, instead of a select of 176 names; the selected company is clearly marked.
