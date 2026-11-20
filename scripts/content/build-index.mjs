@@ -341,6 +341,15 @@ const CONTENT_IDS = {
   'binary-tree-vertical-order-traversal': ['column-sweep', 'verified'],
   'search-suggestions-system': ['typeahead-hints', 'verified'],
   'shortest-path-in-binary-matrix': ['king-path', 'verified'],
+  // Wave F2-3, group D
+  'power-grid-maintenance': ['backup-station', 'verified'],
+  // The array can have 10^5 numbers, so a search over every order of picks cannot finish.
+  'delete-and-earn': ['value-harvest', 'verified'],
+  'count-ways-to-group-overlapping-ranges': ['range-groups', 'verified'],
+  // Limit raised to 10^5 jobs so the quadratic DP times out.
+  'maximum-profit-in-job-scheduling': ['best-job-selection', 'verified'],
+  // Limit raised to 10^5 nodes so trying every start node times out.
+  'collect-coins-in-a-tree': ['coin-sweep', 'verified'],
 };
 
 const WINDOWS = [
@@ -368,7 +377,7 @@ const REPORTED_FREQUENCY = 50;
 const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice', 'hand-picked'];
 
 /** Problems authored on purpose although no selection rule picks them (few companies, no list). */
-const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray']);
+const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray', 'collect-coins-in-a-tree']);
 
 const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
 

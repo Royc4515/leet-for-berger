@@ -19,6 +19,13 @@
 ### Changed
 - The growth verifier (`tests/growth-solutions.test.js`) checks each problem in its own worker thread that loads only that problem, as the browser does. Loading all problems first kept about 1.5 GB alive, and collecting it during timed calls bent the curves; the file now passes without retries on the 30 problems and runs in about 65 s instead of about 120 s.
 
+### Added: wave F2-3
+- Backup Station (LeetCode 3607 idea, Medium, graphs): grids of power stations, checks answered by the smallest online station of the grid, stations only go offline; union-find once and a forward-only pointer per grid, with 10^5 stations and queries so a scan per check is quadratic and deleting an offline station (splitting a grid) is caught.
+- Value Harvest (LeetCode 740 idea, Medium, dp): take a value to score every copy and lose its two neighbouring values; house robber along the value line, tests catch the distinct-values robber, the per-position robber and the biggest-total greedy, and one case reaches the 32-bit-safe answer 10^9.
+- Range Groups (LeetCode 2580 idea, Medium, intervals): split overlapping ranges into two groups, 2^blocks modulo 10^9 + 7; sort and keep the furthest end, with touching-but-disjoint ranges, nested ranges and 10^5 blocks (the power needs the modulus) in the tests.
+- Best Job Selection (LeetCode 1235 idea, Hard, dp): weighted interval scheduling with 10^5 jobs; sort by end and binary search the last compatible job (a job may start when another ends), where the quadratic DP and the greedy choices fail.
+- Coin Sweep (LeetCode 2603 idea, Hard, graphs): the shortest closed walk that collects every coin within two edges, on trees up to 10^5 nodes; trim coinless leaves, then two layers of leaves, and double the remaining edges, with path trees too deep for recursion.
+
 ### Added: wave F2-2 (20 problems asked by companies hiring in Israel, docs/PLAN.md F2)
 - Zero By Powers (LeetCode 2571 idea, Medium): fewest +-2^k steps from n to 0, n up to 10^9; counting 1 bits and subtracting the largest power both fail, and the bit rule (carry through a run of 1s) is O(log n).
 - Undo Running Xor (LeetCode 2433 idea, Medium): recover an array from its running XORs, 10^5 values up to 10^9; neighbor XOR in O(n), where rebuilding each prefix needs about 5 * 10^9 XORs.
