@@ -98,6 +98,11 @@
    "israel": "none",
    "tier": 3
   },
+  "AppFolio": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Apple": {
    "israel": "major",
    "tier": 1,
@@ -332,9 +337,19 @@
    "tier": 1,
    "unverified": true
   },
+  "Deepmind": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Delhivery": {
    "israel": "none",
    "tier": 3
+  },
+  "Deliveroo": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Dell": {
    "israel": "major",
@@ -817,6 +832,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Optiver": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Oracle": {
    "israel": "present",
    "tier": 2,
@@ -844,6 +864,11 @@
    "tier": 2,
    "source": "https://www.timesofisrael.com/in-second-biggest-exit-in-israeli-history-palo-alto-buys-cyberark-for-25-billion/",
    "rankIL": 8
+  },
+  "Patreon": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "PayPal": {
    "israel": "present",
@@ -940,6 +965,11 @@
    "israel": "none",
    "tier": 2
   },
+  "Rivian": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Robinhood": {
    "israel": "none",
    "tier": 2
@@ -947,6 +977,11 @@
   "Roblox": {
    "israel": "none",
    "tier": 2,
+   "unverified": true
+  },
+  "Rokt": {
+   "israel": "none",
+   "tier": 3,
    "unverified": true
   },
   "Roku": {
@@ -1059,6 +1094,11 @@
    "tier": 2,
    "unverified": true
   },
+  "StackAdapt": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Stripe": {
    "israel": "none",
    "tier": 2,
@@ -1101,6 +1141,11 @@
    "israel": "present",
    "tier": 2,
    "source": "https://builtin.com/job/experienced-digital-design-engineer/9660889"
+  },
+  "thoughtspot": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "TikTok": {
    "israel": "none",
@@ -1335,6 +1380,11 @@
   "Zoom": {
    "israel": "none",
    "tier": 2
+  },
+  "Zoox": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Zopsmart": {
    "israel": "none",

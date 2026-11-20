@@ -327,6 +327,13 @@ const CONTENT_IDS = {
   'power-of-four': ['base-four-check', 'verified'],
   // The answer is returned as a 64-bit integer: with n up to 10^5 it can reach 5 * 10^9.
   'subarray-product-less-than-k': ['product-cap-subarrays', 'verified'],
+  // Wave F2-2, group C
+  'snapshot-array': ['checkpoint-array', 'verified'],
+  'design-circular-queue': ['ring-queue', 'verified'],
+  // The cooldown is a constructor argument instead of the fixed 10 seconds.
+  'logger-rate-limiter': ['message-throttle', 'verified'],
+  'basic-calculator-ii': ['plain-arithmetic', 'verified'],
+  'largest-rectangle-in-histogram': ['skyline-block', 'verified'],
 };
 
 const WINDOWS = [
