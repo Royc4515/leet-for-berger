@@ -19,6 +19,13 @@
 ### Changed
 - The growth verifier (`tests/growth-solutions.test.js`) checks each problem in its own worker thread that loads only that problem, as the browser does. Loading all problems first kept about 1.5 GB alive, and collecting it during timed calls bent the curves; the file now passes without retries on the 30 problems and runs in about 65 s instead of about 120 s.
 
+### Added: wave F2-3
+- Weighted Draw Lookup (LeetCode 528 idea, Medium): the deterministic core of weighted random picking, where the draws are given and each answer is the index whose prefix interval holds the draw; prefix sums stay below 2^31 (total at most 10^9), a binary search per draw, and a lower bound is off by one on every draw that sits on an interval end.
+- Bounded Sum Pairs (LeetCode 2563 idea, Medium): count pairs i < j with a sum inside [lower, upper] for 10^5 values up to 10^9 in size; sort and two pointers twice, with the answer (up to 4,999,950,000) as a 64-bit integer.
+- Grid Duel (LeetCode 348 idea, Medium, design): an n x n duel with n up to 10^5, so the board cannot be stored; signed counters per row, column and diagonal give O(1) per move, and a full line of mixed marks is not a win.
+- Mini Feed (LeetCode 355 idea, Medium, design): post, follow, unfollow and a 10-tweet feed; every post carries an explicit timestamp, and between equal timestamps the later call is more recent. A heap merge of per-user lists gives O(F + 10 log F) per feed where collecting every tweet is billions of steps.
+- Daily Load Limit (LeetCode 1011 idea, Medium): the smallest daily weight limit that ships packages in order within D days, 10^5 packages up to 10^4; binary search on the limit with a greedy check, where trying every limit upward and the average both fail.
+
 ### Added: wave F2-2 (20 problems asked by companies hiring in Israel, docs/PLAN.md F2)
 - Zero By Powers (LeetCode 2571 idea, Medium): fewest +-2^k steps from n to 0, n up to 10^9; counting 1 bits and subtracting the largest power both fail, and the bit rule (carry through a run of 1s) is O(log n).
 - Undo Running Xor (LeetCode 2433 idea, Medium): recover an array from its running XORs, 10^5 values up to 10^9; neighbor XOR in O(n), where rebuilding each prefix needs about 5 * 10^9 XORs.

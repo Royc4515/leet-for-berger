@@ -631,6 +631,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Liftoff": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Lime": {
    "israel": "none",
    "tier": 3
@@ -671,6 +676,11 @@
   "MathWorks": {
    "israel": "none",
    "tier": 2,
+   "unverified": true
+  },
+  "Mcdonalds": {
+   "israel": "none",
+   "tier": 3,
    "unverified": true
   },
   "Media.net": {
@@ -1076,9 +1086,19 @@
    "tier": 3,
    "unverified": true
   },
+  "Sony": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Spacex": {
    "israel": "none",
    "tier": 2,
+   "unverified": true
+  },
+  "Spinny": {
+   "israel": "none",
+   "tier": 3,
    "unverified": true
   },
   "Splunk": {
