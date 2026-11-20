@@ -215,8 +215,8 @@ Hidden tests must target the classic wrong answers, not just "more of the same":
 
 ## Registering and verifying
 
-1. Import it in `src/js/problems/index.js` and add it to the `implemented` list.
-2. Remove its `planned` entry if one exists.
+1. Run `node scripts/content/build-catalog.mjs`: it adds the problem to `src/js/problems/catalog.js`, the metadata listing views read without loading any problem module (ADR 0008). Run it again after changing a problem's id, title, difficulty or topics; `tests/catalog.test.js` fails until you do.
+2. Remove its `planned` entry in `src/js/problems/index.js` if one exists.
 3. Add `tests/<id>.test.js`: reference vs brute force on random inputs, visible expectations agree with reference, parser accepts/rejects correctly.
 4. `npm run check`. `tests/solutions.test.js` compiles and runs all 8 solutions against the 15 cases and checks that the generated starter code compiles in every language. It also times each language's run (process startup included) and fails it if all 15 cases take longer than one case's `timeLimitMs`, so max-size tests must actually separate the target complexity from a naive one. `LFB_TIME_FACTOR` scales the budget on a slow machine (0 disables it); `LFB_TIMINGS=<file>` records the times. `VERIFY_LANGUAGES=java,go` (or `sql`, or `none`) limits which solutions run; CI runs one job per language. Locally a missing toolchain skips that language; CI sets `REQUIRE_ALL_LANGUAGES=1` and installs all of them, so nothing ships unverified.
 

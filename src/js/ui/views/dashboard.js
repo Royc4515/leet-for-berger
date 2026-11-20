@@ -2,11 +2,10 @@
  * Dashboard: progress stats + filterable problem bank.
  */
 import { h, mount, difficultyBadge } from '../dom.js';
-import { catalog, TOPICS, DIFFICULTIES } from '../../problems/index.js';
+import { catalog, catalogEntry, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import { stats, dayKey } from '../../state/progress.js';
-import { getProblem } from '../../problems/index.js';
 import { dailyProblem, dailyCandidates, weakSpots } from '../../data/recommend.js';
-import { loadPath } from './path.js';
+import { loadPath } from '../path-loader.js';
 
 export function renderDashboard(root, { store }) {
   const filters = { difficulty: 'All', topic: 'all', query: '' };
@@ -19,7 +18,7 @@ export function renderDashboard(root, { store }) {
     if (!path) return;
     const state = store.get();
     const dailyId = dailyProblem(dailyCandidates(path), dayKey());
-    const daily = dailyId ? getProblem(dailyId) : null;
+    const daily = dailyId ? catalogEntry(dailyId) : null;
     const dailyDone = daily && state.problems[daily.id]?.status === 'solved';
     const spots = weakSpots(path, state.problems);
     const reason = (s) =>

@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Fixed
+- The problem list took 12-13 s to appear: every page load imported all 145 problem modules, and each builds its hidden tests when evaluated. The dashboard now reads a generated catalog (`src/js/problems/catalog.js`, `scripts/content/build-catalog.mjs`) and a problem loads only when it is opened; every view except the dashboard loads on demand too (ADR 0008). Problem list in about 0.1 s instead of 12.8 s, and 0.7 s instead of 17 s with 100 ms of added latency (local, cold, headless Chromium); 29 requests instead of 205. Mock OA, interview and battle load their problems before the clock starts. `tests/catalog.test.js` keeps the catalog current and the first load free of problem modules and the engine; the smoke test checks the same in the browser.
 - The site took about 18 s to show the problem list (measured on the live site): Min Stack's hidden-test generator counted pops by rescanning the whole operation list on every iteration, O(n^2) at 10^5 operations, and every problem builds its tests when the catalog is imported. A running count builds identical tests (same SHA-256) in 0.15 s instead of 11 s; the catalog import went from 26.6 s to 15 s (Node, this container). Loading problems only when opened is the next step.
 - Signed in, every Submit failed with "Internal error: Illegal invocation": the progress sync called `setTimeout` as a method of another object, which browsers reject (Node does not, so the unit tests passed). The e2e test now submits while signed in.
 

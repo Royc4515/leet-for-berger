@@ -3,22 +3,10 @@
  * progress derived from solve data and a "Next up" pointer. Data: src/js/data/essential-path.json.
  */
 import { h, mount, difficultyBadge } from '../dom.js';
-import { getProblem } from '../../problems/index.js';
+import { catalogEntry } from '../../problems/index.js';
+import { loadPath } from '../path-loader.js';
 import { pathProgress, conceptLabel } from '../../data/learning-path.js';
 import { TOPICS } from '../../data/taxonomy.js';
-
-let pathPromise = null;
-
-/**
- * The essential path, fetched once and shared by the path page and the dashboard.
- * @returns {Promise<import('../../data/learning-path.js').PathTier[]|null>}
- */
-export function loadPath() {
-  pathPromise ??= fetch(new URL('../../data/essential-path.json', import.meta.url))
-    .then((r) => (r.ok ? r.json() : null))
-    .catch(() => null);
-  return pathPromise;
-}
 
 const topicTitle = (id) => TOPICS.find((t) => t.id === id)?.title ?? id;
 
@@ -41,7 +29,7 @@ export function renderPath(root, { store }) {
     const state = store.get();
     const isSolved = (id) => state.problems[id]?.status === 'solved';
     const overall = pathProgress(path, isSolved);
-    const nextTitle = overall.next ? getProblem(overall.next.id)?.title ?? overall.next.id : null;
+    const nextTitle = overall.next ? catalogEntry(overall.next.id)?.title ?? overall.next.id : null;
     const nextTopic = overall.next ? path.flatMap((t) => t.topics).find((tp) => tp.problems.includes(overall.next)) : null;
 
     mount(
@@ -86,7 +74,7 @@ export function renderPath(root, { store }) {
                         `li${p === overall.next ? '.is-next' : ''}`,
                         {},
                         h(`span.status-icon.s-${status}`, { title: status, 'aria-label': status }),
-                        h('a.problem-link', { href: `#/problem/${p.id}` }, getProblem(p.id)?.title ?? p.id),
+                        h('a.problem-link', { href: `#/problem/${p.id}` }, catalogEntry(p.id)?.title ?? p.id),
                         h('span.path-concept', {}, conceptLabel(p.concept)),
                         difficultyBadge(p.difficulty),
                       );

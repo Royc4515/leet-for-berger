@@ -12,7 +12,9 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { appendFileSync, mkdtempSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { availableProblems } from '../src/js/problems/index.js';
+import { loadAllProblems } from '../src/js/problems/index.js';
+
+const problems = await loadAllProblems();
 import { buildSuite, comparatorFor } from '../src/js/engine/harness.js';
 import { LANGUAGES, validateSignature } from '../src/js/engine/codegen.js';
 import { buildHarness, buildProgram, programStdin, splitOutput, NATIVE_LANGUAGES, JAVA_SUPPORT_FILES } from '../scripts/verify/harnesses.mjs';
@@ -111,7 +113,7 @@ function verifySql(problem, suite) {
   });
 }
 
-for (const problem of availableProblems()) {
+for (const problem of problems) {
   const suite = buildSuite(problem);
   if (isSql(problem.signature)) {
     verifySql(problem, suite);

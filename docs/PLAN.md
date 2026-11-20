@@ -88,7 +88,10 @@ Recommended order: practice experience first (stage A), since all the content ex
 
 ### Stage D: content expansion
 - [x] Wix wave: 12 problems, Wix at 35 of its top 50 on the site (PR #20)
-- [ ] Load each problem only when it is opened (the catalog builds every problem's tests at startup; about 10 s on the live site after the Min Stack fix)
+- [x] Load each problem only when it is opened, and every view but the dashboard on demand (ADR 0008): problem list in about 0.1 s instead of 13 s (local, cold)
+- [ ] Build a problem's hidden tests on first Run instead of on open (lazy `hiddenTests` getter; `hydrate()` must copy descriptors, not spread)
+- [ ] Faster references and generators for the heaviest problems (word-morph, signal-spread, skyline-outline, glyph-order, two-color-check, growing-word-chain), byte-identical tests
+- [ ] Load supabase-js only with a stored session, a sign-in callback or a Sign in click
 - [x] Write `explanationHtml` (our own prose: the idea, why it works, the pitfall) for the 131 essential problems (PR #18; `tests/explanations.test.js` keeps the format and full coverage)
 - [ ] Growth measurement for all problems (target filled automatically, input generators gradually)
 - [ ] Graphs as objects (Clone Graph) and numbers above 2^53

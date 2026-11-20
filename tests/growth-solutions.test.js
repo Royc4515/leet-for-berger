@@ -13,7 +13,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
-import { availableProblems, getProblem } from '../src/js/problems/index.js';
+import { loadAllProblems } from '../src/js/problems/index.js';
+
+const problems = await loadAllProblems();
+const getProblem = (id) => problems.find((p) => p.id === id);
 import { comparatorFor } from '../src/js/engine/harness.js';
 import { validateGrowth, growthSeed } from '../src/js/engine/growth.js';
 import { compileJs, measureGrowth } from '../scripts/verify/growth.mjs';
@@ -28,7 +31,7 @@ setFlagsFromString('--expose-gc');
 const gc = runInNewContext('gc');
 
 const PILOT = ['pair-sum-target', 'longest-streak', 'top-k-frequent', 'zero-triplets', 'warmer-days', 'subarray-sum-k', 'island-count', 'level-order', 'median-stream', 'rising-chain'];
-const withGrowth = availableProblems().filter((p) => p.growth);
+const withGrowth = problems.filter((p) => p.growth);
 const shipped = (id) => readFileSync(join(ROOT, 'src/js/problems', id, 'solutions/solution.js'), 'utf8');
 
 /** Measures up to ATTEMPTS times; stops at the first estimate `accept` likes. */

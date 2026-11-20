@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { companySizes, rankCompanies, buildProblemMeta, complexityOpenByDefault, COMPANY_LIMIT } from '../src/js/data/problem-meta.js';
-import { availableProblems } from '../src/js/problems/index.js';
+import { shippedEntries } from '../src/js/problems/index.js';
 
 const c = (name, frequency, recency = '6m') => ({ name, frequency, recency });
 
@@ -63,7 +63,7 @@ test('problem-meta.json is fresh and covers every shipped problem', () => {
   const read = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url)));
   const rebuilt = buildProblemMeta(records, read('../content/families.json').families, read('../content/index/complexity.json').problems, read('../content/companies.json').israeli);
   assert.deepEqual(shipped, rebuilt, 'run: node scripts/content/build-meta.mjs');
-  const missing = availableProblems().map((p) => p.id).filter((id) => !shipped[id]);
+  const missing = shippedEntries().map((p) => p.id).filter((id) => !shipped[id]);
   assert.deepEqual(missing, []);
   for (const m of Object.values(shipped)) assert.ok(m.companies.filter((x) => !x.israeli).length <= COMPANY_LIMIT);
 });

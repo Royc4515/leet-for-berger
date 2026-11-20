@@ -21,7 +21,8 @@ import { estimateGrowth, describeGrowth, shouldRetryGrowth } from '../../engine/
 import { getRunner, isRemote } from '../../engine/runners/index.js';
 import { recordSubmission, markRevealed } from '../../state/progress.js';
 import { loadDraft, saveDraft, clearDraft } from '../../state/drafts.js';
-import { TOPICS, loadSolution, getProblem } from '../../problems/index.js';
+import { TOPICS, catalogEntry } from '../../problems/index.js';
+import { loadSolution } from '../../problems/solutions.js';
 import { createProblemContext } from '../problem-context.js';
 import { createProblemExtras } from '../problem-extras.js';
 import { services } from '../../auth/services.js';
@@ -84,7 +85,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
   const context = createProblemContext({
     problem,
     progress: store.get().problems[problem.id],
-    titleOf: (id) => getProblem(id)?.title ?? null,
+    titleOf: (id) => catalogEntry(id)?.title ?? null,
     showComplexity: allowAssist,
     showFamily: !session,
   });

@@ -15,7 +15,9 @@ import {
   parseTablesInput,
 } from '../src/js/engine/sql.js';
 import { buildSuite, judge } from '../src/js/engine/harness.js';
-import { availableProblems } from '../src/js/problems/index.js';
+import { loadAllProblems } from '../src/js/problems/index.js';
+
+const problems = await loadAllProblems();
 import { sqlEngineAvailable, runSqlCases } from '../scripts/verify/sql.mjs';
 
 const sig = {
@@ -178,7 +180,7 @@ test('browser worker and CI verifier pin the same sql.js version', () => {
 });
 
 test('every SQL problem has only the SQL language, a schema starter and a result-set comparator', () => {
-  const sqlProblems = availableProblems().filter((p) => isSql(p.signature));
+  const sqlProblems = problems.filter((p) => isSql(p.signature));
   assert.ok(sqlProblems.length >= 5);
   for (const p of sqlProblems) {
     assert.deepEqual(p.languages.map((l) => l.id), ['sql'], p.id);

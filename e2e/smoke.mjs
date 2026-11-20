@@ -10,7 +10,7 @@ import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { startServer } from '../scripts/serve.mjs';
 import { startFakeRunner } from './fake-runner.mjs';
-import { availableProblems } from '../src/js/problems/index.js';
+import { loadProblem } from '../src/js/problems/index.js';
 
 const args = new Set(process.argv.slice(2));
 const skipPython = args.has('--no-python');
@@ -57,16 +57,41 @@ const expectText = async (sel, re, timeout = 15000) => {
 const setCode = (code) => page.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
 
 try {
+  // ADR 0008: the dashboard loads catalog metadata only. Importing a problem module builds its hidden
+  // tests, so a problem.js request here means every page load pays for test generation again.
+  const requested = [];
+  page.on('request', (r) => requested.push(new URL(r.url()).pathname));
+  const lazyLoaded = (re) => requested.filter((p) => re.test(p));
+  const PROBLEM_MODULE = /\/problems\/[^/]+\/problem\.js$/;
+
   await check('dashboard renders with stats and problem bank', async () => {
+    const t0 = Date.now();
     await page.goto(BASE);
     await page.waitForSelector('.problem-table tbody tr');
+    const ms = Date.now() - t0;
     await expectText('.stats-row', /Solved/);
+    const eager = lazyLoaded(/\/problems\/[^/]+\/problem\.js$|\/ui\/views\/(workspace|path|companies|modes)\.js$|\/engine\/(codegen|harness|adapters)\.js$|\/problems\/hydrate\.js$/);
+    if (eager.length) throw new Error(`dashboard loaded on-demand modules: ${eager.slice(0, 5).join(', ')}`);
+    // Loose on purpose (shared CI runners); the request check above is the real gate.
+    if (ms > 5000) throw new Error(`dashboard took ${ms} ms to render`);
+    console.log(`  # dashboard rows in ${ms} ms, ${requested.length} requests`);
     await shot('01-dashboard');
   });
 
+  await check('leaving a problem before it loads mounts nothing and logs no errors', async () => {
+    await page.evaluate(() => (location.hash = '#/problem/word-morph'));
+    await page.evaluate(() => (location.hash = '#/'));
+    await page.waitForSelector('.problem-table tbody tr');
+    await page.waitForTimeout(1500); // longer than word-morph takes to load and build its tests
+    if (await page.$('.monaco-editor, .workspace')) throw new Error('a stale workspace mounted over the dashboard');
+  });
+
   await check('problem opens with Monaco (vs-dark) and starter code', async () => {
+    const before = lazyLoaded(PROBLEM_MODULE).length;
     await page.click('a.problem-link[href="#/problem/smallest-base-segment"]');
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    const opened = lazyLoaded(PROBLEM_MODULE).slice(before);
+    if (opened.length !== 1 || !opened[0].endsWith('/smallest-base-segment/problem.js')) throw new Error(`expected only smallest-base-segment/problem.js, got ${opened.join(', ') || 'none'}`);
     const theme = await page.evaluate(() => document.querySelector('.monaco-editor').classList.contains('vs-dark'));
     if (!theme) throw new Error('editor is not vs-dark');
     const code = await page.evaluate(() => window.monaco.editor.getModels()[0].getValue());
@@ -208,7 +233,7 @@ try {
   // Remote runner (ADR 0005): with a runner URL configured, Java compiles on the server and is judged
   // in the page. A local fake stands in for the Worker (real javac when a JDK is installed).
   await check('remote runner: Java reveal + submit is Accepted through a runner endpoint', async () => {
-    const problem = availableProblems().find((p) => p.id === 'pair-sum-target');
+    const problem = await loadProblem('pair-sum-target');
     const fake = await startFakeRunner(PORT + 100, { origin: `http://localhost:${PORT}`, reference: (a) => problem.solveReference(a) });
     // Its own context: the runner URL is read when the page loads, and progress stays separate.
     const remote = await browser.newPage({ viewport: { width: 1440, height: 900 } }).catch((err) => {
@@ -649,6 +674,9 @@ try {
 
   await check('unknown route shows not found', async () => {
     await page.goto(`${BASE}#/nope`);
+    await expectText('.page', /Not found/);
+    // An id outside the catalog never reaches import() (ADR 0008).
+    await page.goto(`${BASE}#/problem/no-such-problem`);
     await expectText('.page', /Not found/);
   });
 

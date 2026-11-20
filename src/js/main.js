@@ -9,34 +9,79 @@ import { createAccount } from './auth/account.js';
 import { mountAccountMenu } from './ui/account-menu.js';
 import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
 import { services } from './auth/services.js';
-import { getProblem } from './problems/index.js';
+import { loadProblem } from './problems/index.js';
 import { h, mount, toast } from './ui/dom.js';
 import { renderDashboard } from './ui/views/dashboard.js';
-import { renderWorkspace } from './ui/views/workspace.js';
-import { renderPath } from './ui/views/path.js';
-import { renderCompanies, renderCompany } from './ui/views/companies.js';
-import { renderModesHub, renderInterview, renderBattle } from './ui/views/modes.js';
 
 const store = createStore();
 const view = document.getElementById('view');
 const streakChip = document.getElementById('streak-chip');
 
+// Only the dashboard ships with the first page load. Every other view, and the engine behind the
+// workspace, loads when its route is opened (ADR 0008).
+const views = {
+  workspace: () => import('./ui/views/workspace.js'),
+  path: () => import('./ui/views/path.js'),
+  companies: () => import('./ui/views/companies.js'),
+  modes: () => import('./ui/views/modes.js'),
+};
+
+/**
+ * Renders a view whose code loads on demand. The cleanup it returns is valid before the load
+ * finishes: leaving the route mid-load cancels the render, so a late module never mounts over
+ * the next view and never leaks a Monaco instance.
+ * @param {HTMLElement} root
+ * @param {() => Promise<(() => void) | void>} load resolves after rendering, to the view's cleanup
+ */
+function deferred(root, load) {
+  let disposed = false;
+  let inner = () => {};
+  mount(root, h('div.page', {}, h('p.page-sub', { role: 'status' }, 'Loading...')));
+  load(() => disposed)
+    .then((cleanupFn) => {
+      if (disposed) cleanupFn?.();
+      else inner = cleanupFn ?? (() => {});
+    })
+    .catch(() => {
+      if (!disposed) inner = renderLoadFailed(root);
+    });
+  return () => {
+    disposed = true;
+    inner();
+  };
+}
+
+/** Route view: loads the view module, then renders unless the route was left meanwhile. */
+const lazyView = (load, render) => (root, match) =>
+  deferred(root, async (isDisposed) => {
+    const mod = await load();
+    return isDisposed() ? undefined : render(mod, root, match);
+  });
+
 /** Route table: [pattern, render, navKey]. Order matters, first match wins. */
 const routes = [
   [/^#?\/?$/, (root) => renderDashboard(root, { store }), 'problems'],
   [/^#\/problem\/([\w-]+)$/, (root, [, id]) => renderProblem(root, id), 'problems'],
-  [/^#\/path$/, (root) => renderPath(root, { store }), 'path'],
-  [/^#\/companies$/, (root) => renderCompanies(root, { store }), 'companies'],
-  [/^#\/companies\/([\w-]+)$/, (root, [, slug]) => renderCompany(root, { store, slug }), 'companies'],
-  [/^#\/modes$/, (root) => renderModesHub(root), 'modes'],
-  [/^#\/interview$/, (root) => renderInterview(root, { store }), 'modes'],
-  [/^#\/battle$/, (root) => renderBattle(root, { store }), 'modes'],
+  [/^#\/path$/, lazyView(views.path, (m, root) => m.renderPath(root, { store })), 'path'],
+  [/^#\/companies$/, lazyView(views.companies, (m, root) => m.renderCompanies(root, { store })), 'companies'],
+  [/^#\/companies\/([\w-]+)$/, lazyView(views.companies, (m, root, [, slug]) => m.renderCompany(root, { store, slug })), 'companies'],
+  [/^#\/modes$/, lazyView(views.modes, (m, root) => m.renderModesHub(root)), 'modes'],
+  [/^#\/interview$/, lazyView(views.modes, (m, root) => m.renderInterview(root, { store })), 'modes'],
+  [/^#\/battle$/, lazyView(views.modes, (m, root) => m.renderBattle(root, { store })), 'modes'],
 ];
 
 function renderProblem(root, id) {
-  const problem = getProblem(id);
-  if (!problem) return renderNotFound(root, `Problem "${id}" does not exist or is not published yet.`);
-  return renderWorkspace(root, { problem, store });
+  return deferred(root, async (isDisposed) => {
+    const [problem, { renderWorkspace }] = await Promise.all([loadProblem(id), views.workspace()]);
+    if (isDisposed()) return undefined;
+    if (!problem) return renderNotFound(root, `Problem "${id}" does not exist or is not published yet.`);
+    return renderWorkspace(root, { problem, store });
+  });
+}
+
+function renderLoadFailed(root) {
+  mount(root, h('div.page.page-narrow', {}, h('h1', {}, 'Could not load this page'), h('p.page-sub', {}, 'Check your connection and reload.'), h('a.btn.btn-primary', { href: '#/' }, 'Back to problems')));
+  return () => {};
 }
 
 function renderNotFound(root, message = 'Page not found.') {

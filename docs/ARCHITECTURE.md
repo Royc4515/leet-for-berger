@@ -68,6 +68,8 @@ Streak = consecutive local days with an accepted submission, ending today or yes
 
 Hash routes (`#/`, `#/problem/:id`, `#/path`, `#/modes`, `#/interview`, `#/battle`) so Pages needs no rewrite rules. Each render returns a cleanup; the router always calls the previous cleanup before rendering.
 
+Only the dashboard is in the first load. Other views load with `import()` when their route opens, and a problem loads through `loadProblem(id)` (one module, hydrated, memoised); listing views read the generated `problems/catalog.js` instead. A problem module builds its hidden tests when evaluated, so importing all of them up front cost about 12 s per page load (ADR 0008). The cleanup a route returns is valid while its view is still loading: leaving mid-load cancels the render.
+
 ## Modes
 
 - **Interview** (`modes/interview.js` + `ui/views/modes.js`): pure session (timer from `startedAt`, attempts, tab switches, score). View applies lockdown: hides nav (`body.lockdown`), disables reveal and mentor, logs `visibilitychange`, guards `beforeunload`. Score = coverage x 90 + speed bonus (max 10, only if something was solved) - 5 per tab switch (max 20).

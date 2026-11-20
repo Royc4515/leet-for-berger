@@ -12,7 +12,7 @@ Add a new problem to Leet-For-Berger: $ARGUMENTS
 5. Declare the neutral `signature`. Do not write starter code: it is generated.
 6. Solutions in all 8 languages under `solutions/` (Python, JavaScript, TypeScript, Java, C++, C, C#, Go). Start from imports: `npm run import:solutions -- <leetcode-slug>` stages open-source candidates in `content/.cache/imports/<slug>/`; adapt them (keep the attribution line, see PROBLEM_FORMAT.md) and translate the missing languages. Same algorithm in each, WHY comments, idiomatic per language (C uses LeetCode size conventions).
 7. Write a 3-5 step Socratic `hints` ladder: questions, never answers.
-8. Register in `problems/index.js` (move out of `planned`).
+8. Register it: `node scripts/content/build-catalog.mjs` (adds it to `src/js/problems/catalog.js`), and remove its `planned` entry in `problems/index.js` if one exists.
 9. Add `tests/<id>.test.js`. Run `npm run check`: `tests/solutions.test.js` must pass for all 8 languages (install missing toolchains or rely on CI, which requires all of them).
 10. Update CHANGELOG.md (Unreleased).
 

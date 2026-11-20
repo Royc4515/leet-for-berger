@@ -13,7 +13,9 @@ import { execFileSync } from 'node:child_process';
 import { TOPICS } from '../../src/js/data/taxonomy.js';
 import { LANGUAGES } from '../../src/js/engine/codegen.js';
 import { SQL_LANGUAGE } from '../../src/js/engine/sql.js';
-import { availableProblems } from '../../src/js/problems/index.js';
+import { loadAllProblems } from '../../src/js/problems/index.js';
+
+const problems = await loadAllProblems();
 import { buildSuite } from '../../src/js/engine/harness.js';
 
 const ROOT = new URL('../../', import.meta.url).pathname;
@@ -71,7 +73,7 @@ add('family_members', ['family_id', 'position', 'problem_slug', 'twist'], ['fami
 
 const slugOf = Object.fromEntries(problems.filter((p) => p.contentId).map((p) => [p.contentId, p.slug]));
 const now = new Date().toISOString();
-const shipped = availableProblems();
+const shipped = problems;
 for (const problem of shipped) if (!slugOf[problem.id]) throw new Error(`${problem.id} has no index record`);
 
 // Content rows are generated lazily, one problem at a time: the test data runs to hundreds of
