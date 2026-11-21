@@ -35,9 +35,9 @@ export function remoteRunnerConfig(scope = globalThis) {
  * stays in this browser only.
  */
 export const AUTH = {
-  supabaseUrl: 'https://jezwwmnczliubfmqgutc.supabase.co',
+  supabaseUrl: 'https://jjfwrtsoyunlqtcfvpjn.supabase.co',
   // Publishable (anon) key: public by design, Row Level Security guards the data.
-  supabaseAnonKey: 'sb_publishable_GBa7UHSmKAFQG4vSdxDdzw_Tlmffpwf',
+  supabaseAnonKey: 'sb_publishable_hii7pCgK8dn-21j6ltZqLQ_eYAp18fo',
   // The GitHub App users install to sync solutions (ADR 0007, docs/DEPLOY_GITHUB_SYNC.md).
   // Empty hides GitHub sync.
   githubAppSlug: 'leet-for-berger-sync',
