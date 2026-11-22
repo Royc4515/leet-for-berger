@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { emptyState, recordSubmission, computeStreak, stats, dayKey, load } from '../src/js/state/progress.js';
-import { createSession, recordAttempt, recordTabSwitch, finish, analytics, remainingMs, formatClock } from '../src/js/modes/interview.js';
+import { createSession, recordAttempt, recordTabSwitch, finish, analytics, remainingMs, formatClock, timerState, problemStatus, scoreBand, WARNING_MS } from '../src/js/modes/interview.js';
 import { createBot } from '../src/js/modes/battle.js';
 import { ScriptedMentor } from '../src/js/mentor/mentor.js';
 import problem from '../src/js/problems/smallest-base-segment/problem.js';
@@ -33,12 +33,25 @@ test('load survives corrupt storage', () => {
   assert.deepEqual(load(bad), emptyState());
 });
 
-test('interview session: timer, attempts, integrity penalty', () => {
+test('interview session: timer, attempts, status, warning window, score band, integrity penalty', () => {
   const t0 = 1_000_000;
-  let s = createSession({ problemIds: ['a', 'b'], now: t0 });
+  let s = createSession({ problemIds: ['a', 'b', 'c'], now: t0 });
   assert.equal(remainingMs(s, t0 + 60_000), 45 * 60_000 - 60_000);
+  assert.equal(problemStatus(s, 'a'), 'todo');
+  assert.equal(problemStatus(s, 'b'), 'todo');
+  assert.equal(problemStatus(s, 'c'), 'todo');
+  // Before the last 5 minutes: not warning. Inside the last 5 minutes: warning. At 0: expired.
+  assert.deepEqual(timerState(s, t0 + 45 * 60_000 - WARNING_MS - 1000), { ms: WARNING_MS + 1000, warning: false, expired: false });
+  assert.deepEqual(timerState(s, t0 + 45 * 60_000 - WARNING_MS), { ms: WARNING_MS, warning: true, expired: false });
+  assert.deepEqual(timerState(s, t0 + 45 * 60_000), { ms: 0, warning: false, expired: true });
+
   s = recordAttempt(s, { problemId: 'a', passed: 15, total: 15, accepted: true, kind: 'submit', now: t0 + 10 * 60_000 });
-  s = recordAttempt(s, { problemId: 'b', passed: 6, total: 15, accepted: false, kind: 'run', now: t0 + 20 * 60_000 });
+  // Even a 0/15 run marks the problem as tried.
+  s = recordAttempt(s, { problemId: 'b', passed: 0, total: 15, accepted: false, kind: 'run', now: t0 + 20 * 60_000 });
+  assert.equal(problemStatus(s, 'a'), 'solved');
+  assert.equal(problemStatus(s, 'b'), 'tried');
+  assert.equal(problemStatus(s, 'c'), 'todo');
+
   s = recordTabSwitch(s, t0 + 25 * 60_000);
   s = finish(s, t0 + 30 * 60_000);
   const a = analytics(s);
@@ -46,9 +59,13 @@ test('interview session: timer, attempts, integrity penalty', () => {
   assert.equal(a.tabSwitches, 1);
   assert.equal(a.runs, 1);
   assert.ok(a.score > 0 && a.score <= 100);
+  assert.equal(a.band.band, scoreBand(a.score).band);
+  assert.equal(scoreBand(85).band, 'strong');
+  assert.equal(scoreBand(60).band, 'mid');
+  assert.equal(scoreBand(20).band, 'low');
   // Attempts after the session ends are ignored.
   const after = recordAttempt(s, { problemId: 'b', passed: 15, total: 15, accepted: true, kind: 'submit', now: t0 + 31 * 60_000 });
-  assert.equal(after.perProblem.b.bestPassed, 6);
+  assert.equal(after.perProblem.b.bestPassed, 0);
   assert.equal(formatClock(65_000), '01:05');
 });
 

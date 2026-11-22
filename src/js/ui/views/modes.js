@@ -269,22 +269,105 @@ function renderInterviewSetup(root, { store }) {
   };
 }
 
+/* ======================= Shared Session Banner ======================= */
+
+/**
+ * Shared top banner for active Interview and Battle sessions (Step 8):
+ * large tabular timer, optional middle content (race bars), state text, single exit button,
+ * and a once-only aria-live warning announcement.
+ */
+function createSessionBanner({ kind, label, clockText, stateEl = null, middleEl = null, exitLabel, exitVariant = 'btn-danger', onExit }) {
+  const clock = h('span.clock', { 'aria-live': 'off' }, clockText);
+  const alertEl = h('span.session-alert', { role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true', hidden: true });
+  const exitBtn = h(`button.btn.${exitVariant}.btn-sm.session-exit`, { type: 'button', onClick: onExit }, exitLabel);
+  const el = h(
+    `header.session-banner.${kind}`,
+    {},
+    h('div.session-banner-main', {}, h('strong.session-label', {}, label), clock, alertEl, stateEl),
+    middleEl ?? null,
+    exitBtn,
+  );
+  let warned = false;
+  return {
+    el,
+    clock,
+    alertEl,
+    exitBtn,
+    setClock(text) {
+      clock.textContent = text;
+    },
+    announceWarning(text) {
+      if (warned) return;
+      warned = true;
+      alertEl.hidden = false;
+      alertEl.textContent = text;
+    },
+  };
+}
+
+const SWITCHER_STATUS = {
+  solved: { cls: 's-solved', label: 'Solved', srOnly: false },
+  tried: { cls: 's-attempted', label: 'Tried', srOnly: false },
+  todo: { cls: 's-todo', label: 'Not started', srOnly: true },
+};
+
 function renderInterviewActive(root, { store }) {
   document.body.classList.add('lockdown');
-  const clock = h('span.clock', { 'aria-live': 'off' }, Interview.formatClock(Interview.remainingMs(interview)));
-  const switches = h('span.result-meta', {}, `Tab switches: ${interview.tabSwitches}`);
-  const endBtn = h('button.btn.btn-danger.btn-sm', { type: 'button' }, 'End interview');
-  const banner = h('div.session-banner.interview', {}, h('strong', {}, 'Interview in progress'), clock, switches, h('div.toolbar-spacer'), endBtn);
+  const switches = h('span.session-state', {}, `Tab switches: ${interview.tabSwitches}`);
 
-  const switcher = interview.problemIds.length > 1
-    ? h(
-        'div.problem-switcher',
-        { role: 'tablist' },
-        interview.problemIds.map((id, i) =>
-          h('button.chip', { type: 'button', role: 'tab', 'aria-pressed': String(id === interview.activeProblemId), onClick: () => switchTo(id) }, `Problem ${i + 1}`),
-        ),
-      )
-    : null;
+  const end = () => {
+    interview = { ...Interview.finish(interview), activeProblemId: interview.activeProblemId };
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  };
+
+  const banner = createSessionBanner({
+    kind: 'interview',
+    label: 'Interview',
+    clockText: Interview.formatClock(Interview.remainingMs(interview)),
+    stateEl: switches,
+    exitLabel: 'End interview',
+    exitVariant: 'btn-danger',
+    onExit: async () => {
+      const ok = await confirmDialog({
+        title: 'End the interview now?',
+        body: 'Your best results so far will be scored. This cannot be undone.',
+        confirmLabel: 'End interview',
+        danger: true,
+      });
+      if (ok) end();
+    },
+  });
+
+  const switcher = interview.problemIds.length > 1 ? h('div.problem-switcher', { role: 'group', 'aria-label': 'Interview problems' }) : null;
+  const syncSwitcher = () => {
+    if (!switcher) return;
+    mount(
+      switcher,
+      interview.problemIds.map((id, i) => {
+        const st = Interview.problemStatus(interview, id);
+        const meta = SWITCHER_STATUS[st];
+        const active = id === interview.activeProblemId;
+        return h(
+          'button.chip.switcher-btn',
+          {
+            type: 'button',
+            'data-problem-id': id,
+            'data-status': st,
+            'aria-pressed': String(active),
+            onClick: () => switchTo(id),
+          },
+          h('span.switcher-label', {}, `Problem ${i + 1}`),
+          h(
+            `span.status-pill.${meta.cls}`,
+            {},
+            h('span.status-dot', { 'aria-hidden': 'true' }),
+            meta.srOnly ? h('span.sr-only', {}, meta.label) : meta.label,
+          ),
+        );
+      }),
+    );
+  };
+  syncSwitcher();
 
   let cleanupWs = null;
   interviewDrafts ??= new Map();
@@ -298,41 +381,42 @@ function renderInterviewActive(root, { store }) {
       store,
       session: {
         kind: 'interview',
-        banner,
+        banner: banner.el,
         allowAssist: false,
         problemSwitcher: switcher,
         drafts: interviewDrafts,
         onResult: ({ kind, result, problemId }) => {
           interview = Interview.recordAttempt(interview, { problemId, passed: result.passed, total: result.total, accepted: result.accepted, kind });
+          syncSwitcher();
         },
       },
     });
   };
   const switchTo = (id) => {
     interview.activeProblemId = id;
+    syncSwitcher();
     mountProblem();
   };
   mountProblem();
 
-  const end = () => {
-    interview = { ...Interview.finish(interview), activeProblemId: interview.activeProblemId };
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
-  };
-
-  const tick = setInterval(() => {
-    const ms = Interview.remainingMs(interview);
-    clock.textContent = Interview.formatClock(ms);
-    clock.classList.toggle('urgent', ms < 5 * 60e3);
-    if (ms === 0) {
+  const updateTimer = () => {
+    const ts = Interview.timerState(interview);
+    banner.setClock(Interview.formatClock(ts.ms));
+    banner.clock.classList.toggle('warning', ts.warning);
+    if (ts.warning) banner.announceWarning('5 minutes left');
+    if (ts.expired) {
       toast("Time's up.", 'warn');
       end();
     }
-  }, 500);
+  };
+  updateTimer();
+  const tick = setInterval(updateTimer, 500);
 
   const onVisibility = () => {
     if (document.visibilityState === 'hidden') {
       interview = { ...Interview.recordTabSwitch(interview), activeProblemId: interview.activeProblemId };
       switches.textContent = `Tab switches: ${interview.tabSwitches}`;
+      switches.classList.toggle('is-warn', interview.tabSwitches > 0);
       toast('Tab switch logged.', 'warn');
     }
   };
@@ -343,11 +427,6 @@ function renderInterviewActive(root, { store }) {
   };
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('beforeunload', onBeforeUnload);
-
-  endBtn.addEventListener('click', async () => {
-    const ok = await confirmDialog({ title: 'End the interview now?', body: 'Your best results so far will be scored. This cannot be undone.', confirmLabel: 'End interview', danger: true });
-    if (ok) end();
-  });
 
   return () => {
     clearInterval(tick);
@@ -360,7 +439,7 @@ function renderInterviewActive(root, { store }) {
 
 function renderInterviewReport(root) {
   const a = Interview.analytics(interview);
-  const row = (label, value) => h('div.setup-row', {}, h('span', {}, label), h('strong', {}, value));
+  const statCell = (label, value) => h('div.stat-cell', {}, h('div.stat-value', {}, value), h('div.stat-label', {}, label));
   const again = h('button.btn.btn-primary', { type: 'button' }, 'New interview');
   again.addEventListener('click', () => {
     interview = null;
@@ -373,19 +452,65 @@ function renderInterviewReport(root) {
       'div.page.page-narrow',
       {},
       h('header.page-head', {}, h('h1', {}, 'Interview Report'), h('p.page-sub', {}, 'Coverage dominates the score; speed is a bonus; tab switches cost 5 points each (max 20).')),
-      h('div.score-ring', { style: { '--pct': a.score } }, h('span', {}, String(a.score)), h('small', {}, '/ 100')),
       h(
-        'div.setup-card',
+        'div.report-score',
         {},
-        row('Time used', Interview.formatClock(a.usedMs)),
-        row('Solved', `${a.solved} / ${a.problems.length}`),
-        row('Runs / Submissions', `${a.runs} / ${a.submissions}`),
-        row('Tab switches', String(a.tabSwitches)),
-        h('h3', {}, 'Per problem'),
-        a.problems.map((p) => {
-          return row(catalogEntry(p.id)?.title ?? p.id, `${Math.round(p.coverage * 100)}% tests${p.solved ? ` · solved at ${Interview.formatClock(p.solveTimeMs)}` : ''}`);
-        }),
-        h('div.mode-actions', {}, again, h('a.btn.btn-ghost', { href: '#/' }, 'Back to problems')),
+        h(
+          `div.score-ring.band-${a.band.band}`,
+          { style: { '--pct': a.score }, 'data-band': a.band.band },
+          h('span.score-value', {}, String(a.score)),
+          h('small', {}, '/ 100'),
+        ),
+        h(`span.score-band.band-${a.band.band}`, {}, a.band.label),
+      ),
+      h(
+        'div.stats-row.report-stats',
+        {},
+        statCell('Time used', Interview.formatClock(a.usedMs)),
+        statCell('Solved', `${a.solved} / ${a.problems.length}`),
+        statCell('Runs / Submits', `${a.runs} / ${a.submissions}`),
+        statCell('Tab switches', String(a.tabSwitches)),
+      ),
+      h(
+        'div.setup-card.report-card',
+        {},
+        h('h2.setup-heading', {}, 'Per problem'),
+        h(
+          'div.report-problems',
+          {},
+          a.problems.map((p) => {
+            const entry = catalogEntry(p.id);
+            const title = entry?.title ?? p.id;
+            const stMeta = SWITCHER_STATUS[p.status] ?? SWITCHER_STATUS.todo;
+            return h(
+              'div.report-problem',
+              {},
+              h(
+                'div.report-problem-info',
+                {},
+                h(
+                  'div.report-problem-head',
+                  {},
+                  h('strong.report-problem-title', {}, title),
+                  entry ? difficulty(entry.difficulty) : null,
+                  h(
+                    `span.status-pill.${stMeta.cls}`,
+                    {},
+                    h('span.status-dot', { 'aria-hidden': 'true' }),
+                    stMeta.label,
+                  ),
+                ),
+                h(
+                  'div.hint-text',
+                  {},
+                  `${Math.round(p.coverage * 100)}% tests${p.solved ? ` · solved at ${Interview.formatClock(p.solveTimeMs)}` : ''}`,
+                ),
+              ),
+              h('a.btn.btn-secondary.btn-sm.report-review', { href: `#/problem/${p.id}`, 'aria-label': `Review ${title}` }, 'Review'),
+            );
+          }),
+        ),
+        h('div.mode-actions.report-actions', {}, again, h('a.btn.btn-secondary', { href: '#/' }, 'Back to problems')),
       ),
       siteFooter(),
     ),
@@ -602,21 +727,58 @@ export function renderBattle(root, { store }) {
 }
 
 function startBattle(root, { store, problem, level }) {
+  // Battle is a timed session: hide header and site tab bar like interview lockdown (docs/DESIGN.md).
+  document.body.classList.add('lockdown');
   const bot = createBot({ difficulty: problem.difficulty, level, seed: Date.now() & 0xffff });
   const startedAt = Date.now();
   let youPassed = 0;
   let winner = null;
 
-  const bar = (who) => {
-    const fill = h('div.progress-fill');
+  const bar = (who, side) => {
+    const fill = h(`div.race-fill.race-fill-${side}`);
     const label = h('span.race-count', {}, '0 / 15');
-    return { fill, label, el: h('div.race-row', {}, h('span.race-name', {}, who), h('div.progress', {}, fill), label) };
+    return {
+      fill,
+      label,
+      el: h(
+        `div.race-row.race-${side}`,
+        {},
+        h('span.race-name', {}, h(`span.race-swatch.race-swatch-${side}`, { 'aria-hidden': 'true' }), who),
+        h('div.race-track', { 'aria-hidden': 'true' }, fill),
+        label,
+      ),
+    };
   };
-  const you = bar('You');
-  const them = bar(bot.name);
-  const clock = h('span.clock', {}, '00:00');
-  const status = h('span.result-meta', {}, difficulty(problem.difficulty));
-  const banner = h('div.session-banner.battle', {}, h('strong', {}, 'Battle'), clock, h('div.race', {}, you.el, them.el), status);
+  const you = bar('You', 'you');
+  const them = bar(bot.name, 'bot');
+  const raceResult = h('span.session-state', { role: 'status', 'aria-live': 'polite' }, difficulty(problem.difficulty));
+
+  const leave = () => {
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  };
+
+  const banner = createSessionBanner({
+    kind: 'battle',
+    label: 'Battle',
+    clockText: '00:00',
+    stateEl: raceResult,
+    middleEl: h('div.race', {}, you.el, them.el),
+    exitLabel: 'Leave race',
+    exitVariant: 'btn-secondary',
+    onExit: async () => {
+      if (winner) {
+        leave();
+        return;
+      }
+      const ok = await confirmDialog({
+        title: 'Leave the race now?',
+        body: 'Your progress in this race will be discarded.',
+        confirmLabel: 'Leave race',
+        danger: true,
+      });
+      if (ok) leave();
+    },
+  });
 
   const set = (b, n) => {
     b.fill.style.width = `${(n / 15) * 100}%`;
@@ -626,13 +788,18 @@ function startBattle(root, { store, problem, level }) {
   const declare = (who) => {
     if (winner) return;
     winner = who;
-    banner.classList.add(who === 'you' ? 'won' : 'lost');
+    banner.el.classList.add(who === 'you' ? 'won' : 'lost');
+    mount(
+      raceResult,
+      difficulty(problem.difficulty),
+      h(`span.race-outcome.${who === 'you' ? 'is-win' : 'is-loss'}`, {}, who === 'you' ? 'You won' : `${bot.name} finished first`),
+    );
     toast(who === 'you' ? 'You won the race.' : `${bot.name} finished first. Keep going, finish it anyway.`, who === 'you' ? 'success' : 'warn', 5000);
   };
 
   const tick = setInterval(() => {
     const elapsed = Date.now() - startedAt;
-    clock.textContent = Interview.formatClock(elapsed);
+    banner.setClock(Interview.formatClock(elapsed));
     const botPassed = bot.passedAt(elapsed);
     set(them, botPassed);
     if (botPassed === 15) declare('bot');
@@ -645,7 +812,7 @@ function startBattle(root, { store, problem, level }) {
     store,
     session: {
       kind: 'battle',
-      banner,
+      banner: banner.el,
       allowAssist: false,
       drafts: new Map(),
       onResult: ({ kind, result }) => {
@@ -659,5 +826,6 @@ function startBattle(root, { store, problem, level }) {
   return () => {
     clearInterval(tick);
     cleanupWs();
+    document.body.classList.remove('lockdown');
   };
 }

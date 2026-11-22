@@ -5,6 +5,7 @@
  */
 
 export const DEFAULT_DURATION_MS = 45 * 60 * 1000;
+export const WARNING_MS = 5 * 60 * 1000;
 
 /**
  * @param {{ problemIds: string[], durationMs?: number, now?: number }} opts
@@ -19,7 +20,7 @@ export function createSession({ problemIds, durationMs = DEFAULT_DURATION_MS, no
     tabSwitches: 0,
     runs: 0,
     submissions: 0,
-    perProblem: Object.fromEntries(problemIds.map((id) => [id, { bestPassed: 0, total: 15, acceptedAtMs: null }])),
+    perProblem: Object.fromEntries(problemIds.map((id) => [id, { bestPassed: 0, total: 15, attempts: 0, acceptedAtMs: null }])),
   };
 }
 
@@ -30,6 +31,43 @@ export function remainingMs(session, now = Date.now()) {
 
 export function isOver(session, now = Date.now()) {
   return session.endedAt !== null || remainingMs(session, now) === 0;
+}
+
+/**
+ * Pure timer snapshot for the session banner: time left, whether we are in the final 5-minute
+ * warning window, and whether time has expired. `now` stays a parameter (invariant 6).
+ * @param {ReturnType<typeof createSession>} session
+ * @param {number} [now]
+ * @returns {{ ms: number, warning: boolean, expired: boolean }}
+ */
+export function timerState(session, now = Date.now()) {
+  const ms = remainingMs(session, now);
+  return { ms, warning: ms > 0 && ms <= WARNING_MS, expired: ms === 0 };
+}
+
+/**
+ * Per-problem status for the session problem switcher and report.
+ * @param {ReturnType<typeof createSession>} session
+ * @param {string} problemId
+ * @returns {'solved' | 'tried' | 'todo'}
+ */
+export function problemStatus(session, problemId) {
+  const p = session.perProblem[problemId];
+  if (!p) return 'todo';
+  if (p.acceptedAtMs !== null) return 'solved';
+  if ((p.attempts ?? 0) > 0 || p.bestPassed > 0) return 'tried';
+  return 'todo';
+}
+
+/**
+ * Score colour band and plain-text label (never colour alone, docs/DESIGN.md rule 6).
+ * @param {number} score
+ * @returns {{ band: 'strong' | 'mid' | 'low', label: string }}
+ */
+export function scoreBand(score) {
+  if (score >= 75) return { band: 'strong', label: 'Strong' };
+  if (score >= 45) return { band: 'mid', label: 'Developing' };
+  return { band: 'low', label: 'Needs work' };
 }
 
 /**
@@ -47,7 +85,7 @@ export function recordAttempt(session, { problemId, passed, total, accepted, kin
     submissions: session.submissions + (kind === 'submit' ? 1 : 0),
     perProblem: {
       ...session.perProblem,
-      [problemId]: { bestPassed: Math.max(prev.bestPassed, passed), total, acceptedAtMs },
+      [problemId]: { bestPassed: Math.max(prev.bestPassed, passed), total, attempts: (prev.attempts ?? 0) + 1, acceptedAtMs },
     },
   };
 }
@@ -68,6 +106,8 @@ export function analytics(session) {
   const problems = Object.entries(session.perProblem).map(([id, p]) => ({
     id,
     coverage: p.total ? p.bestPassed / p.total : 0,
+    attempts: p.attempts ?? 0,
+    status: problemStatus(session, id),
     solved: p.acceptedAtMs !== null,
     solveTimeMs: p.acceptedAtMs,
   }));
@@ -78,6 +118,7 @@ export function analytics(session) {
   const score = Math.max(0, Math.round(coverage * 90 + speedBonus - integrityPenalty));
   return {
     score,
+    band: scoreBand(score),
     usedMs,
     solved: problems.filter((p) => p.solved).length,
     problems,
