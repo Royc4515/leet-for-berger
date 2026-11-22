@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildPath, pathOrder, pathProgress, conceptLabel, TIER_TITLES } from '../src/js/data/learning-path.js';
+import { buildPath, pathOrder, pathProgress, conceptLabel, TIER_TITLES, TIER_SUMMARIES, topicStartsOpen } from '../src/js/data/learning-path.js';
 import { TOPICS } from '../src/js/data/taxonomy.js';
 import { catalogEntry } from '../src/js/problems/index.js';
 
@@ -53,4 +53,19 @@ test('essential-path.json is fresh: 131 shipped problems, each once', () => {
   assert.equal(ids.length, 131);
   assert.equal(new Set(ids).size, 131);
   assert.deepEqual(ids.filter((id) => !catalogEntry(id)), []);
+});
+
+test('every tier has a one-line summary of what finishing it means', () => {
+  assert.equal(TIER_SUMMARIES.length, TIER_TITLES.length);
+  for (const line of TIER_SUMMARIES) {
+    assert.ok(line.length > 20 && line.length < 120, line);
+    assert.ok(!line.includes('\n') && !line.includes('\u2014'), line);
+  }
+});
+
+test('topics start open only when they hold Next up or are part-way done', () => {
+  assert.equal(topicStartsOpen({ done: 0, total: 3, holdsNext: true }), true);
+  assert.equal(topicStartsOpen({ done: 1, total: 3, holdsNext: false }), true);
+  assert.equal(topicStartsOpen({ done: 0, total: 3, holdsNext: false }), false);
+  assert.equal(topicStartsOpen({ done: 3, total: 3, holdsNext: false }), false);
 });

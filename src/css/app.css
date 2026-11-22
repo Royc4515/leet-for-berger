@@ -865,28 +865,6 @@ body.lockdown .tab-bar {
   background: linear-gradient(90deg, var(--text-2) 50%, transparent 50%);
   border-color: var(--text-2);
 }
-.status-icon {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 2px solid var(--border-strong);
-  margin-right: 8px;
-  vertical-align: middle;
-}
-.status-icon.s-solved {
-  background: var(--ok);
-  border-color: var(--ok);
-}
-.status-icon.s-assisted {
-  background: transparent;
-  border-color: var(--ok);
-}
-.status-icon.s-attempted {
-  background: linear-gradient(90deg, var(--text-2) 50%, transparent 50%);
-  border-color: var(--text-2);
-}
-
 /* ---------- Workspace ---------- */
 .workspace {
   display: grid;
@@ -1521,21 +1499,6 @@ body.resizing-y * {
     opacity: 0;
     transform: translateX(-16px);
   }
-}
-
-/* ---------- Learning path ---------- */
-.progress {
-  height: 6px;
-  border-radius: var(--r-pill);
-  background: var(--panel-3);
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  width: 0;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent), #ffcf73);
-  transition: width 0.6s var(--ease);
 }
 
 /* ---------- Modes ---------- */
@@ -2402,6 +2365,7 @@ body.lockdown .toast-host {
   display: block;
   height: 100%;
   background: var(--ok);
+  transition: width 0.6s var(--ease);
 }
 .company-progress {
   display: grid;
@@ -2536,9 +2500,9 @@ body.lockdown .toast-host {
 /* ---------- Learning path ---------- */
 .path-summary {
   display: grid;
-  gap: 8px;
-  padding: 14px;
-  margin-bottom: 20px;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  margin-bottom: var(--s-6);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--panel-2);
@@ -2548,78 +2512,204 @@ body.lockdown .toast-host {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--s-3);
+}
+.path-summary-count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  font-size: var(--fs-lg);
+}
+/* Progress is status, so it is green like the other progress bars, never amber. */
+.path-bar,
+.path-mini-bar {
+  display: block;
+  border-radius: var(--r-pill);
+  /* --panel-3 vanishes on the --panel-2 cards; an empty track must still read as a bar. */
+  background: var(--border-strong);
+  overflow: hidden;
+}
+.path-bar {
+  height: 10px;
+}
+.path-mini-bar {
+  width: 72px;
+  height: 4px;
+  flex-shrink: 0;
+}
+.path-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ok);
+  transition: width 0.6s var(--ease);
 }
 .path-tier {
-  margin-bottom: 22px;
+  margin-bottom: var(--s-6);
 }
 .path-tier-title {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: var(--s-3);
   font-size: var(--fs-lg);
-  margin: 0 0 10px;
+  margin: 0 0 var(--s-1);
+}
+.path-tier-desc {
+  margin: 0 0 var(--s-3);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
 }
 .path-count {
   color: var(--muted);
   font-size: var(--fs-xs);
   font-weight: 400;
+  font-variant-numeric: tabular-nums;
 }
 .path-topics {
   display: grid;
-  gap: 8px;
+  gap: var(--s-2);
 }
 .path-topic {
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   background: var(--panel-2);
-  padding: 10px 12px;
 }
 .path-topic.current {
   border-color: var(--accent);
 }
-.path-topic summary {
+.path-topic-head {
+  margin: 0;
+  font-size: var(--fs-md);
+}
+.path-topic-toggle {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: var(--ctl-md);
+  padding: var(--s-2) var(--s-3);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
-.path-topic summary:focus-visible {
+.path-topic-toggle:hover {
+  background: var(--panel-3);
+}
+.path-topic-toggle:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+.path-chevron {
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--text-2);
+  border-bottom: 2px solid var(--text-2);
+  transform: rotate(-45deg);
+  transition: transform var(--t-fast);
+  flex-shrink: 0;
+}
+.path-topic-toggle[aria-expanded='true'] .path-chevron {
+  transform: rotate(45deg);
+}
 .path-topic-title {
+  flex: 1;
+  min-width: 0;
   font-weight: 600;
 }
 .path-topic.complete .path-topic-title::after {
   content: ' \2713';
   color: var(--ok);
 }
-.path-topic .progress {
-  margin: 8px 0;
+.path-topic-body {
+  padding: 0 var(--s-2) var(--s-2);
+}
+.path-prereqs {
+  margin: 0 var(--s-2) var(--s-2);
 }
 .path-problems {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 4px;
+  gap: 2px;
 }
-.path-problems li {
+/* The whole row is the link: status, title, subtopic, difficulty. */
+.path-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) minmax(0, 220px) 72px;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--ctl-md);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  text-decoration: none;
+}
+.path-row:hover {
+  background: var(--panel-3);
+}
+.path-row:hover .path-row-title {
+  text-decoration: underline;
+}
+.path-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.path-problems li.is-next .path-row {
+  background: var(--accent-soft);
+}
+.path-row-title {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding: 4px 6px;
-  border-radius: var(--r-sm);
+  gap: var(--s-2);
+  min-width: 0;
+  font-weight: 500;
 }
-.path-problems li.is-next {
-  background: var(--accent-soft);
+.path-next-tag {
+  color: var(--accent);
 }
 .path-concept {
   color: var(--muted);
   font-size: var(--fs-xs);
-  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.path-row-diff {
+  text-align: right;
+}
+@media (max-width: 640px) {
+  .path-mini-bar {
+    width: 48px;
+  }
+  /* Phone rows: title and difficulty on the first line; status and subtopic share the second,
+     so the subtopic never squeezes into a narrow column beside the title. */
+  .path-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'title title diff'
+      'status concept concept';
+    row-gap: 2px;
+    column-gap: var(--s-2);
+    padding: var(--s-2);
+  }
+  .path-row-title {
+    grid-area: title;
+  }
+  .path-row-diff {
+    grid-area: diff;
+  }
+  .path-row-status {
+    grid-area: status;
+  }
+  .path-concept {
+    grid-area: concept;
+  }
 }
 
 /* ---------- Dashboard: practice today ---------- */

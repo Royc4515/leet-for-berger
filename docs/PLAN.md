@@ -84,7 +84,8 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Step 6, pickers: shared `ui/picker.js` (search, scope, roving arrow-key focus, pagination, `aria-live` selected summary, cleanup), interview setup (format cards, company option cards, 3-line rules, pinned Start bar), battle setup (opponent cards, difficulty + topic chips without `<select>`, pinned Start bar, no inner scroll box on phones)
   - [x] Step 7, workspace: statement first with a collapsed "About this problem", grouped toolbar that wraps instead of clipping Run / Submit, token-matched Monaco theme, mentor as a third column only above 1200 px (overlay below, sheet on phones), ARIA case tabs, phone Description / Code / Results tabs with a pinned Run / Submit bar
   - [x] Step 8, sessions: shared session banner with tabular timer and single 5-minute warning announcement, interview problem switcher with per-problem status, colour-banded interview report with difficulty and Review links, battle lockdown with Leave race exit and two distinct thicker race bars
-  - [ ] Steps 9 to 10: learning path, polish
+  - [x] Step 9, learning path: thicker green overall bar with the count, a one-line description per tier, topic disclosure buttons with `aria-expanded` and a mini bar on every topic header, full-row links with the shared status and difficulty, a visible Next up tag, two-line rows on phones
+  - [ ] Step 10: polish
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)

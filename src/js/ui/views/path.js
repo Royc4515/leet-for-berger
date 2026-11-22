@@ -4,16 +4,28 @@
  */
 import { h, mount, difficulty, stateBlock, loadingState, siteFooter } from '../dom.js';
 import { catalogEntry } from '../../problems/index.js';
-import { pathProgress, conceptLabel } from '../../data/learning-path.js';
+import { pathProgress, conceptLabel, topicStartsOpen, TIER_SUMMARIES } from '../../data/learning-path.js';
 import { TOPICS } from '../../data/taxonomy.js';
 import { loadPath } from '../../data/path-loader.js';
 
 const topicTitle = (id) => TOPICS.find((t) => t.id === id)?.title ?? id;
+const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
+const pct = (done, total) => (total ? Math.round((done / total) * 100) : 0);
 
+/** Labelled progress bar for the overall path; `mini` is the decorative bar in a topic header. */
 function progressBar(done, total, label) {
-  const pct = total ? Math.round((done / total) * 100) : 0;
-  return h('div.progress', { role: 'progressbar', 'aria-valuenow': pct, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': label }, h('div.progress-fill', { style: { width: `${pct}%` } }));
+  return h(
+    'div.path-bar',
+    { role: 'progressbar', 'aria-valuenow': pct(done, total), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': label },
+    h('div.path-bar-fill', { style: { width: `${pct(done, total)}%` } }),
+  );
 }
+const miniBar = (done, total) =>
+  h('span.path-mini-bar', { 'aria-hidden': 'true' }, h('span.path-bar-fill', { style: { width: `${pct(done, total)}%` } }));
+
+/** Shared dot-plus-word status; "not started" is spoken, not shown, as on the dashboard. */
+const statusPill = (status) =>
+  h(`span.status-pill.s-${status}`, {}, h('span.status-dot', { 'aria-hidden': 'true' }), STATUS_LABEL[status] ?? h('span.sr-only', {}, 'Not started'));
 
 /**
  * @param {HTMLElement} root
@@ -23,7 +35,69 @@ function progressBar(done, total, label) {
 export function renderPath(root, { store }) {
   let disposed = false;
   let path = null;
+  // Topics the reader opened or closed by hand; survives the re-render on every store change.
+  const openOverride = new Map();
   mount(root, h('div.page', {}, loadingState({ label: 'Loading the path...' })));
+
+  function topicSection(tp, state, overall) {
+    const isSolved = (id) => state.problems[id]?.status === 'solved';
+    const done = tp.problems.filter((p) => isSolved(p.id)).length;
+    const total = tp.problems.length;
+    const holdsNext = Boolean(overall.next && tp.problems.includes(overall.next));
+    const open = openOverride.get(tp.id) ?? topicStartsOpen({ done, total, holdsNext });
+    const bodyId = `path-topic-${tp.id}`;
+    const body = h(
+      'div.path-topic-body',
+      { id: bodyId, hidden: !open },
+      tp.prereqs.length ? h('p.hint-text.path-prereqs', {}, `Builds on: ${tp.prereqs.map(topicTitle).join(', ')}`) : null,
+      h(
+        'ol.path-problems',
+        {},
+        tp.problems.map((p) => {
+          const s = state.problems[p.id];
+          const status = s?.status === 'solved' ? (s.revealed ? 'assisted' : 'solved') : s ? 'attempted' : 'todo';
+          const title = catalogEntry(p.id)?.title ?? p.id;
+          const isNext = p === overall.next;
+          return h(
+            `li${isNext ? '.is-next' : ''}`,
+            {},
+            h(
+              'a.path-row',
+              { href: `#/problem/${p.id}` },
+              h('span.path-row-status', {}, statusPill(status)),
+              h('span.path-row-title', {}, title, isNext ? h('span.tag.path-next-tag', {}, 'Next up') : null),
+              h('span.path-concept', {}, conceptLabel(p.concept)),
+              h('span.path-row-diff', {}, difficulty(p.difficulty)),
+            ),
+          );
+        }),
+      ),
+    );
+    const toggle = h(
+      'button.path-topic-toggle',
+      {
+        type: 'button',
+        'aria-expanded': String(open),
+        'aria-controls': bodyId,
+        onClick: () => {
+          const next = toggle.getAttribute('aria-expanded') !== 'true';
+          openOverride.set(tp.id, next);
+          toggle.setAttribute('aria-expanded', String(next));
+          body.hidden = !next;
+        },
+      },
+      h('span.path-chevron', { 'aria-hidden': 'true' }),
+      h('span.path-topic-title', {}, tp.title, done === total ? h('span.sr-only', {}, ', complete') : null),
+      miniBar(done, total),
+      h('span.path-count', {}, `${done} / ${total}`),
+    );
+    return h(
+      `section.path-topic${holdsNext ? '.current' : ''}${done === total ? '.complete' : ''}`,
+      {},
+      h('h3.path-topic-head', {}, toggle),
+      body,
+    );
+  }
 
   function render() {
     const state = store.get();
@@ -41,7 +115,12 @@ export function renderPath(root, { store }) {
         h(
           'div.path-summary',
           {},
-          h('div.path-summary-top', {}, h('strong', {}, `${overall.solved} / ${overall.total} solved`), overall.next ? h('a.btn.btn-primary', { href: `#/problem/${overall.next.id}` }, `Next up: ${nextTitle}`) : h('span.tag.tag-live', {}, 'Path complete')),
+          h(
+            'div.path-summary-top',
+            {},
+            h('div.path-summary-count', {}, h('strong', {}, `${overall.solved} / ${overall.total} solved`), h('span.path-count', {}, `${pct(overall.solved, overall.total)}%`)),
+            overall.next ? h('a.btn.btn-primary', { href: `#/problem/${overall.next.id}` }, `Next up: ${nextTitle}`) : h('span.tag.tag-live', {}, 'Path complete'),
+          ),
           progressBar(overall.solved, overall.total, 'Learning path progress'),
           nextTopic ? h('div.hint-text', {}, `${nextTopic.title}: ${conceptLabel(overall.next.concept)}`) : null,
         ),
@@ -52,37 +131,8 @@ export function renderPath(root, { store }) {
             'section.path-tier',
             { 'aria-labelledby': `tier-${tier.tier}` },
             h('h2.path-tier-title', { id: `tier-${tier.tier}` }, `Tier ${tier.tier + 1}: ${tier.title}`, h('span.path-count', {}, `${tierDone} / ${tierProblems.length}`)),
-            h(
-              'div.path-topics',
-              {},
-              tier.topics.map((tp) => {
-                const done = tp.problems.filter((p) => isSolved(p.id)).length;
-                const holdsNext = overall.next && tp.problems.includes(overall.next);
-                return h(
-                  `details.path-topic${holdsNext ? '.current' : ''}${done === tp.problems.length ? '.complete' : ''}`,
-                  { open: holdsNext || (done > 0 && done < tp.problems.length) },
-                  h('summary', {}, h('span.path-topic-title', {}, tp.title), h('span.path-count', {}, `${done} / ${tp.problems.length}`)),
-                  tp.prereqs.length ? h('div.hint-text', {}, `Builds on: ${tp.prereqs.map(topicTitle).join(', ')}`) : null,
-                  progressBar(done, tp.problems.length, `${tp.title} progress`),
-                  h(
-                    'ol.path-problems',
-                    {},
-                    tp.problems.map((p) => {
-                      const s = state.problems[p.id];
-                      const status = s?.status === 'solved' ? (s.revealed ? 'assisted' : 'solved') : s ? 'attempted' : 'todo';
-                      return h(
-                        `li${p === overall.next ? '.is-next' : ''}`,
-                        {},
-                        h(`span.status-icon.s-${status}`, { title: status, 'aria-label': status }),
-                        h('a.problem-link', { href: `#/problem/${p.id}` }, catalogEntry(p.id)?.title ?? p.id),
-                        h('span.path-concept', {}, conceptLabel(p.concept)),
-                        difficulty(p.difficulty),
-                      );
-                    }),
-                  ),
-                );
-              }),
-            ),
+            TIER_SUMMARIES[tier.tier] ? h('p.path-tier-desc', {}, `When you finish it: ${TIER_SUMMARIES[tier.tier].charAt(0).toLowerCase()}${TIER_SUMMARIES[tier.tier].slice(1)}`) : null,
+            h('div.path-topics', {}, tier.topics.map((tp) => topicSection(tp, state, overall))),
           );
         }),
         siteFooter(),
