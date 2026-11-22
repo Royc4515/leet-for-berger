@@ -64,30 +64,49 @@ export function toast(message, kind = 'info', ms = 3200) {
   setTimeout(() => t.remove(), ms + 300);
 }
 
+let dialogSeq = 0;
+
 /**
  * Accessible confirm dialog using <dialog>. Native confirm() is avoided because it
  * blocks the event loop (and the test-runner watchdog timers with it).
+ * @param {{ title: string, body: string, confirmLabel?: string, danger?: boolean }} opts
  * @returns {Promise<boolean>}
  */
 export function confirmDialog({ title, body, confirmLabel = 'Confirm', danger = false }) {
   return new Promise((resolve) => {
-    const dlg = h(
-      'dialog.modal',
-      {},
-      h('h3', {}, title),
-      h('p', {}, body),
-      h(
-        'div.modal-actions',
-        {},
-        h('button.btn.btn-ghost', { value: 'cancel', onClick: () => close(false) }, 'Cancel'),
-        h(`button.btn.${danger ? 'btn-danger' : 'btn-primary'}`, { onClick: () => close(true) }, confirmLabel),
-      ),
-    );
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const seq = ++dialogSeq;
+    const titleId = `modal-title-${seq}`;
+    const bodyId = `modal-body-${seq}`;
+    let closed = false;
     const close = (v) => {
+      if (closed) return;
+      closed = true;
       dlg.close();
       dlg.remove();
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
       resolve(v);
     };
+    const dlg = h(
+      'dialog.modal',
+      { 'aria-labelledby': titleId, 'aria-describedby': bodyId },
+      h(
+        'div.modal-card',
+        {},
+        h('h3', { id: titleId }, title),
+        h('p', { id: bodyId }, body),
+        h(
+          'div.modal-actions',
+          {},
+          h('button.btn.btn-ghost', { type: 'button', value: 'cancel', onClick: () => close(false) }, 'Cancel'),
+          h(`button.btn.${danger ? 'btn-danger' : 'btn-primary'}`, { type: 'button', onClick: () => close(true) }, confirmLabel),
+        ),
+      ),
+    );
+    dlg.addEventListener('click', (e) => {
+      // Padding lives on .modal-card, so clicks outside the card hit the dialog element itself.
+      if (e.target === dlg) close(false);
+    });
     dlg.addEventListener('cancel', (e) => {
       e.preventDefault();
       close(false);
@@ -97,6 +116,62 @@ export function confirmDialog({ title, body, confirmLabel = 'Confirm', danger = 
   });
 }
 
+/**
+ * Render a difficulty badge element.
+ * @param {string} d
+ * @returns {HTMLElement}
+ */
 export function difficultyBadge(d) {
   return h(`span.badge.diff-${d.toLowerCase()}`, {}, d);
+}
+
+/**
+ * Shared empty, error, or informational state block with one optional recovery action.
+ * @param {{ title?: string, body?: string, kind?: 'empty'|'error', headingTag?: 'h1'|'h2', action?: { label: string, href?: string, onClick?: () => void, variant?: string }|null }} opts
+ * @returns {HTMLElement}
+ */
+export function stateBlock({ title, body, kind = 'empty', headingTag = 'h2', action = null } = {}) {
+  const actionEl = !action
+    ? null
+    : action.href
+      ? h(`a.btn.${action.variant ?? 'btn-primary'}`, { href: action.href }, action.label)
+      : h(`button.btn.${action.variant ?? 'btn-primary'}`, { type: 'button', onClick: action.onClick }, action.label);
+  return h(
+    `div.state.state-${kind}`,
+    kind === 'error' ? { role: 'alert' } : { role: 'status' },
+    title ? h(`${headingTag}.state-title`, {}, title) : null,
+    body ? h('p.state-body', {}, body) : null,
+    actionEl ? h('div.state-action', {}, actionEl) : null,
+  );
+}
+
+/**
+ * Shared loading state with skeleton rows sized to match real list rows.
+ * @param {{ label?: string, rows?: number }} [opts]
+ * @returns {HTMLElement}
+ */
+export function loadingState({ label = 'Loading...', rows = 6 } = {}) {
+  const skeletonRows = Array.from({ length: rows }, () =>
+    h('div.skeleton-row', { 'aria-hidden': 'true' }, h('span.skeleton-bar.skeleton-title'), h('span.skeleton-bar.skeleton-meta')),
+  );
+  return h(
+    'div.state.state-loading',
+    { role: 'status', 'aria-busy': 'true' },
+    h('p.sr-only', {}, label),
+    h('div.skeleton-list', {}, skeletonRows),
+  );
+}
+
+/**
+ * Shared footer for browse pages with a link to the privacy policy.
+ * @returns {HTMLElement}
+ */
+export function siteFooter() {
+  return h(
+    'footer.site-links',
+    {},
+    h('span.site-links-copy', {}, 'Leet-For-Berger'),
+    h('span.site-links-sep', { 'aria-hidden': 'true' }, '·'),
+    h('a', { href: 'privacy.html' }, 'Privacy Policy'),
+  );
 }

@@ -2,7 +2,7 @@
  * Dashboard: progress stats + filterable problem bank. Reads only the catalog: no problem module
  * loads here (docs/adr/0008-lazy-problem-modules.md).
  */
-import { h, mount, difficultyBadge } from '../dom.js';
+import { h, mount, difficultyBadge, siteFooter } from '../dom.js';
 import { catalog, catalogEntry, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import { stats, dayKey } from '../../state/progress.js';
 import { dailyProblem, dailyCandidates, weakSpots } from '../../data/recommend.js';
@@ -152,7 +152,7 @@ export function renderDashboard(root, { store }) {
           tableBody,
         ),
       ),
-      h('footer.site-links', {}, h('a', { href: 'privacy.html' }, 'Privacy Policy')),
+      siteFooter(),
     ),
   );
   renderStats();

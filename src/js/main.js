@@ -10,44 +10,57 @@ import { mountAccountMenu } from './ui/account-menu.js';
 import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
 import { services } from './auth/services.js';
 import { catalogEntry, loadProblem } from './problems/index.js';
-import { h, mount, toast } from './ui/dom.js';
+import { h, mount, toast, stateBlock, loadingState, siteFooter } from './ui/dom.js';
 
 const store = createStore();
 const view = document.getElementById('view');
 const streakChip = document.getElementById('streak-chip');
+const headerTitle = document.getElementById('header-title');
 
 /**
- * Route table: [pattern, load, navKey]. Order matters, first match wins. Each view module loads on
- * demand (ADR 0008): `load` imports it and returns a mounter, or throws when the import fails.
- * Literal import() paths, so the dev server and the browser both see plain static specifiers.
+ * Route table: [pattern, load, navKey, title]. Order matters, first match wins. Each view module
+ * loads on demand (ADR 0008): `load` imports it and returns a mounter, or throws when the import
+ * fails. Literal import() paths, so the dev server and the browser both see plain static specifiers.
  */
 const routes = [
-  [/^#?\/?$/, async () => { const m = await import('./ui/views/dashboard.js'); return (root) => m.renderDashboard(root, { store }); }, 'problems'],
-  [/^#\/problem\/([\w-]+)$/, loadProblemRoute, 'problems'],
-  [/^#\/path$/, async () => { const m = await import('./ui/views/path.js'); return (root) => m.renderPath(root, { store }); }, 'path'],
-  [/^#\/companies$/, async () => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompanies(root, { store }); }, 'companies'],
-  [/^#\/companies\/([\w-]+)$/, async (_, [, slug]) => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompany(root, { store, slug }); }, 'companies'],
-  [/^#\/modes$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderModesHub(root); }, 'modes'],
-  [/^#\/interview$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderInterview(root, { store }); }, 'modes'],
-  [/^#\/battle$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderBattle(root, { store }); }, 'modes'],
+  [/^#?\/?$/, async () => { const m = await import('./ui/views/dashboard.js'); return (root) => m.renderDashboard(root, { store }); }, 'problems', 'Problems'],
+  [/^#\/problem\/([\w-]+)$/, loadProblemRoute, 'problems', ([, id]) => catalogEntry(id)?.title ?? 'Problem'],
+  [/^#\/path$/, async () => { const m = await import('./ui/views/path.js'); return (root) => m.renderPath(root, { store }); }, 'path', 'Learning Path'],
+  [/^#\/companies$/, async () => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompanies(root, { store }); }, 'companies', 'Companies'],
+  [/^#\/companies\/([\w-]+)$/, async (_, [, slug]) => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompany(root, { store, slug }); }, 'companies', 'Companies'],
+  [/^#\/modes$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderModesHub(root); }, 'modes', 'Modes'],
+  [/^#\/interview$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderInterview(root, { store }); }, 'modes', 'Interview'],
+  [/^#\/battle$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderBattle(root, { store }); }, 'modes', '1v1 Battle'],
 ];
 
 /** The workspace view and the problem module load in parallel (ADR 0008). */
 async function loadProblemRoute(_, [, id]) {
   if (!catalogEntry(id)) return (root) => renderNotFound(root, `Problem "${id}" does not exist or is not published yet.`);
   const [m, problem] = await Promise.all([import('./ui/views/workspace.js'), loadProblem(id).catch(() => null)]);
-  if (!problem) return (root) => renderNotFound(root, `Problem "${id}" could not be loaded. Check your connection and reload.`, 'Could not load');
+  if (!problem) return (root) => renderNotFound(root, `Problem "${id}" could not be loaded. Check your connection and reload.`, 'Could not load', 'error');
   return (root) => m.renderWorkspace(root, { problem, store });
 }
 
-function renderNotFound(root, message = 'Page not found.', title = 'Not found') {
-  mount(root, h('div.page.page-narrow', {}, h('h1', {}, title), h('p.page-sub', {}, message), h('a.btn.btn-primary', { href: '#/' }, 'Back to problems')));
+function renderNotFound(root, message = 'Page not found.', title = 'Not found', kind = 'empty') {
+  mount(
+    root,
+    h(
+      'div.page.page-narrow',
+      {},
+      stateBlock({ title, body: message, kind, headingTag: 'h1', action: { label: 'Back to problems', href: '#/' } }),
+      siteFooter(),
+    ),
+  );
   return () => {};
 }
 
 let cleanup = () => {};
 // Bumped on every navigation: a view that finishes loading after the hash moved on must not render.
 let navToken = 0;
+
+function setHeaderTitle(text) {
+  if (headerTitle) headerTitle.textContent = text;
+}
 
 async function route() {
   const token = ++navToken;
@@ -65,17 +78,20 @@ async function route() {
   if (!match) {
     cleanup = renderNotFound(view);
     setActiveNav(null);
+    setHeaderTitle('Not found');
     return;
   }
-  const [re, load, nav] = match;
+  const [re, load, nav, title] = match;
+  const groups = hash.match(re);
   setActiveNav(nav);
-  mount(view, h('div.page', {}, h('p.page-sub', { role: 'status' }, 'Loading...')));
+  setHeaderTitle(typeof title === 'function' ? title(groups) : title);
+  mount(view, h('div.page', {}, loadingState({ label: 'Loading page...' })));
   let mounter;
   try {
-    mounter = await load(hash, hash.match(re));
+    mounter = await load(hash, groups);
   } catch {
     // Offline or a stale deploy; no console.error here, the browser already logged the failed fetch.
-    if (token === navToken) cleanup = renderNotFound(view, 'Could not load this page. Check your connection and reload.', 'Could not load');
+    if (token === navToken) cleanup = renderNotFound(view, 'Could not load this page. Check your connection and reload.', 'Could not load', 'error');
     return;
   }
   if (token !== navToken) return;
@@ -92,8 +108,15 @@ function setActiveNav(key) {
 
 function renderStreak() {
   const { streak } = stats(store.get());
-  streakChip.textContent = `🔥 ${streak}`;
-  streakChip.title = `${streak}-day streak`;
+  const label = `${streak}-day streak`;
+  streakChip.setAttribute('aria-label', label);
+  streakChip.title = label;
+  mount(
+    streakChip,
+    h('span.streak-icon', { 'aria-hidden': 'true' }, '🔥'),
+    h('span.streak-count', { 'aria-hidden': 'true' }, String(streak)),
+    h('span.sr-only', {}, label),
+  );
 }
 
 store.subscribe(renderStreak);
