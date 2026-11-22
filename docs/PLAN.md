@@ -81,7 +81,8 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Step 3, core components: buttons, chips, segmented, tags, difficulty, inputs, cards, 44 px touch targets, shared helpers in `ui/dom.js` (#35)
   - [x] Step 4, dashboard: single-strip stats, new-visitor start block, Today Solve CTA, search-first filters + Topic disclosure + Clear filters empty state, full-row links and phone list rows
   - [x] Step 5, companies: option cards (monogram, name, IL mark, "x of y solved" with a bar, two per row on a phone), company page with a progress header, chip filters, Practice links named after the problem, a 3-step frequency meter and phone list rows
-  - [ ] Steps 6 to 10: pickers, workspace, sessions, learning path, polish
+  - [x] Step 6, pickers: shared `ui/picker.js` (search, scope, roving arrow-key focus, pagination, `aria-live` selected summary, cleanup), interview setup (format cards, company option cards, 3-line rules, pinned Start bar), battle setup (opponent cards, difficulty + topic chips without `<select>`, pinned Start bar, no inner scroll box on phones)
+  - [ ] Steps 7 to 10: workspace, sessions, learning path, polish
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)

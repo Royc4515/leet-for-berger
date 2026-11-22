@@ -632,19 +632,49 @@ try {
 
   await check('mock OA: hard format from one company, 3 problems, lockdown, report', async () => {
     await page.goto(`${BASE}#/interview`);
-    await page.click('.chip-group[aria-label="Format"] button:has-text("Hard OA")');
-    await page.waitForSelector('.company-chip[data-slug="google"]', { timeout: 15000 });
-    // Search narrows the picker; the selected chip is obvious (aria-pressed).
+    await page.waitForSelector('.format-grid .format-card');
+    await page.waitForSelector('.company-option[data-slug="google"]', { timeout: 15000 });
+    // Start button must be visible in the 1440x900 viewport immediately on render.
+    const startBox = await page.locator('button:has-text("Start interview")').boundingBox();
+    if (!startBox || startBox.y < 0 || startBox.y + startBox.height > 900) {
+      throw new Error(`Start interview button is outside 1440x900 viewport on load: ${JSON.stringify(startBox)}`);
+    }
+    const primaries = await page.locator('#view .btn-primary').count();
+    if (primaries !== 1) throw new Error(`expected 1 primary button on interview setup, got ${primaries}`);
+    const rulesCount = await page.locator('.setup-rules li').count();
+    if (rulesCount !== 3) throw new Error(`expected 3 short rules on interview setup, got ${rulesCount}`);
+    await expectText('.format-card[data-format="hard-oa"]', /90 min/);
+    await expectText('.format-card[data-format="hard-oa"]', /2 Medium \+ 1 Hard/);
+    await page.click('.format-grid button:has-text("Hard OA")');
+    if ((await page.getAttribute('.format-card[data-format="hard-oa"]', 'aria-pressed')) !== 'true') {
+      throw new Error('Hard OA format card is not pressed');
+    }
+    // Keyboard inside the shared company picker: arrows move focus, Enter selects, Tab leaves it.
+    await page.focus('.picker-options .company-option[tabindex="0"]');
+    await page.keyboard.press('ArrowRight');
+    const focusedSlug = await page.evaluate(() => document.activeElement?.dataset?.slug ?? '');
+    if (!focusedSlug) throw new Error('ArrowRight in company picker did not move focus to a company option');
+    await page.keyboard.press('Enter');
+    if ((await page.getAttribute(`.company-option[data-slug="${focusedSlug}"]`, 'aria-pressed')) !== 'true') {
+      throw new Error(`Enter did not select company option "${focusedSlug}"`);
+    }
+    await page.keyboard.press('Tab');
+    const stillInside = await page.evaluate(() => Boolean(document.activeElement?.closest('.picker-options')));
+    if (stillInside) throw new Error('Tab did not leave the company picker options');
+
+    // Search narrows the picker; the selected card has aria-pressed="true".
     await page.fill('input[aria-label="Search companies"]', 'goog');
-    await page.waitForFunction(() => document.querySelectorAll('.company-chip').length === 2);
-    await page.click('.company-chip[data-slug="google"]');
-    if ((await page.getAttribute('.company-chip[data-slug="google"]', 'aria-pressed')) !== 'true') throw new Error('selected company chip is not pressed');
+    await page.waitForFunction(() => document.querySelectorAll('.company-option').length === 2);
+    await page.click('.company-option[data-slug="google"]');
+    if ((await page.getAttribute('.company-option[data-slug="google"]', 'aria-pressed')) !== 'true') throw new Error('selected company option is not pressed');
+    await expectText('.picker-selected', /Google/);
     await page.fill('input[aria-label="Search companies"]', '');
     await page.click('.segmented-btn:has-text("All")');
-    if ((await page.locator('.company-chip').count()) <= 2) throw new Error('"All" should list more companies');
+    if ((await page.locator('.company-option').count()) <= 2) throw new Error('"All" should list more companies');
     await shot('06-oa-setup-picker');
-    await expectText('.setup-card', /2 Medium \+ 1 Hard, 90 minutes/);
-    await expectText('.setup-card', /asked at Google/);
+    await expectText('.setup-bar', /90 min/);
+    await expectText('.setup-bar', /2 Medium \+ 1 Hard/);
+    await expectText('.setup-bar', /asked at Google/);
     await shot('06-oa-setup');
     await page.click('button:has-text("Start interview")');
     await page.waitForSelector('.session-banner.interview');
@@ -656,7 +686,7 @@ try {
     await page.click('dialog.modal button:has-text("End interview")');
     await page.waitForSelector('.score-ring');
     await page.click('button:has-text("New interview")');
-    await page.waitForSelector('.chip-group[aria-label="Format"]');
+    await page.waitForSelector('.format-grid');
   });
 
   await check('interview: lockdown hides nav, reveal disabled, end produces report', async () => {
@@ -672,22 +702,65 @@ try {
     await page.waitForSelector('.score-ring');
     if (!(await page.locator('.app-header').isVisible())) throw new Error('nav not restored after interview');
     await shot('08-report');
+    // Reset to setup so subsequent 390px route checks capture and measure the setup screen.
+    await page.click('button:has-text("New interview")');
+    await page.waitForSelector('.format-grid');
   });
 
-  await check('battle setup: problems show difficulty and topics, filters narrow the list', async () => {
+  await check('battle setup: opponent cards, difficulty and topic chips (no select), keyboard picker, pinned Start', async () => {
     await page.goto(`${BASE}#/battle`);
     await page.waitForSelector('.pick-row');
+    // Start button must be visible in the 1440x900 viewport immediately on render, with no <select>.
+    const startBox = await page.locator('button:has-text("Start race")').boundingBox();
+    if (!startBox || startBox.y < 0 || startBox.y + startBox.height > 900) {
+      throw new Error(`Start race button is outside 1440x900 viewport on load: ${JSON.stringify(startBox)}`);
+    }
+    if (await page.locator('#view select').count()) throw new Error('battle setup should use chips, not <select>');
+    if ((await page.locator('.opponent-card').count()) !== 3) throw new Error('expected 3 opponent cards');
+    await expectText('.opponent-card[data-level="grandmaster"]', /Fast pace/);
     await expectText('.pick-row:first-child', /Easy|Medium|Hard/);
     if (!(await page.locator('.pick-row >> nth=0').locator('.tag').count())) throw new Error('problem row shows no topic');
-    const before = await page.locator('.pick-row').count();
+
+    // Keyboard inside the battle problem picker: ArrowDown moves, Enter selects, Tab leaves.
+    await page.focus('.picker-options .pick-row[tabindex="0"]');
+    const firstId = await page.evaluate(() => document.activeElement?.dataset?.id ?? '');
+    await page.keyboard.press('ArrowDown');
+    const secondId = await page.evaluate(() => document.activeElement?.dataset?.id ?? '');
+    if (!secondId || secondId === firstId) throw new Error(`ArrowDown did not move focus in battle picker (${firstId} -> ${secondId})`);
+    await page.keyboard.press('Enter');
+    if ((await page.getAttribute(`.pick-row[data-id="${secondId}"]`, 'aria-pressed')) !== 'true') {
+      throw new Error('Enter did not select focused battle problem row');
+    }
+    await page.keyboard.press('Tab');
+    if (await page.evaluate(() => Boolean(document.activeElement?.closest('.picker-options')))) {
+      throw new Error('Tab did not leave the battle problem picker');
+    }
+
+    const totalText = await page.locator('.picker-count').textContent();
+    const totalMatch = Number(totalText.match(/^(\d+) of (\d+)/)?.[1] ?? 0);
     await page.click('.chip-group[aria-label="Difficulty"] button:has-text("Hard")');
-    const hard = await page.locator('.pick-row').count();
-    if (!(hard > 0 && hard < before)) throw new Error(`difficulty filter should narrow the list (${hard} vs ${before})`);
+    const hardText = await page.locator('.picker-count').textContent();
+    const hardMatch = Number(hardText.match(/^(\d+) of (\d+)/)?.[1] ?? 0);
+    if (!(hardMatch > 0 && hardMatch < totalMatch)) throw new Error(`difficulty filter should narrow the list (${hardMatch} vs ${totalMatch})`);
     const nonHard = await page.locator('.pick-row:not(:has(.diff-hard))').count();
     if (nonHard) throw new Error('hard filter shows other difficulties');
+
+    // Topic disclosure chip (no aria-pressed) filters by topic and closes on Escape.
+    await page.click('.topic-toggle');
+    await page.waitForSelector('#battle-topics:not([hidden])');
+    if (await page.evaluate(() => document.querySelector('.topic-toggle').hasAttribute('aria-pressed'))) {
+      throw new Error('battle topic toggle should be a disclosure only (no aria-pressed)');
+    }
+    await page.click('#battle-topics .chip:has-text("Graphs")');
+    await expectText('.topic-toggle', /Topic: Graphs/);
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('#battle-topics', { state: 'hidden' });
+
     await page.fill('input[aria-label="Search problems"]', 'zzzz-no-such-problem');
-    await page.waitForSelector('.pick-list .empty');
-    await page.fill('input[aria-label="Search problems"]', '');
+    await page.waitForSelector('.picker-empty:not([hidden]) .state');
+    await page.click('.picker-empty button:has-text("Clear filters")');
+    await page.waitForSelector('.pick-row');
+    await page.click('.chip-group[aria-label="Difficulty"] button:has-text("Hard")');
     await page.click('button:has-text("Random")');
     await page.waitForSelector('.pick-row[aria-pressed="true"]');
     await shot('09a-battle-setup');
@@ -752,6 +825,38 @@ try {
     await page.waitForSelector('.company-card');
     const cardTops = await page.evaluate(() => [...document.querySelectorAll('.company-card')].slice(0, 2).map((c) => Math.round(c.getBoundingClientRect().top)));
     if (cardTops[0] !== cardTops[1]) throw new Error(`expected two company cards per row at 390px: ${JSON.stringify(cardTops)}`);
+
+    // Setup screens at 390x844: Start button is in the viewport at or above .tab-bar's top
+    // right on render, elementFromPoint at its center lands inside .setup-bar, and pickers do
+    // not create nested scroll boxes on phones.
+    for (const setup of [
+      { url: '#/interview', wait: '.company-option[data-slug="google"]', button: 'Start interview' },
+      { url: '#/battle', wait: '.pick-row', button: 'Start race' },
+    ]) {
+      await page.goto(`${BASE}${setup.url}`);
+      await page.waitForSelector(setup.wait, { timeout: 30000 });
+      const checkBar = await page.evaluate((label) => {
+        const btn = [...document.querySelectorAll('.setup-bar button')].find((b) => b.textContent.trim() === label);
+        const tab = document.querySelector('.tab-bar');
+        if (!btn || !tab) return { missing: true };
+        const br = btn.getBoundingClientRect();
+        const tr = tab.getBoundingClientRect();
+        const hit = document.elementFromPoint(br.left + br.width / 2, br.top + br.height / 2);
+        return {
+          top: br.top,
+          bottom: br.bottom,
+          tabTop: tr.top,
+          hitsBar: Boolean(hit?.closest('.setup-bar')),
+          overflowY: getComputedStyle(document.querySelector('.picker-options')).overflowY,
+        };
+      }, setup.button);
+      if (checkBar.missing || checkBar.top < 0 || checkBar.bottom > 844 || checkBar.bottom > checkBar.tabTop + 1 || !checkBar.hitsBar) {
+        throw new Error(`${setup.url} "${setup.button}" failed 390x844 Start-in-viewport check: ${JSON.stringify(checkBar)}`);
+      }
+      if (checkBar.overflowY === 'auto' || checkBar.overflowY === 'scroll') {
+        throw new Error(`${setup.url} picker uses an inner scroll box on phones (overflowY=${checkBar.overflowY})`);
+      }
+    }
 
     // Tab bar geometry, touch height >= 44px, header title, and single aria-current across all 4 tabs.
     await page.goto(`${BASE}#/`);
@@ -916,8 +1021,8 @@ try {
       { url: '#/', wait: '.problem-table tbody tr a.problem-link', name: '390-touch-dashboard' },
       { url: '#/companies', wait: '.company-card', name: '390-touch-companies' },
       { url: '#/companies/google', wait: '.problem-table tbody tr', name: '390-touch-company' },
-      { url: '#/interview', wait: '.company-chip[data-slug="google"]', name: '390-touch-interview' },
-      { url: '#/battle', wait: '.pick-row', name: '390-touch-battle' },
+      { url: '#/interview', wait: '.company-option[data-slug="google"]', name: '390-touch-interview', startButton: 'Start interview' },
+      { url: '#/battle', wait: '.pick-row', name: '390-touch-battle', startButton: 'Start race' },
     ];
     for (const sc of screens) {
       await touch.goto(`${BASE}${sc.url}`);
@@ -925,6 +1030,20 @@ try {
       await touch.waitForTimeout(300);
       const bad = await undersized();
       if (bad.length) throw new Error(`${sc.url} has touch targets under 44px:\n  ${bad.join('\n  ')}`);
+      if (sc.startButton) {
+        const startCheck = await touch.evaluate((label) => {
+          const btn = [...document.querySelectorAll('.setup-bar button')].find((b) => b.textContent.trim() === label);
+          const tab = document.querySelector('.tab-bar');
+          if (!btn || !tab) return { missing: true };
+          const br = btn.getBoundingClientRect();
+          const tr = tab.getBoundingClientRect();
+          const hit = document.elementFromPoint(br.left + br.width / 2, br.top + br.height / 2);
+          return { top: br.top, bottom: br.bottom, tabTop: tr.top, hitsBar: Boolean(hit?.closest('.setup-bar')) };
+        }, sc.startButton);
+        if (startCheck.missing || startCheck.top < 0 || startCheck.bottom > 844 || startCheck.bottom > startCheck.tabTop + 1 || !startCheck.hitsBar) {
+          throw new Error(`${sc.url} "${sc.startButton}" failed 390x844 touch Start-in-viewport check: ${JSON.stringify(startCheck)}`);
+        }
+      }
       if (shotsDir) await touch.screenshot({ path: `${shotsDir}/${sc.name}.png` });
     }
     // The Sign in panel (a phone sheet) follows the same rule.
