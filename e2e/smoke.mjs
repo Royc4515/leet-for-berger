@@ -114,19 +114,62 @@ try {
     await ctx.close();
   });
 
-  await check('dashboard renders with stats and problem bank, without loading any problem module', async () => {
+  await check('dashboard renders start block, filters, Clear filters empty state and problem bank, without loading any problem module', async () => {
     await page.goto(BASE);
     await page.waitForSelector('.problem-table tbody tr a.problem-link');
+    await page.waitForSelector('.today-card .today-cta');
     const { ready, longest } = await page.evaluate(() => ({ ready: performance.now(), longest: window.__lfbLongestTask }));
     if (problemModules.length) throw new Error(`the dashboard fetched ${problemModules.length} problem modules, e.g. ${problemModules[0]}`);
     console.log(`  # dashboard ready in ${Math.round(ready)} ms (budget ${DASHBOARD_BUDGET_MS}), longest task ${Math.round(longest)} ms`);
     if (ready > DASHBOARD_BUDGET_MS) throw new Error(`dashboard took ${Math.round(ready)} ms, budget ${DASHBOARD_BUDGET_MS} ms`);
-    await expectText('.stats-row', /Solved/);
+    await expectText('.stats-row.stats-empty', /Start with the learning path/);
+    const primaries = await page.locator('#view .btn-primary').count();
+    if (primaries !== 1) throw new Error(`expected 1 primary button on dashboard, got ${primaries}`);
     await shot('01-dashboard');
+
+    // Topic disclosure, result count, empty state with Clear filters restoring the full list.
+    const totalRows = await page.locator('.dashboard-table tbody tr').count();
+    await page.click('.topic-toggle');
+    await page.waitForSelector('#dashboard-topics:not([hidden])');
+    if (await page.evaluate(() => document.querySelector('.topic-toggle').hasAttribute('aria-pressed'))) {
+      throw new Error('topic toggle should be a disclosure only (no aria-pressed)');
+    }
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('#dashboard-topics', { state: 'hidden' });
+    await page.click('.topic-toggle');
+    await page.waitForSelector('#dashboard-topics:not([hidden])');
+    await page.click('#dashboard-topics .chip:has-text("Graphs")');
+    await expectText('.topic-toggle', /Topic: Graphs/);
+    if (!(await page.evaluate(() => document.querySelector('.topic-toggle').classList.contains('is-active')))) {
+      throw new Error('topic toggle missing .is-active when a topic is chosen');
+    }
+    const graphRows = await page.locator('.dashboard-table tbody tr').count();
+    if (!(graphRows > 0 && graphRows < totalRows)) throw new Error(`Graphs filter did not narrow rows (${graphRows} vs ${totalRows})`);
+    await page.focus('#dashboard-topics .chip:has-text("Graphs")');
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('#dashboard-topics', { state: 'hidden' });
+    if ((await page.evaluate(() => document.activeElement?.classList.contains('topic-toggle'))) !== true) {
+      throw new Error('Escape in topic panel did not return focus to topic toggle');
+    }
+    await page.fill('input.dashboard-search', 'zzzz-no-such-problem');
+    await page.waitForSelector('.dashboard-empty:not([hidden]) .state');
+    await expectText('.filter-count', /^0 of \d+ problems$/);
+    await page.click('.dashboard-empty button:has-text("Clear filters")');
+    await page.waitForSelector('.dashboard-table-wrap:not([hidden])');
+    if (await page.evaluate(() => document.querySelector('.topic-toggle').classList.contains('is-active'))) {
+      throw new Error('Clear filters did not remove .is-active from topic toggle');
+    }
+    const restoredRows = await page.locator('.dashboard-table tbody tr').count();
+    if (restoredRows !== totalRows) throw new Error(`Clear filters restored ${restoredRows} rows, expected ${totalRows}`);
+    if ((await page.evaluate(() => document.activeElement?.matches('input.dashboard-search'))) !== true) {
+      throw new Error('Clear filters did not return focus to search input');
+    }
   });
 
-  await check('problem opens with Monaco (vs-dark) and starter code, loading exactly its own module', async () => {
-    await page.click('a.problem-link[href="#/problem/smallest-base-segment"]');
+  await check('problem opens via full-row link with Monaco (vs-dark) and starter code, loading exactly its own module', async () => {
+    // Click the Topics cell coordinates on the far right of the row to verify the stretched full-row link.
+    const cellBox = await page.locator('tr.row-link:has(a.problem-link[href="#/problem/smallest-base-segment"]) td.cell-topics').boundingBox();
+    await page.mouse.click(cellBox.x + cellBox.width / 2, cellBox.y + cellBox.height / 2);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     if (problemModules.length !== 1 || !problemModules[0].includes('/smallest-base-segment/')) throw new Error(`expected one problem module, fetched: ${problemModules.join(', ')}`);
     const theme = await page.evaluate(() => document.querySelector('.monaco-editor').classList.contains('vs-dark'));
@@ -271,8 +314,10 @@ try {
   await check('dashboard reflects the solve', async () => {
     await page.goto(`${BASE}#/`);
     await page.waitForSelector('.stat-value');
+    if (await page.locator('.stats-row.stats-empty').count()) throw new Error('stats strip still in empty state after a solve');
     const solved = await page.locator('.stat-value').first().textContent();
     if (solved.trim() !== '1') throw new Error(`solved = ${solved}`);
+    await expectText('tr:has(a.problem-link[href="#/problem/smallest-base-segment"]) .status-pill', /Assisted|Solved/);
   });
 
   // Remote runner (ADR 0005): with a runner URL configured, Java compiles on the server and is judged
@@ -844,9 +889,24 @@ try {
     const panel = await touch.evaluate(() => [...document.querySelectorAll('.account-menu button')].map((b) => b.getBoundingClientRect().height));
     if (panel.some((hgt) => hgt < 43.5)) throw new Error(`account panel buttons under 44px: ${JSON.stringify(panel)}`);
     // One shape per job: a filter chip is a pill, a static tag is a 4px rectangle, and a selected
-    // chip shows a check mark, so selection is not colour alone.
+    // chip shows a check mark, so selection is not colour alone. On a 390x844 phone the first
+    // problem link must be visible without scrolling (within the first 844 px).
     await touch.goto(`${BASE}#/`);
     await touch.waitForSelector('.problem-table tbody tr a.problem-link');
+    await touch.waitForSelector('.today-card .today-cta');
+    const firstRow = await touch.evaluate(() => {
+      const link = document.querySelector('.dashboard-table tbody tr a.problem-link');
+      const row = link.closest('tr');
+      const lr = link.getBoundingClientRect();
+      const rr = row.getBoundingClientRect();
+      return { linkTop: lr.top, linkBottom: lr.bottom, rowHeight: rr.height };
+    });
+    if (firstRow.linkTop < 0 || firstRow.linkBottom > 844 || firstRow.linkTop >= 788) {
+      throw new Error(`first problem link is below the fold at 390x844: ${JSON.stringify(firstRow)}`);
+    }
+    if (firstRow.rowHeight < 52) {
+      throw new Error(`mobile dashboard list row under 52px: ${JSON.stringify(firstRow)}`);
+    }
     const shapes = await touch.evaluate(() => {
       const chip = document.querySelector('.chip-group[aria-label="Difficulty"] .chip[aria-pressed="true"]');
       const tag = document.querySelector('.problem-table .tag');
