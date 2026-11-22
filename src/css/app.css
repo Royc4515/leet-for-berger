@@ -2191,7 +2191,6 @@ body.lockdown .toast-host {
   padding: 2px;
 }
 .company-chip .il-star {
-  margin-left: var(--s-1);
   color: var(--text-2);
   font-size: var(--fs-xs);
 }

@@ -78,7 +78,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - Plan: `docs/DESIGN_PLAN.md`, rules: `docs/DESIGN.md`. Ten steps, one PR each
   - [x] Step 1, tokens and fonts (#33)
   - [x] Step 2, shell: phone tab bar, account panel, dialogs, toasts, page states (#34)
-  - [x] Step 3, core components: buttons, chips, segmented, tags, difficulty, inputs, cards, 44 px touch targets, shared helpers in `ui/dom.js`
+  - [x] Step 3, core components: buttons, chips, segmented, tags, difficulty, inputs, cards, 44 px touch targets, shared helpers in `ui/dom.js` (#35)
   - [ ] Steps 4 to 10: dashboard, companies, pickers, workspace, sessions, learning path, polish
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
