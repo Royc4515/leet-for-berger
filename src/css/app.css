@@ -2213,6 +2213,9 @@ body.lockdown .toast-host {
   gap: var(--s-1) var(--s-3);
   width: 100%;
   min-height: var(--ctl-md);
+  /* An explicit min-height drops flex's min-height: auto, so rows in the capped .pick-list column
+     would shrink and spill their topic tags onto the next row. */
+  flex-shrink: 0;
   padding: var(--s-2) var(--s-3);
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
