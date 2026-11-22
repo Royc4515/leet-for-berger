@@ -3,8 +3,8 @@
  * (#/companies/<slug>), the problems it asks, most frequent first, one row per family.
  * Data: src/js/data/company-sets.json (built by scripts/content/build-meta.mjs), fetched on demand.
  */
-import { h, mount, difficulty, segmented, ilMark, stateBlock, loadingState, siteFooter } from '../dom.js';
-import { expandRows, companyProgress } from '../../data/company-sets.js';
+import { h, mount, difficulty, chip, chipGroup, segmented, ilMark, stateBlock, loadingState, siteFooter } from '../dom.js';
+import { expandRows, companyProgress, monogram, frequencyLevel } from '../../data/company-sets.js';
 import { filterRanked, findBySlug, israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
 
 const RECENCY_LABEL = { '30d': 'Last 30 days', '3m': 'Last 3 months', '6m': 'Last 6 months', older: 'Older' };
@@ -55,6 +55,13 @@ export function israelBadgeEl(level) {
 
 const isSolvedIn = (state) => (id) => state.problems[id]?.status === 'solved';
 
+/** Solved share as a thin bar. Decorative: the text beside it already says "x of y solved". */
+const progressBar = (done, total) =>
+  h('span.progress-bar', { 'aria-hidden': 'true' }, h('span.progress-fill', { style: { width: `${total ? Math.round((done / total) * 100) : 0}%` } }));
+
+/** "x of y solved", or why there is nothing to count yet. */
+const solvedText = (prog) => (prog.onSite ? `${prog.solved} of ${prog.onSite} solved` : 'Nothing to practice here yet');
+
 function loading(root) {
   mount(root, h('div.page', {}, loadingState({ label: 'Loading companies...' })));
 }
@@ -102,13 +109,16 @@ export function renderCompanies(root, { store }) {
       grid,
       list.map((c) => {
         const prog = companyProgress(expandRows(data.sets, c), isSolvedIn(state));
+        // Option card (docs/DESIGN.md): monogram, name, one fact, progress. The Israel level is a
+        // line only under "All", where it tells cards apart; in the Israel scopes every card has it.
         return h(
           'a.company-card',
-          { href: `#/companies/${c.slug}` },
-          h('div.company-card-name', {}, c.name, c.israeli ? ilMark() : null),
-          israelBadgeEl(c.israel),
-          h('div.company-card-sub', {}, `${c.total} tagged problems`),
-          h('div.company-card-sub', {}, `${prog.onSite} to practice here`, prog.solved ? `, ${prog.solved} solved` : ''),
+          { href: `#/companies/${c.slug}`, 'data-israel': c.israel },
+          h('span.monogram', { 'aria-hidden': 'true' }, monogram(c.name)),
+          h('span.company-card-name', {}, c.name, c.israeli ? ilMark() : null),
+          h('span.company-card-sub', {}, solvedText(prog)),
+          filters.filter === 'all' && israelBadge(c.israel) ? h('span.company-card-sub.company-card-level', {}, israelBadge(c.israel)) : null,
+          progressBar(prog.solved, prog.onSite),
         );
       }),
     );
@@ -161,17 +171,32 @@ export function renderCompanies(root, { store }) {
 export function renderCompany(root, { store, slug }) {
   let disposed = false;
   loading(root);
-  const filters = { onSiteOnly: false, difficulty: 'All' };
+  // Phones start with only what can be practiced here: the off-site rows are long and not actionable.
+  const filters = { onSiteOnly: matchMedia('(max-width: 640px)').matches, difficulty: 'All' };
   const body = h('tbody');
   const summary = h('p.page-sub');
+  const headProgress = h('div.company-progress');
   let sets = null;
   let company = null;
+
+  /** Frequency as a labelled 3-step meter; the word and recency are the text, the steps decorate. */
+  const freqMeter = (r) => {
+    const level = frequencyLevel(r.frequency);
+    return h(
+      'span.freq-meter',
+      { title: `Frequency ${r.frequency} of 100` },
+      h('span.freq-steps', { 'aria-hidden': 'true' }, [1, 2, 3].map((i) => h(`span.freq-step${i <= level.steps ? '.is-on' : ''}`))),
+      h('span.freq-label', {}, level.label),
+      h('span.freq-text', {}, RECENCY_LABEL[r.recency]),
+    );
+  };
 
   function renderRows() {
     const state = store.get();
     const all = expandRows(sets, company);
     const prog = companyProgress(all, isSolvedIn(state));
     summary.textContent = `${company.total} tagged problems. ${prog.onSite} of the top ${all.length} can be practiced here, ${prog.solved} solved.`;
+    mount(headProgress, h('span.company-progress-text', {}, solvedText(prog)), progressBar(prog.solved, prog.onSite));
     const rows = all.filter((r) => (!filters.onSiteOnly || r.practice) && (filters.difficulty === 'All' || r.problem.difficulty === filters.difficulty));
     if (!rows.length) {
       mount(body, h('tr', {}, h('td.empty', { colspan: 5 }, 'No problems match these filters.')));
@@ -184,16 +209,25 @@ export function renderCompany(root, { store, slug }) {
         const name = r.problem.number ? `${r.problem.number}. ${r.problem.title}` : r.problem.title;
         let practice;
         if (!r.practice) practice = h('span.tag.tag-muted', {}, 'Not on the site yet');
-        else if (r.similar) practice = [h('span.hint-text', {}, 'Similar version: '), h('a.problem-link', { href: `#/problem/${r.practice.contentId}` }, 'Practice')];
-        else practice = h('a.problem-link', { href: `#/problem/${r.practice.contentId}` }, 'Practice');
+        else
+          practice = h(
+            'a.btn.btn-secondary.btn-sm.practice-link',
+            // The visible word is short; the name says which problem, and whether it is a sibling version.
+            { href: `#/problem/${r.practice.contentId}`, 'aria-label': r.similar ? `Practice a similar version of ${name}` : `Practice ${name}` },
+            r.similar ? 'Practice similar' : 'Practice',
+          );
         return h(
-          'tr',
+          `tr${r.practice ? '.has-practice' : '.row-offsite'}`,
           {},
-          h('td', {}, h(`span.status-icon.s-${solved ? 'solved' : 'todo'}`, { title: solved ? 'solved' : 'not solved', 'aria-label': solved ? 'solved' : 'not solved' })),
-          h('td', {}, name, r.versions > 1 ? h('span.tag.tag-muted', { title: 'This company asks several versions of this idea' }, `${r.versions} versions`) : null),
-          h('td', {}, difficulty(r.problem.difficulty)),
-          h('td', {}, h('span.freq-bar', { style: `--freq: ${r.frequency}%`, title: `Frequency ${r.frequency}` }), h('span.freq-text', {}, RECENCY_LABEL[r.recency])),
-          h('td', {}, practice),
+          h(
+            'td.cell-status',
+            {},
+            h(`span.status-pill.s-${solved ? 'solved' : 'todo'}`, {}, h('span.status-dot', { 'aria-hidden': 'true' }), solved ? 'Solved' : h('span.sr-only', {}, 'Not solved')),
+          ),
+          h('td.cell-title', {}, h('span.company-problem', {}, name), r.versions > 1 ? h('span.tag.tag-muted', { title: 'This company asks several versions of this idea' }, `${r.versions} versions`) : null),
+          h('td.cell-diff', {}, difficulty(r.problem.difficulty)),
+          h('td.cell-freq', {}, freqMeter(r)),
+          h('td.cell-practice', {}, practice),
         );
       }),
     );
@@ -222,19 +256,25 @@ export function renderCompany(root, { store, slug }) {
       );
       return;
     }
-    const onSite = h('input', { type: 'checkbox', id: 'on-site-only' });
-    onSite.addEventListener('change', () => {
-      filters.onSiteOnly = onSite.checked;
-      renderRows();
+    const diff = chipGroup({
+      label: 'Difficulty',
+      options: ['All', 'Easy', 'Medium', 'Hard'].map((d) => ({ value: d, label: d === 'All' ? 'All difficulties' : d })),
+      value: filters.difficulty,
+      onChange: (d) => {
+        filters.difficulty = d;
+        renderRows();
+      },
     });
-    const diff = h(
-      'select.select',
-      { 'aria-label': 'Difficulty' },
-      ['All', 'Easy', 'Medium', 'Hard'].map((d) => h('option', { value: d }, d === 'All' ? 'All difficulties' : d)),
-    );
-    diff.addEventListener('change', () => {
-      filters.difficulty = diff.value;
-      renderRows();
+    // A filter chip that toggles on its own (not part of an exclusive group).
+    const onSite = chip({
+      label: 'On the site only',
+      pressed: filters.onSiteOnly,
+      attrs: { id: 'on-site-only' },
+      onClick: () => {
+        filters.onSiteOnly = !filters.onSiteOnly;
+        onSite.setAttribute('aria-pressed', String(filters.onSiteOnly));
+        renderRows();
+      },
     });
     mount(
       root,
@@ -242,15 +282,15 @@ export function renderCompany(root, { store, slug }) {
         'div.page',
         {},
         h('a.back-link', { href: '#/companies' }, 'All companies'),
-        h('header.page-head', {}, h('h1', {}, company.name, company.israeli ? ilMark() : null), israelBadgeEl(company.israel), summary),
-        h('div.filters', {}, diff, h('label.switch', { for: 'on-site-only' }, onSite, h('span', {}, 'On the site only'))),
+        h('header.page-head', {}, h('h1', {}, company.name, company.israeli ? ilMark() : null), israelBadgeEl(company.israel), summary, headProgress),
+        h('div.filters.company-filters', {}, diff, onSite),
         h(
           'div.table-wrap',
           {},
           h(
-            'table.problem-table',
+            'table.problem-table.company-table',
             {},
-            h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, ''), h('th', { scope: 'col' }, 'Problem'), h('th', { scope: 'col' }, 'Difficulty'), h('th', { scope: 'col' }, 'Frequency'), h('th', { scope: 'col' }, ''))),
+            h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Status'), h('th', { scope: 'col' }, 'Problem'), h('th', { scope: 'col' }, 'Difficulty'), h('th', { scope: 'col' }, 'Frequency'), h('th', { scope: 'col' }, h('span.sr-only', {}, 'Practice')))),
             body,
           ),
         ),

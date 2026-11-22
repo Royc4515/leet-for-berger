@@ -1672,8 +1672,8 @@ body.lockdown .toast-host {
   .mode-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .problem-table:not(.dashboard-table) th:nth-child(4),
-  .problem-table:not(.dashboard-table) td:nth-child(4) {
+  .problem-table:not(.dashboard-table):not(.company-table) th:nth-child(4),
+  .problem-table:not(.dashboard-table):not(.company-table) td:nth-child(4) {
     display: none;
   }
 }
@@ -2014,12 +2014,17 @@ body.lockdown .toast-host {
 /* ---------- Practice by company ---------- */
 .company-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 10px;
-  margin: 16px 0;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--s-3);
+  margin: var(--s-4) 0;
 }
+/* Option card (docs/DESIGN.md): monogram, name, one fact, progress bar; the whole card is one link. */
 .company-card {
-  display: block;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--s-3);
+  row-gap: 2px;
   padding: var(--s-3);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -2033,32 +2038,175 @@ body.lockdown .toast-host {
   border-color: var(--border-strong);
   background: var(--panel-2);
 }
+.monogram {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  background: var(--panel-3);
+  color: var(--text-2);
+  font: 600 var(--fs-sm) var(--mono);
+}
 .company-card-name {
+  min-width: 0;
   font-weight: 600;
-  margin-bottom: var(--s-1);
+  /* Wrap rather than ellipsis: a cut name would also cut the IL mark that follows it. */
+  overflow-wrap: anywhere;
 }
 .company-card-sub {
+  min-width: 0;
   color: var(--muted);
   font-size: var(--fs-xs);
 }
+.company-card-level {
+  grid-column: 2;
+}
+.company-card .progress-bar {
+  grid-column: 1 / -1;
+  margin-top: var(--s-2);
+}
+.progress-bar {
+  display: block;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--panel-3);
+  overflow: hidden;
+}
+.progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+}
+.company-progress {
+  display: grid;
+  gap: var(--s-1);
+  max-width: 320px;
+  margin-top: var(--s-2);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
 .back-link {
   display: inline-block;
-  margin-bottom: 8px;
+  margin-bottom: var(--s-2);
   color: var(--info);
   font-size: var(--fs-sm);
 }
-.freq-bar {
-  display: inline-block;
-  width: 60px;
-  height: 6px;
-  margin-right: 8px;
+/* Frequency: three steps plus a word, so the scale reads without colour or a number. Neutral, not
+   amber: it is information, not an action. */
+.freq-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  white-space: nowrap;
+}
+.freq-steps {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.freq-step {
+  width: 4px;
   border-radius: var(--r-pill);
-  background: linear-gradient(90deg, var(--accent) var(--freq), var(--panel-3) var(--freq));
-  vertical-align: middle;
+  background: var(--panel-3);
+}
+.freq-step:nth-child(1) {
+  height: 6px;
+}
+.freq-step:nth-child(2) {
+  height: 9px;
+}
+.freq-step:nth-child(3) {
+  height: 12px;
+}
+.freq-step.is-on {
+  background: var(--text-2);
+}
+.freq-label {
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
 }
 .freq-text {
   color: var(--muted);
   font-size: var(--fs-xs);
+}
+.company-table .cell-practice {
+  text-align: right;
+}
+.company-filters {
+  margin-top: var(--s-3);
+}
+/* Rows with nothing to practice on the site stay in the list (they say what the company asks) but
+   step back. */
+.company-table tr.row-offsite .company-problem {
+  color: var(--muted);
+}
+@media (max-width: 640px) {
+  .company-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-2);
+  }
+  /* List rows: the title gets the full width (two lines at most), the facts and Practice share the
+     second line, and Practice stretches over the row so the whole row is the link. */
+  .company-table thead {
+    display: none;
+  }
+  .company-table,
+  .company-table tbody {
+    display: block;
+  }
+  .company-table tbody tr {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    grid-template-areas:
+      'title title title title'
+      'status diff freq practice';
+    align-items: center;
+    gap: var(--s-1) var(--s-3);
+    min-height: 52px;
+    padding: var(--s-3) var(--s-4);
+    border-bottom: 1px solid var(--border);
+  }
+  .company-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+  .company-table tbody td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+  .company-table .cell-title {
+    grid-area: title;
+    font-weight: 600;
+  }
+  .company-table .cell-status {
+    grid-area: status;
+  }
+  .company-table .cell-diff {
+    grid-area: diff;
+  }
+  .company-table tbody td.cell-freq {
+    grid-area: freq;
+    min-width: 0;
+  }
+  .company-table .cell-freq .freq-text {
+    display: none;
+  }
+  .company-table .cell-practice {
+    grid-area: practice;
+  }
+  .company-table .practice-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .company-table td.empty {
+    grid-column: 1 / -1;
+  }
 }
 
 /* ---------- Learning path ---------- */

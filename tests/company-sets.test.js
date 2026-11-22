@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { applyIsrael } from '../scripts/content/israel-companies.mjs';
-import { companySlug, buildCompanySets, expandRows, filterCompanies, companyProgress, MIN_PROBLEMS, PER_COMPANY } from '../src/js/data/company-sets.js';
+import { companySlug, buildCompanySets, expandRows, filterCompanies, companyProgress, monogram, frequencyLevel, MIN_PROBLEMS, PER_COMPANY } from '../src/js/data/company-sets.js';
 
 const rec = (slug, number, companies, extra = {}) => ({ slug, number, platform: 'leetcode', title: slug, difficulty: 'Easy', contentId: null, companies, ...extra });
 const ask = (name, frequency, recency = '6m') => ({ name, frequency, recency });
@@ -62,4 +62,24 @@ test('company-sets.json is fresh and within limits', () => {
   // A merged alias group unions the rows of its spellings, so the cap applies per spelling.
   for (const c of rebuilt.companies) assert.ok(c.rows.length <= PER_COMPANY * (1 + c.aliases.length), c.name);
   assert.equal(new Set(rebuilt.companies.map((c) => c.slug)).size, rebuilt.companies.length, 'company slugs are unique');
+});
+
+test('monogram: two letters from the name, for the company option card', () => {
+  assert.equal(monogram('Nvidia'), 'Nv');
+  assert.equal(monogram('Check Point'), 'CP');
+  assert.equal(monogram('Palo Alto Networks'), 'PA');
+  assert.equal(monogram('J.P. Morgan'), 'JM');
+  assert.equal(monogram('monday.com'), 'Mo');
+  assert.equal(monogram('IBM'), 'IB');
+  assert.equal(monogram('X'), 'X');
+  assert.equal(monogram('  '), '?');
+});
+
+test('frequencyLevel: a 0-100 frequency becomes a 3-step meter with a word', () => {
+  assert.deepEqual(frequencyLevel(100), { steps: 3, label: 'High' });
+  assert.deepEqual(frequencyLevel(75), { steps: 3, label: 'High' });
+  assert.deepEqual(frequencyLevel(74), { steps: 2, label: 'Medium' });
+  assert.deepEqual(frequencyLevel(60), { steps: 2, label: 'Medium' });
+  assert.deepEqual(frequencyLevel(59), { steps: 1, label: 'Low' });
+  assert.deepEqual(frequencyLevel(0), { steps: 1, label: 'Low' });
 });

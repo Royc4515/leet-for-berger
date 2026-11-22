@@ -142,3 +142,31 @@ export function companyProgress(rows, isSolved) {
   const onSite = rows.filter((r) => r.practice);
   return { onSite: onSite.length, solved: onSite.filter((r) => isSolved(r.practice.contentId)).length };
 }
+
+/**
+ * Two-letter mark for a company's option card (docs/DESIGN.md): initials of the first two words,
+ * or the first two letters of a one-word name ("Check Point" -> "CP", "Nvidia" -> "Nv"). Letters,
+ * not logos, so there is no trademark or asset to ship.
+ * @param {string} name
+ * @returns {string}
+ */
+export function monogram(name) {
+  const words = String(name).trim().split(/\s+/).map((w) => w.replace(/[^\p{L}\p{N}]/gu, '')).filter(Boolean);
+  if (!words.length) return '?';
+  if (words.length > 1) return (words[0][0] + words[1][0]).toUpperCase();
+  const w = words[0];
+  // An acronym stays upper case ("IBM" -> "IB"); a word reads as a name ("nvidia" -> "Nv").
+  return w === w.toUpperCase() ? w.slice(0, 2) : w[0].toUpperCase() + w.slice(1, 2).toLowerCase();
+}
+
+/**
+ * A row's 0-100 frequency as a 3-step meter with a word, so the scale reads without colour. The
+ * cut points split the shipped rows into rough thirds (about 63 and 75 at the time of writing).
+ * @param {number} frequency
+ * @returns {{ steps: 1|2|3, label: 'High'|'Medium'|'Low' }}
+ */
+export function frequencyLevel(frequency) {
+  if (frequency >= 75) return { steps: 3, label: 'High' };
+  if (frequency >= 60) return { steps: 2, label: 'Medium' };
+  return { steps: 1, label: 'Low' };
+}

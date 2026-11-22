@@ -441,9 +441,16 @@ try {
     await page.click('nav a[data-nav="companies"]');
     await page.waitForSelector('.company-card', { timeout: 15000 });
     await page.waitForSelector('.segmented[aria-label="Show companies"]');
-    // Default is "Hiring in Israel": the first card is a major company, with its badge.
+    // Default is "Hiring in Israel": the first card is a major company. Cards are option cards:
+    // monogram, name, "x of y solved" and a progress bar.
     await expectText('.segmented-btn[aria-pressed="true"]', /Hiring in Israel/);
-    await expectText('.company-card:first-child', /Major in Israel/);
+    const firstCard = await page.evaluate(() => {
+      const c = document.querySelector('.company-card');
+      return { israel: c.dataset.israel, monogram: c.querySelector('.monogram')?.textContent, fact: c.querySelector('.company-card-sub')?.textContent, bar: Boolean(c.querySelector('.progress-bar')) };
+    });
+    if (firstCard.israel !== 'major' || !/^\S{1,2}$/.test(firstCard.monogram ?? '') || !/of \d+ solved|Nothing to practice/.test(firstCard.fact ?? '') || !firstCard.bar) {
+      throw new Error(`unexpected first company card: ${JSON.stringify(firstCard)}`);
+    }
     const hiringCount = await page.locator('.company-card').count();
     await shot('15a-companies-hiring');
     await page.click('.segmented-btn:has-text("Top in Israel")');
@@ -452,17 +459,35 @@ try {
     await page.click('.segmented-btn:has-text("All")');
     const allCount = await page.locator('.company-card').count();
     if (!(allCount > hiringCount)) throw new Error(`"All" should show more cards than "Hiring in Israel" (${allCount} vs ${hiringCount})`);
+    // Only under "All" does the Israel level tell cards apart, so only there is it a line on the card.
+    await expectText('.company-card[data-israel="major"] .company-card-level', /Major in Israel/);
     await page.fill('input[aria-label="Search companies"]', 'wix');
     await page.waitForFunction(() => document.querySelectorAll('.company-card').length === 1);
     await shot('15-companies');
     await page.click('.company-card');
     await expectText('.page-head h1', /Wix/);
     await expectText('.page-head .page-sub', /can be practiced here/);
-    await page.check('#on-site-only');
-    const missing = await page.locator('.problem-table tbody .tag-muted:has-text("Not on the site yet")').count();
+    // Filters are chips; "On the site only" is a toggle chip (off by default on a desktop).
+    if ((await page.getAttribute('#on-site-only', 'aria-pressed')) !== 'false') throw new Error('on-site filter should start off at 1440px');
+    await page.click('#on-site-only');
+    if ((await page.getAttribute('#on-site-only', 'aria-pressed')) !== 'true') throw new Error('on-site chip did not toggle');
+    const missing = await page.locator('.company-table tbody .tag-muted:has-text("Not on the site yet")').count();
     if (missing) throw new Error('on-site filter still shows problems that are not on the site');
+    await page.click('.company-filters .chip:has-text("Easy")');
+    const nonEasy = await page.locator('.company-table tbody tr:not(:has(.diff-easy))').count();
+    if (nonEasy) throw new Error(`Easy filter left ${nonEasy} other rows`);
+    await page.click('.company-filters .chip:has-text("All difficulties")');
+    // Practice is a real link whose accessible name says which problem it opens.
+    const practice = await page.evaluate(() =>
+      [...document.querySelectorAll('.company-table tbody tr')].map((tr) => {
+        const a = tr.querySelector('.practice-link');
+        return { tag: a?.tagName, label: a?.getAttribute('aria-label') ?? '', title: tr.querySelector('.company-problem')?.textContent ?? '' };
+      }),
+    );
+    const badPractice = practice.filter((p) => p.tag !== 'A' || !p.label.includes(p.title));
+    if (!practice.length || badPractice.length) throw new Error(`Practice links without the problem in their name: ${JSON.stringify(badPractice.slice(0, 3))}`);
     await shot('16-company-wix');
-    await page.click('.problem-table tbody a.problem-link >> nth=0');
+    await page.click('.company-table tbody a.practice-link >> nth=0');
     await page.waitForSelector('.problem-context .company-tag', { timeout: 15000 });
     await expectText('.problem-context', /Wix/);
   });
@@ -707,6 +732,26 @@ try {
       }
       await shot(r.name);
     }
+
+    // Company page on a phone: list rows, titles at most two lines, off-site rows hidden by default,
+    // and two company cards per row.
+    await page.goto(`${BASE}#/companies/google`);
+    await page.waitForSelector('.company-table tbody tr');
+    const phoneCompany = await page.evaluate(() => {
+      const titles = [...document.querySelectorAll('.company-table .company-problem')].map((el) => {
+        const lh = parseFloat(getComputedStyle(el).lineHeight);
+        return { text: el.textContent, lines: Math.round(el.getBoundingClientRect().height / lh) };
+      });
+      const rows = [...document.querySelectorAll('.company-table tbody tr')].map((tr) => tr.getBoundingClientRect().height);
+      return { onSite: document.querySelector('#on-site-only')?.getAttribute('aria-pressed'), offsite: document.querySelectorAll('.company-table tr.row-offsite').length, tooTall: titles.filter((t) => t.lines > 2), shortRows: rows.filter((hgt) => hgt < 52).length };
+    });
+    if (phoneCompany.onSite !== 'true' || phoneCompany.offsite) throw new Error(`phone company page should start with on-site rows only: ${JSON.stringify(phoneCompany)}`);
+    if (phoneCompany.tooTall.length) throw new Error(`company titles wrap past two lines at 390px: ${JSON.stringify(phoneCompany.tooTall.slice(0, 3))}`);
+    if (phoneCompany.shortRows) throw new Error(`${phoneCompany.shortRows} company list rows under 52px`);
+    await page.goto(`${BASE}#/companies`);
+    await page.waitForSelector('.company-card');
+    const cardTops = await page.evaluate(() => [...document.querySelectorAll('.company-card')].slice(0, 2).map((c) => Math.round(c.getBoundingClientRect().top)));
+    if (cardTops[0] !== cardTops[1]) throw new Error(`expected two company cards per row at 390px: ${JSON.stringify(cardTops)}`);
 
     // Tab bar geometry, touch height >= 44px, header title, and single aria-current across all 4 tabs.
     await page.goto(`${BASE}#/`);
