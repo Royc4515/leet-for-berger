@@ -17,17 +17,65 @@ export function mountAccountMenu(host, account, github = null) {
   // menu or reset the connect wizard: the open state lives here, and the GitHub section is rebuilt
   // only when the link itself changes.
   let open = false;
+  let pendingFocus = null;
   let ghLink;
   let ghEl = null;
+
+  const menuItems = () =>
+    [...host.querySelectorAll('.account-menu [role="menuitem"]')].filter((el) => !el.disabled && !el.hidden);
+
+  const captureFocus = () => {
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement) || !host.contains(active)) return null;
+    if (active.matches('[aria-haspopup]')) return { kind: 'toggle' };
+    const list = menuItems();
+    const index = list.indexOf(active);
+    return index >= 0 ? { kind: 'menuitem', index } : null;
+  };
+
+  const restoreFocus = (target) => {
+    if (!target) return;
+    const toggle = host.querySelector('[aria-haspopup]');
+    if (target.kind === 'menuitem' && open) {
+      const list = menuItems();
+      (list[Math.min(target.index, list.length - 1)] ?? toggle)?.focus({ preventScroll: true });
+    } else {
+      toggle?.focus({ preventScroll: true });
+    }
+  };
+
+  const setOpen = (next, { focusItem = null, returnFocus = false } = {}) => {
+    const wasOpen = open;
+    open = next;
+    const menu = host.querySelector('.account-menu');
+    const backdrop = host.querySelector('.account-backdrop');
+    const toggle = host.querySelector('[aria-haspopup]');
+    if (menu) menu.hidden = !open;
+    if (backdrop) backdrop.hidden = !open;
+    toggle?.setAttribute('aria-expanded', String(open));
+    if (open && focusItem) {
+      const list = menuItems();
+      (focusItem === 'last' ? list[list.length - 1] : list[0])?.focus({ preventScroll: true });
+    } else if (!open && wasOpen && returnFocus) {
+      toggle?.focus({ preventScroll: true });
+    }
+  };
+
+  // A menu left open would cover the toolbar on the next page: close it on navigation, on a click
+  // anywhere else, and on Escape.
+  const close = ({ returnFocus = false } = {}) => setOpen(false, { returnFocus });
+
   const ghSection = () => {
     const link = github?.get();
     if (ghEl === null || link !== ghLink) {
       ghLink = link;
-      ghEl = githubSection(github);
+      ghEl = githubSection(github, { closeMenu: () => close({ returnFocus: true }) });
     }
     return ghEl;
   };
+
   const confirmSignOut = async () => {
+    close({ returnFocus: true });
     const ok = await confirmDialog({
       title: 'Sign out?',
       body: 'Your progress stays in your account and is removed from this device.',
@@ -44,9 +92,51 @@ export function mountAccountMenu(host, account, github = null) {
     });
     if (anyway) await account.signOut({ force: true });
   };
+
+  const bindToggle = (toggle, onOpen) => {
+    toggle.addEventListener('click', () => {
+      const next = !open;
+      setOpen(next);
+      if (next) onOpen?.();
+    });
+    toggle.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      e.preventDefault();
+      // don't touch / stop propagation so the document keydown listener does not advance a second item.
+      e.stopPropagation();
+      const target = e.key === 'ArrowDown' ? 'first' : 'last';
+      if (!open) {
+        setOpen(true, { focusItem: target });
+        onOpen?.();
+      } else {
+        const list = menuItems();
+        (target === 'last' ? list[list.length - 1] : list[0])?.focus({ preventScroll: true });
+      }
+    });
+  };
+
+  const makeBackdrop = () =>
+    h('div.account-backdrop', {
+      hidden: !open,
+      'aria-hidden': 'true',
+      onClick: (e) => {
+        e.stopPropagation();
+        close({ returnFocus: true });
+      },
+    });
+
   const render = (s) => {
-    if (s.status === 'off') return mount(host);
-    if (s.status === 'loading') return mount(host, h('span.account-note', {}, ''));
+    const currentFocus = captureFocus();
+    if (s.status === 'off') {
+      pendingFocus = null;
+      return mount(host);
+    }
+    if (s.status === 'loading') {
+      if (currentFocus) pendingFocus = currentFocus;
+      return mount(host, h('span.account-note', {}, ''));
+    }
+    const focusToRestore = currentFocus ?? pendingFocus;
+    pendingFocus = null;
     if (s.status === 'signed-out') {
       const menu = h('div.account-menu', { hidden: !open, role: 'menu' },
         h('button.btn.btn-secondary.btn-sm', { type: 'button', role: 'menuitem', onClick: () => account.signIn('google') }, 'Continue with Google'),
@@ -55,59 +145,77 @@ export function mountAccountMenu(host, account, github = null) {
         s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null,
       );
       const toggle = h('button.btn.btn-ghost.btn-sm', { type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': String(open) }, 'Sign in');
-      toggle.addEventListener('click', () => {
-        open = menu.hidden;
-        menu.hidden = !open;
-        toggle.setAttribute('aria-expanded', String(open));
-        // Opening the menu is the intent to sign in: start loading supabase-js now (a no-op once loaded).
-        if (open) account.start();
-      });
-      return mount(host, h('div.account', {}, toggle, menu));
+      // Opening the menu is the intent to sign in: start loading supabase-js now (a no-op once loaded).
+      bindToggle(toggle, () => account.start());
+      mount(host, h('div.account', {}, toggle, makeBackdrop(), menu));
+      restoreFocus(focusToRestore);
+      return;
     }
     const who = s.user.name ?? s.user.email ?? 'Signed in';
     const panel = h('div.account-menu', { hidden: !open, role: 'menu' }, ghSection(), s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null, h('button.btn.btn-ghost.btn-sm', { type: 'button', role: 'menuitem', onClick: confirmSignOut }, 'Sign out'));
     const toggle = h('button.btn.btn-ghost.btn-sm.account-name', { type: 'button', title: s.user.email ?? '', 'aria-haspopup': 'menu', 'aria-expanded': String(open) }, who);
-    toggle.addEventListener('click', () => {
-      open = panel.hidden;
-      panel.hidden = !open;
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-    return mount(
+    bindToggle(toggle);
+    mount(
       host,
       h(
         'div.account',
         {},
         SYNC_LABEL[s.sync] ? h(`span.account-note${s.sync === 'error' ? '.bad' : ''}`, { title: s.error ?? '' }, SYNC_LABEL[s.sync]) : null,
         toggle,
+        makeBackdrop(),
         panel,
       ),
     );
+    restoreFocus(focusToRestore);
   };
-  // A menu left open would cover the toolbar on the next page: close it on navigation, on a click
-  // anywhere else, and on Escape.
-  const close = () => {
-    const menu = host.querySelector('.account-menu');
-    open = false;
-    if (!menu || menu.hidden) return;
-    menu.hidden = true;
-    host.querySelector('[aria-haspopup]')?.setAttribute('aria-expanded', 'false');
-  };
+
   // don't touch / composedPath, not host.contains(e.target): a wizard step replaces the button that
   // was clicked, so by the time the click reaches document its target is detached and looks "outside".
-  const onDocClick = (e) => !e.composedPath().includes(host) && close();
-  const onKey = (e) => e.key === 'Escape' && close();
+  const onDocClick = (e) => {
+    if (!open || e.composedPath().includes(host)) return;
+    const clickedControl = e.target instanceof Element && Boolean(e.target.closest('a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])'));
+    close({ returnFocus: !clickedControl });
+  };
+  const onKey = (e) => {
+    if (!open) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close({ returnFocus: true });
+      return;
+    }
+    // Preserve native arrow-key selection inside radio groups (e.g. GitHub repo visibility).
+    if (e.target instanceof Element && e.target.matches('input[type="radio"]')) return;
+    if (!host.contains(document.activeElement)) return;
+    const list = menuItems();
+    if (!list.length) return;
+    const idx = list.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      list[(idx + 1) % list.length].focus({ preventScroll: true });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      list[idx <= 0 ? list.length - 1 : idx - 1].focus({ preventScroll: true });
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      list[0].focus({ preventScroll: true });
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      list[list.length - 1].focus({ preventScroll: true });
+    }
+  };
+  const onHash = () => close();
   document.addEventListener('click', onDocClick);
   document.addEventListener('keydown', onKey);
-  window.addEventListener('hashchange', close);
+  window.addEventListener('hashchange', onHash);
 
   render(account.get());
-  const unsubs = [account.subscribe(render), () => document.removeEventListener('click', onDocClick), () => document.removeEventListener('keydown', onKey), () => window.removeEventListener('hashchange', close)];
+  const unsubs = [account.subscribe(render), () => document.removeEventListener('click', onDocClick), () => document.removeEventListener('keydown', onKey), () => window.removeEventListener('hashchange', onHash)];
   if (github) unsubs.push(github.subscribe(() => render(account.get())));
   return () => unsubs.forEach((u) => u());
 }
 
 /** GitHub sync controls in the signed-in menu (ADR 0007); nothing when sync is not set up. */
-function githubSection(github) {
+function githubSection(github, { closeMenu = () => {} } = {}) {
   if (!github?.available) return null;
   const link = github.get();
   const title = h('div.account-section-title', {}, 'GitHub sync');
@@ -137,6 +245,7 @@ function githubSection(github) {
         type: 'button',
         role: 'menuitem',
         onClick: async () => {
+          closeMenu();
           const ok = await confirmDialog({
             title: 'Disconnect GitHub?',
             body: `New solutions will stop being saved to ${link.repo}. Nothing in the repository is deleted.`,

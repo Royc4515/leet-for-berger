@@ -65,7 +65,7 @@ Inter and JetBrains Mono are self-hosted as Latin variable `.woff2` files in `sr
 - **Spacing (4 px base):** `--s-1: 4px`, `--s-2: 8px`, `--s-3: 12px`, `--s-4: 16px`, `--s-5: 24px`, `--s-6: 32px`, `--s-7: 48px`. Inside a component use 8 or 12 px; between components 16 px; between sections 32 px.
 - **Radii:** `--r-tag: 4px` (static tags, inline code), `--r-sm: 6px` (controls), `--r-md: 10px` (cards, dialogs), `--r-pill: 999px` (filter chips, pills, progress bars).
 - **Control heights:** `--ctl-sm: 30px`, `--ctl-md: 36px`, `--ctl-lg: 44px`. Under `@media (pointer: coarse)`, `--ctl-sm` and `--ctl-md` both resolve to `44px`.
-- **Layout widths:** `--page: 1120px`, `--page-narrow: 720px`, `--header-h: 52px`.
+- **Layout widths:** `--page: 1120px`, `--page-narrow: 720px`, `--header-h: 52px`, `--tab-bar-h: 56px`.
 - **Motion:** `--t-fast: 120ms`, `--t-med: 200ms`, `--ease: cubic-bezier(0.2, 0.8, 0.2, 1)`. All transitions and animations disable under `prefers-reduced-motion: reduce`.
 
 ## Components

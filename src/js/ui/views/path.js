@@ -2,7 +2,7 @@
  * Learning Path: the 131 essential problems by tier and topic, in prerequisite order, with
  * progress derived from solve data and a "Next up" pointer. Data: src/js/data/essential-path.json.
  */
-import { h, mount, difficultyBadge } from '../dom.js';
+import { h, mount, difficultyBadge, stateBlock, loadingState, siteFooter } from '../dom.js';
 import { catalogEntry } from '../../problems/index.js';
 import { pathProgress, conceptLabel } from '../../data/learning-path.js';
 import { TOPICS } from '../../data/taxonomy.js';
@@ -23,7 +23,7 @@ function progressBar(done, total, label) {
 export function renderPath(root, { store }) {
   let disposed = false;
   let path = null;
-  mount(root, h('div.page', {}, h('p.page-sub', { role: 'status' }, 'Loading the path...')));
+  mount(root, h('div.page', {}, loadingState({ label: 'Loading the path...' })));
 
   function render() {
     const state = store.get();
@@ -85,6 +85,7 @@ export function renderPath(root, { store }) {
             ),
           );
         }),
+        siteFooter(),
       ),
     );
   }
@@ -92,7 +93,21 @@ export function renderPath(root, { store }) {
   loadPath().then((p) => {
     if (disposed) return;
     if (!p) {
-      mount(root, h('div.page.page-narrow', {}, h('h1', {}, 'Learning Path'), h('p.page-sub', {}, 'The path could not be loaded. Check your connection and reload.')));
+      mount(
+        root,
+        h(
+          'div.page.page-narrow',
+          {},
+          stateBlock({
+            title: 'Could not load the learning path',
+            body: 'The path could not be loaded. Check your connection and reload.',
+            kind: 'error',
+            headingTag: 'h1',
+            action: { label: 'Reload', onClick: () => location.reload() },
+          }),
+          siteFooter(),
+        ),
+      );
       return;
     }
     path = p;

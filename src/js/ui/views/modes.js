@@ -1,7 +1,7 @@
 /**
  * Modes: hub, Interview Simulator, 1v1 Battle (bot).
  */
-import { h, mount, toast, confirmDialog, difficultyBadge } from '../dom.js';
+import { h, mount, toast, confirmDialog, difficultyBadge, siteFooter } from '../dom.js';
 import { renderWorkspace } from './workspace.js';
 import { availableEntries, catalogEntry, loadProblem, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import * as Interview from '../../modes/interview.js';
@@ -46,6 +46,7 @@ export function renderModesHub(root) {
           h('a.btn.btn-secondary', { href: `#/problem/${availableEntries()[0].id}` }, 'Open a problem'),
         ),
       ),
+      siteFooter(),
     ),
   );
   return () => {};
@@ -229,6 +230,7 @@ function renderInterviewSetup(root, { store }) {
         ),
         start,
       ),
+      siteFooter(),
     ),
   );
   return () => {
@@ -354,6 +356,7 @@ function renderInterviewReport(root) {
         }),
         h('div.mode-actions', {}, again, h('a.btn.btn-ghost', { href: '#/' }, 'Back to problems')),
       ),
+      siteFooter(),
     ),
   );
   return () => {};
@@ -505,6 +508,7 @@ export function renderBattle(root, { store }) {
         h('p.hint-text', {}, 'Live peer battles: coming with the server-side judge. Assistance (reveal, mentor) is disabled during a race.'),
         start,
       ),
+      siteFooter(),
     ),
   );
   return () => {

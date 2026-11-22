@@ -633,7 +633,7 @@ try {
     await shot('09-battle');
   });
 
-  await check('mobile layout stacks panes without errors', async () => {
+  await check('mobile layout stacks panes without errors and renders the bottom tab bar', async () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${BASE}#/problem/smallest-base-segment`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
@@ -641,15 +641,15 @@ try {
     // The page must never scroll sideways on a phone: anything wider than the viewport is clipped
     // for the reader (company chips, statement). Wide content scrolls inside its own container.
     const mobileRoutes = [
-      { name: '390-dashboard', url: '#/', wait: '.problem-table tbody tr a.problem-link' },
-      { name: '390-workspace', url: '#/problem/smallest-base-segment', wait: '.monaco-editor' },
-      { name: '390-path', url: '#/path', wait: '.path-tier' },
-      { name: '390-companies', url: '#/companies', wait: '.company-card' },
-      { name: '390-company-google', url: '#/companies/google', wait: '.problem-table tbody tr' },
-      { name: '390-modes', url: '#/modes', wait: '.mode-card' },
-      { name: '390-interview', url: '#/interview', wait: '.setup-card' },
-      { name: '390-battle', url: '#/battle', wait: '.pick-row' },
-      { name: '390-privacy', url: 'privacy.html', wait: 'article.legal h1' },
+      { name: '390-dashboard', url: '#/', wait: '.problem-table tbody tr a.problem-link', footer: true },
+      { name: '390-workspace', url: '#/problem/smallest-base-segment', wait: '.monaco-editor', footer: false },
+      { name: '390-path', url: '#/path', wait: '.path-tier', footer: true },
+      { name: '390-companies', url: '#/companies', wait: '.company-card', footer: true },
+      { name: '390-company-google', url: '#/companies/google', wait: '.problem-table tbody tr', footer: true },
+      { name: '390-modes', url: '#/modes', wait: '.mode-card', footer: true },
+      { name: '390-interview', url: '#/interview', wait: '.setup-card', footer: true },
+      { name: '390-battle', url: '#/battle', wait: '.pick-row', footer: true },
+      { name: '390-privacy', url: 'privacy.html', wait: 'article.legal h1', footer: false },
     ];
     for (const r of mobileRoutes) {
       await page.goto(`${BASE}${r.url}`);
@@ -657,8 +657,134 @@ try {
       await page.waitForTimeout(400);
       const { scrollWidth, innerWidth } = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }));
       if (scrollWidth > innerWidth) throw new Error(`${r.url} overflows at 390px: scrollWidth ${scrollWidth} > ${innerWidth}`);
+      if (r.footer && (await page.locator('footer.site-links a[href="privacy.html"]').count()) !== 1) {
+        throw new Error(`${r.url} missing shared privacy footer`);
+      }
       await shot(r.name);
     }
+
+    // Tab bar geometry, touch height >= 44px, header title, and single aria-current across all 4 tabs.
+    await page.goto(`${BASE}#/`);
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
+    const headerState = await page.evaluate(() => ({
+      navHidden: getComputedStyle(document.querySelector('.nav')).display === 'none',
+      brandNameHidden: getComputedStyle(document.querySelector('.brand-name')).display === 'none',
+      titleVisible: getComputedStyle(document.querySelector('#header-title')).display !== 'none',
+      streakLabel: document.querySelector('#streak-chip')?.getAttribute('aria-label'),
+      streakSr: document.querySelector('#streak-chip .sr-only')?.textContent,
+      streakHiddenParts: [...document.querySelectorAll('#streak-chip [aria-hidden="true"]')].length,
+    }));
+    if (!headerState.navHidden || !headerState.brandNameHidden || !headerState.titleVisible) {
+      throw new Error(`unexpected mobile header state: ${JSON.stringify(headerState)}`);
+    }
+    if (!/^\d+-day streak$/.test(headerState.streakLabel ?? '') || headerState.streakSr !== headerState.streakLabel || headerState.streakHiddenParts < 2) {
+      throw new Error(`streak chip not accessible: ${JSON.stringify(headerState)}`);
+    }
+
+    const tabs = [
+      { key: 'problems', title: 'Problems' },
+      { key: 'path', title: 'Learning Path' },
+      { key: 'companies', title: 'Companies' },
+      { key: 'modes', title: 'Modes' },
+    ];
+    for (const t of tabs) {
+      await page.click(`.tab-bar a[data-nav="${t.key}"]`);
+      await page.waitForFunction((k) => document.querySelector(`.tab-bar a[data-nav="${k}"]`)?.getAttribute('aria-current') === 'page', t.key);
+      const navCheck = await page.evaluate(() => {
+        const barLinks = [...document.querySelectorAll('.tab-bar a')].map((a) => {
+          const r = a.getBoundingClientRect();
+          return { nav: a.dataset.nav, current: a.getAttribute('aria-current'), left: r.left, right: r.right, top: r.top, bottom: r.bottom, height: r.height };
+        });
+        return {
+          barLinks,
+          barCurrent: document.querySelectorAll('.tab-bar a[aria-current="page"]').length,
+          headerCurrent: document.querySelectorAll('.nav a[aria-current="page"]').length,
+          title: document.querySelector('#header-title')?.textContent,
+        };
+      });
+      if (navCheck.barLinks.length !== 4) throw new Error(`expected 4 tab-bar links, got ${navCheck.barLinks.length}`);
+      for (const l of navCheck.barLinks) {
+        if (l.height < 44 || l.left < -0.5 || l.right > 390.5 || l.top < 0 || l.bottom > 844.5) {
+          throw new Error(`tab-bar link ${l.nav} out of bounds or under 44px: ${JSON.stringify(l)}`);
+        }
+      }
+      if (navCheck.barCurrent !== 1 || navCheck.headerCurrent !== 1) {
+        throw new Error(`expected single aria-current per nav, got bar=${navCheck.barCurrent} header=${navCheck.headerCurrent}`);
+      }
+      if (navCheck.title !== t.title) throw new Error(`expected header title "${t.title}", got "${navCheck.title}"`);
+    }
+
+    // Keyboard tab order: skip-link -> header -> content (#view) -> tab-bar.
+    await page.goto(`${BASE}#/modes`);
+    await page.waitForSelector('.mode-card');
+    const domOrderOk = await page.evaluate(() => {
+      const skip = document.querySelector('.skip-link');
+      const header = document.querySelector('.app-header');
+      const main = document.querySelector('#view');
+      const bar = document.querySelector('.tab-bar');
+      const before = (a, b) => Boolean(a && b && (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING));
+      return before(skip, header) && before(header, main) && before(main, bar);
+    });
+    if (!domOrderOk) throw new Error('DOM order is not skip-link -> header -> #view -> tab-bar');
+    await page.focus('.skip-link');
+    const regions = ['skip'];
+    for (let i = 0; i < 12; i++) {
+      await page.keyboard.press('Tab');
+      const region = await page.evaluate(() => {
+        const el = document.activeElement;
+        if (!el) return 'none';
+        if (el.classList.contains('skip-link')) return 'skip';
+        if (el.closest('.app-header')) return 'header';
+        if (el.closest('#view')) return 'view';
+        if (el.closest('.tab-bar')) return 'tab-bar';
+        return 'other';
+      });
+      if (regions[regions.length - 1] !== region) regions.push(region);
+      if (region === 'tab-bar') break;
+    }
+    if (regions.join('>') !== 'skip>header>view>tab-bar') {
+      throw new Error(`unexpected keyboard Tab order: ${regions.join(' > ')}`);
+    }
+
+    // Mobile lockdown hides both header and tab bar; confirm dialog opens as a full-width bottom sheet.
+    await page.goto(`${BASE}#/interview`);
+    await page.waitForSelector('.setup-card');
+    if (await page.locator('button:has-text("New interview")').isVisible()) {
+      await page.click('button:has-text("New interview")');
+      await page.waitForSelector('button:has-text("Start interview")');
+    }
+    await page.click('button:has-text("Start interview")');
+    await page.waitForSelector('.session-banner.interview');
+    if (await page.locator('.app-header').isVisible()) throw new Error('header visible during 390px lockdown');
+    if (await page.locator('.tab-bar').isVisible()) throw new Error('tab-bar visible during 390px lockdown');
+    await page.click('button:has-text("End interview")');
+    await page.waitForSelector('dialog.modal[open]');
+    await page.waitForTimeout(300); // let sheet-up animation finish before measuring
+    const sheet = await page.evaluate(() => {
+      const dlg = document.querySelector('dialog.modal');
+      const r = dlg.getBoundingClientRect();
+      const btns = [...dlg.querySelectorAll('.modal-actions .btn')].map((b) => b.getBoundingClientRect().height);
+      return { x: r.x, width: r.width, bottom: r.bottom, labelledby: dlg.getAttribute('aria-labelledby'), describedby: dlg.getAttribute('aria-describedby'), btns };
+    });
+    if (sheet.width < 388 || Math.abs(sheet.bottom - 844) > 2) throw new Error(`mobile dialog is not a full-width bottom sheet: ${JSON.stringify(sheet)}`);
+    if (!sheet.labelledby || !sheet.describedby) throw new Error(`dialog missing aria references: ${JSON.stringify(sheet)}`);
+    if (sheet.btns.some((h) => h < 44)) throw new Error(`mobile dialog buttons under 44px: ${JSON.stringify(sheet.btns)}`);
+    // Clicking the backdrop outside .modal-card closes the dialog and returns focus to End interview.
+    await page.mouse.click(10, 10);
+    await page.waitForSelector('dialog.modal', { state: 'detached' });
+    const focusedAfterBackdrop = await page.evaluate(() => document.activeElement?.textContent?.trim());
+    if (focusedAfterBackdrop !== 'End interview') throw new Error(`focus did not return to opener after backdrop dismiss: "${focusedAfterBackdrop}"`);
+    await page.click('button:has-text("End interview")');
+    await page.waitForSelector('dialog.modal[open]');
+    await page.click('dialog.modal button:has-text("End interview")');
+    await page.waitForSelector('.score-ring');
+    if (!(await page.locator('.app-header').isVisible()) || !(await page.locator('.tab-bar').isVisible())) {
+      throw new Error('header or tab-bar not restored after 390px interview');
+    }
+    if ((await page.locator('footer.site-links a[href="privacy.html"]').count()) !== 1) {
+      throw new Error('interview report missing shared footer');
+    }
+
     await page.goto(`${BASE}#/`);
     await page.setViewportSize({ width: 1440, height: 900 });
   });
@@ -739,13 +865,67 @@ try {
     await acct.waitForSelector('#account button:has-text("Sign in")');
     await acct.waitForTimeout(300);
     if (acctRequests.some((u) => u.includes('supabase-js'))) throw new Error('supabase-js loaded before the Sign in click');
-    await acct.click('#account button:has-text("Sign in")');
+    // Keyboard open with ArrowDown: opens menu, focuses the first menuitem (no double-jump), and keeps focus across supabase-js lazy-load.
+    await acct.focus('#account button:has-text("Sign in")');
+    await acct.keyboard.press('ArrowDown');
     await acct.waitForFunction(() => document.querySelector('.account-menu button')?.textContent?.includes('Google'));
+    const firstItem = await acct.evaluate(() => document.activeElement?.textContent?.trim());
+    if (firstItem !== 'Continue with Google') throw new Error(`ArrowDown on Sign in should focus first item, got "${firstItem}"`);
     await acct.waitForTimeout(300);
-    if (!acctRequests.some((u) => u.includes('supabase-js'))) throw new Error('clicking Sign in did not load supabase-js');
+    if (!acctRequests.some((u) => u.includes('supabase-js'))) throw new Error('opening Sign in did not load supabase-js');
+    const retainedItem = await acct.evaluate(() => document.activeElement?.textContent?.trim());
+    if (retainedItem !== 'Continue with Google') throw new Error(`focus lost across supabase-js load render: "${retainedItem}"`);
+    await acct.keyboard.press('ArrowDown');
+    if ((await acct.evaluate(() => document.activeElement?.textContent?.trim())) !== 'Continue with GitHub') throw new Error('ArrowDown did not move to second menuitem');
+    await acct.keyboard.press('ArrowUp');
+    if ((await acct.evaluate(() => document.activeElement?.textContent?.trim())) !== 'Continue with Google') throw new Error('ArrowUp did not move back to first menuitem');
+    await acct.keyboard.press('End');
+    if ((await acct.evaluate(() => document.activeElement?.textContent?.trim())) !== 'Continue with GitHub') throw new Error('End did not focus last menuitem');
+    await acct.keyboard.press('Home');
+    if ((await acct.evaluate(() => document.activeElement?.textContent?.trim())) !== 'Continue with Google') throw new Error('Home did not focus first menuitem');
+    // Escape closes the menu and returns focus to the Sign in toggle.
+    await acct.keyboard.press('Escape');
+    const afterEsc = await acct.evaluate(() => ({
+      hidden: document.querySelector('.account-menu')?.hidden,
+      expanded: document.querySelector('#account [aria-haspopup]')?.getAttribute('aria-expanded'),
+      active: document.activeElement?.textContent?.trim(),
+    }));
+    if (!afterEsc.hidden || afterEsc.expanded !== 'false' || afterEsc.active !== 'Sign in') {
+      throw new Error(`Escape did not close menu and restore focus: ${JSON.stringify(afterEsc)}`);
+    }
+    // Re-open with click, verify outside click closes and returns focus to toggle.
+    await acct.click('#account button:has-text("Sign in")');
     await acct.waitForSelector('.account-menu button:has-text("Continue with Google")');
     await acct.waitForSelector('.account-menu button:has-text("Continue with GitHub")');
     if (shotsDir) await acct.screenshot({ path: `${shotsDir}/19-sign-in.png` });
+    await acct.click('.page-head h1');
+    const afterOutside = await acct.evaluate(() => ({
+      hidden: document.querySelector('.account-menu')?.hidden,
+      active: document.activeElement?.textContent?.trim(),
+    }));
+    if (!afterOutside.hidden || afterOutside.active !== 'Sign in') {
+      throw new Error(`outside click did not close menu and restore focus: ${JSON.stringify(afterOutside)}`);
+    }
+    // Mobile account menu shows a dimmed backdrop and closes cleanly on backdrop click.
+    await acct.setViewportSize({ width: 390, height: 844 });
+    await acct.click('#account button:has-text("Sign in")');
+    await acct.waitForSelector('.account-backdrop:not([hidden])');
+    const mobileMenu = await acct.evaluate(() => {
+      const bd = document.querySelector('.account-backdrop');
+      const m = document.querySelector('.account-menu').getBoundingClientRect();
+      return { bdDisplay: getComputedStyle(bd).display, left: m.left, right: m.right, top: m.top };
+    });
+    if (mobileMenu.bdDisplay === 'none' || mobileMenu.left < 0 || mobileMenu.right > 390.5) {
+      throw new Error(`unexpected mobile account menu/backdrop layout: ${JSON.stringify(mobileMenu)}`);
+    }
+    if (shotsDir) await acct.screenshot({ path: `${shotsDir}/390-account-menu.png` });
+    await acct.mouse.click(195, 700);
+    await acct.waitForSelector('.account-menu', { state: 'hidden' });
+    if ((await acct.evaluate(() => document.activeElement?.textContent?.trim())) !== 'Sign in') {
+      throw new Error('backdrop click did not restore focus to Sign in toggle');
+    }
+    await acct.setViewportSize({ width: 1440, height: 900 });
+
     signedIn = true;
     // supabase-js keeps a returning user's session here; its presence is what starts the client at page load.
     await acct.evaluate(() => localStorage.setItem('sb-example-auth-token', '{}'));
@@ -756,7 +936,10 @@ try {
     await acct.click('#account .account-name');
     // Not linked yet: the wizard offers GitHub's prefilled new-repository page, then the app install page.
     await acct.click('.account-menu button:has-text("No, create one")');
-    await acct.click('#gh-vis-public');
+    // Arrow keys inside the radio group must switch radios natively instead of jumping to menuitems.
+    await acct.focus('#gh-vis-private');
+    await acct.keyboard.press('ArrowDown');
+    if (!(await acct.locator('#gh-vis-public').isChecked())) throw new Error('ArrowDown on radio group did not select Public radio');
     const createHref = await acct.locator('.account-menu a:has-text("Create it on GitHub")').getAttribute('href');
     if (!/^https:\/\/github\.com\/new\?name=leetcode-solutions&.*visibility=public/.test(createHref)) throw new Error(`create link: ${createHref}`);
     const installHref = await acct.locator('.account-menu a:has-text("Connect it")').getAttribute('href');
@@ -779,9 +962,26 @@ try {
       throw new Error(`no Accepted; console: ${(await acct.locator('.result-head, .console-body').first().textContent().catch(() => '?')).slice(0, 300)}`);
     });
     await acct.waitForSelector('.toast:has-text("Saved to GitHub: ada/practice")', { timeout: 15000 });
+    // Verify toast renders top-center under the header with click-through host.
+    const toastLayout = await acct.evaluate(() => {
+      const host = document.querySelector('.toast-host');
+      const item = document.querySelector('.toast');
+      const r = item.getBoundingClientRect();
+      return {
+        hostPe: getComputedStyle(host).pointerEvents,
+        toastPe: getComputedStyle(item).pointerEvents,
+        top: r.top,
+        centerX: r.left + r.width / 2,
+        vw: window.innerWidth,
+      };
+    });
+    if (toastLayout.hostPe !== 'none' || toastLayout.toastPe !== 'auto') throw new Error(`unexpected toast pointer-events: ${JSON.stringify(toastLayout)}`);
+    if (toastLayout.top < 52 || toastLayout.top > 160 || Math.abs(toastLayout.centerX - toastLayout.vw / 2) > 40) {
+      throw new Error(`toast is not top-center under header: ${JSON.stringify(toastLayout)}`);
+    }
     if (pushes.length !== 1 || pushes[0].problemId !== 'pair-sum-target' || pushes[0].assisted !== false || !pushes[0].code.includes('function')) throw new Error(`unexpected pushes: ${JSON.stringify(pushes).slice(0, 200)}`);
 
-    // Sign-out asks first, keeps everything on Cancel, and clears this user's data on confirm.
+    // Sign-out asks first, closes the menu before opening the dialog, keeps everything on Cancel, and clears this user's data on confirm.
     await acct.goto(`${BASE}#/`);
     await acct.waitForSelector('#account .account-name:has-text("Ada")');
     const stored = () => acct.evaluate(() => ({ progress: JSON.parse(localStorage.getItem('lfb:progress:v1') ?? 'null'), drafts: Object.keys(localStorage).filter((k) => k.startsWith('lfb:draft:')) }));
@@ -790,6 +990,9 @@ try {
     await acct.click('#account .account-name');
     await acct.click('.account-menu button:has-text("Sign out")');
     await acct.waitForSelector('dialog.modal[open]');
+    if (!(await acct.evaluate(() => document.querySelector('.account-menu')?.hidden))) {
+      throw new Error('account menu must close before opening Sign out dialog');
+    }
     await expectDialog(acct, /Sign out\?[\s\S]*stays in your account[\s\S]*removed from this device/);
     if (shotsDir) await acct.screenshot({ path: `${shotsDir}/22-sign-out-confirm.png` });
     await acct.click('dialog.modal button:has-text("Cancel")');
@@ -803,10 +1006,13 @@ try {
     await acct.keyboard.press('Escape');
     await acct.waitForSelector('dialog.modal', { state: 'detached' });
     if (!(await stored()).progress) throw new Error('Escape must cancel');
-    // Disconnecting GitHub asks too, and names the repository.
+    // Disconnecting GitHub asks too, closes the menu first, and names the repository.
     await acct.click('#account .account-name');
     await acct.click('.account-menu button:has-text("Disconnect")');
     await expectDialog(acct, /Disconnect GitHub\?[\s\S]*ada\/practice[\s\S]*Nothing in the repository is deleted/);
+    if (!(await acct.evaluate(() => document.querySelector('.account-menu')?.hidden))) {
+      throw new Error('account menu must close before opening Disconnect dialog');
+    }
     await acct.click('dialog.modal button:has-text("Cancel")');
     await acct.waitForSelector('dialog.modal', { state: 'detached' });
     await acct.click('#account .account-name');
@@ -819,31 +1025,49 @@ try {
     await acct.close();
   });
 
-  await check('privacy policy: linked from the home page, loads, lists what is stored and how to delete it', async () => {
+  await check('privacy policy: linked from the home page, uses shared shell, lists what is stored and how to delete it', async () => {
     await page.goto(`${BASE}#/`);
     await page.click('footer.site-links a:has-text("Privacy Policy")');
     await page.waitForSelector('article.legal h1');
     await expectText('article.legal', /Deleting your data/);
     await expectText('article.legal', /IP address/);
+    const privacyShell = await page.evaluate(() => ({
+      skipLink: Boolean(document.querySelector('a.skip-link[href="#view"]')),
+      headerNav: document.querySelectorAll('.app-header .nav a').length,
+      headerBack: Boolean(document.querySelector('.app-header a.btn')),
+      backLink: Boolean(document.querySelector('article.legal a.back-link')),
+      btnColor: getComputedStyle(document.querySelector('article.legal a.btn')).color,
+      linkColor: getComputedStyle(document.querySelector('article.legal a[href^="mailto:"]')).color,
+      tabLinks: document.querySelectorAll('.tab-bar a').length,
+    }));
+    if (!privacyShell.skipLink || privacyShell.headerNav !== 4 || !privacyShell.headerBack || !privacyShell.backLink || privacyShell.tabLinks !== 4) {
+      throw new Error(`privacy.html shell incomplete: ${JSON.stringify(privacyShell)}`);
+    }
+    if (privacyShell.btnColor === privacyShell.linkColor) {
+      throw new Error(`button inside .legal inherited link blue color (${privacyShell.btnColor})`);
+    }
     await shot('20-privacy');
     await page.goto(`${BASE}#/`);
   });
 
-  await check('unknown route shows not found', async () => {
+  await check('unknown route shows shared .state not found block', async () => {
     await page.goto(`${BASE}#/nope`);
-    await expectText('.page', /Not found/);
+    await page.waitForSelector('.page .state .state-title');
+    await expectText('.page .state', /Not found/);
   });
 
   await check('unknown problem id shows not found; a problem module that fails to load shows could not load', async () => {
     await page.goto(`${BASE}#/problem/no-such-problem`);
-    await expectText('.page', /Not found/);
+    await page.waitForSelector('.page .state .state-title');
+    await expectText('.page .state', /Not found/);
     // A module that throws while evaluating: the import rejects like a failed download, without the
     // browser's own network-error log, so the zero-console-errors check below still covers our code.
     const broken = '**/problems/two-wall-tank/problem.js';
     await page.route(broken, (route) => route.fulfill({ status: 200, contentType: 'text/javascript', body: 'throw new Error("simulated load failure");' }));
     try {
       await page.goto(`${BASE}#/problem/two-wall-tank`);
-      await expectText('.page', /Could not load/);
+      await page.waitForSelector('.page .state.state-error .state-title');
+      await expectText('.page .state.state-error', /Could not load/);
     } finally {
       await page.unroute(broken);
     }
@@ -855,11 +1079,12 @@ try {
     await page.route(broken, (route) => route.fulfill({ status: 200, contentType: 'text/javascript', body: 'throw new Error("simulated view failure");' }));
     try {
       await page.goto(`${BASE}#/path`);
-      await expectText('.page', /Could not load this page\. Check your connection and reload\./);
+      await page.waitForSelector('.page .state.state-error .state-title');
+      await expectText('.page .state.state-error', /Could not load this page\. Check your connection and reload\./);
     } finally {
       await page.unroute(broken);
     }
-    await page.click('.page a:has-text("Back to problems")');
+    await page.click('.page .state a:has-text("Back to problems")');
     await page.waitForSelector('.problem-table tbody tr a.problem-link');
   });
 

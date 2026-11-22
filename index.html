@@ -17,6 +17,7 @@
         <span class="brand-mark" aria-hidden="true">{ }</span>
         <span class="brand-name">Leet<span>-For-</span>Berger</span>
       </a>
+      <span id="header-title" class="header-title" aria-hidden="true">Problems</span>
       <nav class="nav" aria-label="Main">
         <a href="#/" data-nav="problems">Problems</a>
         <a href="#/path" data-nav="path">Learning Path</a>
@@ -24,12 +25,35 @@
         <a href="#/modes" data-nav="modes">Modes</a>
       </nav>
       <div class="header-right">
-        <span id="streak-chip" class="streak-chip">🔥 0</span>
+        <span id="streak-chip" class="streak-chip" aria-label="0-day streak" title="0-day streak">
+          <span class="streak-icon" aria-hidden="true">🔥</span>
+          <span class="streak-count" aria-hidden="true">0</span>
+          <span class="sr-only">0-day streak</span>
+        </span>
         <div id="account" class="account-host"></div>
       </div>
     </header>
 
     <main id="view" class="view" tabindex="-1"></main>
+
+    <nav class="tab-bar" aria-label="Primary">
+      <a href="#/" data-nav="problems">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span>Problems</span>
+      </a>
+      <a href="#/path" data-nav="path">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+        <span>Path</span>
+      </a>
+      <a href="#/companies" data-nav="companies">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9h.01"/><path d="M9 13h.01"/><path d="M9 17h.01"/></svg>
+        <span>Companies</span>
+      </a>
+      <a href="#/modes" data-nav="modes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
+        <span>Modes</span>
+      </a>
+    </nav>
 
     <noscript><p class="noscript">Leet-For-Berger needs JavaScript to run code in your browser.</p></noscript>
     <script type="module" src="src/js/main.js"></script>

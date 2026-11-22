@@ -3,7 +3,7 @@
  * (#/companies/<slug>), the problems it asks, most frequent first, one row per family.
  * Data: src/js/data/company-sets.json (built by scripts/content/build-meta.mjs), fetched on demand.
  */
-import { h, mount, difficultyBadge } from '../dom.js';
+import { h, mount, difficultyBadge, stateBlock, loadingState, siteFooter } from '../dom.js';
 import { expandRows, companyProgress } from '../../data/company-sets.js';
 import { filterRanked, findBySlug, israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
 
@@ -74,11 +74,25 @@ export function israelBadgeEl(level) {
 const isSolvedIn = (state) => (id) => state.problems[id]?.status === 'solved';
 
 function loading(root) {
-  mount(root, h('div.page', {}, h('p.page-sub', { role: 'status' }, 'Loading companies...')));
+  mount(root, h('div.page', {}, loadingState({ label: 'Loading companies...' })));
 }
 
 function loadFailed(root) {
-  mount(root, h('div.page.page-narrow', {}, h('h1', {}, 'Companies'), h('p.page-sub', {}, 'Company data could not be loaded. Check your connection and reload.')));
+  mount(
+    root,
+    h(
+      'div.page.page-narrow',
+      {},
+      stateBlock({
+        title: 'Could not load companies',
+        body: 'Company data could not be loaded. Check your connection and reload.',
+        kind: 'error',
+        headingTag: 'h1',
+        action: { label: 'Reload', onClick: () => location.reload() },
+      }),
+      siteFooter(),
+    ),
+  );
 }
 
 /**
@@ -145,6 +159,7 @@ export function renderCompanies(root, { store }) {
         count,
         grid,
         h('p.hint-text', {}, 'Company tags are crowdsourced from public datasets (content/SOURCES.md). Treat them as a trend, not a promise. Israel hiring labels: content/israel-hiring.md.'),
+        siteFooter(),
       ),
     );
     renderGrid();
@@ -208,7 +223,21 @@ export function renderCompany(root, { store, slug }) {
     sets = d.sets;
     company = findBySlug(d.ranked, slug);
     if (!company) {
-      mount(root, h('div.page.page-narrow', {}, h('h1', {}, 'Not found'), h('p.page-sub', {}, 'No company data for this name.'), h('a.btn.btn-primary', { href: '#/companies' }, 'All companies')));
+      mount(
+        root,
+        h(
+          'div.page.page-narrow',
+          {},
+          stateBlock({
+            title: 'Not found',
+            body: 'No company data for this name.',
+            kind: 'empty',
+            headingTag: 'h1',
+            action: { label: 'All companies', href: '#/companies' },
+          }),
+          siteFooter(),
+        ),
+      );
       return;
     }
     const onSite = h('input', { type: 'checkbox', id: 'on-site-only' });
@@ -243,6 +272,7 @@ export function renderCompany(root, { store, slug }) {
             body,
           ),
         ),
+        siteFooter(),
       ),
     );
     renderRows();
