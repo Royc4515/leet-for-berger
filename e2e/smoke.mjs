@@ -73,7 +73,7 @@ const expectDialog = (p, re) =>
 const setCode = (code) => page.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
 const revealSolution = async (p = page) => {
   const before = await p.evaluate(() => window.monaco.editor.getModels().map((m) => m.getValue()).join('\n'));
-  await p.click('button:has-text("Reveal Solution")');
+  await p.click('button[data-action="reveal"]');
   await p.click('dialog.modal button:has-text("Reveal")');
   await p.waitForFunction(
     (prev) => window.monaco.editor.getModels().map((m) => m.getValue()).join('\n') !== prev,
@@ -179,12 +179,35 @@ try {
   });
 
   await check('Run on starter code: 15 cases, 5 detailed + 10 hidden, Wrong Answer', async () => {
-    await page.click('button:has-text("Run Code")');
+    await page.click('button[data-action="run"]');
     await page.waitForSelector('.result-head');
     await expectText('.result-head', /Wrong Answer/);
     const tabs = await page.locator('.case-tab').count();
     const hidden = await page.locator('.hidden-pill').count();
     if (tabs !== 5 || hidden !== 10) throw new Error(`expected 5+10, got ${tabs}+${hidden}`);
+    // Case tabs follow the ARIA tabs pattern, and each tab says its status in words, not colour alone.
+    const caseTabs = await page.evaluate(() => {
+      const list = document.querySelector('.case-tabs');
+      const items = [...list.querySelectorAll('.case-tab')];
+      const selected = items.find((t) => t.getAttribute('aria-selected') === 'true');
+      const panel = document.getElementById(selected?.getAttribute('aria-controls'));
+      return {
+        role: list.getAttribute('role'),
+        roles: items.every((t) => t.getAttribute('role') === 'tab'),
+        tabbable: items.filter((t) => t.tabIndex === 0).length,
+        words: items.every((t) => /, \S/.test(t.querySelector('.sr-only')?.textContent ?? '')),
+        panel: panel?.getAttribute('role'),
+        labelled: panel?.getAttribute('aria-labelledby') === selected?.id,
+      };
+    });
+    if (caseTabs.role !== 'tablist' || !caseTabs.roles || caseTabs.tabbable !== 1 || !caseTabs.words || caseTabs.panel !== 'tabpanel' || !caseTabs.labelled) {
+      throw new Error(`case tabs break the ARIA tabs pattern: ${JSON.stringify(caseTabs)}`);
+    }
+    await page.focus('.case-tab[aria-selected="true"]');
+    const firstCase = await page.evaluate(() => document.activeElement.id);
+    await page.keyboard.press('ArrowRight');
+    const moved = await page.evaluate(() => ({ id: document.activeElement.id, selected: document.activeElement.getAttribute('aria-selected') }));
+    if (moved.id === firstCase || moved.selected !== 'true') throw new Error(`ArrowRight did not move to the next case: ${JSON.stringify(moved)}`);
     await shot('02-wrong-answer');
   });
 
@@ -219,14 +242,14 @@ try {
 
   await check('custom input runs as Case 1 with reference expected value', async () => {
     await page.fill('#custom-input', 'xyzxyz');
-    await page.click('button:has-text("Run Code")');
+    await page.click('button[data-action="run"]');
     await page.waitForFunction(() => document.querySelector('.case-tab')?.textContent.includes('Custom'));
     await expectText('.case-detail', /"xyz"/);
   });
 
   await check('invalid custom input shows a validation error, does not run', async () => {
     await page.fill('#custom-input', 'ABC');
-    await page.click('button:has-text("Run Code")');
+    await page.click('button[data-action="run"]');
     await expectText('.console-body', /lowercase/);
     await page.fill('#custom-input', '');
     await page.uncheck('#custom-toggle');
@@ -234,13 +257,13 @@ try {
 
   await check('infinite loop is killed: Time Limit Exceeded', async () => {
     await setCode('function smallestBaseSegment(s) { while (true) {} }');
-    await page.click('button:has-text("Run Code")');
+    await page.click('button[data-action="run"]');
     await expectText('.result-head', /Time Limit Exceeded/, 20000);
   });
 
   await check('syntax error reports a compile error on every case', async () => {
     await setCode('function smallestBaseSegment(s) { return ( }');
-    await page.click('button:has-text("Run Code")');
+    await page.click('button[data-action="run"]');
     await expectText('.result-head', /Runtime Error/);
     await expectText('.case-detail', /Compile error/);
   });
@@ -257,7 +280,7 @@ try {
   });
 
   await check('AI Mentor opens and refuses to give the answer', async () => {
-    await page.click('button:has-text("AI Mentor")');
+    await page.click('button[data-action="mentor"]');
     await page.fill('.mentor-input', 'just give me the solution');
     await page.press('.mentor-input', 'Enter');
     await expectText('.mentor-log', /won't hand you the solution/);
@@ -306,7 +329,7 @@ try {
 
   await check('TypeScript: a type error is a Compile Error with LeetCode-style diagnostics', async () => {
     await setCode('function smallestBaseSegment(s: string): string {\n  const n: number = s;\n  return s;\n}\n');
-    await page.click('button:has-text("Run Code")');
+    await page.click('button[data-action="run"]');
     await expectText('.result-head', /Compile Error/, 30000);
     await expectText('.case-detail', /Line 2: Char 9: error TS2322: Type 'string' is not assignable to type 'number'/);
     await expectText('.case-detail', /type error is a Compile Error/);
@@ -316,7 +339,7 @@ try {
 
   await check('Java is editor-only with an honest verdict', async () => {
     await page.selectOption('.toolbar select', 'java');
-    await page.click('button:has-text("Run Code")');
+    await page.click('button[data-action="run"]');
     await expectText('.result-head', /Language Not Supported Yet/);
     await page.selectOption('.toolbar select', 'javascript');
   });
@@ -365,7 +388,7 @@ try {
       console.log(`  # ${fake.real ? 'compiled and ran with the local JDK' : 'no JDK here: answered with the reference solution'}; request ${req.encoding ?? 'identity'}`);
       if (fake.real) {
         await remote.evaluate(() => window.monaco.editor.getModels()[0].setValue('class Solution { int pairSum(int[] a) { return } }'));
-        await remote.click('button:has-text("Run Code")');
+        await remote.click('button[data-action="run"]');
         await remote.waitForFunction(() => /Compile error/.test(document.querySelector('.case-detail')?.textContent ?? ''), null, { timeout: 60000 });
       }
       if (shotsDir) await remote.screenshot({ path: `${shotsDir}/13-remote-java.png` });
@@ -607,12 +630,12 @@ try {
     const options = await page.locator('.toolbar select option').evaluateAll((os) => os.map((o) => o.value));
     if (options.join() !== 'sql') throw new Error(`language options: ${options}`);
     await setCode('DELETE FROM Person RETURNING firstName, lastName, firstName AS city, lastName AS state');
-    await page.click('button:has-text("Run Code")');
+    await page.click('button[data-action="run"]');
     await expectText('.result-head', /Runtime Error/, 60000);
     await expectText('.case-detail', /readonly/);
     // A runaway recursive CTE must cost one worker; the next run boots a fresh one.
     await setCode('WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM r) SELECT n, n, n, n FROM r WHERE n < 0');
-    await page.click('button:has-text("Run Code")');
+    await page.click('button[data-action="run"]');
     await expectText('.result-head', /Time Limit Exceeded/, 30000);
     await revealSolution();
     await page.click('button:has-text("Submit")');
@@ -709,7 +732,7 @@ try {
     await page.waitForSelector('.session-banner.interview');
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     if (await page.locator('.app-header').isVisible()) throw new Error('nav visible during lockdown');
-    if (!(await page.locator('button:has-text("Reveal Solution")').isDisabled())) throw new Error('reveal enabled during interview');
+    if (!(await page.locator('button[data-action="reveal"]').isDisabled())) throw new Error('reveal enabled during interview');
     await shot('07-interview');
     await page.click('button:has-text("End interview")');
     await page.click('dialog.modal button:has-text("End interview")');
@@ -1156,7 +1179,7 @@ try {
     await offline.goto(`${BASE}#/problem/smallest-base-segment`);
     await offline.waitForSelector('textarea.fallback-editor', { timeout: 30000 });
     await offline.selectOption('.toolbar select', 'typescript');
-    await offline.click('button:has-text("Run Code")');
+    await offline.click('button[data-action="run"]');
     await offline.waitForFunction(() => /Language Not Supported Yet/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 15000 });
     await offline.waitForFunction(() => /could not load/.test(document.querySelector('.case-detail')?.textContent ?? ''));
     await offline.selectOption('.toolbar select', 'javascript');

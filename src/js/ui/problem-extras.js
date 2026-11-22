@@ -41,7 +41,7 @@ export function createProblemExtras({ problem, store, getLanguage, languageLabel
   function renderWalkthrough(entry) {
     const unlocked = entry?.status === 'solved' || entry?.revealed;
     if (!unlocked) {
-      mount(walkthroughBody, h('p.hint-text', {}, 'Unlocks after an Accepted submit. Reveal Solution unlocks it too, and marks the problem as assisted.'));
+      mount(walkthroughBody, h('p.hint-text', {}, 'Unlocks after an Accepted submit. Reveal unlocks it too, and marks the problem as assisted.'));
       return;
     }
     const complexity = h('div.walkthrough-complexity');

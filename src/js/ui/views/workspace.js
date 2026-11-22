@@ -176,7 +176,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       'div.custom-card',
       {},
       h('div.custom-head', {}, h('h2.block-title', {}, 'Custom Test Input'), h('label.switch', { for: 'custom-toggle' }, customToggle, h('span', {}, 'Use on Run'))),
-      h('p.hint-text', {}, 'Runs as Case 1 on "Run Code". Submissions always use the official 15 tests. JSON string or bare text.'),
+      h('p.hint-text', {}, 'Runs as Case 1 on "Run". Submissions always use the official 15 tests. JSON string or bare text.'),
       customInput,
     ),
   );
@@ -190,16 +190,16 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     { 'aria-label': 'Language' },
     languages.map((l) => h('option', { value: l.id, selected: l.id === language }, l.label + (l.executable || onServer(l.id) ? '' : ' (editor only)'))),
   );
-  const runBtn = h('button.btn.btn-secondary', { type: 'button', title: "Run Code (Ctrl+')", 'data-action': 'run' }, 'Run Code');
+  const runBtn = h('button.btn.btn-secondary', { type: 'button', title: "Run Code (Ctrl+')", 'data-action': 'run' }, 'Run');
   const submitBtn = h('button.btn.btn-primary', { type: 'button', title: 'Submit (Ctrl+Enter)', 'data-action': 'submit' }, 'Submit');
-  const revealBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, title: allowAssist ? 'Load the optimal solution' : 'Disabled in this mode' }, 'Reveal Solution');
+  const revealBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, title: allowAssist ? 'Reveal Solution: load the optimal solution' : 'Disabled in this mode', 'data-action': 'reveal' }, 'Reveal');
   const runnerNote = h('span.runner-note', { title: 'Compiled and run on the code server; judged in your browser' }, 'Runs on the server');
   const showRunnerNote = () => {
     runnerNote.hidden = !onServer(language);
   };
   showRunnerNote();
   const resetBtn = h('button.btn.btn-ghost.btn-icon', { type: 'button', title: 'Reset to starter code', 'aria-label': 'Reset to starter code' }, '↺');
-  const mentorBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, 'aria-pressed': 'false', title: allowAssist ? 'Socratic hints' : 'Disabled in this mode' }, 'AI Mentor');
+  const mentorBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, 'aria-pressed': 'false', title: allowAssist ? 'AI Mentor: Socratic hints' : 'Disabled in this mode', 'data-action': 'mentor' }, 'Mentor');
 
   const editorHost = h('div.editor-host#ws-code', {}, h('div.editor-loading', {}, h('span.spinner'), ' Loading editor...'));
   // A status region (polite). Not atomic: the growth line added after a verdict is read on its own.

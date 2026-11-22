@@ -1137,6 +1137,10 @@ body.resizing-y * {
   gap: var(--s-2);
   margin-left: auto;
 }
+/* The longest option ("TypeScript (editor only)") would push the toolbar onto a second row. */
+.toolbar-setup .select {
+  max-width: 140px;
+}
 .toolbar-spacer {
   flex: 1;
 }
@@ -1508,6 +1512,14 @@ body.resizing-y * {
     border-left: 0;
     border-right: 1px solid var(--border-strong);
     box-shadow: 12px 0 32px rgba(0, 0, 0, 0.45);
+    /* It enters over the left pane, so it slides in from the left, never across the editor. */
+    animation-name: slide-in-left;
+  }
+}
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
   }
 }
 
