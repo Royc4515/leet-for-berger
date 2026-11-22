@@ -3,7 +3,7 @@
  * (#/companies/<slug>), the problems it asks, most frequent first, one row per family.
  * Data: src/js/data/company-sets.json (built by scripts/content/build-meta.mjs), fetched on demand.
  */
-import { h, mount, difficultyBadge, stateBlock, loadingState, siteFooter } from '../dom.js';
+import { h, mount, difficulty, segmented, ilMark, stateBlock, loadingState, siteFooter } from '../dom.js';
 import { expandRows, companyProgress } from '../../data/company-sets.js';
 import { filterRanked, findBySlug, israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
 
@@ -40,25 +40,7 @@ export async function loadRankedCompanies() {
  * @returns {HTMLElement}
  */
 export function israelFilterControl(initial, onChange, label = 'Show companies') {
-  const group = h('div.segmented', { role: 'group', 'aria-label': label });
-  for (const f of ISRAEL_FILTERS) {
-    group.append(
-      h(
-        'button.segmented-btn',
-        {
-          type: 'button',
-          'data-filter': f.id,
-          'aria-pressed': String(f.id === initial),
-          onClick: () => {
-            group.querySelectorAll('.segmented-btn').forEach((b) => b.setAttribute('aria-pressed', String(b === group.querySelector(`[data-filter="${f.id}"]`))));
-            onChange(f.id);
-          },
-        },
-        f.label,
-      ),
-    );
-  }
-  return group;
+  return segmented({ label, options: ISRAEL_FILTERS.map((f) => ({ value: f.id, label: f.label })), value: initial, onChange });
 }
 
 /**
@@ -123,7 +105,7 @@ export function renderCompanies(root, { store }) {
         return h(
           'a.company-card',
           { href: `#/companies/${c.slug}` },
-          h('div.company-card-name', {}, c.name, c.israeli ? h('span.il-mark', { 'aria-label': 'Israeli company' }, 'IL') : null),
+          h('div.company-card-name', {}, c.name, c.israeli ? ilMark() : null),
           israelBadgeEl(c.israel),
           h('div.company-card-sub', {}, `${c.total} tagged problems`),
           h('div.company-card-sub', {}, `${prog.onSite} to practice here`, prog.solved ? `, ${prog.solved} solved` : ''),
@@ -209,7 +191,7 @@ export function renderCompany(root, { store, slug }) {
           {},
           h('td', {}, h(`span.status-icon.s-${solved ? 'solved' : 'todo'}`, { title: solved ? 'solved' : 'not solved', 'aria-label': solved ? 'solved' : 'not solved' })),
           h('td', {}, name, r.versions > 1 ? h('span.tag.tag-muted', { title: 'This company asks several versions of this idea' }, `${r.versions} versions`) : null),
-          h('td', {}, difficultyBadge(r.problem.difficulty)),
+          h('td', {}, difficulty(r.problem.difficulty)),
           h('td', {}, h('span.freq-bar', { style: `--freq: ${r.frequency}%`, title: `Frequency ${r.frequency}` }), h('span.freq-text', {}, RECENCY_LABEL[r.recency])),
           h('td', {}, practice),
         );
@@ -260,7 +242,7 @@ export function renderCompany(root, { store, slug }) {
         'div.page',
         {},
         h('a.back-link', { href: '#/companies' }, 'All companies'),
-        h('header.page-head', {}, h('h1', {}, company.name, company.israeli ? h('span.il-mark', { 'aria-label': 'Israeli company' }, 'IL') : null), israelBadgeEl(company.israel), summary),
+        h('header.page-head', {}, h('h1', {}, company.name, company.israeli ? ilMark() : null), israelBadgeEl(company.israel), summary),
         h('div.filters', {}, diff, h('label.switch', { for: 'on-site-only' }, onSite, h('span', {}, 'On the site only'))),
         h(
           'div.table-wrap',

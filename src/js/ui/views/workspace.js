@@ -12,7 +12,7 @@
  * @property {HTMLElement} [problemSwitcher] interview: tabs between problems
  * @property {Map<string, string>} [drafts]  in-memory drafts: sessions start from starter code, never from practice drafts
  */
-import { h, mount, trustedHtml, toast, confirmDialog, difficultyBadge } from '../dom.js';
+import { h, mount, trustedHtml, toast, confirmDialog, difficulty } from '../dom.js';
 import { attachResizer } from '../resizer.js';
 import { createEditor } from '../editor.js';
 import { renderIdle, renderPending, renderResult, renderError, renderGrowthLine } from '../results.js';
@@ -128,7 +128,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       'header.problem-head',
       {},
       h('h1.problem-title', {}, problem.title),
-      h('div.problem-tags', {}, difficultyBadge(problem.difficulty), topicLabels.map((t) => h('span.tag', {}, t)), problem.patterns.map((p) => h('span.tag.tag-muted', {}, p))),
+      h('div.problem-tags', {}, difficulty(problem.difficulty), topicLabels.map((t) => h('span.tag', {}, t)), problem.patterns.map((p) => h('span.tag.tag-muted', {}, p))),
     ),
     context.el,
     trustedHtml('div.statement', problem.statementHtml),

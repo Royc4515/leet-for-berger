@@ -670,14 +670,15 @@ try {
       navHidden: getComputedStyle(document.querySelector('.nav')).display === 'none',
       brandNameHidden: getComputedStyle(document.querySelector('.brand-name')).display === 'none',
       titleVisible: getComputedStyle(document.querySelector('#header-title')).display !== 'none',
-      streakLabel: document.querySelector('#streak-chip')?.getAttribute('aria-label'),
+      // aria-label on a plain span is not exposed (ARIA 1.2), so the name is the .sr-only text.
+      streakAriaLabel: document.querySelector('#streak-chip')?.getAttribute('aria-label'),
       streakSr: document.querySelector('#streak-chip .sr-only')?.textContent,
       streakHiddenParts: [...document.querySelectorAll('#streak-chip [aria-hidden="true"]')].length,
     }));
     if (!headerState.navHidden || !headerState.brandNameHidden || !headerState.titleVisible) {
       throw new Error(`unexpected mobile header state: ${JSON.stringify(headerState)}`);
     }
-    if (!/^\d+-day streak$/.test(headerState.streakLabel ?? '') || headerState.streakSr !== headerState.streakLabel || headerState.streakHiddenParts < 2) {
+    if (headerState.streakAriaLabel !== null || !/^\d+-day streak$/.test(headerState.streakSr ?? '') || headerState.streakHiddenParts < 2) {
       throw new Error(`streak chip not accessible: ${JSON.stringify(headerState)}`);
     }
 
@@ -789,6 +790,83 @@ try {
     await page.setViewportSize({ width: 1440, height: 900 });
   });
 
+  await check('touch: every control on the browse and setup screens is at least 44px tall, and chips and tags look different', async () => {
+    // hasTouch makes (pointer: coarse) match, which is what promotes the --ctl-* tokens to 44 px.
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    const touch = await ctx.newPage();
+    touch.on('console', (m) => m.type() === 'error' && errors.push(`console (touch page): ${m.text()}`));
+    touch.on('pageerror', (e) => errors.push(`pageerror (touch page): ${e.message}`));
+    // Accounts on with a stub client, so the Sign in panel is measured too; no network.
+    await touch.route('**/@supabase/supabase-js@*/+esm', (r) =>
+      r.fulfill({ contentType: 'text/javascript', body: 'export function createClient() { return { auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({}) } }; }' }),
+    );
+    await touch.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = 'https://example.supabase.co';
+      window.LFB_SUPABASE_ANON_KEY = 'public-anon-key';
+    });
+    const undersized = () =>
+      touch.evaluate(() => {
+        const out = [];
+        for (const root of ['.app-header', '#view', '.tab-bar'].map((sel) => document.querySelector(sel)).filter(Boolean)) {
+          for (const el of root.querySelectorAll('a[href], button, input:not([type="hidden"]), select, summary')) {
+            // A checkbox or radio is tapped through its label, so the label is the target.
+            const target = el.matches('input[type="checkbox"], input[type="radio"]') ? (el.closest('label') ?? el) : el;
+            const r = target.getBoundingClientRect();
+            if (!r.width || !r.height || getComputedStyle(target).visibility === 'hidden') continue;
+            // Allow-list: links inside running text, which follow the line height by design.
+            if (el.closest('p, .hint-text, .page-sub, .statement')) continue;
+            // 43.5 absorbs subpixel layout (a 44 px control can measure 43.99).
+            if (r.height < 43.5) out.push(`${el.tagName.toLowerCase()}.${[...el.classList].join('.')} "${(el.textContent || el.getAttribute('placeholder') || '').trim().slice(0, 30)}" ${r.height.toFixed(1)}px`);
+          }
+        }
+        return [...new Set(out)];
+      });
+    const screens = [
+      { url: '#/', wait: '.problem-table tbody tr a.problem-link', name: '390-touch-dashboard' },
+      { url: '#/companies', wait: '.company-card', name: '390-touch-companies' },
+      { url: '#/companies/google', wait: '.problem-table tbody tr', name: '390-touch-company' },
+      { url: '#/interview', wait: '.company-chip[data-slug="google"]', name: '390-touch-interview' },
+      { url: '#/battle', wait: '.pick-row', name: '390-touch-battle' },
+    ];
+    for (const sc of screens) {
+      await touch.goto(`${BASE}${sc.url}`);
+      await touch.waitForSelector(sc.wait, { timeout: 30000 });
+      await touch.waitForTimeout(300);
+      const bad = await undersized();
+      if (bad.length) throw new Error(`${sc.url} has touch targets under 44px:\n  ${bad.join('\n  ')}`);
+      if (shotsDir) await touch.screenshot({ path: `${shotsDir}/${sc.name}.png` });
+    }
+    // The Sign in panel (a phone sheet) follows the same rule.
+    await touch.goto(`${BASE}#/`);
+    await touch.click('#account .account-toggle');
+    await touch.waitForSelector('.account-menu:not([hidden]) button:has-text("Continue with GitHub")');
+    const panel = await touch.evaluate(() => [...document.querySelectorAll('.account-menu button')].map((b) => b.getBoundingClientRect().height));
+    if (panel.some((hgt) => hgt < 43.5)) throw new Error(`account panel buttons under 44px: ${JSON.stringify(panel)}`);
+    // One shape per job: a filter chip is a pill, a static tag is a 4px rectangle, and a selected
+    // chip shows a check mark, so selection is not colour alone.
+    await touch.goto(`${BASE}#/`);
+    await touch.waitForSelector('.problem-table tbody tr a.problem-link');
+    const shapes = await touch.evaluate(() => {
+      const chip = document.querySelector('.chip-group[aria-label="Difficulty"] .chip[aria-pressed="true"]');
+      const tag = document.querySelector('.problem-table .tag');
+      const diff = document.querySelector('.problem-table .difficulty');
+      return {
+        chipRadius: parseFloat(getComputedStyle(chip).borderTopLeftRadius),
+        chipCheck: getComputedStyle(chip, '::before').content,
+        tagRadius: parseFloat(getComputedStyle(tag).borderTopLeftRadius),
+        tagBorder: getComputedStyle(tag).borderTopWidth,
+        diffDot: getComputedStyle(diff, '::before').width,
+        diffText: diff.textContent,
+      };
+    });
+    if (shapes.chipRadius < 15 || shapes.tagRadius > 4 || shapes.tagBorder !== '0px' || !/✓/.test(shapes.chipCheck)) {
+      throw new Error(`chip and tag shapes are not distinct: ${JSON.stringify(shapes)}`);
+    }
+    if (shapes.diffDot !== '8px' || !/^(Easy|Medium|Hard)$/.test(shapes.diffText)) throw new Error(`difficulty is not dot plus word: ${JSON.stringify(shapes)}`);
+    await ctx.close();
+  });
+
   // Its own page: the blocked CDN request is logged as a failed resource, which is the point here.
   await check('without Monaco, TypeScript reports honestly that it needs the editor and nothing crashes', async () => {
     const offline = await browser.newPage();
@@ -869,6 +947,16 @@ try {
     await acct.focus('#account button:has-text("Sign in")');
     await acct.keyboard.press('ArrowDown');
     await acct.waitForFunction(() => document.querySelector('.account-menu button')?.textContent?.includes('Google'));
+    // A disclosure, not an ARIA menu: the panel holds hints and a wizard, which role="menu" forbids.
+    const semantics = await acct.evaluate(() => {
+      const toggle = document.querySelector('#account .account-toggle');
+      return {
+        roles: document.querySelectorAll('#account [role="menu"], #account [role="menuitem"], #account [aria-haspopup]').length,
+        controls: toggle?.getAttribute('aria-controls'),
+        panelId: document.querySelector('#account .account-menu')?.id,
+      };
+    });
+    if (semantics.roles || !semantics.controls || semantics.controls !== semantics.panelId) throw new Error(`account panel semantics: ${JSON.stringify(semantics)}`);
     const firstItem = await acct.evaluate(() => document.activeElement?.textContent?.trim());
     if (firstItem !== 'Continue with Google') throw new Error(`ArrowDown on Sign in should focus first item, got "${firstItem}"`);
     await acct.waitForTimeout(300);
@@ -887,7 +975,7 @@ try {
     await acct.keyboard.press('Escape');
     const afterEsc = await acct.evaluate(() => ({
       hidden: document.querySelector('.account-menu')?.hidden,
-      expanded: document.querySelector('#account [aria-haspopup]')?.getAttribute('aria-expanded'),
+      expanded: document.querySelector('#account .account-toggle')?.getAttribute('aria-expanded'),
       active: document.activeElement?.textContent?.trim(),
     }));
     if (!afterEsc.hidden || afterEsc.expanded !== 'false' || afterEsc.active !== 'Sign in') {
@@ -915,7 +1003,8 @@ try {
       const m = document.querySelector('.account-menu').getBoundingClientRect();
       return { bdDisplay: getComputedStyle(bd).display, left: m.left, right: m.right, top: m.top };
     });
-    if (mobileMenu.bdDisplay === 'none' || mobileMenu.left < 0 || mobileMenu.right > 390.5) {
+    // Same 12 px gutter on both sides (a stray right: auto once left about 2 px on the right).
+    if (mobileMenu.bdDisplay === 'none' || mobileMenu.left < 0 || mobileMenu.right > 390.5 || Math.abs(mobileMenu.left - (390 - mobileMenu.right)) > 1) {
       throw new Error(`unexpected mobile account menu/backdrop layout: ${JSON.stringify(mobileMenu)}`);
     }
     if (shotsDir) await acct.screenshot({ path: `${shotsDir}/390-account-menu.png` });
@@ -935,7 +1024,17 @@ try {
     if (!acctRequests.some((u) => u.includes('supabase-js'))) throw new Error('a stored session must start supabase-js at page load');
     await acct.click('#account .account-name');
     // Not linked yet: the wizard offers GitHub's prefilled new-repository page, then the app install page.
-    await acct.click('.account-menu button:has-text("No, create one")');
+    // Each step replaces the pressed button; keyboard focus must land on the new step, not <body>.
+    await acct.focus('.account-menu button:has-text("Yes")');
+    await acct.keyboard.press('Enter');
+    const afterYes = await acct.evaluate(() => ({ inPanel: Boolean(document.activeElement?.closest('.account-menu')), text: document.activeElement?.textContent?.trim() }));
+    if (!afterYes.inPanel || afterYes.text !== 'Connect it') throw new Error(`wizard "Yes" dropped keyboard focus: ${JSON.stringify(afterYes)}`);
+    await acct.focus('.account-menu .gh-wizard .btn-link');
+    await acct.keyboard.press('Enter');
+    if ((await acct.evaluate(() => document.activeElement?.textContent?.trim())) !== 'Yes') throw new Error('wizard "Back" did not move focus to the first step');
+    await acct.focus('.account-menu button:has-text("No, create one")');
+    await acct.keyboard.press('Enter');
+    if ((await acct.evaluate(() => document.activeElement?.id)) !== 'gh-vis-private') throw new Error('wizard "No, create one" did not move focus to the visibility choice');
     // Arrow keys inside the radio group must switch radios natively instead of jumping to menuitems.
     await acct.focus('#gh-vis-private');
     await acct.keyboard.press('ArrowDown');

@@ -117,12 +117,82 @@ export function confirmDialog({ title, body, confirmLabel = 'Confirm', danger = 
 }
 
 /**
- * Render a difficulty badge element.
- * @param {string} d
+ * Difficulty label: a dot plus the word in the semantic colour (docs/DESIGN.md), the same in
+ * tables, pickers and headers. The word carries the meaning; the colour only reinforces it.
+ * @param {string} d  'Easy' | 'Medium' | 'Hard'
  * @returns {HTMLElement}
  */
-export function difficultyBadge(d) {
-  return h(`span.badge.diff-${d.toLowerCase()}`, {}, d);
+export function difficulty(d) {
+  return h(`span.difficulty.diff-${d.toLowerCase()}`, {}, d);
+}
+
+/**
+ * Compact "IL" mark beside an Israeli company's name. aria-label on a plain span is not exposed
+ * by assistive tech (ARIA 1.2 forbids naming generic elements), so the meaning is real text.
+ * @returns {HTMLElement}
+ */
+export function ilMark() {
+  return h('span.il-mark', { title: 'Israeli company' }, h('span', { 'aria-hidden': 'true' }, 'IL'), h('span.sr-only', {}, ' (Israeli company)'));
+}
+
+/**
+ * One filter chip: a real button whose selected state is `aria-pressed` (the CSS adds a check
+ * mark, so selection is never colour alone).
+ * @param {{ label: any, pressed?: boolean, onClick?: (e: MouseEvent) => void, attrs?: Record<string, any>, className?: string }} opts
+ * @returns {HTMLButtonElement}
+ */
+export function chip({ label, pressed = false, onClick, attrs = {}, className = '' }) {
+  return h(`button.chip${className}`, { ...attrs, type: 'button', 'aria-pressed': String(pressed), onClick }, label);
+}
+
+/**
+ * A labelled group of chips where exactly one is selected. Keeps `aria-pressed` in sync and
+ * calls `onChange` with the option's value. Options can carry extra attributes (data-*).
+ * @param {{ label: string, options: Array<{ value: string, label: any, attrs?: Record<string, any> }>, value: string, onChange: (value: string) => void }} opts
+ * @returns {HTMLElement}
+ */
+export function chipGroup({ label, options, value, onChange }) {
+  const group = h('div.chip-group', { role: 'group', 'aria-label': label });
+  const buttons = options.map((o) =>
+    chip({
+      label: o.label,
+      pressed: o.value === value,
+      attrs: o.attrs,
+      onClick: () => {
+        buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(options[i].value === o.value)));
+        onChange(o.value);
+      },
+    }),
+  );
+  group.append(...buttons);
+  return group;
+}
+
+/**
+ * Segmented control: one of several views of the same data (a scope, not a filter). Real
+ * buttons with `aria-pressed` inside a labelled group.
+ * @param {{ label: string, options: Array<{ value: string, label: string }>, value: string, onChange: (value: string) => void }} opts
+ * @returns {HTMLElement}
+ */
+export function segmented({ label, options, value, onChange }) {
+  const group = h('div.segmented', { role: 'group', 'aria-label': label });
+  const buttons = options.map((o) =>
+    h(
+      'button.segmented-btn',
+      {
+        type: 'button',
+        'data-value': o.value,
+        'aria-pressed': String(o.value === value),
+        onClick: () => {
+          buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(options[i].value === o.value)));
+          onChange(o.value);
+        },
+      },
+      o.label,
+    ),
+  );
+  group.append(...buttons);
+  return group;
 }
 
 /**

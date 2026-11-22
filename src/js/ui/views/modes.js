@@ -1,7 +1,7 @@
 /**
  * Modes: hub, Interview Simulator, 1v1 Battle (bot).
  */
-import { h, mount, toast, confirmDialog, difficultyBadge, siteFooter } from '../dom.js';
+import { h, mount, toast, confirmDialog, difficulty, chip, chipGroup, siteFooter } from '../dom.js';
 import { renderWorkspace } from './workspace.js';
 import { availableEntries, catalogEntry, loadProblem, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import * as Interview from '../../modes/interview.js';
@@ -82,52 +82,41 @@ function renderInterviewSetup(root, { store }) {
   let ranked = [];
   const cf = { filter: DEFAULT_ISRAEL_FILTER, query: '' };
 
-  const formatGroup = h(
-    'div.chip-group',
-    { role: 'group', 'aria-label': 'Format' },
-    OA_FORMATS.map((f) =>
-      h(
-        'button.chip',
-        {
-          type: 'button',
-          'aria-pressed': String(f === format),
-          onClick: (e) => {
-            format = f;
-            formatGroup.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-            e.currentTarget.setAttribute('aria-pressed', 'true');
-            describe();
-          },
-        },
-        f.label,
-      ),
-    ),
-  );
+  const formatGroup = chipGroup({
+    label: 'Format',
+    options: OA_FORMATS.map((f) => ({ value: f.id, label: f.label })),
+    value: format.id,
+    onChange: (id) => {
+      format = OA_FORMATS.find((f) => f.id === id);
+      describe();
+    },
+  });
   const companyList = h('div.chip-group.company-chips', { role: 'group', 'aria-label': 'Company' });
   const companyHint = h('p.hint-text', { role: 'status' }, 'Loading companies...');
-  const chip = (slug, name, text, badge) =>
-    h(
-      'button.chip.company-chip',
-      {
-        type: 'button',
-        'data-slug': slug,
-        'aria-pressed': String(slug === companySlug),
-        onClick: () => {
-          companySlug = slug;
-          companyName = name;
-          companyIds = slug ? companyOf.get(slug) : null;
-          renderCompanies();
-          describe();
-        },
+  // Re-rendered on every pick (the list filters and the selected company stays pinned), so this
+  // builds single chips rather than a chipGroup.
+  const companyChip = (slug, name, text, badge) =>
+    chip({
+      className: '.company-chip',
+      label: [text, badge],
+      pressed: slug === companySlug,
+      attrs: { 'data-slug': slug },
+      onClick: () => {
+        companySlug = slug;
+        companyName = name;
+        companyIds = slug ? companyOf.get(slug) : null;
+        renderCompanies();
+        describe();
       },
-      text,
-      badge,
-    );
+    });
+  // A star alone means nothing to a screen reader, and aria-label on a plain span is not exposed.
+  const majorStar = () => h('span.il-star', { title: 'Major in Israel' }, h('span', { 'aria-hidden': 'true' }, '\u2605'), h('span.sr-only', {}, ', major in Israel'));
   function renderCompanies() {
     const shown = filterRanked(ranked, cf).filter((c) => companyOf.has(c.slug));
-    const chips = [chip('', '', 'Any company', null)];
+    const chips = [companyChip('', '', 'Any company', null)];
     // The selected company stays visible even when the current filter or search hides it.
     const selected = companySlug && !shown.some((c) => c.slug === companySlug) ? ranked.find((c) => c.slug === companySlug) : null;
-    for (const c of selected ? [selected, ...shown] : shown) chips.push(chip(c.slug, c.name, `${c.name} (${companyOf.get(c.slug).length})`, c.israel === 'major' ? h('span.il-star', { 'aria-label': 'Major in Israel', title: 'Major in Israel' }, '\u2605') : null));
+    for (const c of selected ? [selected, ...shown] : shown) chips.push(companyChip(c.slug, c.name, `${c.name} (${companyOf.get(c.slug).length})`, c.israel === 'major' ? majorStar() : null));
     mount(companyList, chips);
     companyHint.textContent = `${shown.length} ${shown.length === 1 ? 'company' : 'companies'} with enough problems on the site. Optional: draws from the problems that company asks.`;
   }
@@ -154,7 +143,7 @@ function renderInterviewSetup(root, { store }) {
     }
     renderCompanies();
   });
-  mount(companyList, chip('', '', 'Any company', null));
+  mount(companyList, companyChip('', '', 'Any company', null));
 
   const summary = h('div.setup-card-rows');
   const describe = () => {
@@ -371,31 +360,20 @@ export function renderBattle(root, { store }) {
   const pf = { query: '', difficulty: 'all', topic: 'all' };
   const topicLabel = (id) => TOPICS.find((t) => t.id === id)?.label ?? id;
 
-  const levelGroup = h(
-    'div.chip-group',
-    { role: 'group', 'aria-label': 'Bot level' },
-    BOT_LEVELS.map((l) =>
-      h(
-        'button.chip',
-        {
-          type: 'button',
-          'aria-pressed': String(l.id === level),
-          onClick: (e) => {
-            level = l.id;
-            levelGroup.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-            e.currentTarget.setAttribute('aria-pressed', 'true');
-          },
-        },
-        l.label,
-      ),
-    ),
-  );
+  const levelGroup = chipGroup({
+    label: 'Bot level',
+    options: BOT_LEVELS.map((l) => ({ value: l.id, label: l.label })),
+    value: level,
+    onChange: (id) => {
+      level = id;
+    },
+  });
   const pickList = h('div.pick-list', { role: 'group', 'aria-label': 'Problem' });
   const pickCount = h('p.hint-text', { role: 'status' });
   const selectedLine = h('p.pick-selected');
   const showSelected = () => {
     const p = catalogEntry(problemId);
-    mount(selectedLine, 'Selected: ', h('strong', {}, p?.title ?? problemId), ' ', p ? difficultyBadge(p.difficulty) : null);
+    mount(selectedLine, 'Selected: ', h('strong', {}, p?.title ?? problemId), ' ', p ? difficulty(p.difficulty) : null);
   };
   function renderPicker() {
     const list = filterProblems(problems, pf);
@@ -420,7 +398,7 @@ export function renderBattle(root, { store }) {
             },
           },
           h('span.pick-title', {}, p.title),
-          difficultyBadge(p.difficulty),
+          difficulty(p.difficulty),
           h('span.pick-topics', {}, p.topics.map((t) => h('span.tag', {}, topicLabel(t)))),
         ),
       ),
@@ -431,26 +409,15 @@ export function renderBattle(root, { store }) {
     pf.query = search.value;
     renderPicker();
   });
-  const diffGroup = h(
-    'div.chip-group',
-    { role: 'group', 'aria-label': 'Difficulty' },
-    ['all', ...DIFFICULTIES].map((d) =>
-      h(
-        'button.chip',
-        {
-          type: 'button',
-          'data-difficulty': d,
-          'aria-pressed': String(d === pf.difficulty),
-          onClick: () => {
-            pf.difficulty = d;
-            diffGroup.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.difficulty === d)));
-            renderPicker();
-          },
-        },
-        d === 'all' ? 'All difficulties' : d,
-      ),
-    ),
-  );
+  const diffGroup = chipGroup({
+    label: 'Difficulty',
+    options: ['all', ...DIFFICULTIES].map((d) => ({ value: d, label: d === 'all' ? 'All difficulties' : d, attrs: { 'data-difficulty': d } })),
+    value: pf.difficulty,
+    onChange: (d) => {
+      pf.difficulty = d;
+      renderPicker();
+    },
+  });
   const topicSelect = h('select.select', { 'aria-label': 'Topic' }, h('option', { value: 'all' }, 'All topics'), usedTopics(problems, TOPICS).map((t) => h('option', { value: t.id }, t.label)));
   topicSelect.addEventListener('change', () => {
     pf.topic = topicSelect.value;
@@ -531,7 +498,7 @@ function startBattle(root, { store, problem, level }) {
   const you = bar('You');
   const them = bar(bot.name);
   const clock = h('span.clock', {}, '00:00');
-  const status = h('span.result-meta', {}, difficultyBadge(problem.difficulty));
+  const status = h('span.result-meta', {}, difficulty(problem.difficulty));
   const banner = h('div.session-banner.battle', {}, h('strong', {}, 'Battle'), clock, h('div.race', {}, you.el, them.el), status);
 
   const set = (b, n) => {

@@ -75,6 +75,11 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [ ] The 21 pending, each tried and left out for a stated reason (allocation or cache bends, too fast to time on CI, recursion limits, retry-only passes): bucket-map, column-sweep, course-finish-time, dictionary-split, digit-list-sum, fizz-buzz-list, gap-in-range, hill-rearrange, jump-reach, justify-lines, list-loop, lone-number, prefix-tree, random-link-copy, ring-shift, rotate-grid, ticket-itinerary, trade-cooldown, two-color-check, unfold-brackets (solution fixed, spec still to write), word-order-flip. Fixing these needs measurement work, not more specs: e.g. timing several reps per size to average out bends, packed (non-holey) arrays in the generators, a larger browser budget for big linked lists. Worth doing only if users ask for feedback on these problems
 - [ ] **F4. Real AI mentor:** an LLM behind a Supabase Edge Function with a hard monthly cap, using the system prompt already in `src/js/mentor/mentor.js`. Starts only after the budget decision below
 - [ ] **F5. Design session:** after F1, F3 and the first three F2 waves. A dedicated session (Fable 5.2): a plan per screen, then execution per screen
+  - Plan: `docs/DESIGN_PLAN.md`, rules: `docs/DESIGN.md`. Ten steps, one PR each
+  - [x] Step 1, tokens and fonts (#33)
+  - [x] Step 2, shell: phone tab bar, account panel, dialogs, toasts, page states (#34)
+  - [x] Step 3, core components: buttons, chips, segmented, tags, difficulty, inputs, cards, 44 px touch targets, shared helpers in `ui/dom.js` (#35)
+  - [ ] Steps 4 to 10: dashboard, companies, pickers, workspace, sessions, learning path, polish
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)

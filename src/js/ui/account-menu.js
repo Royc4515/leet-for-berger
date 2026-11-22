@@ -5,6 +5,7 @@
 import { h, mount, confirmDialog, toast } from './dom.js';
 import { newRepoUrl } from '../auth/github-sync.js';
 
+const MENU_ID = 'account-panel';
 const SYNC_LABEL = { idle: '', syncing: 'Syncing...', synced: 'Progress synced', error: 'Sync failed' };
 
 /**
@@ -21,22 +22,25 @@ export function mountAccountMenu(host, account, github = null) {
   let ghLink;
   let ghEl = null;
 
+  // A disclosure panel, not an ARIA menu: it holds hints, a wizard and radios, which role="menu"
+  // does not allow. Arrow keys still move between its controls as a convenience; links inside
+  // hint text (Privacy Policy, the synced repository) stay reachable with Tab only.
   const menuItems = () =>
-    [...host.querySelectorAll('.account-menu [role="menuitem"]')].filter((el) => !el.disabled && !el.hidden);
+    [...host.querySelectorAll('.account-menu :is(a[href], button, input:not([type="radio"]))')].filter((el) => !el.disabled && !el.closest('.hint-text') && el.getClientRects().length > 0);
 
   const captureFocus = () => {
     const active = document.activeElement;
     if (!(active instanceof HTMLElement) || !host.contains(active)) return null;
-    if (active.matches('[aria-haspopup]')) return { kind: 'toggle' };
+    if (active.matches('.account-toggle')) return { kind: 'toggle' };
     const list = menuItems();
     const index = list.indexOf(active);
-    return index >= 0 ? { kind: 'menuitem', index } : null;
+    return index >= 0 ? { kind: 'item', index } : null;
   };
 
   const restoreFocus = (target) => {
     if (!target) return;
-    const toggle = host.querySelector('[aria-haspopup]');
-    if (target.kind === 'menuitem' && open) {
+    const toggle = host.querySelector('.account-toggle');
+    if (target.kind === 'item' && open) {
       const list = menuItems();
       (list[Math.min(target.index, list.length - 1)] ?? toggle)?.focus({ preventScroll: true });
     } else {
@@ -49,7 +53,7 @@ export function mountAccountMenu(host, account, github = null) {
     open = next;
     const menu = host.querySelector('.account-menu');
     const backdrop = host.querySelector('.account-backdrop');
-    const toggle = host.querySelector('[aria-haspopup]');
+    const toggle = host.querySelector('.account-toggle');
     if (menu) menu.hidden = !open;
     if (backdrop) backdrop.hidden = !open;
     toggle?.setAttribute('aria-expanded', String(open));
@@ -138,13 +142,13 @@ export function mountAccountMenu(host, account, github = null) {
     const focusToRestore = currentFocus ?? pendingFocus;
     pendingFocus = null;
     if (s.status === 'signed-out') {
-      const menu = h('div.account-menu', { hidden: !open, role: 'menu' },
-        h('button.btn.btn-secondary.btn-sm', { type: 'button', role: 'menuitem', onClick: () => account.signIn('google') }, 'Continue with Google'),
-        h('button.btn.btn-secondary.btn-sm', { type: 'button', role: 'menuitem', onClick: () => account.signIn('github') }, 'Continue with GitHub'),
+      const menu = h('div.account-menu', { hidden: !open, id: MENU_ID },
+        h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => account.signIn('google') }, 'Continue with Google'),
+        h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => account.signIn('github') }, 'Continue with GitHub'),
         h('p.hint-text', {}, 'Signing in syncs your progress across devices. ', h('a', { href: 'privacy.html' }, 'Privacy Policy')),
         s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null,
       );
-      const toggle = h('button.btn.btn-ghost.btn-sm', { type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': String(open) }, 'Sign in');
+      const toggle = h('button.btn.btn-ghost.btn-sm.account-toggle', { type: 'button', 'aria-controls': MENU_ID, 'aria-expanded': String(open) }, 'Sign in');
       // Opening the menu is the intent to sign in: start loading supabase-js now (a no-op once loaded).
       bindToggle(toggle, () => account.start());
       mount(host, h('div.account', {}, toggle, makeBackdrop(), menu));
@@ -152,8 +156,8 @@ export function mountAccountMenu(host, account, github = null) {
       return;
     }
     const who = s.user.name ?? s.user.email ?? 'Signed in';
-    const panel = h('div.account-menu', { hidden: !open, role: 'menu' }, ghSection(), s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null, h('button.btn.btn-ghost.btn-sm', { type: 'button', role: 'menuitem', onClick: confirmSignOut }, 'Sign out'));
-    const toggle = h('button.btn.btn-ghost.btn-sm.account-name', { type: 'button', title: s.user.email ?? '', 'aria-haspopup': 'menu', 'aria-expanded': String(open) }, who);
+    const panel = h('div.account-menu', { hidden: !open, id: MENU_ID }, ghSection(), s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null, h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: confirmSignOut }, 'Sign out'));
+    const toggle = h('button.btn.btn-ghost.btn-sm.account-toggle.account-name', { type: 'button', title: s.user.email ?? '', 'aria-controls': MENU_ID, 'aria-expanded': String(open) }, who);
     bindToggle(toggle);
     mount(
       host,
@@ -243,7 +247,6 @@ function githubSection(github, { closeMenu = () => {} } = {}) {
       'button.btn.btn-ghost.btn-sm',
       {
         type: 'button',
-        role: 'menuitem',
         onClick: async () => {
           closeMenu();
           const ok = await confirmDialog({
@@ -267,28 +270,31 @@ function githubSection(github, { closeMenu = () => {} } = {}) {
 function connectWizard(github) {
   const body = h('div.gh-wizard');
   const installNote = h('p.hint-text', {}, 'On GitHub choose "Only select repositories" and pick that one repository.');
-  const connect = (label) => h('a.btn.btn-secondary.btn-sm', { href: github.installUrl, role: 'menuitem' }, label);
-  const ask = () =>
-    mount(
-      body,
-      h('p.hint-text', {}, 'Save each accepted solution to a GitHub repository of yours. Do you have a repository for them?'),
-      h(
-        'div.gh-wizard-actions',
-        {},
-        h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => mount(body, installNote, connect('Connect it'), back()) }, 'Yes'),
-        h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: create }, 'No, create one'),
-      ),
-    );
-  const back = () => h('button.btn-link', { type: 'button', onClick: ask }, 'Back');
+  const connect = (label) => h('a.btn.btn-secondary.btn-sm', { href: github.installUrl }, label);
+  // Each step replaces the button that was just pressed, which drops keyboard focus to <body>.
+  // Move it to the new step's first control instead (only on a user action, never on first render).
+  const show = (...children) => {
+    mount(body, ...children);
+    body.querySelector('a[href], button, input')?.focus({ preventScroll: true });
+  };
+  const askStep = () => [
+    h('p.hint-text', {}, 'Save each accepted solution to a GitHub repository of yours. Do you have a repository for them?'),
+    h(
+      'div.gh-wizard-actions',
+      {},
+      h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => show(installNote, connect('Connect it'), back()) }, 'Yes'),
+      h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: create }, 'No, create one'),
+    ),
+  ];
+  const back = () => h('button.btn-link', { type: 'button', onClick: () => show(askStep()) }, 'Back');
   function create() {
     const priv = h('input', { type: 'radio', name: 'gh-vis', id: 'gh-vis-private', value: 'private', checked: true });
     const pub = h('input', { type: 'radio', name: 'gh-vis', id: 'gh-vis-public', value: 'public' });
-    const link = h('a.btn.btn-secondary.btn-sm', { href: newRepoUrl(), target: '_blank', rel: 'noopener', role: 'menuitem' }, '1. Create it on GitHub');
+    const link = h('a.btn.btn-secondary.btn-sm', { href: newRepoUrl(), target: '_blank', rel: 'noopener' }, '1. Create it on GitHub');
     const update = () => link.setAttribute('href', newRepoUrl({ visibility: pub.checked ? 'public' : 'private' }));
     priv.addEventListener('change', update);
     pub.addEventListener('change', update);
-    mount(
-      body,
+    show(
       h(
         'fieldset.gh-vis',
         {},
@@ -304,6 +310,6 @@ function connectWizard(github) {
       back(),
     );
   }
-  ask();
+  mount(body, askStep());
   return body;
 }

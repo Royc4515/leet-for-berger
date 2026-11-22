@@ -13,7 +13,8 @@ All tokens and component styles live in [`src/css/app.css`](../src/css/app.css) 
 | `--bg` | `#0d0e10` | Page background and code inputs |
 | `--panel` | `#15171a` | Cards, split panes, header, modals |
 | `--panel-2` | `#1b1e22` | Inset blocks, hover states, menus, controls |
-| `--panel-3` | `#22262b` | Selected/pressed states, secondary buttons, inline code |
+| `--panel-3` | `#22262b` | Selected/pressed states, secondary buttons, inline code, static tags |
+| `--panel-hover` | `#2b3036` | Hover on secondary buttons (text stays >= 4.5:1) |
 
 ### Text and borders
 
@@ -33,6 +34,7 @@ All tokens and component styles live in [`src/css/app.css`](../src/css/app.css) 
 | `--accent` | `#f5a623` | Primary action, selected state, focus outline only |
 | `--accent-ink` | `#1a1203` | Text on `--accent` (9.15:1) |
 | `--accent-soft` | `rgba(245, 166, 35, 0.12)` | Selected chip/row fill |
+| `--accent-hover` | `#ffb93f` | Primary button hover (ink stays >= 4.5:1) |
 | `--ok` | `#2fbf71` | Passing status, solved indicator |
 | `--ok-soft` | `rgba(47, 191, 113, 0.12)` | Pass banner/background tint |
 | `--bad` | `#f05252` | Error text and icons |
@@ -43,7 +45,6 @@ All tokens and component styles live in [`src/css/app.css`](../src/css/app.css) 
 | `--info` | `#5aa7ff` | Inline links and info toast border |
 | `--easy` | `#2fbf71` | Easy difficulty dot + label |
 | `--medium` | `#e3b341` | Medium difficulty dot + label (distinct from `--accent`) |
-| `--medium-soft` | `rgba(227, 179, 65, 0.12)` | Medium difficulty tint (while pill badges transition) |
 | `--hard` | `#f05252` | Hard difficulty dot + label |
 
 ### Type scale and fonts
@@ -76,7 +77,7 @@ Inter and JetBrains Mono are self-hosted as Latin variable `.woff2` files in `sr
 | Chip | Toggles a filter (many can be on) | Pill (`--r-pill`), `--border-control`, `aria-pressed`. Selected state combines accent border, `--accent-soft` fill, and a check mark (never colour alone). |
 | Segmented | Picks one view of the same data | Rectangular track (`--r-sm`). Used for scope (`Hiring in Israel` / `Top in Israel` / `All`) and phone workspace tabs. |
 | Tag | Static non-interactive label | `--r-tag` (4 px), no border, never clickable. Israeli companies use a compact `IL` mark instead of a repeating amber pill. |
-| Difficulty | Easy, Medium, Hard | Semantic dot + word. Identical across tables, pickers, and problem headers. |
+| Difficulty | Easy, Medium, Hard | Semantic dot + word, no tinted pill. Identical across tables, pickers, and problem headers. Each colour is >= 4.5:1 on `--bg`, `--panel` and `--panel-2`. |
 | Card | Groups content or acts as one link | When clickable, the entire card is one `<a>` or `<button>` with hover and focus states. Never nest a card inside a card. |
 | Option card | One choice in a picker | Monogram, name, one supporting fact, optional progress bar. Used for companies, interview formats, and battle opponents. |
 | Picker | Choose one item from many | Shared `src/js/ui/picker.js`: search + optional scope segmented + option grid/list + `aria-live` selection summary. Used by interview, battle, and companies. |
@@ -85,6 +86,23 @@ Inter and JetBrains Mono are self-hosted as Latin variable `.woff2` files in `sr
 | Toast | Confirms an event that already happened | Top centre under header, solid panel with coloured left edge, `role="status"`. Never the only place a result appears. |
 | Nav | Four destinations | Header links at >= 821 px; bottom tab bar with icon and label at <= 820 px. `aria-current="page"` on active item. Hidden during active sessions. |
 | States | Empty, loading, error | Shared `.state` block with explanation and one recovery action. Loading uses skeleton rows matching real row height. |
+
+## Shared helpers
+
+Views build components through `src/js/ui/dom.js` instead of hand-writing markup, so the classes, ARIA state and touch sizing stay identical everywhere. All helpers build with `h()` and text nodes only (never `innerHTML`), and they live in `dom.js` so the ADR 0008 startup graph does not grow.
+
+| Helper | Renders |
+|---|---|
+| `difficulty(d)` | `span.difficulty.diff-<level>`: dot + word |
+| `chip({ label, pressed, onClick, attrs })` | One filter chip (`button.chip`, `aria-pressed`) |
+| `chipGroup({ label, options, value, onChange })` | A labelled `role="group"` of chips with exactly one pressed |
+| `segmented({ label, options, value, onChange })` | A labelled segmented control (`button.segmented-btn`, `aria-pressed`) |
+| `ilMark()` | The `IL` tag with screen-reader text (no `aria-label` on a plain span) |
+| `stateBlock()`, `loadingState()`, `siteFooter()` | Empty/error/loading states and the browse-page footer (Step 2) |
+
+Touch sizing: buttons, chips, segmented buttons, inputs and selects take their height from `--ctl-*`, which become 44 px under `@media (pointer: coarse)`. Text-like controls (logo, `.btn-link`, `.back-link`, `.problem-link`, footer links, checkbox labels) get a 44 px `min-height` only under a coarse pointer, so desktop layout does not change. Inputs use 16 px text on touch devices so iOS does not zoom on focus.
+
+The account control is a disclosure (toggle with `aria-expanded` and `aria-controls`), not an ARIA menu: its panel holds hints, a wizard and radio buttons, which `role="menu"` does not allow. Arrow keys still move between its controls as a convenience.
 
 ## Screen Consistency Rules
 

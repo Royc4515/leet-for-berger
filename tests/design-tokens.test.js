@@ -111,12 +111,12 @@ test('base :root defines all required tokens and separates medium from accent an
   assert.ok(coarseRoot, 'coarse-pointer :root override block not found');
 
   const required = [
-    '--bg', '--panel', '--panel-2', '--panel-3',
+    '--bg', '--panel', '--panel-2', '--panel-3', '--panel-hover',
     '--border', '--border-strong', '--border-control',
     '--text', '--text-2', '--muted',
-    '--accent', '--accent-ink', '--accent-soft',
+    '--accent', '--accent-ink', '--accent-soft', '--accent-hover',
     '--ok', '--ok-soft', '--bad', '--bad-solid', '--bad-ink', '--bad-soft', '--warn', '--info',
-    '--easy', '--medium', '--medium-soft', '--hard',
+    '--easy', '--medium', '--hard',
     '--fs-xs', '--fs-sm', '--fs-md', '--fs-lg', '--fs-xl', '--fs-2xl', '--fs-display',
     '--font', '--mono',
     '--s-1', '--s-2', '--s-3', '--s-4', '--s-5', '--s-6', '--s-7',
@@ -154,12 +154,29 @@ test('control border meets >= 3:1 on resting control surfaces', () => {
 test('button ink and background pairs meet WCAG AA (>= 4.5:1)', () => {
   const pairs = [
     ['--accent-ink', '--accent'],
+    ['--accent-ink', '--accent-hover'],
+    ['--text', '--panel-hover'],
     ['--bad-ink', '--bad-solid'],
     ['--text', '--panel-3'],
     ['--text-2', '--bg'],
     ['--text-2', '--panel'],
     ['--text-2', '--panel-2'],
     ['--text-2', '--panel-3'],
+  ];
+  for (const [fg, bg] of pairs) {
+    const ratio = contrastRatio(baseRoot.get(fg), baseRoot.get(bg));
+    assert.ok(ratio >= 4.5, `${fg} on ${bg} contrast ${ratio.toFixed(2)}:1 is below 4.5:1`);
+  }
+});
+
+test('difficulty and selected-state text meet WCAG AA (>= 4.5:1) where they render', () => {
+  // Difficulty is a dot plus a 12 px word (no tinted pill), so the word itself must pass on the
+  // surfaces it sits on: page, cards, inset rows and hovered table rows. A selected segment shows
+  // accent text on --panel-3.
+  const pairs = [
+    ...['--easy', '--medium', '--hard'].flatMap((fg) => ['--bg', '--panel', '--panel-2'].map((bg) => [fg, bg])),
+    ['--accent', '--panel-3'],
+    ['--accent', '--panel-2'],
   ];
   for (const [fg, bg] of pairs) {
     const ratio = contrastRatio(baseRoot.get(fg), baseRoot.get(bg));
