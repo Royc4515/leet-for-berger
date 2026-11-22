@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Changed (design system, Step 1)
+- Design tokens (`src/css/app.css`, `docs/DESIGN.md`): standardized type scale (`--fs-xs` 12 px floor through `--fs-display` 38 px), spacing (`--s-1`..`--s-7`), radii (`--r-tag`, `--r-sm`, `--r-md`, `--r-pill`), control heights (`--ctl-sm`/`--ctl-md`/`--ctl-lg`, promoted to 44 px under `pointer: coarse`), and layout width tokens (`--page`, `--page-narrow`).
+- Accessibility contrast and semantic separation (`src/css/app.css`): raised `--muted` to `#8f97a3` (>= 5.16:1 on all surfaces), added `--border-control` (`#646d7a`, >= 3.19:1 on resting control surfaces), added `--bad-solid` (`#cf3636`, 4.96:1 with white ink) for `.btn-danger`, and split `--medium` (`#e3b341`) from `--accent`.
+- Self-hosted Inter and JetBrains Mono as Latin variable `.woff2` files in `src/fonts/` (`font-display: swap`), added `.woff2` MIME mapping in `scripts/serve.mjs`, remeasured Monaco fonts on load in `src/js/ui/editor.js`, and documented licenses in `THIRD_PARTY_NOTICES.md`.
+- Added `tests/design-tokens.test.js` (token presence, WCAG AA contrast matrix, 12 px type floor and scale enforcement, radius token discipline, and font asset checks) and expanded `e2e/smoke.mjs` to assert loaded self-hosted fonts on `#/` and capture 390 px screenshots across all 9 routes.
+
 ### Added: wave F2-3 (20 problems asked by companies hiring in Israel, each with growth feedback from the start, docs/PLAN.md F2)
 - Drop From Tail (LeetCode 19 idea, Medium): remove the n-th node from the end of a linked list in one pass, lists up to 10^5 nodes; two pointers n apart behind a placeholder node, with the head, the tail, equal values and 10^5-node lists in the tests.
 - Tidy Path (LeetCode 71 idea, Medium): canonical form of an absolute Unix path, limit raised from 3000 to 10^5 characters so repeated string replacement is too slow; a stack of names, where `...` and `.hidden` are ordinary names and `..` at the root does nothing.

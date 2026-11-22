@@ -21,6 +21,7 @@ Local e2e on a machine with Chrome but no Playwright browsers: `PW_CHANNEL=chrom
 ```
 index.html                 shell: header, <main id="view">, loads src/js/main.js
 src/css/app.css            all styles; design tokens at the top
+src/fonts/                 self-hosted Inter + JetBrains Mono woff2 fonts
 src/js/main.js             bootstrap + hash router (every view returns a cleanup fn)
 src/js/engine/             PURE judging logic + execution
   harness.js               buildSuite (15 cases), judge, deepEqual, preview
@@ -62,10 +63,10 @@ src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler 
 src/js/ui/views/           dashboard, workspace, path, companies, modes (hub, interview, battle)
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test
-docs/                      ARCHITECTURE, PROBLEM_FORMAT, ROADMAP, PLAN, DEPLOY_RUNNER, DEPLOY_AUTH, DEPLOY_GITHUB_SYNC, adr/
+docs/                      ARCHITECTURE, DESIGN, PROBLEM_FORMAT, ROADMAP, PLAN, DEPLOY_RUNNER, DEPLOY_AUTH, DEPLOY_GITHUB_SYNC, adr/
 ```
 
-Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR). Deeper: `docs/ARCHITECTURE.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
+Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR). Deeper: `docs/ARCHITECTURE.md` and `docs/DESIGN.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
 
 ## Invariants (breaking any of these is a bug, not a style choice)
 

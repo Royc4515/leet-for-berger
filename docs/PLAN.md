@@ -141,6 +141,7 @@ Every decision that changes direction goes here, newest first. Detailed technica
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-22 | Stage F5 design plan approved with all 6 owner recommendations: self-host Inter and JetBrains Mono (`src/fonts/`), phone bottom tab bar (replaced by Run/Submit bar in workspace), hide header during battle race, 2 mode cards on Modes hub (AI Mentor note only until F4), defer light theme and RTL (`docs/DESIGN.md`) | One shared token system and consistent component rules across desktop and 390 px phone views without adding external runtime CDN dependencies |
 | 2026-11-19 | New order (stage F): last speed steps, then company waves ranked by hiring in Israel, growth for every problem, real AI mentor after a budget decision, then the design session | Platform and practice modes are done; problem count and complexity feedback are what limit the site for an Israeli job seeker |
 | 2026-11-19 | Defer server-only hidden tests, the CI to Supabase content sync and peer battles | The judge runs in the page, so server-only data only hides answers from casual reading; it pays off only with scored peer play |
 | 2026-11-19 | Content waves follow `content/israel-hiring.json` rank, not global company frequency | The owner and the audience are hiring in Israel; the data is now verified with sources |
