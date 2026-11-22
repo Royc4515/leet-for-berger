@@ -137,6 +137,40 @@ export function loadMonaco() {
  * @property {boolean} isFallback
  */
 
+const THEME = 'lfb-dark';
+let themeDefined = false;
+
+/**
+ * Monaco's vs-dark with the panel colours of the design tokens (docs/DESIGN.md), so the editor is
+ * the same surface as the panes around it. Read from the CSS at runtime: one source of truth, and
+ * Monaco only accepts hex, which the surface tokens are. Defined once per page (pinned 0.52.2 API).
+ * @param {any} monaco
+ */
+function defineTheme(monaco) {
+  if (themeDefined) return;
+  const css = getComputedStyle(document.documentElement);
+  const tok = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
+  monaco.editor.defineTheme(THEME, {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [],
+    colors: {
+      'editor.background': tok('--panel', '#15171a'),
+      'editorGutter.background': tok('--panel', '#15171a'),
+      'editor.lineHighlightBackground': tok('--panel-2', '#1b1e22'),
+      'editor.lineHighlightBorder': tok('--panel-2', '#1b1e22'),
+      'editorLineNumber.foreground': tok('--border-control', '#646d7a'),
+      'editorLineNumber.activeForeground': tok('--text-2', '#b4bac3'),
+      'editor.selectionBackground': tok('--border-strong', '#3a4049'),
+      'editorWidget.background': tok('--panel-2', '#1b1e22'),
+      'editorWidget.border': tok('--border-strong', '#3a4049'),
+      'editorIndentGuide.background1': tok('--border', '#2a2f36'),
+      'scrollbarSlider.background': `${tok('--border-strong', '#3a4049')}99`,
+    },
+  });
+  themeDefined = true;
+}
+
 /**
  * @param {HTMLElement} host
  * @param {{ value: string, language: string }} opts
@@ -147,10 +181,12 @@ export async function createEditor(host, { value, language }) {
   if (!host.isConnected) return fallbackEditor(host, { value }); // view left while loading
   if (!monaco) return fallbackEditor(host, { value });
 
+  defineTheme(monaco);
   const editor = monaco.editor.create(host, {
     value,
     language,
-    theme: 'vs-dark',
+    // Based on vs-dark, so the editor still carries the vs-dark class and token colours.
+    theme: THEME,
     automaticLayout: false, // we call layout() from the resizer; the built-in polling is laggy
     fontSize: 14,
     fontFamily: "'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace",

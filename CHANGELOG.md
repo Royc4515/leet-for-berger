@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed (design system, Step 7)
+- Workspace, desktop (`src/js/ui/views/workspace.js`, `src/css/app.css`): the statement comes first; companies, complexity and family versions sit in a collapsed "About this problem" block under the tags (open state remembered). The toolbar is three groups: language and reset, Mentor and Reveal, then Run and Submit on the right. A narrow pane wraps the groups instead of scrolling, so Run and Submit are never clipped.
+- Monaco theme (`src/js/ui/editor.js`): `lfb-dark`, based on `vs-dark`, reads the panel, border and text tokens so the editor matches the panels; the editor host and the textarea fallback use the same surface.
+- Mentor: a third column only above 1200 px; from 821 to 1200 px it overlays the description pane (never the editor); on a phone it is a full-height sheet.
+- Results (`src/js/ui/results.js`): case tabs follow the ARIA tabs pattern (`role="tab"`, `aria-selected`, roving arrow-key focus, a `tabpanel`), each tab carries its pass/fail word for screen readers, and hidden-case tiles are tinted by token. The console body keeps `role="status"`.
+- Phone (<= 820 px): Description, Code and Results tabs (ARIA tabs, arrow keys, Home and End); a pinned Run / Submit bar replaces the site tab bar; Run and Submit switch to Results so the verdict is in view. Switching tabs relayouts Monaco instead of re-creating it. Inputs use 16 px under a coarse pointer so mobile Safari does not zoom.
+- Tests (`e2e/smoke.mjs`): Run and Submit whole inside the viewport at 1440 px with the mentor open; at 390 px the tabs pattern, Run and Submit visible on the Code tab, the verdict visible after Run with `role="status"`; About this problem starts collapsed.
+
 ### Changed (design system, Step 6)
 - Shared option picker (`src/js/ui/picker.js`, `src/css/app.css`): reusable `createPicker()` and `createOptionGroup()` with search, optional scope segmented control, paginated grid or list of option buttons (no inner scroll boxes), `aria-live="polite"` selected summary, shared `.state` empty block with Clear filters, roving arrow-key focus (arrows move inside, Enter selects, Tab leaves), and returned cleanup (invariant 7). Pure `filterPickerItems()` and `moveRovingIndex()` helpers covered by `tests/picker.test.js`.
 - Interview and Mock OA setup (`src/js/ui/views/modes.js`, `src/css/app.css`): Format options are cards showing time and problem mix before picking; Company uses the shared picker with company option cards (monogram, name, IL mark, problem count, 2 columns on phones, Israel level only under "All"); Rules collapse to three short lines; Start interview sits in a pinned bottom bar with a live summary so it is visible immediately on load at both 1440 px and 390 px.

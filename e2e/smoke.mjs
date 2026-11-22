@@ -272,6 +272,16 @@ try {
     });
     if (!stacking.inside) throw new Error(`mentor panel is covered by ${stacking.hit}`);
     if (stacking.overlap > 1) throw new Error(`editor extends ${stacking.overlap}px under the mentor panel`);
+    // Step 7 acceptance: with the mentor open, Run and Submit stay whole inside the viewport.
+    const actions = await page.evaluate(() =>
+      ['run', 'submit'].map((label) => {
+        const b = document.querySelector(`.toolbar-run .btn[data-action="${label}"]`);
+        const r = b?.getBoundingClientRect();
+        const hit = r && document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return { label, ok: Boolean(r && r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight && b.contains(hit)) };
+      }),
+    );
+    if (actions.some((a) => !a.ok)) throw new Error(`Run / Submit clipped or covered with the mentor open: ${JSON.stringify(actions)}`);
     await page.click('button[aria-label="Close mentor"]');
   });
 
@@ -425,6 +435,10 @@ try {
   // Growth estimate (ADR 0004): after an Accepted JS submit, the console adds one estimate line.
   await check('problem context: companies, complexity behind a toggle, family versions with links', async () => {
     await page.goto(`${BASE}#/problem/course-check`);
+    // Collapsed under the tags by default so the statement comes first; the open state persists.
+    await page.waitForSelector('details.about-problem .company-tag', { state: 'attached', timeout: 15000 });
+    if (await page.locator('details.about-problem').evaluate((d) => d.open)) throw new Error('About this problem should start collapsed');
+    await page.click('details.about-problem > summary');
     await page.waitForSelector('.problem-context .company-tag', { timeout: 15000 });
     await expectText('.problem-context .context-label', /Asked at \d+ compan/);
     if (!(await page.locator('.complexity-body').isHidden())) throw new Error('complexity should be hidden before a solve');
@@ -488,7 +502,7 @@ try {
     if (!practice.length || badPractice.length) throw new Error(`Practice links without the problem in their name: ${JSON.stringify(badPractice.slice(0, 3))}`);
     await shot('16-company-wix');
     await page.click('.company-table tbody a.practice-link >> nth=0');
-    await page.waitForSelector('.problem-context .company-tag', { timeout: 15000 });
+    await page.waitForSelector('.problem-context .company-tag', { state: 'attached', timeout: 15000 });
     await expectText('.problem-context', /Wix/);
   });
 
@@ -776,16 +790,53 @@ try {
     await shot('09-battle');
   });
 
-  await check('mobile layout stacks panes without errors and renders the bottom tab bar', async () => {
+  await check('phone workspace: Description / Code / Results tabs, pinned Run / Submit, verdict in view', async () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${BASE}#/problem/smallest-base-segment`);
-    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await page.waitForSelector('.monaco-editor', { state: 'attached', timeout: 30000 });
     await shot('10-mobile');
+    const wsTabs = await page.evaluate(() => {
+      const list = document.querySelector('.ws-tabs');
+      return {
+        role: list?.getAttribute('role'),
+        tabs: [...list.querySelectorAll('[role="tab"]')].map((t) => ({ text: t.textContent, selected: t.getAttribute('aria-selected'), tabindex: t.tabIndex, panel: document.getElementById(t.getAttribute('aria-controls'))?.getAttribute('role') })),
+        siteTabBar: getComputedStyle(document.querySelector('.tab-bar')).display,
+      };
+    });
+    const want = ['Description', 'Code', 'Results'];
+    if (wsTabs.role !== 'tablist' || wsTabs.tabs.map((t) => t.text).join() !== want.join()) throw new Error(`workspace tabs: ${JSON.stringify(wsTabs)}`);
+    if (wsTabs.tabs[0].selected !== 'true' || wsTabs.tabs.filter((t) => t.tabindex === 0).length !== 1 || wsTabs.tabs.some((t) => t.panel !== 'tabpanel')) {
+      throw new Error(`workspace tabs break the ARIA tabs pattern: ${JSON.stringify(wsTabs)}`);
+    }
+    if (wsTabs.siteTabBar !== 'none') throw new Error('site tab bar should give way to the Run / Submit bar');
+    // Arrow keys move between tabs (roving tabindex).
+    await page.focus('.ws-tab[aria-selected="true"]');
+    await page.keyboard.press('ArrowRight');
+    if ((await page.evaluate(() => document.activeElement?.textContent)) !== 'Code') throw new Error('ArrowRight did not move to the Code tab');
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    const inView = (sel) =>
+      page.evaluate((s) => {
+        const el = document.querySelector(s);
+        const r = el?.getBoundingClientRect();
+        return Boolean(r && r.height > 0 && r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth);
+      }, sel);
+    for (const label of ['Run', 'Submit']) {
+      if (!(await inView(`.ws-actions .btn[data-action="${label.toLowerCase()}"]`))) throw new Error(`${label} not visible without scrolling on the Code tab`);
+    }
+    await shot('10-mobile-code');
+    await page.click('.ws-actions .btn[data-action="run"]');
+    await page.waitForSelector('.result-head', { timeout: 30000 });
+    if ((await page.getAttribute('.ws-tab:has-text("Results")', 'aria-selected')) !== 'true') throw new Error('Run did not switch to the Results tab');
+    if (!(await inView('.result-head'))) throw new Error('verdict is not visible without scrolling after Run');
+    if ((await page.getAttribute('.console-body', 'role')) !== 'status') throw new Error('verdict region lost role="status"');
+    await shot('10-mobile-results');
+    await page.click('.ws-tab:has-text("Code")');
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     // The page must never scroll sideways on a phone: anything wider than the viewport is clipped
     // for the reader (company chips, statement). Wide content scrolls inside its own container.
     const mobileRoutes = [
       { name: '390-dashboard', url: '#/', wait: '.problem-table tbody tr a.problem-link', footer: true },
-      { name: '390-workspace', url: '#/problem/smallest-base-segment', wait: '.monaco-editor', footer: false },
+      { name: '390-workspace', url: '#/problem/smallest-base-segment', wait: '.ws-tab[aria-selected="true"]', footer: false },
       { name: '390-path', url: '#/path', wait: '.path-tier', footer: true },
       { name: '390-companies', url: '#/companies', wait: '.company-card', footer: true },
       { name: '390-company-google', url: '#/companies/google', wait: '.problem-table tbody tr', footer: true },

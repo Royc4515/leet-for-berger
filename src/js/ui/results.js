@@ -4,6 +4,9 @@
 import { h, mount } from './dom.js';
 import { preview } from '../engine/harness.js';
 
+/** Makes tab and panel ids unique across renders (one console at a time, but re-renders overlap). */
+let resultSeq = 0;
+
 const STATUS_LABEL = {
   pass: 'Passed',
   fail: 'Wrong Answer',
@@ -36,29 +39,49 @@ export function renderResult(el, result, { kind, argNames, elapsedMs }) {
   const hidden = result.cases.filter((c) => !c.visible);
   const verdictClass = result.accepted ? 'ok' : result.verdict === 'Language Not Supported Yet' ? 'muted' : 'bad';
 
-  const detail = h('div.case-detail');
+  // ARIA tabs pattern: one tab per visible case, the detail below is their tabpanel. Each tab says
+  // its status in words for screen readers; the dot is only colour.
+  const uid = ++resultSeq;
+  const detail = h('div.case-detail', { role: 'tabpanel', id: `case-panel-${uid}`, tabindex: '0' });
+  const select = (i, { focus = false } = {}) => {
+    tabs.forEach((t, j) => {
+      t.setAttribute('aria-selected', String(j === i));
+      t.setAttribute('tabindex', j === i ? '0' : '-1');
+    });
+    detail.setAttribute('aria-labelledby', tabs[i].id);
+    showCase(detail, visible[i], argNames);
+    if (focus) tabs[i].focus();
+  };
   const tabs = visible.map((c, i) =>
     h(
       `button.case-tab.st-${c.status}`,
       {
         type: 'button',
-        'aria-pressed': i === 0 ? 'true' : 'false',
+        role: 'tab',
+        id: `case-tab-${uid}-${i}`,
+        'aria-controls': detail.id,
+        'aria-selected': 'false',
+        tabindex: '-1',
         title: STATUS_LABEL[c.status],
-        onClick: (e) => {
-          tabs.forEach((t) => t.setAttribute('aria-pressed', 'false'));
-          e.currentTarget.setAttribute('aria-pressed', 'true');
-          showCase(detail, c, argNames);
-        },
+        onClick: () => select(i),
       },
-      h('span.dot'),
+      h('span.dot', { 'aria-hidden': 'true' }),
       c.custom ? 'Custom' : `Case ${c.id}`,
+      h('span.sr-only', {}, `, ${STATUS_LABEL[c.status]}`),
     ),
   );
+  const tabList = h('div.case-tabs', { role: 'tablist', 'aria-label': 'Visible test cases' }, tabs);
+  tabList.addEventListener('keydown', (e) => {
+    const i = tabs.indexOf(document.activeElement);
+    if (i === -1) return;
+    const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    select((next + tabs.length) % tabs.length, { focus: true });
+  });
   // Open the first non-passing visible case: that is the one the user needs to look at.
   const firstBad = visible.findIndex((c) => c.status !== 'pass');
-  const openIdx = firstBad === -1 ? 0 : firstBad;
-  tabs.forEach((t, i) => t.setAttribute('aria-pressed', i === openIdx ? 'true' : 'false'));
-  showCase(detail, visible[openIdx], argNames);
+  select(firstBad === -1 ? 0 : firstBad);
 
   mount(
     el,
@@ -71,14 +94,14 @@ export function renderResult(el, result, { kind, argNames, elapsedMs }) {
       h('span.result-meta', {}, `${Math.round(elapsedMs)} ms`),
     ),
     h('div.section-label', {}, 'Detailed cases (1-5)'),
-    h('div.case-tabs', { role: 'group', 'aria-label': 'Visible test cases' }, tabs),
+    tabList,
     detail,
     h('div.section-label', {}, 'Hidden cases (6-15)'),
     h(
       'div.hidden-grid',
       {},
       hidden.map((c) =>
-        h(`div.hidden-pill.st-${c.status}`, { title: `Hidden test ${c.id}: ${STATUS_LABEL[c.status]}` }, h('span.dot'), `#${c.id}`, h('span.pill-status', {}, c.status === 'pass' ? 'Pass' : 'Fail')),
+        h(`div.hidden-pill.st-${c.status}`, { title: `Hidden test ${c.id}: ${STATUS_LABEL[c.status]}` }, h('span.dot', { 'aria-hidden': 'true' }), `#${c.id}`, h('span.pill-status', {}, c.status === 'pass' ? 'Pass' : 'Fail')),
       ),
     ),
   );
