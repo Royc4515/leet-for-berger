@@ -767,6 +767,8 @@ try {
 
   await check('interview timer: warning colour and single "5 minutes left" announcement in the last five minutes', async () => {
     const clockPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    clockPage.on('console', (m) => m.type() === 'error' && errors.push(`console (clock page): ${m.text()}`));
+    clockPage.on('pageerror', (e) => errors.push(`pageerror (clock page): ${e.message}`));
     await clockPage.addInitScript(() => {
       window.LFB_SUPABASE_URL = '';
       window.LFB_SUPABASE_ANON_KEY = '';
@@ -777,16 +779,32 @@ try {
     await clockPage.click('.format-card[data-format="screen"]');
     await clockPage.click('button:has-text("Start interview")');
     await clockPage.waitForSelector('.session-banner.interview .clock');
-    const beforeWarn = await clockPage.evaluate(() => ({
-      hasWarn: document.querySelector('.session-banner .clock').classList.contains('warning'),
-      alertHidden: document.querySelector('.session-alert').hidden,
-    }));
-    if (beforeWarn.hasWarn || !beforeWarn.alertHidden) {
-      throw new Error(`5-minute warning should not show at start: ${JSON.stringify(beforeWarn)}`);
+    const beforeWarn = await clockPage.evaluate(() => {
+      const live = document.querySelector('.session-live');
+      return {
+        hasWarn: document.querySelector('.session-banner .clock').classList.contains('warning'),
+        pillHidden: document.querySelector('.session-alert').hidden,
+        livePresent: Boolean(live),
+        liveHidden: Boolean(live?.hidden) || getComputedStyle(live).display === 'none',
+        liveRole: live?.getAttribute('role'),
+        liveAttr: live?.getAttribute('aria-live'),
+        liveText: live?.textContent ?? '',
+      };
+    });
+    if (
+      beforeWarn.hasWarn ||
+      !beforeWarn.pillHidden ||
+      !beforeWarn.livePresent ||
+      beforeWarn.liveHidden ||
+      beforeWarn.liveRole !== 'status' ||
+      beforeWarn.liveAttr !== 'polite' ||
+      beforeWarn.liveText !== ''
+    ) {
+      throw new Error(`5-minute live region should be mounted, unhidden, and empty before warning: ${JSON.stringify(beforeWarn)}`);
     }
     await clockPage.evaluate(() => {
       window.__warnAnnouncements = 0;
-      const el = document.querySelector('.session-alert');
+      const el = document.querySelector('.session-live');
       new MutationObserver(() => {
         if (el.textContent.includes('5 minutes left')) window.__warnAnnouncements++;
       }).observe(el, { childList: true, characterData: true, subtree: true });
@@ -795,12 +813,12 @@ try {
     await clockPage.clock.fastForward('40:02');
     const inWarn = await clockPage.evaluate(() => ({
       hasWarn: document.querySelector('.session-banner .clock').classList.contains('warning'),
-      alertHidden: document.querySelector('.session-alert').hidden,
-      alertText: document.querySelector('.session-alert').textContent,
-      live: document.querySelector('.session-alert').getAttribute('aria-live'),
+      pillHidden: document.querySelector('.session-alert').hidden,
+      pillText: document.querySelector('.session-alert').textContent,
+      liveText: document.querySelector('.session-live').textContent,
       announcements: window.__warnAnnouncements,
     }));
-    if (!inWarn.hasWarn || inWarn.alertHidden || inWarn.alertText !== '5 minutes left' || inWarn.live !== 'polite' || inWarn.announcements !== 1) {
+    if (!inWarn.hasWarn || inWarn.pillHidden || inWarn.pillText !== '5 minutes left' || inWarn.liveText !== '5 minutes left' || inWarn.announcements !== 1) {
       throw new Error(`unexpected 5-minute warning state: ${JSON.stringify(inWarn)}`);
     }
     // Several more ticks inside the last 5 minutes must not repeat the announcement.

@@ -1774,7 +1774,7 @@ body.resizing-y * {
   --ring-color: var(--ok);
 }
 .score-ring.band-mid {
-  --ring-color: var(--warn);
+  --ring-color: var(--text-2);
 }
 .score-ring.band-low {
   --ring-color: var(--bad);
@@ -1800,7 +1800,7 @@ body.resizing-y * {
 }
 .score-band.band-mid {
   background: var(--panel-3);
-  color: var(--warn);
+  color: var(--text-2);
 }
 .score-band.band-low {
   background: var(--bad-soft);

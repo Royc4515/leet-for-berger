@@ -62,6 +62,9 @@ let interviewProblems = null; // id -> hydrated problem, loaded before the clock
 
 export function renderInterview(root, { store }) {
   if (!interview) return renderInterviewSetup(root, { store });
+  if (!interview.endedAt && Interview.isOver(interview)) {
+    interview = { ...Interview.finish(interview), activeProblemId: interview.activeProblemId };
+  }
   if (interview.endedAt) return renderInterviewReport(root);
   return renderInterviewActive(root, { store });
 }
@@ -278,12 +281,14 @@ function renderInterviewSetup(root, { store }) {
  */
 function createSessionBanner({ kind, label, clockText, stateEl = null, middleEl = null, exitLabel, exitVariant = 'btn-danger', onExit }) {
   const clock = h('span.clock', { 'aria-live': 'off' }, clockText);
-  const alertEl = h('span.session-alert', { role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true', hidden: true });
+  // Keep the live region mounted and unhidden from first render so AT announces its first text update.
+  const liveEl = h('span.sr-only.session-live', { role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });
+  const alertEl = h('span.session-alert', { 'aria-hidden': 'true', hidden: true });
   const exitBtn = h(`button.btn.${exitVariant}.btn-sm.session-exit`, { type: 'button', onClick: onExit }, exitLabel);
   const el = h(
     `header.session-banner.${kind}`,
     {},
-    h('div.session-banner-main', {}, h('strong.session-label', {}, label), clock, alertEl, stateEl),
+    h('div.session-banner-main', {}, h('strong.session-label', {}, label), clock, alertEl, liveEl, stateEl),
     middleEl ?? null,
     exitBtn,
   );
@@ -292,6 +297,7 @@ function createSessionBanner({ kind, label, clockText, stateEl = null, middleEl 
     el,
     clock,
     alertEl,
+    liveEl,
     exitBtn,
     setClock(text) {
       clock.textContent = text;
@@ -301,6 +307,7 @@ function createSessionBanner({ kind, label, clockText, stateEl = null, middleEl 
       warned = true;
       alertEl.hidden = false;
       alertEl.textContent = text;
+      liveEl.textContent = text;
     },
   };
 }
@@ -399,17 +406,17 @@ function renderInterviewActive(root, { store }) {
   };
   mountProblem();
 
-  const updateTimer = () => {
+  const updateTimer = ({ allowEnd = true } = {}) => {
     const ts = Interview.timerState(interview);
     banner.setClock(Interview.formatClock(ts.ms));
     banner.clock.classList.toggle('warning', ts.warning);
     if (ts.warning) banner.announceWarning('5 minutes left');
-    if (ts.expired) {
+    if (allowEnd && ts.expired) {
       toast("Time's up.", 'warn');
       end();
     }
   };
-  updateTimer();
+  updateTimer({ allowEnd: false });
   const tick = setInterval(updateTimer, 500);
 
   const onVisibility = () => {
@@ -751,7 +758,8 @@ function startBattle(root, { store, problem, level }) {
   };
   const you = bar('You', 'you');
   const them = bar(bot.name, 'bot');
-  const raceResult = h('span.session-state', { role: 'status', 'aria-live': 'polite' }, difficulty(problem.difficulty));
+  // The toast host already announces the race outcome via role="status", so keep this static.
+  const raceResult = h('span.session-state', {}, difficulty(problem.difficulty));
 
   const leave = () => {
     window.dispatchEvent(new HashChangeEvent('hashchange'));
