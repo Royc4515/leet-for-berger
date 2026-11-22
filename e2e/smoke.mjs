@@ -726,22 +726,106 @@ try {
     await page.waitForSelector('.format-grid');
   });
 
-  await check('interview: lockdown hides nav, reveal disabled, end produces report', async () => {
+  await check('interview: lockdown hides nav, reveal disabled, switcher tracks status, end produces banded report with Review links', async () => {
     await page.goto(`${BASE}#/interview`);
     await page.click('button:has-text("Start interview")');
     await page.waitForSelector('.session-banner.interview');
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     if (await page.locator('.app-header').isVisible()) throw new Error('nav visible during lockdown');
     if (!(await page.locator('button[data-action="reveal"]').isDisabled())) throw new Error('reveal enabled during interview');
+    if ((await page.getAttribute('.problem-switcher button:first-child', 'data-status')) !== 'todo') {
+      throw new Error('problem 1 should start as todo in problem switcher');
+    }
+    await page.click('button[data-action="run"]');
+    await page.waitForSelector('.result-head', { timeout: 30000 });
+    if ((await page.getAttribute('.problem-switcher button:first-child', 'data-status')) !== 'tried') {
+      throw new Error('problem 1 should update to tried after a run');
+    }
+    await expectText('.problem-switcher button:first-child', /Tried/);
     await shot('07-interview');
     await page.click('button:has-text("End interview")');
     await page.click('dialog.modal button:has-text("End interview")');
-    await page.waitForSelector('.score-ring');
+    await page.waitForSelector('.score-ring[data-band]');
+    await page.waitForSelector('.score-band');
     if (!(await page.locator('.app-header').isVisible())) throw new Error('nav not restored after interview');
+    const reportRows = await page.evaluate(() =>
+      [...document.querySelectorAll('.report-problem')].map((row) => ({
+        title: row.querySelector('.report-problem-title')?.textContent ?? '',
+        hasDiff: Boolean(row.querySelector('.difficulty')),
+        href: row.querySelector('a.report-review')?.getAttribute('href') ?? '',
+        label: row.querySelector('a.report-review')?.getAttribute('aria-label') ?? '',
+      })),
+    );
+    if (reportRows.length !== 2 || reportRows.some((r) => !r.hasDiff || !r.href.startsWith('#/problem/') || !r.label.includes(r.title))) {
+      throw new Error(`report rows missing difficulty or named Review link: ${JSON.stringify(reportRows)}`);
+    }
     await shot('08-report');
     // Reset to setup so subsequent 390px route checks capture and measure the setup screen.
     await page.click('button:has-text("New interview")');
     await page.waitForSelector('.format-grid');
+  });
+
+  await check('interview timer: warning colour and single "5 minutes left" announcement in the last five minutes', async () => {
+    const clockPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    clockPage.on('console', (m) => m.type() === 'error' && errors.push(`console (clock page): ${m.text()}`));
+    clockPage.on('pageerror', (e) => errors.push(`pageerror (clock page): ${e.message}`));
+    await clockPage.addInitScript(() => {
+      window.LFB_SUPABASE_URL = '';
+      window.LFB_SUPABASE_ANON_KEY = '';
+    });
+    await clockPage.clock.install();
+    await clockPage.goto(`${BASE}#/interview`);
+    await clockPage.waitForSelector('.format-grid');
+    await clockPage.click('.format-card[data-format="screen"]');
+    await clockPage.click('button:has-text("Start interview")');
+    await clockPage.waitForSelector('.session-banner.interview .clock');
+    const beforeWarn = await clockPage.evaluate(() => {
+      const live = document.querySelector('.session-live');
+      return {
+        hasWarn: document.querySelector('.session-banner .clock').classList.contains('warning'),
+        pillHidden: document.querySelector('.session-alert').hidden,
+        livePresent: Boolean(live),
+        liveHidden: Boolean(live?.hidden) || getComputedStyle(live).display === 'none',
+        liveRole: live?.getAttribute('role'),
+        liveAttr: live?.getAttribute('aria-live'),
+        liveText: live?.textContent ?? '',
+      };
+    });
+    if (
+      beforeWarn.hasWarn ||
+      !beforeWarn.pillHidden ||
+      !beforeWarn.livePresent ||
+      beforeWarn.liveHidden ||
+      beforeWarn.liveRole !== 'status' ||
+      beforeWarn.liveAttr !== 'polite' ||
+      beforeWarn.liveText !== ''
+    ) {
+      throw new Error(`5-minute live region should be mounted, unhidden, and empty before warning: ${JSON.stringify(beforeWarn)}`);
+    }
+    await clockPage.evaluate(() => {
+      window.__warnAnnouncements = 0;
+      const el = document.querySelector('.session-live');
+      new MutationObserver(() => {
+        if (el.textContent.includes('5 minutes left')) window.__warnAnnouncements++;
+      }).observe(el, { childList: true, characterData: true, subtree: true });
+    });
+    // Jump 40m02s into the 45-minute phone screen so ~4:58 remains.
+    await clockPage.clock.fastForward('40:02');
+    const inWarn = await clockPage.evaluate(() => ({
+      hasWarn: document.querySelector('.session-banner .clock').classList.contains('warning'),
+      pillHidden: document.querySelector('.session-alert').hidden,
+      pillText: document.querySelector('.session-alert').textContent,
+      liveText: document.querySelector('.session-live').textContent,
+      announcements: window.__warnAnnouncements,
+    }));
+    if (!inWarn.hasWarn || inWarn.pillHidden || inWarn.pillText !== '5 minutes left' || inWarn.liveText !== '5 minutes left' || inWarn.announcements !== 1) {
+      throw new Error(`unexpected 5-minute warning state: ${JSON.stringify(inWarn)}`);
+    }
+    // Several more ticks inside the last 5 minutes must not repeat the announcement.
+    await clockPage.clock.fastForward('00:05');
+    const countAfter = await clockPage.evaluate(() => window.__warnAnnouncements);
+    if (countAfter !== 1) throw new Error(`"5 minutes left" announced ${countAfter} times, expected 1`);
+    await clockPage.close();
   });
 
   await check('battle setup: opponent cards, difficulty and topic chips (no select), keyboard picker, pinned Start', async () => {
@@ -804,13 +888,27 @@ try {
     await page.click('.chip-group[aria-label="Difficulty"] button:has-text("All difficulties")');
   });
 
-  await check('battle: race banner with two progress bars', async () => {
+  await check('battle: lockdown hides nav, two distinct thick race bars, Leave race restores nav', async () => {
     await page.goto(`${BASE}#/battle`);
     await page.click('button:has-text("Start race")');
     await page.waitForSelector('.session-banner.battle .race-row');
-    if ((await page.locator('.race-row').count()) !== 2) throw new Error('expected 2 race rows');
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    if (await page.locator('.app-header').isVisible()) throw new Error('nav visible during battle race');
+    const race = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll('.race-row')];
+      const track = document.querySelector('.race-track');
+      const youColor = getComputedStyle(document.querySelector('.race-fill-you')).backgroundColor;
+      const botColor = getComputedStyle(document.querySelector('.race-fill-bot')).backgroundColor;
+      return { count: rows.length, trackHeight: track?.getBoundingClientRect().height ?? 0, youColor, botColor };
+    });
+    if (race.count !== 2) throw new Error(`expected 2 race rows, got ${race.count}`);
+    if (race.trackHeight < 9.5) throw new Error(`race bar track too thin: ${race.trackHeight}px`);
+    if (race.youColor === race.botColor) throw new Error(`race bars should use two distinct colours, both were ${race.youColor}`);
     await shot('09-battle');
+    await page.click('button:has-text("Leave race")');
+    await page.click('dialog.modal button:has-text("Leave race")');
+    await page.waitForSelector('.opponent-grid');
+    if (!(await page.locator('.app-header').isVisible())) throw new Error('nav not restored after leaving battle race');
   });
 
   await check('phone workspace: Description / Code / Results tabs, pinned Run / Submit, verdict in view', async () => {
