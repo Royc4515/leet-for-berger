@@ -71,6 +71,16 @@ const expectText = async (sel, re, timeout = 15000) => {
 const expectDialog = (p, re) =>
   p.waitForFunction((src) => new RegExp(src).test(document.querySelector('dialog.modal')?.textContent ?? ''), re.source, { timeout: 5000 });
 const setCode = (code) => page.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
+const revealSolution = async (p = page) => {
+  const before = await p.evaluate(() => window.monaco.editor.getModels().map((m) => m.getValue()).join('\n'));
+  await p.click('button:has-text("Reveal Solution")');
+  await p.click('dialog.modal button:has-text("Reveal")');
+  await p.waitForFunction(
+    (prev) => window.monaco.editor.getModels().map((m) => m.getValue()).join('\n') !== prev,
+    before,
+    { timeout: 15000 },
+  );
+};
 
 try {
   await check('a fresh visit to #/ loads no workspace, runner program builder or supabase-js, and the dashboard renders', async () => {
@@ -90,6 +100,15 @@ try {
     await fresh.waitForTimeout(800);
     const bad = urls.filter((u) => /ui\/views\/workspace\.js|engine\/programs\/build\.js|supabase-js/.test(u));
     if (bad.length) throw new Error(`loaded on a fresh #/: ${bad.join(', ')}`);
+    const fontFamilies = await fresh.evaluate(async () => {
+      await document.fonts.ready;
+      return [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family.replace(/['"]/g, ''));
+    });
+    if (!fontFamilies.includes('Inter') || !fontFamilies.includes('JetBrains Mono')) {
+      throw new Error(`expected Inter and JetBrains Mono to be loaded, got: ${[...new Set(fontFamilies)].join(', ')}`);
+    }
+    const externalFonts = urls.filter((u) => /\.woff2(\?|$)/.test(u) && !u.startsWith(BASE));
+    if (externalFonts.length) throw new Error(`external woff2 requests: ${externalFonts.join(', ')}`);
     const modules = urls.filter((u) => u.startsWith(BASE) && u.endsWith('.js')).length;
     console.log(`  # fresh #/: ${modules} local modules, ${urls.length} requests, dashboard ready in ${Math.round(ms)} ms`);
     await ctx.close();
@@ -127,8 +146,7 @@ try {
   });
 
   await check('Reveal Solution (confirm dialog) then Submit is Accepted 15/15', async () => {
-    await page.click('button:has-text("Reveal Solution")');
-    await page.click('dialog.modal button:has-text("Reveal")');
+    await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/);
     await expectText('.result-head', /15 \/ 15/);
@@ -217,8 +235,7 @@ try {
   if (!skipPython) {
     await check('Python via Pyodide: reveal + submit is Accepted', async () => {
       await page.selectOption('.toolbar select', 'python');
-      await page.click('button:has-text("Reveal Solution")');
-      await page.click('dialog.modal button:has-text("Reveal")');
+      await revealSolution();
       await page.click('button:has-text("Submit")');
       await expectText('.result-head', /Accepted/, 90000);
       await page.selectOption('.toolbar select', 'javascript');
@@ -228,8 +245,7 @@ try {
   // TypeScript is type-checked and transpiled by Monaco's TypeScript service, then runs as JavaScript.
   await check('TypeScript: reveal + submit is Accepted 15/15 on a function problem', async () => {
     await page.selectOption('.toolbar select', 'typescript');
-    await page.click('button:has-text("Reveal Solution")');
-    await page.click('dialog.modal button:has-text("Reveal")');
+    await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 60000);
     await expectText('.result-head', /15 \/ 15/);
@@ -283,8 +299,7 @@ try {
       if (/editor only/.test(label)) throw new Error(`Java still editor-only: ${label}`);
       await remote.selectOption('.toolbar select', 'java');
       if (!(await remote.locator('.runner-note').isVisible())) throw new Error('no "Runs on the server" note');
-      await remote.click('button:has-text("Reveal Solution")');
-      await remote.click('dialog.modal button:has-text("Reveal")');
+      await revealSolution(remote);
       await remote.click('button:has-text("Submit")');
       await remote.waitForFunction(() => /Accepted/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 60000 });
       await remote.waitForFunction(() => /15 \/ 15/.test(document.querySelector('.result-head')?.textContent ?? ''));
@@ -310,8 +325,7 @@ try {
     await page.goto(`${BASE}#/problem/min-stack`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class MinStack')));
-    await page.click('button:has-text("Reveal Solution")');
-    await page.click('dialog.modal button:has-text("Reveal")');
+    await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 30000);
     await expectText('.result-head', /15 \/ 15/);
@@ -320,8 +334,7 @@ try {
   await check('design problem (Min Stack): TypeScript reveal + submit is Accepted through the JavaScript adapter', async () => {
     await page.selectOption('.toolbar select', 'typescript');
     await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class MinStack') && m.getValue().includes(': number')));
-    await page.click('button:has-text("Reveal Solution")');
-    await page.click('dialog.modal button:has-text("Reveal")');
+    await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 60000);
     await expectText('.result-head', /15 \/ 15/);
@@ -333,8 +346,7 @@ try {
     await page.goto(`${BASE}#/problem/random-link-copy`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('function copyRandomList')));
-    await page.click('button:has-text("Reveal Solution")');
-    await page.click('dialog.modal button:has-text("Reveal")');
+    await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 30000);
     await expectText('.result-head', /15 \/ 15/);
@@ -347,8 +359,7 @@ try {
         await page.goto(`${BASE}#/problem/${id}`);
         await page.waitForSelector('.monaco-editor', { timeout: 30000 });
         await page.selectOption('.toolbar select', 'python');
-        await page.click('button:has-text("Reveal Solution")');
-        await page.click('dialog.modal button:has-text("Reveal")');
+        await revealSolution();
         await page.click('button:has-text("Submit")');
         await expectText('.result-head', /Accepted/, 90000);
         await page.selectOption('.toolbar select', 'javascript');
@@ -360,8 +371,7 @@ try {
     await page.goto(`${BASE}#/problem/random-pool`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class RandomizedSet')));
-    await page.click('button:has-text("Reveal Solution")');
-    await page.click('dialog.modal button:has-text("Reveal")');
+    await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 30000);
     await expectText('.result-head', /15 \/ 15/);
@@ -420,8 +430,7 @@ try {
     await page.goto(`${BASE}#/problem/pair-sum-target`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('function pairSum')));
-    await page.click('button:has-text("Reveal Solution")');
-    await page.click('dialog.modal button:has-text("Reveal")');
+    await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 30000);
     const text = await growthHeadline();
@@ -433,8 +442,7 @@ try {
 
   await check('growth estimate: TypeScript Pair Sum Target is timed as its transpiled JavaScript', async () => {
     await page.selectOption('.toolbar select', 'typescript');
-    await page.click('button:has-text("Reveal Solution")');
-    await page.click('dialog.modal button:has-text("Reveal")');
+    await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 60000);
     const text = await growthHeadline();
@@ -485,8 +493,7 @@ try {
       await page.goto(`${BASE}#/problem/pair-sum-target`);
       await page.waitForSelector('.monaco-editor', { timeout: 30000 });
       await page.selectOption('.toolbar select', 'python');
-      await page.click('button:has-text("Reveal Solution")');
-      await page.click('dialog.modal button:has-text("Reveal")');
+      await revealSolution();
       await page.click('button:has-text("Submit")');
       await expectText('.result-head', /Accepted/, 90000);
       const text = await growthHeadline();
@@ -501,8 +508,7 @@ try {
       await page.goto(`${BASE}#/problem/reverse-list`);
       await page.waitForSelector('.monaco-editor', { timeout: 30000 });
       await page.selectOption('.toolbar select', 'python');
-      await page.click('button:has-text("Reveal Solution")');
-      await page.click('dialog.modal button:has-text("Reveal")');
+      await revealSolution();
       await page.click('button:has-text("Submit")');
       await expectText('.result-head', /Accepted/, 90000);
       await page.selectOption('.toolbar select', 'javascript');
@@ -524,8 +530,7 @@ try {
     await setCode('WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM r) SELECT n, n, n, n FROM r WHERE n < 0');
     await page.click('button:has-text("Run Code")');
     await expectText('.result-head', /Time Limit Exceeded/, 30000);
-    await page.click('button:has-text("Reveal Solution")');
-    await page.click('dialog.modal button:has-text("Reveal")');
+    await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 60000);
     await expectText('.result-head', /15 \/ 15/);
@@ -635,13 +640,26 @@ try {
     await shot('10-mobile');
     // The page must never scroll sideways on a phone: anything wider than the viewport is clipped
     // for the reader (company chips, statement). Wide content scrolls inside its own container.
-    for (const route of ['#/', '#/problem/smallest-base-segment', '#/path', '#/companies', '#/companies/google', '#/modes']) {
-      await page.goto(`${BASE}${route}`);
-      await page.waitForSelector('#view > *', { timeout: 30000 });
-      await page.waitForTimeout(500);
+    const mobileRoutes = [
+      { name: '390-dashboard', url: '#/', wait: '.problem-table tbody tr a.problem-link' },
+      { name: '390-workspace', url: '#/problem/smallest-base-segment', wait: '.monaco-editor' },
+      { name: '390-path', url: '#/path', wait: '.path-tier' },
+      { name: '390-companies', url: '#/companies', wait: '.company-card' },
+      { name: '390-company-google', url: '#/companies/google', wait: '.problem-table tbody tr' },
+      { name: '390-modes', url: '#/modes', wait: '.mode-card' },
+      { name: '390-interview', url: '#/interview', wait: '.setup-card' },
+      { name: '390-battle', url: '#/battle', wait: '.pick-row' },
+      { name: '390-privacy', url: 'privacy.html', wait: 'article.legal h1' },
+    ];
+    for (const r of mobileRoutes) {
+      await page.goto(`${BASE}${r.url}`);
+      await page.waitForSelector(r.wait, { timeout: 30000 });
+      await page.waitForTimeout(400);
       const { scrollWidth, innerWidth } = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }));
-      if (scrollWidth > innerWidth) throw new Error(`${route} overflows at 390px: scrollWidth ${scrollWidth} > ${innerWidth}`);
+      if (scrollWidth > innerWidth) throw new Error(`${r.url} overflows at 390px: scrollWidth ${scrollWidth} > ${innerWidth}`);
+      await shot(r.name);
     }
+    await page.goto(`${BASE}#/`);
     await page.setViewportSize({ width: 1440, height: 900 });
   });
 

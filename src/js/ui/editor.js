@@ -106,6 +106,7 @@ export function loadMonaco() {
         () => {
           clearTimeout(timer);
           configureTypeScript(window.monaco);
+          document.fonts?.ready.then(() => window.monaco?.editor?.remeasureFonts?.());
           resolve(window.monaco);
         },
         () => {
