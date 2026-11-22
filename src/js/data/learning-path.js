@@ -15,6 +15,26 @@ const DIFFICULTY_RANK = { Easy: 0, Medium: 1, Hard: 2 };
 /** Tier names, matching the section comments in taxonomy.js. */
 export const TIER_TITLES = ['Vocabulary', 'First patterns', 'Patterns built on patterns', 'Core data structures', 'Structures on structures', 'Advanced'];
 
+/** What finishing each tier means, one line each, in TIER_TITLES order. */
+export const TIER_SUMMARIES = [
+  'You can store, count and look things up in one pass, and read a basic SQL query.',
+  'You know the first named patterns: two pointers, stacks, prefix sums, sorting, bits and recursion.',
+  'You can build on those patterns: sliding windows, binary search, linked list surgery and greedy choices.',
+  'You can work with trees, search with backtracking and write 1D dynamic programming.',
+  'You can use heaps and tries, traverse graphs and write 2D dynamic programming.',
+  'You have the advanced tools: union find, advanced graph algorithms and range queries.',
+];
+
+/**
+ * Whether a topic starts expanded: the one holding "Next up", and any topic part-way done.
+ * Untouched and finished topics start collapsed so the page stays scannable.
+ * @param {{ done: number, total: number, holdsNext: boolean }} t
+ * @returns {boolean}
+ */
+export function topicStartsOpen({ done, total, holdsNext }) {
+  return holdsNext || (done > 0 && done < total);
+}
+
 /**
  * @typedef {{ id: string, concept: string, difficulty: string }} PathProblem  id = our problem id
  * @typedef {{ id: string, title: string, prereqs: string[], problems: PathProblem[] }} PathTopic

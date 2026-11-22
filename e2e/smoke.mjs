@@ -654,6 +654,33 @@ try {
     // Earlier steps solved problems on the path, so progress must be above zero.
     await expectText('.path-summary', /[1-9]\d* \/ 131 solved/);
     const next = await page.locator('.path-summary a.btn').getAttribute('href');
+    // Step 9: a tier summary line each, topic disclosures with aria-expanded, a mini bar on every
+    // topic header (visible while collapsed), full-row links, and the Next up row is in an open topic.
+    const shape = await page.evaluate(() => {
+      const toggles = [...document.querySelectorAll('.path-topic-toggle')];
+      const collapsed = toggles.filter((t) => t.getAttribute('aria-expanded') === 'false');
+      return {
+        descs: document.querySelectorAll('.path-tier-desc').length,
+        toggles: toggles.length,
+        badToggle: toggles.filter((t) => !['true', 'false'].includes(t.getAttribute('aria-expanded')) || !document.getElementById(t.getAttribute('aria-controls'))).length,
+        collapsed: collapsed.length,
+        collapsedMini: collapsed.filter((t) => t.querySelector('.path-mini-bar')?.getBoundingClientRect().width > 0).length,
+        hiddenMismatch: toggles.filter((t) => document.getElementById(t.getAttribute('aria-controls')).hidden === (t.getAttribute('aria-expanded') === 'true')).length,
+        rowLinks: [...document.querySelectorAll('.path-problems li')].filter((li) => li.firstElementChild?.matches('a.path-row[href^="#/problem/"]')).length,
+        nextVisible: Boolean(document.querySelector('.path-problems li.is-next .path-next-tag')?.getClientRects().length),
+      };
+    });
+    if (shape.descs !== 6 || !shape.toggles || shape.badToggle || shape.hiddenMismatch || shape.rowLinks !== 131 || !shape.nextVisible) {
+      throw new Error(`learning path structure: ${JSON.stringify(shape)}`);
+    }
+    if (!shape.collapsed || shape.collapsedMini !== shape.collapsed) throw new Error(`collapsed topics need a visible mini bar: ${JSON.stringify(shape)}`);
+    // The disclosure opens and closes its own panel.
+    const firstClosed = page.locator('.path-topic-toggle[aria-expanded="false"]').first();
+    const panelId = await firstClosed.getAttribute('aria-controls');
+    await firstClosed.click();
+    if ((await page.getAttribute(`[aria-controls="${panelId}"]`, 'aria-expanded')) !== 'true' || (await page.locator(`#${panelId}`).isHidden())) throw new Error('topic toggle did not open its panel');
+    await page.click(`[aria-controls="${panelId}"]`);
+    if (!(await page.locator(`#${panelId}`).isHidden())) throw new Error('topic toggle did not close its panel');
     await shot('05-path');
     await page.click('.path-summary a.btn');
     await page.waitForFunction((h) => location.hash === h, next);
@@ -993,6 +1020,22 @@ try {
     if (phoneCompany.onSite !== 'true' || phoneCompany.offsite) throw new Error(`phone company page should start with on-site rows only: ${JSON.stringify(phoneCompany)}`);
     if (phoneCompany.tooTall.length) throw new Error(`company titles wrap past two lines at 390px: ${JSON.stringify(phoneCompany.tooTall.slice(0, 3))}`);
     if (phoneCompany.shortRows) throw new Error(`${phoneCompany.shortRows} company list rows under 52px`);
+    // Learning path rows on a phone: the subtopic sits on its own line under the title, one line
+    // high, never squeezed into a narrow column beside it.
+    await page.goto(`${BASE}#/path`);
+    await page.waitForSelector('.path-row');
+    const pathRows = await page.evaluate(() =>
+      [...document.querySelectorAll('.path-row')]
+        .filter((r) => r.getClientRects().length)
+        .map((r) => {
+          const t = r.querySelector('.path-row-title').getBoundingClientRect();
+          const c = r.querySelector('.path-concept');
+          const cr = c.getBoundingClientRect();
+          return { text: c.textContent, below: cr.top >= t.bottom - 1, oneLine: cr.height <= parseFloat(getComputedStyle(c).lineHeight) * 1.5 };
+        }),
+    );
+    const badRows = pathRows.filter((r) => !r.below || !r.oneLine);
+    if (!pathRows.length || badRows.length) throw new Error(`path subtopics wrap beside the title at 390px: ${JSON.stringify(badRows.slice(0, 3))}`);
     await page.goto(`${BASE}#/companies`);
     await page.waitForSelector('.company-card');
     const cardTops = await page.evaluate(() => [...document.querySelectorAll('.company-card')].slice(0, 2).map((c) => Math.round(c.getBoundingClientRect().top)));
