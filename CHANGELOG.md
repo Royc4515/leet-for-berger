@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed (design system, Step 5)
+- Companies list (`src/js/ui/views/companies.js`, `src/css/app.css`): company cards are option cards with a two-letter monogram, the name and IL mark, "x of y solved" and a progress bar; two cards per row on a phone. The repeated amber "Major in Israel" pill is gone from the cards; the Israel level is a line only under the "All" scope, where it tells cards apart.
+- Company page: a progress line and bar under the header; difficulty and "On the site only" are chips (the select and checkbox are gone), and "On the site only" starts on for phones. Practice is a real button-styled link whose accessible name includes the problem ("Practice 1. Two Sum", "Practice a similar version of ..."). Frequency is a labelled 3-step meter (High, Medium, Low) in neutral colours instead of an amber bar, and rows with nothing to practice on the site are muted. Solved state uses the shared dot-plus-word status.
+- Phone list rows (<= 640 px): the company table becomes rows with the title on its own line (two lines at most) and status, difficulty, frequency and Practice on the second; Practice stretches over the row, rows are at least 52 px. The tablet rule that hid a table's 4th column no longer hides the company frequency.
+- Pure helpers in `src/js/data/company-sets.js` with unit tests: `monogram(name)` and `frequencyLevel(frequency)` (cut points 60 and 75 split the shipped rows into rough thirds).
+- e2e: company cards are option cards, the level line shows only under "All", the chips filter, every Practice link names its problem, and at 390 px the company page starts on-site only, no title wraps past two lines, rows are at least 52 px and the list shows two cards per row.
+
 ### Changed (design system, Step 4)
 - Dashboard layout and progress strip (`src/js/ui/views/dashboard.js`, `src/css/app.css`): stats collapse into a single 4-column horizontal strip across viewports; new visitors with no attempts yet see a compact "Start with the learning path or today's problem" block with a secondary Learning path link instead of four zeros.
 - Problem of the day and Weak spots (`src/js/ui/views/dashboard.js`, `src/css/app.css`): Problem of the day gets the dashboard's single primary button (`Solve`, switching to `Review` once solved) while Weak spots sits beside it on desktop and hides its empty note below 640 px so problems appear above the fold on phones.
