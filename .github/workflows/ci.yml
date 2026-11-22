@@ -5,14 +5,15 @@ on:
     branches: [main]
   pull_request:
 
-# A new push to the same PR cancels the run it replaces; main keeps every run.
+# A new push to the same PR cancels the run it replaces; every push to main keeps its run.
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # What a PR touches decides what runs. On main everything runs. Each pattern lists the files that
-  # can change that check's outcome; when in doubt a path belongs in the pattern, not out of it.
+  # What a change touches decides what runs, on a PR and on main alike (a push to main is compared
+  # with the commit main pointed to before it). Each pattern lists the files that can change that
+  # check's outcome; when in doubt a path belongs in the pattern, not out of it.
   # ci.yml is in every pattern: a PR that edits a job must run that job before it merges.
   changes:
     runs-on: ubuntu-latest
@@ -27,12 +28,17 @@ jobs:
           fetch-depth: 2
       - id: diff
         run: |
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
-            for k in code solutions db python; do echo "$k=true" >> "$GITHUB_OUTPUT"; done
-            exit 0
+          all() { for k in code solutions db python; do echo "$k=true" >> "$GITHUB_OUTPUT"; done; exit 0; }
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # The PR checkout is a merge commit: its first parent is the base branch tip.
+            files=$(git diff --name-only HEAD^1 HEAD)
+          else
+            # A push to main: compare with where main was before. If that commit is unknown (first
+            # push, force push), run everything rather than guess.
+            before='${{ github.event.before }}'
+            git fetch -q --depth=1 origin "$before" 2>/dev/null || all
+            files=$(git diff --name-only "$before" HEAD) || all
           fi
-          # The PR checkout is a merge commit: its first parent is the base branch tip.
-          files=$(git diff --name-only HEAD^1 HEAD)
           echo "$files"
           has() { if echo "$files" | grep -qE "$1"; then echo "$2=true"; else echo "$2=false"; fi >> "$GITHUB_OUTPUT"; }
           # Anything but docs and Markdown: unit tests and the browser smoke test.
@@ -42,7 +48,8 @@ jobs:
           # Schema and the git -> database sync, which reads the problem files.
           has '^(db/|scripts/db/|src/js/problems/|\.github/workflows/ci\.yml)' db
           # Pyodide steps of the smoke test: Python execution or problem content. A UI-only edit to
-          # e2e/smoke.mjs skips them here; the next run on main runs them.
+          # e2e/smoke.mjs skips them (owner's call, for speed): a change to the smoke test's own
+          # Python steps should also touch one of these paths or ci.yml to run them.
           has '^(src/js/engine/|src/js/problems/|package(-lock)?\.json|\.github/workflows/ci\.yml)' python
 
   # Unit tests, signature checks, database checks and the browser smoke test. Solutions are
