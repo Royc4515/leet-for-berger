@@ -29,6 +29,30 @@ import { shouldAutoSync } from '../../auth/github-sync.js';
 import { createMentorPanel } from '../mentor-panel.js';
 
 const LANG_KEY = 'lfb:lang';
+/** Whether "About this problem" was left open, so following a family link keeps it open. */
+const ABOUT_KEY = 'lfb:about-open';
+/** Below this width the workspace becomes Description / Code / Results tabs (docs/DESIGN_PLAN.md Step 7). */
+const PHONE_QUERY = '(max-width: 820px)';
+const WS_TABS = [
+  ['description', 'Description'],
+  ['code', 'Code'],
+  ['results', 'Results'],
+];
+
+const readFlag = (key) => {
+  try {
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+};
+const writeFlag = (key, on) => {
+  try {
+    localStorage.setItem(key, on ? '1' : '0');
+  } catch {
+    /* private mode: the block simply starts closed next time */
+  }
+};
 
 /** The saved language when this problem offers it; SQL problems offer only SQL. */
 function preferredLanguage(languages) {
@@ -88,6 +112,10 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     showComplexity: allowAssist,
     showFamily: !session,
   });
+  // Companies, complexity and family versions are context, not the task: they sit in one collapsed
+  // block under the tags so the statement comes first (docs/DESIGN_PLAN.md Step 7).
+  const aboutBlock = h('details.about-problem', { open: readFlag(ABOUT_KEY) }, h('summary', {}, 'About this problem'), context.el);
+  aboutBlock.addEventListener('toggle', () => writeFlag(ABOUT_KEY, aboutBlock.open));
   /** Saves one submission to the user's GitHub repository (ADR 0007); the toast says how it went. */
   function pushToGitHub({ language: lang, code, verdict, passed, total, assisted }) {
     services.github
@@ -121,7 +149,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
   if (extras) cleanups.push(extras.dispose);
 
   const left = h(
-    'section.pane.pane-left',
+    'section.pane.pane-left#ws-description',
     { 'aria-label': 'Problem description' },
     session?.problemSwitcher ?? null,
     h(
@@ -130,7 +158,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       h('h1.problem-title', {}, problem.title),
       h('div.problem-tags', {}, difficulty(problem.difficulty), topicLabels.map((t) => h('span.tag', {}, t)), problem.patterns.map((p) => h('span.tag.tag-muted', {}, p))),
     ),
-    context.el,
+    aboutBlock,
     trustedHtml('div.statement', problem.statementHtml),
     h('h2.block-title', {}, 'Examples'),
     problem.examples.map((ex, i) =>
@@ -148,7 +176,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       'div.custom-card',
       {},
       h('div.custom-head', {}, h('h2.block-title', {}, 'Custom Test Input'), h('label.switch', { for: 'custom-toggle' }, customToggle, h('span', {}, 'Use on Run'))),
-      h('p.hint-text', {}, 'Runs as Case 1 on "Run Code". Submissions always use the official 15 tests. JSON string or bare text.'),
+      h('p.hint-text', {}, 'Runs as Case 1 on "Run". Submissions always use the official 15 tests. JSON string or bare text.'),
       customInput,
     ),
   );
@@ -162,29 +190,96 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     { 'aria-label': 'Language' },
     languages.map((l) => h('option', { value: l.id, selected: l.id === language }, l.label + (l.executable || onServer(l.id) ? '' : ' (editor only)'))),
   );
-  const runBtn = h('button.btn.btn-secondary', { type: 'button', title: "Run Code (Ctrl+')" }, 'Run Code');
-  const submitBtn = h('button.btn.btn-primary', { type: 'button', title: 'Submit (Ctrl+Enter)' }, 'Submit');
-  const revealBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, title: allowAssist ? 'Load the optimal solution' : 'Disabled in this mode' }, 'Reveal Solution');
+  const runBtn = h('button.btn.btn-secondary', { type: 'button', title: "Run Code (Ctrl+')", 'data-action': 'run' }, 'Run');
+  const submitBtn = h('button.btn.btn-primary', { type: 'button', title: 'Submit (Ctrl+Enter)', 'data-action': 'submit' }, 'Submit');
+  const revealBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, title: allowAssist ? 'Reveal Solution: load the optimal solution' : 'Disabled in this mode', 'data-action': 'reveal' }, 'Reveal');
   const runnerNote = h('span.runner-note', { title: 'Compiled and run on the code server; judged in your browser' }, 'Runs on the server');
   const showRunnerNote = () => {
     runnerNote.hidden = !onServer(language);
   };
   showRunnerNote();
   const resetBtn = h('button.btn.btn-ghost.btn-icon', { type: 'button', title: 'Reset to starter code', 'aria-label': 'Reset to starter code' }, '↺');
-  const mentorBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, 'aria-pressed': 'false', title: allowAssist ? 'Socratic hints' : 'Disabled in this mode' }, 'AI Mentor');
+  const mentorBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, 'aria-pressed': 'false', title: allowAssist ? 'AI Mentor: Socratic hints' : 'Disabled in this mode', 'data-action': 'mentor' }, 'Mentor');
 
-  const editorHost = h('div.editor-host', {}, h('div.editor-loading', {}, h('span.spinner'), ' Loading editor...'));
-  const consoleBody = h('div.console-body', { 'aria-live': 'polite' });
+  const editorHost = h('div.editor-host#ws-code', {}, h('div.editor-loading', {}, h('span.spinner'), ' Loading editor...'));
+  // A status region (polite). Not atomic: the growth line added after a verdict is read on its own.
+  const consoleBody = h('div.console-body', { role: 'status', 'aria-live': 'polite', 'aria-atomic': 'false' });
   renderIdle(consoleBody);
 
   const rowHandle = h('div.resizer.resizer-y', { 'aria-label': 'Resize editor and console' });
+  // Grouped so the order reads as setup, help, then the two actions; the toolbar wraps rather than
+  // clipping Run and Submit when the mentor narrows the pane.
+  const runGroup = h('div.toolbar-group.toolbar-run', {}, runBtn, submitBtn);
+  const consoleEl = h('div.console#ws-results', {}, h('div.console-title', {}, 'Execution Console'), consoleBody);
   const right = h(
     'section.pane.pane-right',
     { 'aria-label': 'Code editor and console' },
-    h('div.toolbar', {}, langSelect, resetBtn, runnerNote, h('div.toolbar-spacer'), mentorBtn, revealBtn, runBtn, submitBtn),
-    h('div.editor-split', {}, editorHost, rowHandle, h('div.console', {}, h('div.console-title', {}, 'Execution Console'), consoleBody)),
+    h(
+      'div.toolbar',
+      {},
+      h('div.toolbar-group.toolbar-setup', {}, langSelect, resetBtn, runnerNote),
+      h('div.toolbar-group.toolbar-help', {}, mentorBtn, revealBtn),
+      runGroup,
+    ),
+    h('div.editor-split', {}, editorHost, rowHandle, consoleEl),
   );
   const editorSplit = right.querySelector('.editor-split');
+
+  /* ---------- Phone: Description / Code / Results tabs and a pinned Run / Submit bar ---------- */
+  const panels = { description: left, code: editorHost, results: consoleEl };
+  const tabButtons = WS_TABS.map(([id, label]) =>
+    h('button.ws-tab', { type: 'button', role: 'tab', id: `ws-tab-${id}`, 'aria-controls': panels[id].id, 'aria-selected': 'false', tabindex: '-1' }, label),
+  );
+  const wsTabs = h('div.ws-tabs', { role: 'tablist', 'aria-label': 'Workspace' }, tabButtons);
+  const wsActions = h('div.ws-actions');
+  const phoneMq = matchMedia(PHONE_QUERY);
+  let wsTab = 'description';
+
+  /** Shows one phone panel. Monaco measures 0 x 0 while hidden, so it is laid out again on show. */
+  function setTab(id, { focus = false } = {}) {
+    wsTab = id;
+    split.dataset.wsTab = id;
+    tabButtons.forEach((b, i) => {
+      const on = WS_TABS[i][0] === id;
+      b.setAttribute('aria-selected', String(on));
+      b.setAttribute('tabindex', on ? '0' : '-1');
+      if (on && focus) b.focus();
+    });
+    if (id === 'code') requestAnimationFrame(() => editor?.layout());
+  }
+  tabButtons.forEach((b, i) => b.addEventListener('click', () => setTab(WS_TABS[i][0])));
+  // ARIA tabs pattern: arrows move between tabs and select them, Home and End jump to the ends.
+  wsTabs.addEventListener('keydown', (e) => {
+    const i = WS_TABS.findIndex(([id]) => id === wsTab);
+    const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: WS_TABS.length - 1 }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    setTab(WS_TABS[(next + WS_TABS.length) % WS_TABS.length][0], { focus: true });
+  });
+
+  /**
+   * Tabs and the action bar exist only on a phone: there the panels become tabpanels and Run and
+   * Submit move (same elements, same listeners) into the bar that replaces the site's tab bar.
+   */
+  function applyLayout() {
+    const phone = phoneMq.matches;
+    for (const [id] of WS_TABS) {
+      const panel = panels[id];
+      if (phone) {
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', `ws-tab-${id}`);
+      } else {
+        panel.removeAttribute('role');
+        panel.removeAttribute('aria-labelledby');
+      }
+    }
+    // The left pane keeps its own name on desktop; on a phone the tab names it.
+    if (phone) left.removeAttribute('aria-label');
+    else left.setAttribute('aria-label', 'Problem description');
+    if (phone) wsActions.append(runBtn, submitBtn);
+    else runGroup.append(runBtn, submitBtn);
+    requestAnimationFrame(() => editor?.layout());
+  }
 
   const mentor = createMentorPanel({
     getContext: () => ({ problem, language, code: editor?.getValue() ?? '', lastResult }),
@@ -193,8 +288,17 @@ export function renderWorkspace(root, { problem, store, session = null }) {
 
   const colHandle = h('div.resizer.resizer-x', { 'aria-label': 'Resize description and editor' });
   const split = h('div.workspace', {}, left, colHandle, right, mentor.el);
-  mount(root, session?.banner ?? null, split);
+  mount(root, session?.banner ?? null, wsTabs, split, wsActions);
   root.classList.add('view-workspace');
+  // On a phone the Run / Submit bar takes the place of the site's tab bar.
+  document.body.classList.add('has-workspace');
+  setTab('description');
+  applyLayout();
+  phoneMq.addEventListener('change', applyLayout);
+  cleanups.push(() => {
+    phoneMq.removeEventListener('change', applyLayout);
+    document.body.classList.remove('has-workspace');
+  });
 
   cleanups.push(
     attachResizer({ handle: colHandle, container: split, axis: 'x', cssVar: '--left-size', storageKey: 'lfb:split:x', min: 0.22, max: 0.65, initial: 0.4, onResize: () => editor?.layout() }),
@@ -225,7 +329,8 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     });
     ed.addAction('run', () => execute('run'));
     ed.addAction('submit', () => execute('submit'));
-    ed.focus();
+    // On a phone the editor starts on a hidden tab; focusing it there would only pop the keyboard.
+    if (!phoneMq.matches) ed.focus();
   });
   cleanups.push(() => editor?.dispose());
 
@@ -345,6 +450,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     if (kind === 'run' && customToggle.checked && customInput.value.trim()) {
       const parsed = problem.parseCustomInput(customInput.value);
       if (!parsed.ok) {
+        if (phoneMq.matches) setTab('results');
         renderError(consoleBody, `Custom input: ${parsed.error}`);
         return;
       }
@@ -352,6 +458,8 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     }
 
     running = true;
+    // On a phone the verdict is on the Results tab: go there so it shows without scrolling.
+    if (phoneMq.matches) setTab('results');
     runBtn.disabled = submitBtn.disabled = true;
     root.classList.add('is-running');
     const started = performance.now();

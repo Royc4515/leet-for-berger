@@ -58,7 +58,7 @@ test('store.reset returns to an empty guest state and notifies subscribers', () 
 // Guard against a forgotten store: every localStorage key literal in src/js must be either listed
 // as user data or named here as a device preference.
 test('every persisted lfb: key is user data or a known device preference', () => {
-  const DEVICE_PREFS = ['lfb:lang', 'lfb:split:x', 'lfb:split:y'];
+  const DEVICE_PREFS = ['lfb:lang', 'lfb:split:x', 'lfb:split:y', 'lfb:about-open'];
   const files = [];
   const walk = (dir) => {
     for (const f of readdirSync(dir)) {

@@ -253,7 +253,7 @@ function renderInterviewSetup(root, { store }) {
         h(
           'ul.rules.setup-rules',
           {},
-          h('li', {}, 'Lockdown mode: navigation, Reveal Solution, AI Mentor and complexity hints stay off.'),
+          h('li', {}, 'Lockdown mode: navigation, Reveal, Mentor and complexity hints stay off.'),
           h('li', {}, 'JavaScript, TypeScript and Python run live; Java, C++, C, C# and Go are editor-only.'),
           h('li', {}, 'Tab switches cost integrity points; your best run per problem counts when time ends.'),
         ),
@@ -416,7 +416,7 @@ export function renderBattle(root, { store }) {
     mount(
       barSummary,
       h('div.setup-bar-title', {}, h('strong', {}, p?.title ?? problemId), p ? difficulty(p.difficulty) : null),
-      h('div.hint-text.setup-bar-sub', {}, `${botLabel} · Bot opponent. Reveal and AI Mentor stay off.`),
+      h('div.hint-text.setup-bar-sub', {}, `${botLabel} · Bot opponent. Reveal and Mentor stay off.`),
     );
   };
 
