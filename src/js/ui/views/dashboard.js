@@ -22,6 +22,7 @@ const topicLabel = (id) => TOPICS.find((t) => t.id === id)?.label ?? id;
 export function renderDashboard(root, { store }) {
   const filters = { difficulty: 'All', topic: 'all', query: '' };
   const available = catalog.filter((p) => p.status === 'available').length;
+  const planned = catalog.length - available;
   const tableBody = h('tbody');
   const tableWrap = h(
     'div.table-wrap.dashboard-table-wrap',
@@ -46,7 +47,7 @@ export function renderDashboard(root, { store }) {
   );
   const emptyHost = h('div.dashboard-empty', { hidden: true });
   const statsRow = h('div.stats-row');
-  const today = h('div.today-row', { 'aria-label': 'Practice today' });
+  const today = h('section.today-row', { 'aria-label': 'Practice today' });
   const countLine = h('p.hint-text.filter-count', { role: 'status' });
   const clearInline = h('button.btn.btn-ghost.btn-sm.filter-clear', { type: 'button', hidden: true, onClick: () => clearFilters() }, 'Clear filters');
   let path = null;
@@ -158,7 +159,9 @@ export function renderDashboard(root, { store }) {
     clearInline.hidden = !active;
     countLine.textContent = active
       ? `${rows.length} of ${catalog.length} ${catalog.length === 1 ? 'problem' : 'problems'}`
-      : `${rows.length} ${rows.length === 1 ? 'problem' : 'problems'}`;
+      : planned > 0
+        ? `${available} ${available === 1 ? 'problem' : 'problems'}, ${planned} coming soon`
+        : `${rows.length} ${rows.length === 1 ? 'problem' : 'problems'}`;
 
     if (!rows.length) {
       tableWrap.hidden = true;
@@ -212,7 +215,6 @@ export function renderDashboard(root, { store }) {
       type: 'button',
       'aria-expanded': 'false',
       'aria-controls': 'dashboard-topics',
-      'aria-pressed': 'false',
       onClick: () => setTopicOpen(!topicOpen),
     },
     'Topic',
@@ -221,7 +223,7 @@ export function renderDashboard(root, { store }) {
   const syncTopicToggle = () => {
     const active = filters.topic !== 'all';
     topicToggle.textContent = active ? `Topic: ${topicLabel(filters.topic)}` : 'Topic';
-    topicToggle.setAttribute('aria-pressed', String(active));
+    topicToggle.classList.toggle('is-active', active);
   };
 
   const topicGroup = chipGroup({
@@ -242,6 +244,12 @@ export function renderDashboard(root, { store }) {
     topicPanel.hidden = !topicOpen;
     topicToggle.setAttribute('aria-expanded', String(topicOpen));
   }
+
+  topicToggle.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !topicOpen) return;
+    e.preventDefault();
+    setTopicOpen(false);
+  });
 
   topicPanel.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;

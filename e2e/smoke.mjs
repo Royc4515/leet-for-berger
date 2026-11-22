@@ -131,8 +131,18 @@ try {
     const totalRows = await page.locator('.dashboard-table tbody tr').count();
     await page.click('.topic-toggle');
     await page.waitForSelector('#dashboard-topics:not([hidden])');
+    if (await page.evaluate(() => document.querySelector('.topic-toggle').hasAttribute('aria-pressed'))) {
+      throw new Error('topic toggle should be a disclosure only (no aria-pressed)');
+    }
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('#dashboard-topics', { state: 'hidden' });
+    await page.click('.topic-toggle');
+    await page.waitForSelector('#dashboard-topics:not([hidden])');
     await page.click('#dashboard-topics .chip:has-text("Graphs")');
     await expectText('.topic-toggle', /Topic: Graphs/);
+    if (!(await page.evaluate(() => document.querySelector('.topic-toggle').classList.contains('is-active')))) {
+      throw new Error('topic toggle missing .is-active when a topic is chosen');
+    }
     const graphRows = await page.locator('.dashboard-table tbody tr').count();
     if (!(graphRows > 0 && graphRows < totalRows)) throw new Error(`Graphs filter did not narrow rows (${graphRows} vs ${totalRows})`);
     await page.focus('#dashboard-topics .chip:has-text("Graphs")');
@@ -146,6 +156,9 @@ try {
     await expectText('.filter-count', /^0 of \d+ problems$/);
     await page.click('.dashboard-empty button:has-text("Clear filters")');
     await page.waitForSelector('.dashboard-table-wrap:not([hidden])');
+    if (await page.evaluate(() => document.querySelector('.topic-toggle').classList.contains('is-active'))) {
+      throw new Error('Clear filters did not remove .is-active from topic toggle');
+    }
     const restoredRows = await page.locator('.dashboard-table tbody tr').count();
     if (restoredRows !== totalRows) throw new Error(`Clear filters restored ${restoredRows} rows, expected ${totalRows}`);
     if ((await page.evaluate(() => document.activeElement?.matches('input.dashboard-search'))) !== true) {

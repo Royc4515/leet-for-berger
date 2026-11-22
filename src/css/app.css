@@ -711,6 +711,11 @@ body.lockdown .tab-bar {
   flex: 1 1 240px;
   min-width: 200px;
 }
+.topic-toggle.is-active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .topic-toggle::after {
   content: '';
   width: 0;
@@ -835,7 +840,7 @@ body.lockdown .tab-bar {
 }
 .status-pill.s-assisted,
 .status-pill.s-attempted {
-  color: var(--accent);
+  color: var(--text-2);
 }
 .status-pill.s-todo {
   color: var(--muted);
@@ -853,11 +858,12 @@ body.lockdown .tab-bar {
   border-color: var(--ok);
 }
 .status-pill.s-assisted .status-dot {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: transparent;
+  border-color: var(--ok);
 }
 .status-pill.s-attempted .status-dot {
-  border-color: var(--accent);
+  background: linear-gradient(90deg, var(--text-2) 50%, transparent 50%);
+  border-color: var(--text-2);
 }
 .status-icon {
   display: inline-block;
@@ -873,11 +879,12 @@ body.lockdown .tab-bar {
   border-color: var(--ok);
 }
 .status-icon.s-assisted {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: transparent;
+  border-color: var(--ok);
 }
 .status-icon.s-attempted {
-  border-color: var(--accent);
+  background: linear-gradient(90deg, var(--text-2) 50%, transparent 50%);
+  border-color: var(--text-2);
 }
 
 /* ---------- Workspace ---------- */
