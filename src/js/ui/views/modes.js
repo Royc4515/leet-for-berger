@@ -96,7 +96,7 @@ function renderInterviewSetup(root, { store }) {
       h(
         'div.hint-text.setup-bar-sub',
         {},
-        `${format.note} · ${pool.length} problems${companyIds ? ` asked at ${companyName}` : ''}, unsolved first`,
+        `${formatMix(format.slots)} · ${pool.length} problems${companyIds ? ` asked at ${companyName}` : ''}, unsolved first`,
       ),
     );
   };
@@ -151,10 +151,8 @@ function renderInterviewSetup(root, { store }) {
     },
     emptyTitle: 'No matching companies',
     emptyBody: 'Try another search or switch the scope to All companies.',
-    formatCount: ({ filtered, query }) => {
-      const n = query.trim() && filtered === 0 ? 0 : Math.max(0, filtered - 1);
-      return `${n} ${n === 1 ? 'company' : 'companies'} with enough problems on the site. Optional: draws from that company's list.`;
-    },
+    formatCount: ({ matched }) =>
+      `${matched} ${matched === 1 ? 'company' : 'companies'} with enough problems on the site. Optional: draws from that company's list.`,
     formatSelected: (item) =>
       item ? ['Selected: ', h('strong', {}, item.name), ` (${item.count} ${item.count === 1 ? 'problem' : 'problems'})`] : 'Selected: Any company',
     renderOption: (item, { scope: scopeVal }) => ({

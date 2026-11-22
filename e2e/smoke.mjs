@@ -672,7 +672,8 @@ try {
     await page.click('.segmented-btn:has-text("All")');
     if ((await page.locator('.company-option').count()) <= 2) throw new Error('"All" should list more companies');
     await shot('06-oa-setup-picker');
-    await expectText('.setup-bar', /2 Medium \+ 1 Hard, 90 minutes/);
+    await expectText('.setup-bar', /90 min/);
+    await expectText('.setup-bar', /2 Medium \+ 1 Hard/);
     await expectText('.setup-bar', /asked at Google/);
     await shot('06-oa-setup');
     await page.click('button:has-text("Start interview")');
@@ -825,21 +826,35 @@ try {
     const cardTops = await page.evaluate(() => [...document.querySelectorAll('.company-card')].slice(0, 2).map((c) => Math.round(c.getBoundingClientRect().top)));
     if (cardTops[0] !== cardTops[1]) throw new Error(`expected two company cards per row at 390px: ${JSON.stringify(cardTops)}`);
 
-    // Setup screens at 390x844: Start button is in the viewport above the 56 px bottom tab bar
-    // right on render, and pickers do not create nested scroll boxes on phones.
+    // Setup screens at 390x844: Start button is in the viewport at or above .tab-bar's top
+    // right on render, elementFromPoint at its center lands inside .setup-bar, and pickers do
+    // not create nested scroll boxes on phones.
     for (const setup of [
       { url: '#/interview', wait: '.company-option[data-slug="google"]', button: 'Start interview' },
       { url: '#/battle', wait: '.pick-row', button: 'Start race' },
     ]) {
       await page.goto(`${BASE}${setup.url}`);
       await page.waitForSelector(setup.wait, { timeout: 30000 });
-      const btnBox = await page.locator(`button:has-text("${setup.button}")`).boundingBox();
-      if (!btnBox || btnBox.y < 0 || btnBox.y + btnBox.height > 844 - 55) {
-        throw new Error(`${setup.url} "${setup.button}" is outside 390x844 viewport above tab bar: ${JSON.stringify(btnBox)}`);
+      const checkBar = await page.evaluate((label) => {
+        const btn = [...document.querySelectorAll('.setup-bar button')].find((b) => b.textContent.trim() === label);
+        const tab = document.querySelector('.tab-bar');
+        if (!btn || !tab) return { missing: true };
+        const br = btn.getBoundingClientRect();
+        const tr = tab.getBoundingClientRect();
+        const hit = document.elementFromPoint(br.left + br.width / 2, br.top + br.height / 2);
+        return {
+          top: br.top,
+          bottom: br.bottom,
+          tabTop: tr.top,
+          hitsBar: Boolean(hit?.closest('.setup-bar')),
+          overflowY: getComputedStyle(document.querySelector('.picker-options')).overflowY,
+        };
+      }, setup.button);
+      if (checkBar.missing || checkBar.top < 0 || checkBar.bottom > 844 || checkBar.bottom > checkBar.tabTop + 1 || !checkBar.hitsBar) {
+        throw new Error(`${setup.url} "${setup.button}" failed 390x844 Start-in-viewport check: ${JSON.stringify(checkBar)}`);
       }
-      const overflowY = await page.evaluate(() => getComputedStyle(document.querySelector('.picker-options')).overflowY);
-      if (overflowY === 'auto' || overflowY === 'scroll') {
-        throw new Error(`${setup.url} picker uses an inner scroll box on phones (overflowY=${overflowY})`);
+      if (checkBar.overflowY === 'auto' || checkBar.overflowY === 'scroll') {
+        throw new Error(`${setup.url} picker uses an inner scroll box on phones (overflowY=${checkBar.overflowY})`);
       }
     }
 
@@ -1006,8 +1021,8 @@ try {
       { url: '#/', wait: '.problem-table tbody tr a.problem-link', name: '390-touch-dashboard' },
       { url: '#/companies', wait: '.company-card', name: '390-touch-companies' },
       { url: '#/companies/google', wait: '.problem-table tbody tr', name: '390-touch-company' },
-      { url: '#/interview', wait: '.company-option[data-slug="google"]', name: '390-touch-interview' },
-      { url: '#/battle', wait: '.pick-row', name: '390-touch-battle' },
+      { url: '#/interview', wait: '.company-option[data-slug="google"]', name: '390-touch-interview', startButton: 'Start interview' },
+      { url: '#/battle', wait: '.pick-row', name: '390-touch-battle', startButton: 'Start race' },
     ];
     for (const sc of screens) {
       await touch.goto(`${BASE}${sc.url}`);
@@ -1015,6 +1030,20 @@ try {
       await touch.waitForTimeout(300);
       const bad = await undersized();
       if (bad.length) throw new Error(`${sc.url} has touch targets under 44px:\n  ${bad.join('\n  ')}`);
+      if (sc.startButton) {
+        const startCheck = await touch.evaluate((label) => {
+          const btn = [...document.querySelectorAll('.setup-bar button')].find((b) => b.textContent.trim() === label);
+          const tab = document.querySelector('.tab-bar');
+          if (!btn || !tab) return { missing: true };
+          const br = btn.getBoundingClientRect();
+          const tr = tab.getBoundingClientRect();
+          const hit = document.elementFromPoint(br.left + br.width / 2, br.top + br.height / 2);
+          return { top: br.top, bottom: br.bottom, tabTop: tr.top, hitsBar: Boolean(hit?.closest('.setup-bar')) };
+        }, sc.startButton);
+        if (startCheck.missing || startCheck.top < 0 || startCheck.bottom > 844 || startCheck.bottom > startCheck.tabTop + 1 || !startCheck.hitsBar) {
+          throw new Error(`${sc.url} "${sc.startButton}" failed 390x844 touch Start-in-viewport check: ${JSON.stringify(startCheck)}`);
+        }
+      }
       if (shotsDir) await touch.screenshot({ path: `${shotsDir}/${sc.name}.png` });
     }
     // The Sign in panel (a phone sheet) follows the same rule.

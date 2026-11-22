@@ -234,8 +234,12 @@ export function createPicker({
   optionsEl.addEventListener('keydown', onOptionsKeydown);
   cleanups.push(() => optionsEl.removeEventListener('keydown', onOptionsKeydown));
 
+  let lastSelectedKey = null;
   const updateSelectedLine = () => {
     const current = allItems.find((x) => x.id === selectedId) ?? null;
+    const key = current ? `${current.id}|${current.label ?? ''}|${current.count ?? ''}` : '';
+    if (key === lastSelectedKey) return;
+    lastSelectedKey = key;
     mount(selectedLine, formatSelected(current, { filtered: filteredItems.length, total: allItems.length }));
   };
 
@@ -260,6 +264,19 @@ export function createPicker({
     searchInput?.focus({ preventScroll: true });
   };
 
+  const alwaysSet = new Set(alwaysIncludeIds);
+  function computeMatchedCount() {
+    const q = String(query ?? '').trim().toLowerCase();
+    let n = 0;
+    for (const item of allItems) {
+      if (alwaysSet.has(item.id)) continue;
+      if (predicate && !predicate(item, scopeValue)) continue;
+      if (q && !String(item.searchText ?? item.label ?? item.id).toLowerCase().includes(q)) continue;
+      n++;
+    }
+    return n;
+  }
+
   function computeFiltered() {
     return filterPickerItems(allItems, {
       query,
@@ -273,6 +290,7 @@ export function createPicker({
   function render() {
     const focusedValue = optionsEl.contains(document.activeElement) ? document.activeElement?.dataset?.value : null;
     filteredItems = computeFiltered();
+    const matched = computeMatchedCount();
 
     // Slice to the current page limit; if the selected item is inside filteredItems but beyond the
     // slice (e.g. chosen by Random), surface it at the top so the selection is immediately visible.
@@ -282,7 +300,7 @@ export function createPicker({
       if (sel) shown = [sel, ...shown.slice(0, Math.max(0, limit - 1))];
     }
 
-    countLine.textContent = statusOverride ?? formatCount({ shown: shown.length, filtered: filteredItems.length, total: allItems.length, query, scope: scopeValue });
+    countLine.textContent = statusOverride ?? formatCount({ shown: shown.length, filtered: filteredItems.length, matched, total: allItems.length, query, scope: scopeValue });
     updateSelectedLine();
 
     if (!shown.length) {
