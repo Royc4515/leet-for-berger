@@ -79,7 +79,8 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Step 1, tokens and fonts (#33)
   - [x] Step 2, shell: phone tab bar, account panel, dialogs, toasts, page states (#34)
   - [x] Step 3, core components: buttons, chips, segmented, tags, difficulty, inputs, cards, 44 px touch targets, shared helpers in `ui/dom.js` (#35)
-  - [ ] Steps 4 to 10: dashboard, companies, pickers, workspace, sessions, learning path, polish
+  - [x] Step 4, dashboard: single-strip stats, new-visitor start block, Today Solve CTA, search-first filters + Topic disclosure + Clear filters empty state, full-row links and phone list rows
+  - [ ] Steps 5 to 10: companies, pickers, workspace, sessions, learning path, polish
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)

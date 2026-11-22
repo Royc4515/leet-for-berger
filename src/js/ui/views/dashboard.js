@@ -2,18 +2,55 @@
  * Dashboard: progress stats + filterable problem bank. Reads only the catalog: no problem module
  * loads here (docs/adr/0008-lazy-problem-modules.md).
  */
-import { h, mount, difficulty, chipGroup, siteFooter } from '../dom.js';
+import { h, mount, difficulty, chipGroup, stateBlock, siteFooter } from '../dom.js';
 import { catalog, catalogEntry, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import { stats, dayKey } from '../../state/progress.js';
 import { dailyProblem, dailyCandidates, weakSpots } from '../../data/recommend.js';
 import { loadPath } from '../../data/path-loader.js';
 
+const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
+const topicLabel = (id) => TOPICS.find((t) => t.id === id)?.label ?? id;
+
+/**
+ * Render the Problem Bank dashboard: compact progress strip (or new-visitor start block),
+ * Problem of the day with primary Solve CTA, Weak spots, search-first filters with Topic
+ * disclosure and result count, and full-row problem table (stacked list rows under 640 px).
+ * @param {HTMLElement} root
+ * @param {{ store: any }} opts
+ * @returns {() => void} cleanup
+ */
 export function renderDashboard(root, { store }) {
   const filters = { difficulty: 'All', topic: 'all', query: '' };
+  const available = catalog.filter((p) => p.status === 'available').length;
   const tableBody = h('tbody');
+  const tableWrap = h(
+    'div.table-wrap.dashboard-table-wrap',
+    {},
+    h(
+      'table.problem-table.dashboard-table',
+      {},
+      h(
+        'thead',
+        {},
+        h(
+          'tr',
+          {},
+          h('th', { scope: 'col' }, 'Title'),
+          h('th', { scope: 'col' }, 'Status'),
+          h('th', { scope: 'col' }, 'Difficulty'),
+          h('th', { scope: 'col' }, 'Topics'),
+        ),
+      ),
+      tableBody,
+    ),
+  );
+  const emptyHost = h('div.dashboard-empty', { hidden: true });
   const statsRow = h('div.stats-row');
   const today = h('div.today-row', { 'aria-label': 'Practice today' });
+  const countLine = h('p.hint-text.filter-count', { role: 'status' });
+  const clearInline = h('button.btn.btn-ghost.btn-sm.filter-clear', { type: 'button', hidden: true, onClick: () => clearFilters() }, 'Clear filters');
   let path = null;
+  let topicOpen = false;
 
   function renderToday() {
     if (!path) return;
@@ -30,15 +67,20 @@ export function renderDashboard(root, { store }) {
       today,
       daily
         ? h(
-            'section.today-card',
+            'section.today-card.today-daily',
             { 'aria-labelledby': 'daily-title' },
-            h('div.today-kicker', { id: 'daily-title' }, 'Problem of the day'),
-            h('div.today-main', {}, h('a.problem-link', { href: `#/problem/${daily.id}` }, daily.title), difficulty(daily.difficulty), dailyDone ? h('span.tag.tag-live', {}, 'Solved') : null),
-            h('div.hint-text', {}, 'The same problem for everyone today. A new one at midnight.'),
+            h(
+              'div.today-daily-copy',
+              {},
+              h('div.today-kicker', { id: 'daily-title' }, 'Problem of the day'),
+              h('div.today-main', {}, h('a.problem-link', { href: `#/problem/${daily.id}` }, daily.title), difficulty(daily.difficulty), dailyDone ? h('span.tag.tag-live', {}, 'Solved') : null),
+              h('div.hint-text', {}, 'The same problem for everyone today. A new one at midnight.'),
+            ),
+            h('a.btn.btn-primary.today-cta', { href: `#/problem/${daily.id}` }, dailyDone ? 'Review' : 'Solve'),
           )
         : null,
       h(
-        'section.today-card',
+        `section.today-card.today-weak${spots.length ? '' : '.is-empty'}`,
         { 'aria-labelledby': 'weak-title' },
         h('div.today-kicker', { id: 'weak-title' }, 'Weak spots'),
         spots.length
@@ -59,68 +101,176 @@ export function renderDashboard(root, { store }) {
     );
   }
 
-  const statCard = (label, value, sub) => h('div.stat-card', {}, h('div.stat-label', {}, label), h('div.stat-value', {}, value), sub ? h('div.stat-sub', {}, sub) : null);
+  const statCell = (label, value, sub) =>
+    h('div.stat-cell', {}, h('div.stat-value', {}, value), h('div.stat-label', {}, label), sub ? h('div.stat-sub', {}, sub) : null);
 
   function renderStats() {
-    const st = stats(store.get());
-    const available = catalog.filter((p) => p.status === 'available').length;
+    const state = store.get();
+    const st = stats(state);
+    const hasActivity = st.submissions > 0 || st.solved > 0 || Object.keys(state.problems).length > 0;
+    statsRow.classList.toggle('stats-empty', !hasActivity);
+    if (!hasActivity) {
+      mount(
+        statsRow,
+        h(
+          'div.start-copy',
+          {},
+          h('strong', {}, 'Start with the learning path or today\'s problem.'),
+          h('span.start-sub', {}, `${available} problems ready to practice, ordered easy to hard.`),
+        ),
+        h('a.btn.btn-secondary.btn-sm', { href: '#/path' }, 'Learning path'),
+      );
+      return;
+    }
     mount(
       statsRow,
-      statCard('Solved', `${st.solved}`, `of ${available} available · ${catalog.length} planned total`),
-      statCard('Streak', `${st.streak} ${st.streak === 1 ? 'day' : 'days'}`, 'Days in a row with an accepted submit'),
-      statCard('Accuracy', st.accuracy === null ? '-' : `${st.accuracy}%`, 'Accepted / total submissions'),
-      statCard('Submissions', `${st.submissions}`, 'Runs are free, submits count'),
+      statCell('Solved', `${st.solved}`, `of ${available}`),
+      statCell('Streak', `${st.streak} ${st.streak === 1 ? 'day' : 'days'}`),
+      statCell('Accuracy', st.accuracy === null ? '-' : `${st.accuracy}%`),
+      statCell('Submits', `${st.submissions}`),
     );
+  }
+
+  const statusCell = (status) => {
+    const label = STATUS_LABEL[status];
+    return h(
+      `span.status-pill.s-${status}`,
+      {},
+      h('span.status-dot', { 'aria-hidden': 'true' }),
+      label ? label : h('span.sr-only', {}, 'Not started'),
+    );
+  };
+
+  function hasActiveFilters() {
+    return filters.difficulty !== 'All' || filters.topic !== 'all' || filters.query.trim() !== '';
   }
 
   function renderRows() {
     const state = store.get();
-    const q = filters.query.toLowerCase();
+    const q = filters.query.trim().toLowerCase();
     const rows = catalog.filter(
       (p) =>
         (filters.difficulty === 'All' || p.difficulty === filters.difficulty) &&
         (filters.topic === 'all' || p.topics.includes(filters.topic)) &&
         (!q || p.title.toLowerCase().includes(q)),
     );
+    const active = hasActiveFilters();
+    clearInline.hidden = !active;
+    countLine.textContent = active
+      ? `${rows.length} of ${catalog.length} ${catalog.length === 1 ? 'problem' : 'problems'}`
+      : `${rows.length} ${rows.length === 1 ? 'problem' : 'problems'}`;
+
     if (!rows.length) {
-      mount(tableBody, h('tr', {}, h('td.empty', { colspan: 4 }, 'No problems match these filters.')));
+      tableWrap.hidden = true;
+      emptyHost.hidden = false;
+      mount(
+        emptyHost,
+        stateBlock({
+          title: 'No matching problems',
+          body: 'No problems match these filters. Try a broader search or clear the active filters.',
+          kind: 'empty',
+          action: { label: 'Clear filters', variant: 'btn-secondary', onClick: clearFilters },
+        }),
+      );
       return;
     }
+
+    tableWrap.hidden = false;
+    emptyHost.hidden = true;
     mount(
       tableBody,
       rows.map((p) => {
         const prog = state.problems[p.id];
         const status = prog?.status === 'solved' ? (prog.revealed ? 'assisted' : 'solved') : prog ? 'attempted' : 'todo';
-        const available = p.status === 'available';
-        const title = available ? h('a.problem-link', { href: `#/problem/${p.id}` }, p.title) : h('span.planned-title', {}, p.title);
+        const isAvailable = p.status === 'available';
+        const title = isAvailable ? h('a.problem-link', { href: `#/problem/${p.id}` }, p.title) : h('span.planned-title', {}, p.title);
         return h(
-          `tr${available ? '' : '.row-planned'}`,
+          `tr${isAvailable ? '.row-link' : '.row-planned'}`,
           {},
-          h('td', {}, h(`span.status-icon.s-${status}`, { title: status, 'aria-label': status })),
-          h('td', {}, title, available ? null : h('span.tag.tag-muted', {}, 'Coming soon')),
-          h('td', {}, difficulty(p.difficulty)),
-          h('td', {}, p.topics.map((t) => h('span.tag', {}, TOPICS.find((x) => x.id === t)?.label ?? t))),
+          h('td.cell-title', {}, title, isAvailable ? null : h('span.tag.tag-muted', {}, 'Coming soon')),
+          h('td.cell-status', {}, statusCell(status)),
+          h('td.cell-diff', {}, difficulty(p.difficulty)),
+          h('td.cell-topics', {}, p.topics.map((t) => h('span.tag', {}, topicLabel(t)))),
         );
       }),
     );
   }
 
-  const filterGroup = (key, label, options) =>
-    chipGroup({
-      label,
-      options,
-      value: filters[key],
-      onChange: (value) => {
-        filters[key] = value;
-        renderRows();
-      },
-    });
+  const diffGroup = chipGroup({
+    label: 'Difficulty',
+    options: ['All', ...DIFFICULTIES].map((d) => ({ value: d, label: d, attrs: { 'data-value': d } })),
+    value: filters.difficulty,
+    onChange: (value) => {
+      filters.difficulty = value;
+      renderRows();
+    },
+  });
 
-  const search = h('input.search', { type: 'search', placeholder: 'Search problems', 'aria-label': 'Search problems' });
+  const topicToggle = h(
+    'button.chip.topic-toggle',
+    {
+      type: 'button',
+      'aria-expanded': 'false',
+      'aria-controls': 'dashboard-topics',
+      'aria-pressed': 'false',
+      onClick: () => setTopicOpen(!topicOpen),
+    },
+    'Topic',
+  );
+
+  const syncTopicToggle = () => {
+    const active = filters.topic !== 'all';
+    topicToggle.textContent = active ? `Topic: ${topicLabel(filters.topic)}` : 'Topic';
+    topicToggle.setAttribute('aria-pressed', String(active));
+  };
+
+  const topicGroup = chipGroup({
+    label: 'Topic',
+    options: [{ value: 'all', label: 'All topics', attrs: { 'data-value': 'all' } }, ...TOPICS.map((t) => ({ value: t.id, label: t.label, attrs: { 'data-value': t.id } }))],
+    value: filters.topic,
+    onChange: (value) => {
+      filters.topic = value;
+      syncTopicToggle();
+      renderRows();
+    },
+  });
+
+  const topicPanel = h('div#dashboard-topics.topic-panel', { hidden: true }, topicGroup);
+
+  function setTopicOpen(next) {
+    topicOpen = next;
+    topicPanel.hidden = !topicOpen;
+    topicToggle.setAttribute('aria-expanded', String(topicOpen));
+  }
+
+  topicPanel.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    setTopicOpen(false);
+    topicToggle.focus({ preventScroll: true });
+  });
+
+  const search = h('input.search.dashboard-search', {
+    type: 'search',
+    placeholder: `Search ${available} problems`,
+    'aria-label': 'Search problems',
+  });
   search.addEventListener('input', () => {
     filters.query = search.value;
     renderRows();
   });
+
+  function clearFilters() {
+    filters.difficulty = 'All';
+    filters.topic = 'all';
+    filters.query = '';
+    search.value = '';
+    diffGroup.querySelectorAll('.chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === 'All')));
+    topicGroup.querySelectorAll('.chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === 'all')));
+    syncTopicToggle();
+    renderRows();
+    search.focus({ preventScroll: true });
+  }
 
   mount(
     root,
@@ -131,22 +281,14 @@ export function renderDashboard(root, { store }) {
       statsRow,
       today,
       h(
-        'div.filters',
+        'div.dashboard-controls',
         {},
-        filterGroup('difficulty', 'Difficulty', ['All', ...DIFFICULTIES].map((d) => ({ value: d, label: d }))),
-        filterGroup('topic', 'Topic', [{ value: 'all', label: 'All topics' }, ...TOPICS.map((t) => ({ value: t.id, label: t.label }))]),
-        search,
+        h('div.filters.dashboard-filters', {}, search, diffGroup, topicToggle),
+        topicPanel,
+        h('div.filter-meta', {}, countLine, clearInline),
       ),
-      h(
-        'div.table-wrap',
-        {},
-        h(
-          'table.problem-table',
-          {},
-          h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, ''), h('th', { scope: 'col' }, 'Title'), h('th', { scope: 'col' }, 'Difficulty'), h('th', { scope: 'col' }, 'Topics'))),
-          tableBody,
-        ),
-      ),
+      tableWrap,
+      emptyHost,
       siteFooter(),
     ),
   );
