@@ -2,7 +2,7 @@
  * Learning Path: the 131 essential problems by tier and topic, in prerequisite order, with
  * progress derived from solve data and a "Next up" pointer. Data: src/js/data/essential-path.json.
  */
-import { h, mount, difficultyBadge, stateBlock, loadingState, siteFooter } from '../dom.js';
+import { h, mount, difficulty, stateBlock, loadingState, siteFooter } from '../dom.js';
 import { catalogEntry } from '../../problems/index.js';
 import { pathProgress, conceptLabel } from '../../data/learning-path.js';
 import { TOPICS } from '../../data/taxonomy.js';
@@ -76,7 +76,7 @@ export function renderPath(root, { store }) {
                         h(`span.status-icon.s-${status}`, { title: status, 'aria-label': status }),
                         h('a.problem-link', { href: `#/problem/${p.id}` }, catalogEntry(p.id)?.title ?? p.id),
                         h('span.path-concept', {}, conceptLabel(p.concept)),
-                        difficultyBadge(p.difficulty),
+                        difficulty(p.difficulty),
                       );
                     }),
                   ),

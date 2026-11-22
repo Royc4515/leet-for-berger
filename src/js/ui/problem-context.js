@@ -3,7 +3,7 @@
  * and the other versions of the same idea. Data: src/js/data/problem-meta.json (built by
  * scripts/content/build-meta.mjs), fetched once and shared by every problem page.
  */
-import { h } from './dom.js';
+import { h, ilMark } from './dom.js';
 import { complexityOpenByDefault } from '../data/problem-meta.js';
 
 const SHOWN_COMPANIES = 8;
@@ -25,7 +25,7 @@ function companyChip(c) {
     `span.tag.company-tag${c.israeli ? '.company-il' : ''}`,
     { title: `${c.name}: frequency ${c.frequency}, asked ${RECENCY_LABEL[c.recency] ?? c.recency}${c.israeli ? ', Israeli company' : ''}` },
     c.name,
-    c.israeli ? h('span.il-mark', { 'aria-label': 'Israeli company' }, 'IL') : null,
+    c.israeli ? ilMark() : null,
   );
 }
 

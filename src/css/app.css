@@ -25,6 +25,7 @@
   --panel: #15171a;
   --panel-2: #1b1e22;
   --panel-3: #22262b;
+  --panel-hover: #2b3036;
 
   /* Borders */
   --border: #2a2f36;
@@ -40,6 +41,7 @@
   --accent: #f5a623;
   --accent-ink: #1a1203;
   --accent-soft: rgba(245, 166, 35, 0.12);
+  --accent-hover: #ffb93f;
 
   /* Semantic */
   --ok: #2fbf71;
@@ -54,7 +56,6 @@
   /* Difficulty */
   --easy: #2fbf71;
   --medium: #e3b341;
-  --medium-soft: rgba(227, 179, 65, 0.12);
   --hard: #f05252;
 
   /* Type scale (12 px floor) */
@@ -395,14 +396,17 @@ body.lockdown .tab-bar {
   }
 }
 
-/* ---------- Buttons, chips, tags ---------- */
+/* ---------- Buttons, chips, segmented, tags, difficulty, inputs (docs/DESIGN.md) ----------
+   One shape per job: buttons are rectangles (--r-sm), filter chips are pills (--r-pill) with a
+   control border, static tags are small 4 px rectangles with no border. Heights come from the
+   --ctl-* tokens, which grow to 44 px under a coarse pointer. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 14px;
+  gap: var(--s-2);
+  height: var(--ctl-md);
+  padding: 0 var(--s-4);
   border: 1px solid transparent;
   border-radius: var(--r-sm);
   font: 600 var(--fs-sm) var(--font);
@@ -411,7 +415,7 @@ body.lockdown .tab-bar {
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s, transform 0.08s, opacity 0.15s;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast), opacity var(--t-fast);
 }
 .btn:active:not(:disabled) {
   transform: translateY(1px);
@@ -425,14 +429,14 @@ body.lockdown .tab-bar {
   color: var(--accent-ink);
 }
 .btn-primary:hover:not(:disabled) {
-  background: #ffb93f;
+  background: var(--accent-hover);
 }
 .btn-secondary {
   background: var(--panel-3);
-  border-color: var(--border-strong);
+  border-color: var(--border-control);
 }
 .btn-secondary:hover:not(:disabled) {
-  background: #2b3036;
+  background: var(--panel-hover);
 }
 .btn-ghost {
   background: transparent;
@@ -450,40 +454,45 @@ body.lockdown .tab-bar {
   background: var(--bad-solid);
   color: var(--bad-ink);
 }
-.btn-icon {
-  width: 32px;
-  padding: 0;
-  font-size: var(--fs-lg);
-}
 .btn-sm {
-  height: 28px;
-  padding: 0 10px;
+  height: var(--ctl-sm);
+  padding: 0 var(--s-3);
 }
 .btn-lg {
-  height: 42px;
-  padding: 0 22px;
+  height: var(--ctl-lg);
+  padding: 0 var(--s-5);
   font-size: var(--fs-lg);
-  margin-top: 8px;
+  margin-top: var(--s-2);
+}
+/* Square: the width follows whichever height token the size modifier set. */
+.btn-icon {
+  aspect-ratio: 1;
+  padding: 0;
+  font-size: var(--fs-lg);
 }
 
 .chip-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--s-2);
 }
 .chip {
-  height: 30px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: var(--ctl-sm);
+  padding: 0 var(--s-3);
+  border: 1px solid var(--border-control);
   border-radius: var(--r-pill);
   background: transparent;
   color: var(--text-2);
   font: 500 var(--fs-sm) var(--font);
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
 }
 .chip:hover {
-  border-color: var(--border-strong);
+  border-color: var(--text-2);
   color: var(--text);
 }
 .chip[aria-pressed='true'] {
@@ -491,58 +500,140 @@ body.lockdown .tab-bar {
   border-color: var(--accent);
   color: var(--accent);
 }
+/* Selection is never colour alone (docs/DESIGN.md rule 6). The empty alt text keeps screen
+   readers from announcing "check mark": aria-pressed already says it. */
+.chip[aria-pressed='true']::before {
+  content: '\2713';
+  content: '\2713' / '';
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border-control);
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+}
+.segmented-btn {
+  min-height: var(--ctl-sm);
+  padding: 0 var(--s-3);
+  border: 0;
+  border-radius: var(--r-tag);
+  background: transparent;
+  color: var(--text-2);
+  font: 500 var(--fs-sm) var(--font);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.segmented-btn:hover {
+  color: var(--text);
+}
+/* Raised segment + ring + weight, so the choice reads without colour. */
+.segmented-btn[aria-pressed='true'] {
+  background: var(--panel-3);
+  box-shadow: inset 0 0 0 1px var(--border-control);
+  color: var(--accent);
+  font-weight: 600;
+}
+.segmented[hidden] {
+  display: none;
+}
 
 .tag {
-  display: inline-block;
-  padding: 1px 8px;
-  margin: 2px 4px 2px 0;
-  border-radius: var(--r-pill);
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 var(--s-2);
+  margin: 2px var(--s-1) 2px 0;
+  border-radius: var(--r-tag);
   background: var(--panel-3);
   color: var(--text-2);
   font-size: var(--fs-xs);
+  line-height: 1.4;
+  vertical-align: middle;
 }
 .tag-muted {
-  background: transparent;
-  border: 1px solid var(--border);
+  background: var(--panel-2);
   color: var(--muted);
 }
 .tag-live {
   background: var(--ok-soft);
   color: var(--ok);
 }
-.badge {
-  display: inline-block;
-  padding: 1px 8px;
-  border-radius: var(--r-pill);
+
+.difficulty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: var(--s-2);
   font: 600 var(--fs-xs) var(--font);
-  margin-right: 6px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.difficulty::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
 }
 .diff-easy {
   color: var(--easy);
-  background: var(--ok-soft);
 }
 .diff-medium {
   color: var(--medium);
-  background: var(--medium-soft);
 }
 .diff-hard {
   color: var(--hard);
-  background: var(--bad-soft);
 }
 
 .select,
 .search {
-  height: 32px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
+  height: var(--ctl-md);
+  padding: 0 var(--s-3);
+  border: 1px solid var(--border-control);
   border-radius: var(--r-sm);
   background: var(--panel-2);
   color: var(--text);
   font: var(--fs-sm) var(--font);
 }
+.search::placeholder {
+  color: var(--muted);
+}
 .search {
   min-width: 220px;
   margin-left: auto;
+}
+
+/* Touch: every control a finger can reach is at least 44 px tall (docs/DESIGN.md rule 7). The
+   --ctl-* tokens already cover buttons, chips, segmented and inputs; these are the text-like
+   controls that otherwise size to their line height. Desktop layout is unchanged. */
+@media (pointer: coarse) {
+  .select,
+  .search {
+    /* 16 px stops iOS Safari from zooming the page when the field takes focus. */
+    font-size: var(--fs-lg);
+  }
+  .brand,
+  .btn-link,
+  .back-link,
+  .problem-link,
+  .site-links a,
+  .switch,
+  .gh-vis label {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--ctl-sm);
+  }
+  .problem-table td {
+    padding-top: var(--s-1);
+    padding-bottom: var(--s-1);
+  }
 }
 
 /* ---------- Dashboard ---------- */
@@ -583,7 +674,9 @@ body.lockdown .tab-bar {
 .table-wrap {
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  overflow: hidden;
+  /* Scroll, not clip: a phone-width company table used to hide its Practice column. Step 5 turns
+     these tables into list rows; until then the table scrolls inside its own box. */
+  overflow-x: auto;
 }
 .problem-table {
   width: 100%;
@@ -1224,7 +1317,7 @@ body.resizing-y * {
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--panel);
-  transition: border-color 0.2s, transform 0.2s var(--ease);
+  transition: border-color var(--t-med), transform var(--t-med) var(--ease);
 }
 .mode-card:hover {
   border-color: var(--border-strong);
@@ -1623,14 +1716,19 @@ body.lockdown .toast-host {
   font-size: var(--fs-xs);
   margin-bottom: 4px;
 }
-.company-il {
-  border: 1px solid var(--accent);
-}
+/* Amber is reserved for action and selection; an Israeli company gets the IL mark, not an
+   accent border. */
 .il-mark {
-  margin-left: 4px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--s-1);
+  padding: 0 var(--s-1);
+  border-radius: var(--r-tag);
+  background: var(--panel-3);
+  color: var(--text-2);
+  font: 700 var(--fs-xs) var(--mono);
+  line-height: 1.5;
+  vertical-align: middle;
 }
 .btn-link {
   background: none;
@@ -1695,20 +1793,22 @@ body.lockdown .toast-host {
 }
 .company-card {
   display: block;
-  padding: 12px;
+  padding: var(--s-3);
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  background: var(--panel-2);
+  border-radius: var(--r-md);
+  background: var(--panel);
   color: var(--text);
   text-decoration: none;
+  transition: background var(--t-fast), border-color var(--t-fast);
 }
-.company-card:hover,
-.company-card:focus-visible {
-  border-color: var(--accent);
+/* A whole-card link: hover lifts the surface; amber stays for focus (the global ring). */
+.company-card:hover {
+  border-color: var(--border-strong);
+  background: var(--panel-2);
 }
 .company-card-name {
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: var(--s-1);
 }
 .company-card-sub {
   color: var(--muted);
@@ -2004,7 +2104,6 @@ body.lockdown .toast-host {
     position: fixed;
     inset-inline: var(--s-3);
     top: calc(var(--header-h) + var(--s-2));
-    right: auto;
     width: auto;
     max-width: none;
     z-index: 50;
@@ -2075,44 +2174,12 @@ body.lockdown .toast-host {
 }
 
 /* ---------- Israel filter, company picker, battle picker ---------- */
-.segmented {
-  display: inline-flex;
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  overflow: hidden;
-}
-.segmented-btn {
-  height: 32px;
-  padding: 0 14px;
-  border: 0;
-  border-right: 1px solid var(--border);
-  background: var(--panel-2);
-  color: var(--text-2);
-  font: 500 var(--fs-sm) var(--font);
-  cursor: pointer;
-}
-.segmented-btn:last-child {
-  border-right: 0;
-}
-.segmented-btn:hover {
-  color: var(--text);
-}
-.segmented-btn[aria-pressed='true'] {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.segmented[hidden] {
-  display: none;
-}
 .il-badge {
   margin: 0 0 6px;
 }
 .il-major {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.il-present {
-  border: 1px solid var(--border);
+  background: var(--panel-3);
+  color: var(--text);
 }
 .company-count {
   margin: 0 0 4px;
@@ -2124,8 +2191,8 @@ body.lockdown .toast-host {
   padding: 2px;
 }
 .company-chip .il-star {
-  margin-left: 4px;
-  color: var(--accent);
+  margin-left: var(--s-1);
+  color: var(--text-2);
   font-size: var(--fs-xs);
 }
 .setup-card .filters .search {
@@ -2143,9 +2210,10 @@ body.lockdown .toast-host {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 10px;
+  gap: var(--s-1) var(--s-3);
   width: 100%;
-  padding: 8px 10px;
+  min-height: var(--ctl-md);
+  padding: var(--s-2) var(--s-3);
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   background: var(--panel-2);
@@ -2164,7 +2232,7 @@ body.lockdown .toast-host {
 .pick-title {
   font-weight: 600;
 }
-.pick-row .badge,
+.pick-row .difficulty,
 .pick-row .tag {
   margin: 0;
 }

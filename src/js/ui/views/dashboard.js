@@ -2,7 +2,7 @@
  * Dashboard: progress stats + filterable problem bank. Reads only the catalog: no problem module
  * loads here (docs/adr/0008-lazy-problem-modules.md).
  */
-import { h, mount, difficultyBadge, siteFooter } from '../dom.js';
+import { h, mount, difficulty, chipGroup, siteFooter } from '../dom.js';
 import { catalog, catalogEntry, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import { stats, dayKey } from '../../state/progress.js';
 import { dailyProblem, dailyCandidates, weakSpots } from '../../data/recommend.js';
@@ -33,7 +33,7 @@ export function renderDashboard(root, { store }) {
             'section.today-card',
             { 'aria-labelledby': 'daily-title' },
             h('div.today-kicker', { id: 'daily-title' }, 'Problem of the day'),
-            h('div.today-main', {}, h('a.problem-link', { href: `#/problem/${daily.id}` }, daily.title), difficultyBadge(daily.difficulty), dailyDone ? h('span.tag.tag-live', {}, 'Solved') : null),
+            h('div.today-main', {}, h('a.problem-link', { href: `#/problem/${daily.id}` }, daily.title), difficulty(daily.difficulty), dailyDone ? h('span.tag.tag-live', {}, 'Solved') : null),
             h('div.hint-text', {}, 'The same problem for everyone today. A new one at midnight.'),
           )
         : null,
@@ -98,28 +98,23 @@ export function renderDashboard(root, { store }) {
           {},
           h('td', {}, h(`span.status-icon.s-${status}`, { title: status, 'aria-label': status })),
           h('td', {}, title, available ? null : h('span.tag.tag-muted', {}, 'Coming soon')),
-          h('td', {}, difficultyBadge(p.difficulty)),
+          h('td', {}, difficulty(p.difficulty)),
           h('td', {}, p.topics.map((t) => h('span.tag', {}, TOPICS.find((x) => x.id === t)?.label ?? t))),
         );
       }),
     );
   }
 
-  const chip = (group, value, label) =>
-    h(
-      'button.chip',
-      {
-        type: 'button',
-        'aria-pressed': String(filters[group] === value),
-        onClick: (e) => {
-          filters[group] = value;
-          e.currentTarget.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-          e.currentTarget.setAttribute('aria-pressed', 'true');
-          renderRows();
-        },
-      },
+  const filterGroup = (key, label, options) =>
+    chipGroup({
       label,
-    );
+      options,
+      value: filters[key],
+      onChange: (value) => {
+        filters[key] = value;
+        renderRows();
+      },
+    });
 
   const search = h('input.search', { type: 'search', placeholder: 'Search problems', 'aria-label': 'Search problems' });
   search.addEventListener('input', () => {
@@ -138,8 +133,8 @@ export function renderDashboard(root, { store }) {
       h(
         'div.filters',
         {},
-        h('div.chip-group', { role: 'group', 'aria-label': 'Difficulty' }, ['All', ...DIFFICULTIES].map((d) => chip('difficulty', d, d))),
-        h('div.chip-group', { role: 'group', 'aria-label': 'Topic' }, chip('topic', 'all', 'All topics'), TOPICS.map((t) => chip('topic', t.id, t.label))),
+        filterGroup('difficulty', 'Difficulty', ['All', ...DIFFICULTIES].map((d) => ({ value: d, label: d }))),
+        filterGroup('topic', 'Topic', [{ value: 'all', label: 'All topics' }, ...TOPICS.map((t) => ({ value: t.id, label: t.label }))]),
         search,
       ),
       h(

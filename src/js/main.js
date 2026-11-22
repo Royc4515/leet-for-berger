@@ -109,7 +109,6 @@ function setActiveNav(key) {
 function renderStreak() {
   const { streak } = stats(store.get());
   const label = `${streak}-day streak`;
-  streakChip.setAttribute('aria-label', label);
   streakChip.title = label;
   mount(
     streakChip,
