@@ -288,7 +288,7 @@ export function progressBar(done, total) {
  * @returns {HTMLElement}
  */
 export function companyMark({ letters, israel = null, tier = null, fill = 0, size = 'md' }) {
-  const cls = `span.company-mark.is-mono${size !== 'md' ? `.${size}` : ''}${israel === 'major' ? '.is-il' : ''}${tier === 1 ? '.is-t1' : ''}`;
+  const cls = `span.company-mark.monogram.is-mono${size !== 'md' ? `.${size}` : ''}${israel === 'major' ? '.is-il' : ''}${tier === 1 ? '.is-t1' : ''}`;
   return h(
     cls,
     { 'aria-hidden': 'true', style: { '--fill': `${Math.round(Math.min(1, Math.max(0, fill)) * 100)}%` } },
