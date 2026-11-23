@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added (wave F2-4, Nvidia, group A)
+- Five problems Nvidia asks, each with 8 verified solutions, 15 cases, hints and a walkthrough: View Cone (Hard, polar angles and a wrapping window, LeetCode 1610), Cover Area (union of two rectangles, 223), Digit Sum Pair (largest pair per digit-sum group, 2342), Closest Gaps (all closest pairs after sorting, 1200), Two Power Check (one set bit, 231). 205 -> 210 problems; Nvidia's top 60 on the site goes from 52 to 57.
+- View Cone compares angles with a 1e-9 tolerance in the reference and every solution, so a point exactly on the edge of the view does not depend on how a language's atan2 rounds.
+- Growth feedback from the start for View Cone and Closest Gaps (`n log n`) and Digit Sum Pair (`n`); Cover Area and Two Power Check are excluded as fixed-size.
+- Index links in `scripts/content/build-index.mjs` (Cover Area and Digit Sum Pair hand-picked: Nvidia asks them but no selection rule picks them), a subtopic for Digit Sum Pair (`arrays-hashing/group-by-key`), and Paycom in `content/israel-hiring.json` (none, tier 3, unverified).
+
 ### Changed (design system, Step 10)
 - Modes hub (`src/js/ui/views/modes.js`, `src/js/modes/last-results.js`, `src/js/state/user-data.js`, `src/css/app.css`): redesigned to two mode cards (Mock OA and Interview, 1v1 Battle) with user-facing copy stating known limits plainly (bot-only battle, editor-only server languages in sessions, no roadmap jargon) and exactly one primary button (`Set up a session`; Battle drops to secondary). AI Mentor moves into a compact note linking to a practice problem (offline scripted hint ladder). Cards surface the most recent finished Interview score/band or Battle outcome stored under `lfb:last-sessions:v1` (registered in `USER_KEYS` so sign-out clears it).
 - Privacy page (`privacy.html`, `src/css/app.css`): wrapped the heading in the shared `header.page-head`, documented local last-session storage under "Without an account", tokenized `.legal` spacing, and excluded `.back-link` from `.legal a:not(.btn):not(.back-link)` so it is styled only by the shared `.back-link` rule.

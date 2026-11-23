@@ -905,6 +905,11 @@
    "tier": 3,
    "unverified": true
   },
+  "Paycom": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "PayPal": {
    "israel": "present",
    "tier": 2,

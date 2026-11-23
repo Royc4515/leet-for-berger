@@ -182,6 +182,7 @@
   "max-consecutive-ones": "sliding-window/variable-window",
   "max-consecutive-ones-iii": "sliding-window/variable-window",
   "max-stack": "design/composite-design",
+  "max-sum-of-a-pair-with-equal-sum-of-digits": "arrays-hashing/group-by-key",
   "maximize-greatness-of-an-array": "two-pointers/sort-then-scan",
   "maximize-the-minimum-game-score": "binary-search/search-on-answer",
   "maximum-69-number": "greedy/greedy-construction",
