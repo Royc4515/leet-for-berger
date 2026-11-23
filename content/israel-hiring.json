@@ -133,6 +133,11 @@
    "israel": "none",
    "tier": 2
   },
+  "Attentive": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Audible": {
    "israel": "none",
    "tier": 2,
@@ -168,6 +173,11 @@
   "Bcg": {
    "israel": "none",
    "tier": 3
+  },
+  "Bill Com": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "BitGo": {
    "israel": "none",
@@ -439,9 +449,24 @@
    "israel": "none",
    "tier": 2
   },
+  "EY": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
+  "Faire": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Fast": {
    "israel": "none",
    "tier": 3
+  },
+  "Fidelity": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Fiverr": {
    "israel": "major",
@@ -496,6 +521,11 @@
    "source": "https://en.globes.co.il/en/article-Google-Israel-RD-head-Yossi-Matias-moving-to-global-role-1001477138",
    "rankIL": 10
   },
+  "Gopuff": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Grab": {
    "israel": "none",
    "tier": 2,
@@ -508,6 +538,16 @@
   "Graviton": {
    "israel": "none",
    "tier": 3
+  },
+  "GSA Capital": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
+  "Gusto": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Harness": {
    "israel": "none",
@@ -862,6 +902,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Oppo": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Optiver": {
    "israel": "none",
    "tier": 3,
@@ -969,6 +1014,11 @@
    "tier": 2,
    "source": "https://calcalistech.com/ctechnews/article/rytzpacjs",
    "rankIL": 19
+  },
+  "Qualtrics": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Quince": {
    "israel": "none",
@@ -1126,6 +1176,11 @@
    "tier": 3,
    "unverified": true
   },
+  "SoundHound": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Spacex": {
    "israel": "none",
    "tier": 2,
@@ -1239,6 +1294,11 @@
   "Turing": {
    "israel": "none",
    "tier": 3
+  },
+  "TuSimple": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Twilio": {
    "israel": "none",

@@ -181,7 +181,7 @@ export const problem = {
   growth: {
     target: 'n',
     n: 'nums.length',
-    sizes: [125000, 250000, 500000, 1000000, 2000000],
+    sizes: [62500, 125000, 250000, 500000, 1000000],
     input: (n, seed) => [intArray(n, mulberry32(seed), { min: 1, max: MAX_V })],
   },
 };

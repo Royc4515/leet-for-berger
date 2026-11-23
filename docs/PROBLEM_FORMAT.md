@@ -194,6 +194,7 @@ Exclusion reasons (the whole policy, one place):
 | `output-bound` | the answer lists every combination, so the output size decides the time | Subset Builder, All Orderings, Keypad Words, Balanced Pairs |
 | `backtracking` | exponential search on a tiny n, or time that depends on the contents more than the size | Grid Word, Board Words, Visit All Nodes |
 | `sublinear` | the target is O(log n): one call takes microseconds, under the 1 ms the estimator needs | Rotated Search, Target Range, Mountain Peak |
+| `too-fast` | a linear pass of a few ns per element over an input that is costly to build (one small array per element): every size a browser can build in its 5 s budget runs under the 1 ms the estimator needs on CI | Sparse Dot |
 
 Design problems are in scope (n = calls), and so are problems whose n is a value (Prime Count), as long as the value can grow to measurable times within its constraint.
 

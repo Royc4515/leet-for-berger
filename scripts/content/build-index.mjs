@@ -385,6 +385,29 @@ const CONTENT_IDS = {
   'max-sum-of-a-pair-with-equal-sum-of-digits': ['digit-sum-pair', 'verified'],
   'minimum-absolute-difference': ['closest-gaps', 'verified'],
   'power-of-two': ['two-power-check', 'verified'],
+  // Wave F2-4 (Nvidia), group B
+  'integer-to-english-words': ['number-in-words', 'verified'],
+  'first-unique-character-in-a-string': ['first-lone-char', 'verified'],
+  'contains-duplicate': ['repeat-check', 'verified'],
+  'maximum-product-of-three-numbers': ['best-triple-product', 'verified'],
+  'count-the-number-of-good-subsequences': ['balanced-subsequence-count', 'verified'],
+  // Wave F2-4 (Nvidia), group C
+  'max-points-on-a-line': ['collinear-max', 'verified'],
+  'maximum-number-of-events-that-can-be-attended': ['most-events', 'verified'],
+  'remove-stones-to-minimize-the-total': ['stone-halving', 'verified'],
+  // LeetCode's class takes another instance; ours takes both vectors as sorted [index, value] lists.
+  'dot-product-of-two-sparse-vectors': ['sparse-dot', 'verified'],
+  'counting-bits': ['bit-tally', 'verified'],
+  // Wave F2-4 (Nvidia), group D
+  'first-missing-positive': ['smallest-positive-gap', 'verified'],
+  // Limit raised from 300 to 10^5 nodes so quadratic rescans and deep recursion fail clearly.
+  'remove-duplicates-from-sorted-list': ['sorted-list-dedupe', 'verified'],
+  // Limit raised from 100 to 10^5 nodes so single-pass O(n) traversal is tested at scale.
+  'middle-of-the-linked-list': ['list-midpoint', 'verified'],
+  // Limit raised from 3 * 10^4 to 10^5 with a 64-bit integer return (up to 5 * 10^9) so O(n^2) times out.
+  'binary-subarrays-with-sum': ['bit-sum-subarrays', 'verified'],
+  // Cells are 0/1 integers instead of '0'/'1' characters.
+  'maximal-square': ['largest-ones-square', 'verified'],
 };
 
 const WINDOWS = [
@@ -412,7 +435,16 @@ const REPORTED_FREQUENCY = 50;
 const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice', 'hand-picked'];
 
 /** Problems authored on purpose although no selection rule picks them (few companies, no list). */
-const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray', 'collect-coins-in-a-tree', 'rectangle-area', 'max-sum-of-a-pair-with-equal-sum-of-digits']);
+const HAND_PICKED = new Set([
+  'find-consecutive-integers-from-a-data-stream',
+  'find-the-longest-equal-subarray',
+  'collect-coins-in-a-tree',
+  'rectangle-area',
+  'max-sum-of-a-pair-with-equal-sum-of-digits',
+  'count-the-number-of-good-subsequences',
+  'remove-stones-to-minimize-the-total',
+  'binary-subarrays-with-sum',
+]);
 
 const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
 

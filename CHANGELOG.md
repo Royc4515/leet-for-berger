@@ -5,6 +5,36 @@
 ### Added (docs)
 - Redesign brief (`docs/REDESIGN_BRIEF.md`, `docs/PLAN.md`): the prompt for stage F6, a research-led redesign of the whole site with an interactive Problem Map. Not started.
 
+### Changed
+- Collinear Max's growth ladder is now 125 to 1000 points (was 250 to 2000): the 2000 size pushed a run to about 5.4 s, over the browser's 5 s budget; a run now takes about 1.2 s and still reads quadratic. The unused `gcd` helper in its problem file is removed (review nits on group C).
+
+### Added (wave F2-4, Nvidia, group D)
+- Five Nvidia company problems closing Wave F2-4 (220 -> 225 problems), each with original wording, 15 test cases (5 visible, 10 hidden), Socratic hints, walkthrough prose, unit tests against brute force, `n` growth feedback, and verified solutions in all 8 languages (Python, JavaScript, TypeScript, Java, C++, C, C#, Go):
+  - **Smallest Positive Gap** (`smallest-positive-gap`, Hard, LeetCode 41): in-place O(n) cyclic placement in O(1) extra space (linked to `first-missing-positive` family).
+  - **Sorted List Dedupe** (`sorted-list-dedupe`, Easy, LeetCode 83): single-pass O(n) linked-list deduplication with limit raised to 10^5 nodes (linked to `dedupe-sorted-list` family).
+  - **List Midpoint** (`list-midpoint`, Easy, LeetCode 876): fast/slow pointer linked-list midpoint with limit raised to 10^5 nodes (linked to `middle-of-list` family).
+  - **Bit Sum Subarrays** (`bit-sum-subarrays`, Medium, LeetCode 930): `atMost(goal) - atMost(goal - 1)` O(n) sliding window with limit raised to 10^5 and 64-bit integer return.
+  - **Largest Ones Square** (`largest-ones-square`, Medium, LeetCode 221): rolling 1D O(m * n) dynamic programming over 0/1 integer grids returning maximum square area.
+- First Lone Character's growth ladder trimmed from `512000..8192000` to `256000..4096000` so runs stay comfortably inside the 5 s browser budget (review nit on group B).
+- Index links in `scripts/content/build-index.mjs` (`binary-subarrays-with-sum` hand-picked), subtopic `sliding-window/variable-window` in `content/subtopics.json`, and `EY`, `GSA Capital`, `Oppo`, `Qualtrics`, and `SoundHound` in `content/israel-hiring.json` (`none`, tier 3, unverified).
+
+### Added (wave F2-4, Nvidia, group B)
+- Five Nvidia company problems (215 -> 220 problems), each with original wording, 15 test cases (5 visible, 10 hidden), Socratic hints, walkthrough prose, unit tests against brute force, and verified solutions in all 8 languages (Python, JavaScript, TypeScript, Java, C++, C, C#, Go):
+  - **Number in Words** (`number-in-words`, Hard, LeetCode 273): base-1000 English spelling for 32-bit integers (`fixed-size` growth exclusion).
+  - **First Lone Character** (`first-lone-char`, Easy, LeetCode 387): two-pass O(n) frequency scan with O(1) space and `n` growth spec.
+  - **Repeat Check** (`repeat-check`, Easy, LeetCode 217): hash-set duplicate detection (linked to the `contains-duplicate` family) with `n` growth spec.
+  - **Best Triple Product** (`best-triple-product`, Easy, LeetCode 628): single-pass five-extreme tracker (linked to the `maximum-product-of-three-numbers` family) with `n` growth spec.
+  - **Balanced Subsequence Count** (`balanced-subsequence-count`, Medium, LeetCode 2539): modular combinatorics over shared character frequency `k = 1..maxFreq` with `n` growth spec.
+- Index links in `scripts/content/build-index.mjs` (`count-the-number-of-good-subsequences` hand-picked), plus `Attentive`, `Faire`, `Fidelity`, `Gusto`, and `TuSimple` in `content/israel-hiring.json` (`none`, tier 3, unverified).
+
+### Added (wave F2-4, Nvidia, group C)
+- Five problems Nvidia asks, each with 8 verified solutions, 15 cases, hints and a walkthrough: Collinear Max (Hard, reduced integer directions per anchor, LeetCode 149), Most Events (greedy over days with a min-heap of end days, 1353), Stone Halving (max-heap, k halvings, 1962), Sparse Dot (two-pointer merge of sorted [index, value] lists, based on 1570), Bit Tally (tally[i] = tally[i >> 1] + (i & 1), 338). Nvidia's top 60 on the site is now complete (57 -> 60).
+- Sparse Dot reframes LeetCode's class (whose method takes another instance, which the harness cannot pass) as a function over both vectors in compressed form, with indices up to 10^9 so a dense array is not an option.
+- Growth feedback from the start for Collinear Max (`n^2`), Most Events and Stone Halving (`n log n`); Most Events stops at 64000 events, below the pair-sorting bend Merge Ranges also hit. Bit Tally is excluded as `fixed-size` (n is a value of at most 10^5).
+- New growth exclusion reason `too-fast` (`scripts/content/growth-exclusions.mjs`, docs/PROBLEM_FORMAT.md): a linear pass of a few ns per element over an input that is costly to build, so no size the browser can build in 5 s runs past the 1 ms the estimator needs on CI. Sparse Dot is the first (and only) problem with it.
+- Digit Sum Pair's growth ladder is halved to 62500 to 10^6 so a run stays inside the browser's 5 s budget (review nit on group A).
+- Index links in `scripts/content/build-index.mjs` (Stone Halving hand-picked), a subtopic for Stone Halving (`heap/greedy-with-heap`), and Bill Com and Gopuff in `content/israel-hiring.json` (none, tier 3, unverified).
+
 ### Added (wave F2-4, Nvidia, group A)
 - Five problems Nvidia asks, each with 8 verified solutions, 15 cases, hints and a walkthrough: View Cone (Hard, polar angles and a wrapping window, LeetCode 1610), Cover Area (union of two rectangles, 223), Digit Sum Pair (largest pair per digit-sum group, 2342), Closest Gaps (all closest pairs after sorting, 1200), Two Power Check (one set bit, 231). 205 -> 210 problems; Nvidia's top 60 on the site goes from 52 to 57.
 - View Cone compares angles with a 1e-9 tolerance in the reference and every solution, so a point exactly on the edge of the view does not depend on how a language's atan2 rounds.
