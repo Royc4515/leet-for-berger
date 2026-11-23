@@ -4,7 +4,8 @@
  * for every shipped problem, see src/js/data/problem-meta.js) and src/js/data/company-sets.json
  * (practice by company, with Israel hiring fields merged in from content/israel-hiring.json,
  * see src/js/data/company-sets.js and scripts/content/israel-companies.mjs) and src/js/data/essential-path.json (the
- * learning path, see src/js/data/learning-path.js).
+ * learning path, see src/js/data/learning-path.js) and src/js/data/problem-topics.json (taxonomy topic
+ * per shipped problem for the Problem Map, see src/js/data/problem-topics.js).
  *
  * Usage: node scripts/content/build-meta.mjs   (after build-index.mjs and complexity.mjs)
  */
@@ -17,6 +18,7 @@ import { buildCompanySets } from '../../src/js/data/company-sets.js';
 import { applyIsrael } from './israel-companies.mjs';
 import { buildPath } from '../../src/js/data/learning-path.js';
 import { TOPICS } from '../../src/js/data/taxonomy.js';
+import { buildProblemTopics } from '../../src/js/data/problem-topics.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
@@ -42,6 +44,11 @@ const setsBody = [
 ].join('\n');
 writeFileSync(join(ROOT, 'src/js/data/company-sets.json'), setsBody + '\n');
 console.log(`${sets.companies.length} companies, ${sets.problems.length} problems -> src/js/data/company-sets.json`);
+
+const topicsOf = buildProblemTopics(records, TOPICS);
+const topicsBody = Object.entries(topicsOf).map(([id, t]) => `  ${JSON.stringify(id)}: ${JSON.stringify(t)}`).join(',\n');
+writeFileSync(join(ROOT, 'src/js/data/problem-topics.json'), `{\n${topicsBody}\n}\n`);
+console.log(`${Object.keys(topicsOf).length} problems -> src/js/data/problem-topics.json`);
 
 const path = buildPath(records, TOPICS);
 writeFileSync(join(ROOT, 'src/js/data/essential-path.json'), JSON.stringify(path, null, 1) + '\n');

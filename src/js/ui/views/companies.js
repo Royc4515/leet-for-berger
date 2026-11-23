@@ -6,21 +6,11 @@
 import { h, mount, difficulty, chip, chipGroup, segmented, ilMark, stateBlock, loadingState, siteFooter } from '../dom.js';
 import { expandRows, companyProgress, monogram, frequencyLevel } from '../../data/company-sets.js';
 import { filterRanked, findBySlug, israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
+import { loadSets } from '../../data/company-loader.js';
 
 const RECENCY_LABEL = { '30d': 'Last 30 days', '3m': 'Last 3 months', '6m': 'Last 6 months', older: 'Older' };
 
-let setsPromise = null;
-
-/**
- * Company data, fetched once and shared by the companies pages and the mock OA setup.
- * @returns {Promise<import('../../data/company-sets.js').CompanySets|null>}
- */
-export function loadSets() {
-  setsPromise ??= fetch(new URL('../../data/company-sets.json', import.meta.url))
-    .then((r) => (r.ok ? r.json() : null))
-    .catch(() => null);
-  return setsPromise;
-}
+export { loadSets };
 
 /**
  * Companies already merged and ordered by Israel relevance (baked into company-sets.json); shared

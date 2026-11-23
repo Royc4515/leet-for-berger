@@ -4,7 +4,7 @@
  * Hash routing (not History API) so the app works on GitHub Pages with zero server
  * config: a refresh on any route still serves index.html.
  */
-import { createStore, stats } from './state/progress.js';
+import { createStore, stats, dayKey } from './state/progress.js';
 import { createAccount } from './auth/account.js';
 import { mountAccountMenu } from './ui/account-menu.js';
 import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
@@ -25,6 +25,8 @@ const headerTitle = document.getElementById('header-title');
 const routes = [
   [/^#?\/?$/, async () => { const m = await import('./ui/views/dashboard.js'); return (root) => m.renderDashboard(root, { store }); }, 'problems', 'Problems'],
   [/^#\/problem\/([\w-]+)$/, loadProblemRoute, 'problems', ([, id]) => catalogEntry(id)?.title ?? 'Problem'],
+  [/^#\/map(?:\/([\w-]+))?$/, async (_, [, topic]) => { const m = await import('./ui/views/map.js'); return (root) => m.renderMap(root, { store, topic: topic ?? null }); }, 'map', 'Map'],
+  [/^#\/daily$/, async () => { const m = await import('./ui/views/daily.js'); return (root) => m.renderDaily(root, { store }); }, 'problems', 'Daily challenge'],
   [/^#\/path$/, async () => { const m = await import('./ui/views/path.js'); return (root) => m.renderPath(root, { store }); }, 'path', 'Learning Path'],
   [/^#\/companies$/, async () => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompanies(root, { store }); }, 'companies', 'Companies'],
   [/^#\/companies\/([\w-]+)$/, async (_, [, slug]) => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompany(root, { store, slug }); }, 'companies', 'Companies'],
@@ -107,16 +109,36 @@ function setActiveNav(key) {
 }
 
 function renderStreak() {
-  const { streak } = stats(store.get());
-  const label = `${streak}-day streak`;
+  const state = store.get();
+  const { streak } = stats(state);
+  // Lit only once today has an accepted submission; a streak kept alive by yesterday stays dim.
+  const today = state.activeDays.includes(dayKey());
+  const label = streak ? `${streak}-day streak${today ? '' : ', solve one today to keep it'}` : 'No streak yet';
   streakChip.title = label;
+  streakChip.href = '#/daily';
+  streakChip.classList.toggle('is-active', streak > 0 && today);
   mount(
     streakChip,
-    h('span.streak-icon', { 'aria-hidden': 'true' }, '🔥'),
+    h('span.streak-icon', { 'aria-hidden': 'true' }),
     h('span.streak-count', { 'aria-hidden': 'true' }, String(streak)),
     h('span.sr-only', {}, label),
   );
 }
+
+/* ---------- Command palette (Ctrl/Cmd+K), loaded on first use ---------- */
+const openPalette = () =>
+  import('./ui/palette.js')
+    .then((m) => m.openPalette())
+    .catch(() => toast('Search could not load. Check your connection and try again.', 'error'));
+document.getElementById('palette-trigger')?.addEventListener('click', openPalette);
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+    // Sessions hide navigation on purpose; the palette would be a way out of the exam room.
+    if (document.body.classList.contains('lockdown')) return;
+    e.preventDefault();
+    openPalette();
+  }
+});
 
 store.subscribe(renderStreak);
 renderStreak();

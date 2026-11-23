@@ -2,11 +2,17 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark" />
-    <meta name="description" content="Leet-For-Berger: interactive coding assessments with a 15-case test harness, learning path, interview simulator and battle mode." />
+    <meta name="theme-color" content="#100f0d" />
+    <meta name="description" content="Leet-For-Berger: practice coding interview problems on a map of 26 topics, with a 15-case judge, a daily challenge, company briefings, and timed interview and battle modes." />
+    <meta property="og:title" content="Leet-For-Berger" />
+    <meta property="og:description" content="Interview practice on a map: every problem is a hex, every solve lights one up." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="src/brand/social-preview.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <title>Leet-For-Berger</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f5a623'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='16' font-weight='700' text-anchor='middle' fill='%23111'%3E%7B%7D%3C/text%3E%3C/svg%3E" />
+    <link rel="icon" href="src/brand/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="stylesheet" href="src/css/app.css" />
   </head>
@@ -14,22 +20,28 @@
     <a class="skip-link" href="#view">Skip to content</a>
     <header class="app-header">
       <a class="brand" href="#/" aria-label="Leet-For-Berger home">
-        <span class="brand-mark" aria-hidden="true">{ }</span>
+        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5 21.1 6.75v10.5L12 22.5 2.9 17.25V6.75Z" fill="#f3a93c"/><path d="M12 6.2 16.5 8.8v5.2L12 16.6 7.5 14V8.8Z" fill="#100f0d"/><path d="M12 9.3 13.8 10.35v2.1L12 13.5l-1.8-1.05v-2.1Z" fill="#f3a93c"/></svg>
         <span class="brand-name">Leet<span>-For-</span>Berger</span>
       </a>
       <span id="header-title" class="header-title" aria-hidden="true">Problems</span>
       <nav class="nav" aria-label="Main">
         <a href="#/" data-nav="problems">Problems</a>
-        <a href="#/path" data-nav="path">Learning Path</a>
+        <a href="#/map" data-nav="map">Map</a>
+        <a href="#/path" data-nav="path">Path</a>
         <a href="#/companies" data-nav="companies">Companies</a>
         <a href="#/modes" data-nav="modes">Modes</a>
       </nav>
       <div class="header-right">
-        <span id="streak-chip" class="streak-chip" title="0-day streak">
-          <span class="streak-icon" aria-hidden="true">🔥</span>
+        <button type="button" class="palette-trigger" id="palette-trigger" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5" /><path d="M11 11l3.5 3.5" /></svg>
+          <span class="palette-trigger-label">Jump to</span>
+          <kbd aria-hidden="true">Ctrl K</kbd>
+        </button>
+        <a id="streak-chip" class="streak-chip" href="#/" title="0-day streak">
+          <span class="streak-icon" aria-hidden="true"></span>
           <span class="streak-count" aria-hidden="true">0</span>
           <span class="sr-only">0-day streak</span>
-        </span>
+        </a>
         <div id="account" class="account-host"></div>
       </div>
     </header>
@@ -38,19 +50,23 @@
 
     <nav class="tab-bar" aria-label="Primary">
       <a href="#/" data-nav="problems">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
         <span>Problems</span>
       </a>
+      <a href="#/map" data-nav="map">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 3.5 12 5.8v4.6L8 12.7 4 10.4V5.8Z" /><path d="M16 3.5l4 2.3v4.6l-4 2.3-4-2.3V5.8Z" /><path d="M12 11.3l4 2.3v4.6l-4 2.3-4-2.3v-4.6Z" /></svg>
+        <span>Map</span>
+      </a>
       <a href="#/path" data-nav="path">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="2.5" /><path d="M8.5 19h8a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H15" /><circle cx="18" cy="5" r="2.5" /></svg>
         <span>Path</span>
       </a>
       <a href="#/companies" data-nav="companies">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9h.01"/><path d="M9 13h.01"/><path d="M9 17h.01"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18" /><path d="M5 21V7l8-4v18" /><path d="M19 21V11l-6-4" /><path d="M9 9h.01M9 13h.01M9 17h.01" /></svg>
         <span>Companies</span>
       </a>
       <a href="#/modes" data-nav="modes">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 1.5" /><path d="M9 2h6M12 2v3" /></svg>
         <span>Modes</span>
       </a>
     </nav>
