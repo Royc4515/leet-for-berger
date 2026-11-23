@@ -9,8 +9,11 @@
 import { STORAGE_KEY as PROGRESS_KEY } from './progress.js';
 import { DRAFT_PREFIX } from './drafts.js';
 
+/** localStorage key holding the most recent Interview and Battle results shown on the Modes hub. */
+export const LAST_SESSIONS_KEY = 'lfb:last-sessions:v1';
+
 /** Exact localStorage keys holding a user's data. */
-export const USER_KEYS = [PROGRESS_KEY];
+export const USER_KEYS = [PROGRESS_KEY, LAST_SESSIONS_KEY];
 /** localStorage key prefixes holding a user's data (one key per problem and language). */
 export const USER_KEY_PREFIXES = [DRAFT_PREFIX];
 

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { emptyState, recordSubmission, computeStreak, stats, dayKey, load } from '../src/js/state/progress.js';
 import { createSession, recordAttempt, recordTabSwitch, finish, analytics, remainingMs, formatClock, timerState, problemStatus, scoreBand, WARNING_MS } from '../src/js/modes/interview.js';
 import { createBot } from '../src/js/modes/battle.js';
+import { parseLastResults, formatLastInterview, formatLastBattle } from '../src/js/modes/last-results.js';
 import { ScriptedMentor } from '../src/js/mentor/mentor.js';
 import problem from '../src/js/problems/smallest-base-segment/problem.js';
 
@@ -91,3 +92,33 @@ test('scripted mentor refuses to give the answer and walks hints in order', asyn
   assert.match(h1, /^Hint 1\//);
   assert.match(h2, /^Hint 2\//);
 });
+
+test('last session results: tolerates corrupt storage and formats interview and battle summaries', () => {
+  assert.deepEqual(parseLastResults(null), { interview: null, battle: null });
+  assert.deepEqual(parseLastResults('{bad json'), { interview: null, battle: null });
+  assert.deepEqual(parseLastResults(JSON.stringify({ interview: { score: 'nan' }, battle: { won: 'yes' } })), {
+    interview: null,
+    battle: null,
+  });
+
+  const parsed = parseLastResults(
+    JSON.stringify({
+      interview: { formatLabel: 'Phone screen', score: 82.4, band: 'strong', bandLabel: 'Strong', solved: 2, total: 2 },
+      battle: { won: true, botName: 'Regular bot', problemTitle: 'Pair Sum Target' },
+    }),
+  );
+  assert.deepEqual(formatLastInterview(parsed.interview), {
+    text: 'Last session: Phone screen · 82 / 100 (Strong) · 2 / 2 solved',
+    band: 'strong',
+    bandLabel: 'Strong',
+  });
+  assert.deepEqual(formatLastBattle(parsed.battle), {
+    text: 'Last race: Won vs Regular bot · Pair Sum Target',
+    won: true,
+  });
+  assert.deepEqual(formatLastBattle({ won: false, botName: 'Grandmaster bot', problemTitle: 'Merge Ranges' }), {
+    text: 'Last race: Grandmaster bot finished first · Merge Ranges',
+    won: false,
+  });
+});
+

@@ -12,40 +12,85 @@ import { expandRows, monogram } from '../../data/company-sets.js';
 import { loadRankedCompanies } from './companies.js';
 import { israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
 import { usedTopics, pickRandom } from '../../modes/battle-picker.js';
+import { LAST_SESSIONS_KEY } from '../../state/user-data.js';
+import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
+
+function loadLastResults() {
+  try {
+    return parseLastResults(localStorage.getItem(LAST_SESSIONS_KEY));
+  } catch {
+    return { interview: null, battle: null };
+  }
+}
+
+function saveLastResult(kind, value) {
+  try {
+    const next = { ...loadLastResults(), [kind]: value };
+    localStorage.setItem(LAST_SESSIONS_KEY, JSON.stringify(next));
+  } catch {
+    /* storage unavailable */
+  }
+}
 
 /* ======================= Hub ======================= */
 
+/**
+ * Render the Modes hub: two mode cards (Mock OA / Interview and 1v1 Battle) with at most one
+ * primary button, optional last-session summary lines, and a compact note pointing to AI Mentor
+ * inside practice problems.
+ * @param {HTMLElement} root
+ * @returns {() => void}
+ */
 export function renderModesHub(root) {
-  const card = (title, status, body, actions) =>
-    h('article.mode-card', {}, h('div.mode-top', {}, h('h2', {}, title), h(`span.tag${status === 'Live' ? '.tag-live' : '.tag-muted'}`, {}, status)), h('p', {}, body), h('div.mode-actions', {}, actions));
+  const last = loadLastResults();
+  const lastInterview = formatLastInterview(last.interview);
+  const lastBattle = formatLastBattle(last.battle);
+  const firstProblem = availableEntries()[0];
+
+  const card = (title, status, body, lastEl, actions) =>
+    h(
+      'article.mode-card',
+      {},
+      h('div.mode-top', {}, h('h2', {}, title), h(`span.tag${status === 'Live' ? '.tag-live' : '.tag-muted'}`, {}, status)),
+      h('p.mode-desc', {}, body),
+      lastEl,
+      h('div.mode-actions', {}, actions),
+    );
 
   mount(
     root,
     h(
       'div.page',
       {},
-      h('header.page-head', {}, h('h1', {}, 'Modes'), h('p.page-sub', {}, 'Same engine, different pressure.')),
+      h('header.page-head', {}, h('h1', {}, 'Modes'), h('p.page-sub', {}, 'Timed practice and paced races on the same 15-case judge.')),
       h(
         'div.mode-grid',
         {},
         card(
           'Mock OA and Interview',
           'Live',
-          'A phone screen, an online assessment or a hard OA, optionally drawn from one company\'s problems. Timed, locked-down UI: no navigation, no reveal, no mentor. Tab switches are logged. Ends with a scored report.',
+          'Timed phone screens, standard OAs, or hard OAs, optionally drawn from one company\'s problems. Navigation, solution reveal, and the mentor stay hidden; tab switches are logged; ends with a scored report. JavaScript, TypeScript, and Python run live; other languages stay editor-only in sessions.',
+          lastInterview ? h(`p.mode-last.band-${lastInterview.band}`, {}, lastInterview.text) : null,
           h('a.btn.btn-primary', { href: '#/interview' }, 'Set up a session'),
         ),
         card(
           '1v1 Battle',
           'Bot only',
-          'Race a bot on the same problem with live progress bars. Real-time peer battles need the server-side judge (roadmap Phase 3) so nobody can fake progress from the client.',
-          h('a.btn.btn-primary', { href: '#/battle' }, 'Race a bot'),
+          'Race a paced bot on the same problem with live progress bars while navigation stays hidden. Bot opponents only; live peer races are not available, and Java, C++, C, C#, and Go stay editor-only during a race.',
+          lastBattle ? h(`p.mode-last${lastBattle.won ? '.is-win' : ''}`, {}, lastBattle.text) : null,
+          h('a.btn.btn-secondary', { href: '#/battle' }, 'Race a bot'),
         ),
-        card(
-          'AI Mentor',
-          'Offline',
-          'Side panel inside every practice problem. Asks guiding questions, refuses to hand out solutions. Runs on a scripted hint ladder today; the LLM provider plugs into the same interface behind a backend proxy.',
-          h('a.btn.btn-secondary', { href: `#/problem/${availableEntries()[0].id}` }, 'Open a problem'),
+      ),
+      h(
+        'section.mentor-note',
+        { 'aria-label': 'AI Mentor' },
+        h(
+          'div.mentor-note-copy',
+          {},
+          h('div.mentor-note-head', {}, h('h2', {}, 'AI Mentor'), h('span.tag.tag-muted', {}, 'Scripted')),
+          h('p', {}, 'Available as a side panel inside every practice problem. Asks guiding questions without handing out the answer, using an offline scripted hint ladder (no live LLM yet).'),
         ),
+        firstProblem ? h('a.btn.btn-secondary.btn-sm', { href: `#/problem/${firstProblem.id}` }, 'Try it in a problem') : null,
       ),
       siteFooter(),
     ),
@@ -57,13 +102,27 @@ export function renderModesHub(root) {
 
 // Module-level so leaving and re-entering the route resumes instead of restarting.
 let interview = null;
+let interviewFormatLabel = '';
 let interviewDrafts = null; // survives route changes with the session, reset on a new interview
 let interviewProblems = null; // id -> hydrated problem, loaded before the clock starts
+
+function finishAndRecordInterview() {
+  interview = { ...Interview.finish(interview), activeProblemId: interview.activeProblemId };
+  const a = Interview.analytics(interview);
+  saveLastResult('interview', {
+    formatLabel: interviewFormatLabel,
+    score: a.score,
+    band: a.band.band,
+    bandLabel: a.band.label,
+    solved: a.solved,
+    total: a.problems.length,
+  });
+}
 
 export function renderInterview(root, { store }) {
   if (!interview) return renderInterviewSetup(root, { store });
   if (!interview.endedAt && Interview.isOver(interview)) {
-    interview = { ...Interview.finish(interview), activeProblemId: interview.activeProblemId };
+    finishAndRecordInterview();
   }
   if (interview.endedAt) return renderInterviewReport(root);
   return renderInterviewActive(root, { store });
@@ -233,6 +292,7 @@ function renderInterviewSetup(root, { store }) {
     interviewProblems = new Map(loaded.map((p) => [p.id, p]));
     // don't touch / the clock starts here, so it must stay after the await above (load time is not the candidate's)
     interview = Interview.createSession({ problemIds, durationMs: format.minutes * 60 * 1000 });
+    interviewFormatLabel = format.label;
     interviewDrafts = new Map();
     interview.activeProblemId = problemIds[0];
     window.dispatchEvent(new HashChangeEvent('hashchange')); // re-render current route
@@ -323,7 +383,7 @@ function renderInterviewActive(root, { store }) {
   const switches = h('span.session-state', {}, `Tab switches: ${interview.tabSwitches}`);
 
   const end = () => {
-    interview = { ...Interview.finish(interview), activeProblemId: interview.activeProblemId };
+    finishAndRecordInterview();
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   };
 
@@ -796,6 +856,11 @@ function startBattle(root, { store, problem, level }) {
   const declare = (who) => {
     if (winner) return;
     winner = who;
+    saveLastResult('battle', {
+      won: who === 'you',
+      botName: bot.name,
+      problemTitle: problem.title,
+    });
     banner.el.classList.add(who === 'you' ? 'won' : 'lost');
     mount(
       raceResult,
