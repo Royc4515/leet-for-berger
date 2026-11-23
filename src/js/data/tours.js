@@ -45,8 +45,8 @@ export const TOURS = {
     id: 'map',
     label: 'Map',
     steps: [
-      { target: ['.map-canvas'], title: 'Every topic', body: 'Each block is a topic, each hex a problem: green solved, coral tried.' },
-      { target: ['.map-canvas .district.has-next', '.map-canvas .district'], title: 'Zoom in', body: 'Click a topic for its subtopics, then a subtopic for its problems.' },
+      { target: ['.map-canvas'], title: 'One map', body: 'Every topic, subtopic and problem. Scroll or pinch to zoom, drag to move.' },
+      { target: ['.map-canvas .district.has-next', '.map-canvas .district'], title: 'Fly in', body: 'Click a topic to fly closer. Names appear as you get near.' },
       { target: ['.map-lens'], title: 'Colour by', body: 'Your progress, difficulty, or what one company asks.' },
       { target: ['.map-brief'], title: 'Where to go next', body: 'The panel always points at your next problem.' },
     ],

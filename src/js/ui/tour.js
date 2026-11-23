@@ -10,7 +10,7 @@
  */
 import { h } from './dom.js';
 import { TOURS, WELCOME, WELCOME_ALIASES } from '../data/tours.js';
-import { placeCard, spotRect } from '../data/tour-layout.js';
+import { placeCard, spotRect, sheetScroll } from '../data/tour-layout.js';
 import { loadSeen, saveSeen, markSeen, hasSeen } from '../state/tours.js';
 
 let active = null;
@@ -160,6 +160,11 @@ export function startTour(id, { onClose, withWelcome = false } = {}) {
     void card.offsetWidth; // restart the entrance animation for the new step
     card.classList.add('is-entering');
     layout();
+    // A phone's sheet must not cover the target when there is room for both: scroll to make it.
+    if (target) {
+      const dy = sheetScroll({ target: target.getBoundingClientRect(), card: { width: card.offsetWidth, height: card.offsetHeight }, viewport: { width: document.documentElement.clientWidth, height: innerHeight } });
+      if (dy) scrollBy({ top: dy, behavior: 'instant' });
+    }
     // Views animate in and fonts swap: place again once things have settled.
     clearTimeout(settle);
     settle = setTimeout(queue, 260);

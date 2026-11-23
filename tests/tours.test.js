@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TOURS, MODE_TOURS, TOUR_LIMITS, WELCOME, validateTour, tourForRoute } from '../src/js/data/tours.js';
 import { TOURS_KEY, parseSeen, hasSeen, markSeen, loadSeen, saveSeen } from '../src/js/state/tours.js';
-import { placeCard, spotRect, SHEET_WIDTH, TOUR_MARGIN } from '../src/js/data/tour-layout.js';
+import { placeCard, spotRect, sheetScroll, SHEET_WIDTH, TOUR_MARGIN, TOUR_GAP } from '../src/js/data/tour-layout.js';
 import { mulberry32 } from '../src/js/engine/rng.js';
 
 test('every part of the site has its own tour, plus a one-step welcome that only prefixes another', () => {
@@ -144,6 +144,26 @@ test('placement: under the sheet width the card docks to the edge away from the 
   assert.equal(bottom.edge, 'top');
   assert.equal(bottom.top, TOUR_MARGIN);
   assert.equal(bottom.left, TOUR_MARGIN);
+});
+
+test('placement: on a phone a tall target scrolls clear of the sheet when both fit, never otherwise', () => {
+  const vp = { width: 390, height: 844 };
+  const sheetCard = { width: 358, height: 200 };
+  // A 490 px map anywhere on screen: after the scroll the sheet and the spotlight never touch.
+  for (const top of [-200, 0, 100, 177, 190, 260, 340, 600]) {
+    const map = { top, left: 16, width: 358, height: 490 };
+    const moved = { ...map, top: top - sheetScroll({ target: map, card: sheetCard, viewport: vp }) };
+    const place = placeCard({ target: moved, card: sheetCard, viewport: vp });
+    const spot = spotRect(moved, vp);
+    const clear = place.edge === 'top' ? place.top + sheetCard.height + TOUR_GAP <= spot.top : spot.top + spot.height + TOUR_GAP <= place.top;
+    assert.ok(clear, `map at ${top}: ${JSON.stringify({ moved: moved.top, place, spot })}`);
+  }
+  assert.ok(sheetScroll({ target: { top: 177, left: 16, width: 358, height: 490 }, card: sheetCard, viewport: vp }) !== 0, 'a centred map needs a scroll');
+  // Already clear, too tall for both, or a desktop: no scroll.
+  assert.equal(sheetScroll({ target: { top: 300, left: 0, width: 300, height: 100 }, card: sheetCard, viewport: vp }), 0);
+  assert.equal(sheetScroll({ target: { top: 0, left: 0, width: 390, height: 700 }, card: sheetCard, viewport: vp }), 0);
+  assert.equal(sheetScroll({ target: { top: 177, left: 16, width: 358, height: 490 }, card: sheetCard, viewport: { width: 1440, height: 900 } }), 0);
+  assert.equal(sheetScroll({ target: null, card: sheetCard, viewport: vp }), 0);
 });
 
 test('placement: the card always stays on screen, whatever the target', () => {

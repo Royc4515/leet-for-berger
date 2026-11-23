@@ -1,6 +1,7 @@
 /**
  * Problem Map model: topic states (locked, open, started, mastered), the reason a topic is
- * locked, and the deterministic layout the map view draws.
+ * locked, subtopic states, map level URLs and keyboard neighbours. The map view's world is laid out
+ * by data/map-world.js; layoutMap here still draws the social preview image.
  *
  * Locked is advice, never a wall: a locked topic still opens and its problems still run. It only
  * says what to solve first, so a first-time visitor can read "why" in one line.
@@ -305,7 +306,7 @@ export function neighbours(districts) {
   return out;
 }
 
-/* ---------- Drill-down: topic, subtopic, problem (owner's request) ---------- */
+/* ---------- Map levels: topic, subtopic, problem (owner's request; drawn on one world, map-world.js) ---------- */
 
 /**
  * @typedef {{
@@ -333,65 +334,6 @@ export function conceptStates({ topic, placed, ids, progress }) {
       return { id: c, title: conceptLabel(c), problems, total: problems.length, solved, attempted, essential, next, state };
     })
     .filter((c) => c.total > 0);
-}
-
-/**
- * @typedef {{ id: string, order: number, x: number, y: number, w: number, h: number, cells: Point[], head: number }} Block
- * @typedef {{ narrow: boolean, width: number, height: number, r: number, blocks: Block[], roads: Road[] }} TopicLayout
- */
-
-/**
- * The topic level: one block per subtopic, in learning order, on a winding road (left to right,
- * then right to left, like reading a board game), one hex per problem. Pure and deterministic.
- * @param {{ id: string, count: number }[]} concepts in learning order
- * @param {{ width: number }} opts available width in CSS pixels
- * @returns {TopicLayout}
- */
-export function layoutTopic(concepts, { width }) {
-  const narrow = width < NARROW_WIDTH;
-  const r = narrow ? 9 : 11;
-  const cw = SQRT3 * r;
-  const head = 50;
-  const pad = 12;
-  const gapX = narrow ? 14 : 44;
-  const gapY = narrow ? 30 : 44;
-  const perRow = narrow ? 2 : Math.max(2, Math.min(4, Math.floor((width + gapX) / (220 + gapX))));
-  const boxW = Math.floor((width - gapX * (perRow - 1)) / perRow);
-  const hexCols = Math.max(3, Math.floor((boxW - 2 * pad - cw / 2) / cw));
-  /** @type {Block[]} */
-  const blocks = [];
-  let y = 0;
-  for (let start = 0, row = 0; start < concepts.length; start += perRow, row++) {
-    const list = concepts.slice(start, start + perRow);
-    const shapes = list.map((c) => hexCells(c.count, hexCols, r));
-    const rowH = round(head + Math.max(...shapes.map((sh) => sh.h)) + pad);
-    list.forEach((c, j) => {
-      // Odd rows run right to left, so the road turns down at the end of a row, not back across it.
-      const col = row % 2 ? perRow - 1 - j : j;
-      blocks.push({ id: c.id, order: start + j, x: round(col * (boxW + gapX)), y: round(y), w: boxW, h: rowH, cells: shapes[j].cells.map((cell) => ({ x: round(cell.x + pad), y: round(cell.y + head) })), head });
-    });
-    y = round(y + rowH + gapY);
-  }
-  /** @type {Road[]} */
-  const roads = [];
-  for (let i = 0; i + 1 < blocks.length; i++) {
-    const a = blocks[i];
-    const b = blocks[i + 1];
-    if (a.y === b.y) {
-      const rightward = b.x > a.x;
-      const p = { x: rightward ? a.x + a.w : a.x, y: round(a.y + a.h / 2) };
-      const q = { x: rightward ? b.x : b.x + b.w, y: round(b.y + b.h / 2) };
-      const mx = round((p.x + q.x) / 2);
-      roads.push({ from: a.id, to: b.id, points: [p, { x: mx, y: p.y }, { x: mx, y: q.y }, q] });
-    } else {
-      const p = { x: round(a.x + a.w / 2), y: round(a.y + a.h) };
-      const q = { x: round(b.x + b.w / 2), y: b.y };
-      const my = round((p.y + q.y) / 2);
-      roads.push({ from: a.id, to: b.id, points: [p, { x: p.x, y: my }, { x: q.x, y: my }, q] });
-    }
-  }
-  const height = blocks.length ? round(Math.max(...blocks.map((b) => b.y + b.h)) + 4) : 0;
-  return { narrow, width, height, r, blocks, roads };
 }
 
 /**
