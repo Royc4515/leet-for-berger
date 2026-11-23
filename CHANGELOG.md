@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Collinear Max's growth ladder is now 125 to 1000 points (was 250 to 2000): the 2000 size pushed a run to about 5.4 s, over the browser's 5 s budget; a run now takes about 1.2 s and still reads quadratic. The unused `gcd` helper in its problem file is removed (review nits on group C).
+
 ### Added (wave F2-4, Nvidia, group B)
 - Five Nvidia company problems (215 -> 220 problems), each with original wording, 15 test cases (5 visible, 10 hidden), Socratic hints, walkthrough prose, unit tests against brute force, and verified solutions in all 8 languages (Python, JavaScript, TypeScript, Java, C++, C, C#, Go):
   - **Number in Words** (`number-in-words`, Hard, LeetCode 273): base-1000 English spelling for 32-bit integers (`fixed-size` growth exclusion).
