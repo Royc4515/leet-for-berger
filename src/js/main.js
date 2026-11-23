@@ -11,6 +11,7 @@ import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
 import { services } from './auth/services.js';
 import { catalogEntry, loadProblem } from './problems/index.js';
 import { h, mount, toast, stateBlock, loadingState, siteFooter } from './ui/dom.js';
+import { loadSeen, hasSeen } from './state/tours.js';
 
 const store = createStore();
 const view = document.getElementById('view');
@@ -61,6 +62,32 @@ let cleanup = () => {};
 // Bumped on every navigation: a view that finishes loading after the hash moved on must not render.
 let navToken = 0;
 
+/* ---------- Guided tours (data/tours.js) ---------- */
+// The site tour starts on the first visit to a browse page. Interview, battle and the workspace
+// start their own mode tours. The overlay module loads only when a tour is due or asked for.
+const SITE_TOUR_ROUTE = /^#?\/?$|^#\/(map|daily|path|companies|modes)\b/;
+let closeTour = () => {};
+const loadTour = () => import('./ui/tour.js');
+
+function maybeSiteTour(hash, token) {
+  if (!SITE_TOUR_ROUTE.test(hash) || hasSeen(loadSeen(), 'site')) return;
+  loadTour()
+    .then((m) => {
+      if (token === navToken) closeTour = m.startTourIfDue('site');
+    })
+    .catch(() => {}); // offline: no tour this time, it stays due
+}
+
+// Replays (the footer, the palette) ask for a tour by id with a 'tour:open' event.
+addEventListener('tour:open', (e) => {
+  loadTour()
+    .then((m) => {
+      closeTour();
+      closeTour = m.startTour(e.detail);
+    })
+    .catch(() => toast('The tour could not load. Check your connection and try again.', 'error'));
+});
+
 function setHeaderTitle(text) {
   if (headerTitle) headerTitle.textContent = text;
 }
@@ -75,6 +102,8 @@ async function route() {
     console.error('View cleanup failed', err);
   }
   cleanup = () => {};
+  closeTour();
+  closeTour = () => {};
   const hash = location.hash || '#/';
   const match = routes.find(([re]) => re.test(hash));
   view.className = 'view';
@@ -100,6 +129,7 @@ async function route() {
   if (token !== navToken) return;
   cleanup = mounter(view) ?? (() => {});
   view.focus({ preventScroll: true });
+  maybeSiteTour(hash, token);
 }
 
 function setActiveNav(key) {
@@ -137,6 +167,8 @@ document.addEventListener('keydown', (e) => {
     // Sessions hide navigation on purpose; the palette would be a way out of the exam room.
     if (document.body.classList.contains('lockdown')) return;
     e.preventDefault();
+    // Not over a tour or a confirm: finish or close that first (an open palette ignores it too).
+    if (document.querySelector('dialog[open]')) return;
     openPalette();
   }
 });

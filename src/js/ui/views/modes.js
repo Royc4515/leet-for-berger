@@ -14,6 +14,23 @@ import { israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/i
 import { usedTopics, pickRandom } from '../../modes/battle-picker.js';
 import { LAST_SESSIONS_KEY } from '../../state/user-data.js';
 import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
+import { startTour, startTourIfDue } from '../tour.js';
+
+/**
+ * A mode's guided tour (data/tours.js): it starts on the first visit to the setup page and the
+ * "How it works" button replays it. The returned close goes in the view's cleanup.
+ * @param {string} id
+ * @returns {{ replay: HTMLElement, close: () => void }}
+ */
+function modeTour(id) {
+  let close = startTourIfDue(id);
+  const replay = h('button.btn.btn-ghost.btn-sm.tour-replay', { type: 'button', 'aria-haspopup': 'dialog' }, 'How it works');
+  replay.addEventListener('click', () => {
+    close();
+    close = startTour(id);
+  });
+  return { replay, close: () => close() };
+}
 
 function loadLastResults() {
   try {
@@ -288,6 +305,7 @@ function renderInterviewSetup(root, { store }) {
   describe();
 
   let disposed = false;
+  const tour = modeTour('interview');
   const start = h('button.btn.btn-primary.btn-lg', { type: 'button' }, 'Start interview');
   start.addEventListener('click', async () => {
     const solvedIds = new Set(Object.entries(store.get().problems).filter(([, p]) => p.status === 'solved').map(([id]) => id));
@@ -328,7 +346,7 @@ function renderInterviewSetup(root, { store }) {
       'div.page.page-narrow.setup-page',
       {},
       h('a.back-link', { href: '#/modes' }, 'All modes'),
-      h('header.page-head', {}, h('h1', {}, 'Mock OA and Interview'), h('p.page-sub', {}, 'Treat it like the real thing. The problems stay hidden until the clock starts.')),
+      h('header.page-head', {}, h('h1', {}, 'Mock OA and Interview'), tour.replay, h('p.page-sub', {}, 'Treat it like the real thing. The problems stay hidden until the clock starts.')),
       h(
         'div.setup-card',
         {},
@@ -345,12 +363,15 @@ function renderInterviewSetup(root, { store }) {
           h('li', {}, 'Tab switches cost integrity points; your best run per problem counts when time ends.'),
         ),
       ),
-      h('div.setup-bar', {}, barSummary, start),
+      h('div.setup-bar', { 'data-tour': 'oa-start' }, barSummary, start),
       siteFooter(),
     ),
   );
+  formatGroup.el.dataset.tour = 'oa-format';
+  companyPicker.el.dataset.tour = 'oa-company';
   return () => {
     disposed = true;
+    tour.close();
     formatGroup.cleanup();
     companyPicker.cleanup();
   };
@@ -768,6 +789,7 @@ export function renderBattle(root, { store }) {
 
   describeStart();
   const start = h('button.btn.btn-primary.btn-lg', { type: 'button' }, 'Start race');
+  const tour = modeTour('battle');
 
   let cleanup = () => {};
   let disposed = false;
@@ -794,7 +816,7 @@ export function renderBattle(root, { store }) {
       'div.page.page-narrow.setup-page',
       {},
       h('a.back-link', { href: '#/modes' }, 'All modes'),
-      h('header.page-head', {}, h('h1', {}, '1v1 Battle'), h('p.page-sub', {}, 'First to an accepted submission wins.')),
+      h('header.page-head', {}, h('h1', {}, '1v1 Battle'), tour.replay, h('p.page-sub', {}, 'First to an accepted submission wins.')),
       h(
         'div.setup-card',
         {},
@@ -803,12 +825,15 @@ export function renderBattle(root, { store }) {
         h('h2.setup-heading', {}, 'Problem'),
         problemPicker.el,
       ),
-      h('div.setup-bar', {}, barSummary, start),
+      h('div.setup-bar', { 'data-tour': 'battle-start' }, barSummary, start),
       siteFooter(),
     ),
   );
+  opponentGroup.el.dataset.tour = 'battle-opponent';
+  problemPicker.el.dataset.tour = 'battle-problem';
   return () => {
     disposed = true;
+    tour.close();
     opponentGroup.cleanup();
     problemPicker.cleanup();
     topicToggle.removeEventListener('keydown', onTopicToggleKeydown);

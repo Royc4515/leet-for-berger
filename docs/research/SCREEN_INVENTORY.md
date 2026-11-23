@@ -82,6 +82,7 @@ What each screen must help them do:
 | C27 | Progress bars and meters | path, companies, frequency meter | 0, partial, full | Step 1 | [x] |
 | C28 | Session banner | interview, battle | running, warning, ended | Step 7 | [x] |
 | C29 | Command palette (new) | global | open, results, empty, keyboard | Step 1 | [x] |
+| C30 | Guided tour (new, owner's request after step 9) | global, setup pages, mentor panel | first visit, each step, centred step, phone sheet, replay, Esc | Step 9 | [x] |
 
 ## Brand assets
 

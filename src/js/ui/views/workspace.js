@@ -27,6 +27,7 @@ import { createProblemExtras } from '../problem-extras.js';
 import { services } from '../../auth/services.js';
 import { shouldAutoSync } from '../../auth/github-sync.js';
 import { createMentorPanel } from '../mentor-panel.js';
+import { startTour, startTourIfDue } from '../tour.js';
 import { loadPath } from '../../data/path-loader.js';
 import { pathProgress, conceptLabel } from '../../data/learning-path.js';
 import { TOPICS as TAXONOMY } from '../../data/taxonomy.js';
@@ -302,9 +303,17 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     requestAnimationFrame(() => editor?.layout());
   }
 
+  // The mentor's guided tour: on the first open, and again from the panel's "?" button.
+  let closeMentorTour = () => {};
+  const mentorTour = (replay) => {
+    closeMentorTour();
+    closeMentorTour = replay ? startTour('mentor') : startTourIfDue('mentor', { delay: 260 });
+  };
+  cleanups.push(() => closeMentorTour());
   const mentor = createMentorPanel({
     getContext: () => ({ problem, language, code: editor?.getValue() ?? '', lastResult }),
     onClose: () => toggleMentor(false),
+    onHelp: () => mentorTour(true),
   });
 
   const colHandle = h('div.resizer.resizer-x', { 'aria-label': 'Resize description and editor' });
@@ -331,6 +340,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     split.classList.toggle('mentor-open', open);
     mentorBtn.setAttribute('aria-pressed', String(open));
     if (open) mentor.focus();
+    if (open) mentorTour(false);
     requestAnimationFrame(() => editor?.layout());
   }
   mentorBtn.addEventListener('click', () => toggleMentor());

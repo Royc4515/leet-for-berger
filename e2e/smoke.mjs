@@ -38,6 +38,10 @@ await page.addInitScript(() => {
     // longtask is Chromium-only; the number is informational.
   }
 });
+// Guided tours (data/tours.js) open on a first visit. Every context except the fresh-visit step and
+// the tour steps starts with them seen, so a tour never covers what a step is testing.
+const SEEN_TOURS = () => localStorage.setItem('lfb:tours:v1', JSON.stringify({ site: '2026-01-01', interview: '2026-01-01', battle: '2026-01-01', mentor: '2026-01-01' }));
+await page.addInitScript(SEEN_TOURS);
 // Problem modules load one at a time, when a problem opens (ADR 0008); count what the page fetched.
 const PROBLEM_MODULE = /\/problems\/[^/]+\/problem\.js(\?|$)/;
 const problemModules = [];
@@ -366,6 +370,7 @@ try {
     remote.on('console', (m) => m.type() === 'error' && errors.push(`console (remote page, step ${step}): ${m.text()}`));
     remote.on('pageerror', (e) => errors.push(`pageerror (remote page, step ${step}): ${e.message}`));
     try {
+      await remote.addInitScript(SEEN_TOURS);
       await remote.addInitScript((url) => {
         window.LFB_REMOTE_RUNNER_URL = url;
         window.LFB_SUPABASE_URL = '';
@@ -809,6 +814,7 @@ try {
     const clockPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     clockPage.on('console', (m) => m.type() === 'error' && errors.push(`console (clock page): ${m.text()}`));
     clockPage.on('pageerror', (e) => errors.push(`pageerror (clock page): ${e.message}`));
+    await clockPage.addInitScript(SEEN_TOURS);
     await clockPage.addInitScript(() => {
       window.LFB_SUPABASE_URL = '';
       window.LFB_SUPABASE_ANON_KEY = '';
@@ -1224,6 +1230,7 @@ try {
     await touch.route('**/@supabase/supabase-js@*/+esm', (r) =>
       r.fulfill({ contentType: 'text/javascript', body: 'export function createClient() { return { auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({}) } }; }' }),
     );
+    await touch.addInitScript(SEEN_TOURS);
     await touch.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = 'https://example.supabase.co';
@@ -1329,6 +1336,7 @@ try {
   // Its own page: the blocked CDN request is logged as a failed resource, which is the point here.
   await check('without Monaco, TypeScript reports honestly that it needs the editor and nothing crashes', async () => {
     const offline = await browser.newPage();
+    await offline.addInitScript(SEEN_TOURS);
     await offline.addInitScript(() => {
       window.LFB_SUPABASE_URL = '';
       window.LFB_SUPABASE_ANON_KEY = '';
@@ -1391,6 +1399,7 @@ try {
       }
       return r.fulfill({ contentType: 'application/json', headers: cors, body: linked ? '{"linked":true,"repo":"ada/practice","autoSync":true}' : '{"linked":false,"githubUser":true}' });
     });
+    await acct.addInitScript(SEEN_TOURS);
     await acct.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = 'https://example.supabase.co';
@@ -1727,6 +1736,7 @@ try {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
     const phone = await ctx.newPage();
     phone.on('console', (m) => m.type() === 'error' && errors.push(`console (390 map): ${m.text()}`));
+    await phone.addInitScript(SEEN_TOURS);
     await phone.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = '';
@@ -1790,11 +1800,134 @@ try {
     if (!(await page.evaluate(() => document.activeElement?.id === 'palette-trigger'))) throw new Error('focus did not return to the palette trigger');
   });
 
+  await check('guided tours: the site tour opens once on a first visit and replays; each mode explains itself the first time it opens', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const t = await ctx.newPage();
+    t.on('console', (m) => m.type() === 'error' && errors.push(`console (tours): ${m.text()}`));
+    t.on('pageerror', (e) => errors.push(`pageerror (tours): ${e.message}`));
+    await t.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+      window.LFB_SUPABASE_ANON_KEY = '';
+    });
+    const open = (id) => t.waitForSelector(`dialog.tour[open][data-tour-id="${id}"]`, { timeout: 8000 });
+    const gone = () => t.waitForSelector('dialog.tour', { state: 'detached', timeout: 5000 });
+    const eyebrow = () => t.textContent('.tour-eyebrow');
+    // The card is on screen and the spotlight sits on the step's target (when it has one).
+    const geometry = (sel) =>
+      t.evaluate((s) => {
+        const c = document.querySelector('.tour-card').getBoundingClientRect();
+        const spot = document.querySelector('.tour-spot').getBoundingClientRect();
+        const target = s ? document.querySelector(s)?.getBoundingClientRect() : null;
+        const covers = target ? spot.left <= target.left + 1 && spot.top <= target.top + 1 && spot.right >= target.right - 1 && spot.bottom >= target.bottom - 1 : true;
+        return { onScreen: c.left >= 0 && c.top >= 0 && c.right <= innerWidth && c.bottom <= innerHeight, covers, focus: document.activeElement?.textContent };
+      }, sel);
+
+    await t.goto(`${BASE}#/`);
+    await open('site');
+    if (!/Welcome · 1 of 4/.test(await eyebrow())) throw new Error(`site tour starts at: ${await eyebrow()}`);
+    const first = await geometry(null);
+    if (!first.onScreen || first.focus !== 'Next') throw new Error(`welcome step: ${JSON.stringify(first)}`);
+    await t.keyboard.press('ArrowRight');
+    await t.waitForFunction(() => /2 of 4/.test(document.querySelector('.tour-eyebrow')?.textContent ?? ''));
+    await t.waitForTimeout(350);
+    const mapStep = await geometry('.nav [data-nav="map"]');
+    if (!mapStep.onScreen || !mapStep.covers) throw new Error(`map step: ${JSON.stringify(mapStep)}`);
+    await t.keyboard.press('Escape');
+    await gone();
+    const seen = await t.evaluate(() => JSON.parse(localStorage.getItem('lfb:tours:v1') ?? '{}'));
+    if (!seen.site) throw new Error(`Escape did not mark the site tour seen: ${JSON.stringify(seen)}`);
+    await t.reload();
+    await t.waitForSelector('.problem-table tbody tr a.problem-link');
+    await t.waitForTimeout(900);
+    if (await t.locator('dialog.tour').count()) throw new Error('the site tour opened again after it was seen');
+    // Replays: the footer, then the palette, walking every step to Done.
+    await t.click('.site-links-tour');
+    await open('site');
+    for (let i = 0; i < 4; i++) await t.click('.tour-next');
+    await gone();
+    await t.keyboard.press('Control+k');
+    await t.waitForSelector('dialog.palette[open]');
+    await t.keyboard.type('site tour');
+    await t.keyboard.press('Enter');
+    await open('site');
+    await t.keyboard.press('Escape');
+    await gone();
+
+    // Interview: the guide opens on the first visit, every step lights its target, "How it works" replays it.
+    await t.goto(`${BASE}#/interview`);
+    await open('interview');
+    for (const sel of ['[data-tour="oa-format"]', '[data-tour="oa-company"]', '[data-tour="oa-start"]']) {
+      await t.waitForTimeout(350);
+      const g = await geometry(sel);
+      if (!g.onScreen || !g.covers) throw new Error(`interview step ${sel}: ${JSON.stringify(g)}`);
+      await t.click('.tour-next');
+    }
+    await gone();
+    await t.reload();
+    await t.waitForSelector('[data-tour="oa-format"]');
+    await t.waitForTimeout(900);
+    if (await t.locator('dialog.tour').count()) throw new Error('the interview guide opened again after it was seen');
+    await t.click('.tour-replay');
+    await open('interview');
+    await t.keyboard.press('Escape');
+    await gone();
+
+    await t.goto(`${BASE}#/battle`);
+    await open('battle');
+    if (!/Battle · 1 of 3/.test(await eyebrow())) throw new Error(`battle guide: ${await eyebrow()}`);
+    await t.keyboard.press('Escape');
+    await gone();
+
+    // Mentor: on the first open of the panel, not the second; the panel's ? replays it.
+    await t.goto(`${BASE}#/problem/pair-sum-target`);
+    await t.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await t.click('button[data-action="mentor"]');
+    await open('mentor');
+    if (!/Mentor · 1 of 2/.test(await eyebrow())) throw new Error(`mentor guide: ${await eyebrow()}`);
+    await t.keyboard.press('Escape');
+    await gone();
+    await t.click('button[data-action="mentor"]');
+    await t.click('button[data-action="mentor"]');
+    await t.waitForTimeout(700);
+    if (await t.locator('dialog.tour').count()) throw new Error('the mentor guide opened again after it was seen');
+    await t.click('button[aria-label="How the mentor works"]');
+    await open('mentor');
+    await t.keyboard.press('Escape');
+    await gone();
+    await ctx.close();
+  });
+
+  await check('guided tours at 390: the card is a sheet on screen, away from its target, with 44 px buttons', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    const t = await ctx.newPage();
+    t.on('console', (m) => m.type() === 'error' && errors.push(`console (tours 390): ${m.text()}`));
+    t.on('pageerror', (e) => errors.push(`pageerror (tours 390): ${e.message}`));
+    await t.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+    });
+    await t.goto(`${BASE}#/`);
+    await t.waitForSelector('dialog.tour[open][data-tour-id="site"]', { timeout: 8000 });
+    await t.tap('.tour-next');
+    await t.waitForFunction(() => /2 of 4/.test(document.querySelector('.tour-eyebrow')?.textContent ?? ''));
+    await t.waitForTimeout(350);
+    const m = await t.evaluate(() => {
+      const c = document.querySelector('.tour-card').getBoundingClientRect();
+      const target = document.querySelector('.tab-bar [data-nav="map"]').getBoundingClientRect();
+      const buttons = [...document.querySelectorAll('.tour-card button')].filter((b) => !b.hidden).map((b) => Math.round(b.getBoundingClientRect().height));
+      return { left: c.left, right: c.right, top: c.top, bottom: c.bottom, overlaps: c.bottom > target.top && c.top < target.bottom, buttons, sw: document.documentElement.scrollWidth };
+    });
+    if (m.left < 0 || m.right > 390 || m.top < 0 || m.bottom > 844 || m.overlaps || m.sw > 390) throw new Error(`390 tour card: ${JSON.stringify(m)}`);
+    if (m.buttons.some((hgt) => hgt < 44)) throw new Error(`tour buttons under 44 px: ${m.buttons}`);
+    await ctx.close();
+  });
+
   await check('reduced motion: every route renders with animations effectively off and nothing left hidden', async () => {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
     const rm = await ctx.newPage();
     rm.on('console', (m) => m.type() === 'error' && errors.push(`console (reduced motion): ${m.text()}`));
     rm.on('pageerror', (e) => errors.push(`pageerror (reduced motion): ${e.message}`));
+    await rm.addInitScript(SEEN_TOURS);
     await rm.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = '';

@@ -15,6 +15,7 @@ for (const [label, rate, vp] of [['desktop 1x', 1, { width: 1440, height: 900 }]
   await cdp.send('Emulation.setCPUThrottlingRate', { rate });
   await p.addInitScript(() => {
     window.__long = [];
+    localStorage.setItem('lfb:tours:v1', JSON.stringify({ site: '2026-01-01' })); // the first-visit tour is not the map
     new PerformanceObserver((l) => l.getEntries().forEach((e) => window.__long.push(e.duration))).observe({ type: 'longtask', buffered: true });
     localStorage.setItem('lfb:progress:v1', JSON.stringify({ version: 1, problems: { 'pair-sum-target': { status: 'solved', submissions: 1, accepted: 1 }, 'isomorphic-strings': { status: 'solved', submissions: 1, accepted: 1 } }, activeDays: [], totals: { submissions: 2, accepted: 2 }, drafts: {} }));
   });

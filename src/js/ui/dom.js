@@ -237,7 +237,8 @@ export function loadingState({ label = 'Loading...', rows = 6 } = {}) {
 }
 
 /**
- * Shared footer for browse pages: the main destinations and the privacy policy.
+ * Shared footer for browse pages: the main destinations, a replay of the site tour, and the
+ * privacy policy.
  * @param {{ note?: string }} [opts] note: one extra line (company pages carry the trademark note)
  * @returns {HTMLElement}
  */
@@ -252,6 +253,8 @@ export function siteFooter({ note = '' } = {}) {
       h('a', { href: '#/map' }, 'Map'),
       h('a', { href: '#/daily' }, 'Daily'),
       h('a', { href: '#/path' }, 'Path'),
+      // main.js owns tours (they outlive a view); the footer only asks for one.
+      h('button.site-links-tour', { type: 'button', onClick: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'site' })) }, 'Site tour'),
       h('a', { href: 'privacy.html' }, 'Privacy Policy'),
     ),
     note ? h('p.site-links-note', {}, note) : null,

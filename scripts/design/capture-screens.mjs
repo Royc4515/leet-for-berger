@@ -65,6 +65,8 @@ for (const vp of [{ w: 1440, h: 900, tag: '1440' }, { w: 390, h: 844, tag: '390'
     page.on('pageerror', (e) => errs.push(e.message));
     await page.addInitScript((st) => {
       window.LFB_REMOTE_RUNNER_URL = ''; window.LFB_SUPABASE_URL = ''; window.LFB_SUPABASE_ANON_KEY = '';
+      // Guided tours open on a first visit; they would cover the screen being captured.
+      localStorage.setItem('lfb:tours:v1', JSON.stringify({ site: '2026-01-01', interview: '2026-01-01', battle: '2026-01-01', mentor: '2026-01-01' }));
       if (st && !sessionStorage.getItem('seeded')) { localStorage.setItem('lfb:progress:v1', JSON.stringify(st)); sessionStorage.setItem('seeded', '1'); }
     }, s.state ?? null);
     try {

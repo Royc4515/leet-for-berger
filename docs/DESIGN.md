@@ -90,6 +90,7 @@ Easing: `--ease` (out, default), `--ease-in-out` (things that move across the sc
 | Dialog | Confirms a destructive or irreversible step | Native `<dialog>`, title is the question, the confirm button repeats the verb. |
 | Toast | Confirms something that already happened | Top centre, hex marker in the semantic colour, `role="status"`. Never the only place a result appears. |
 | Command palette | Jump anywhere | Ctrl or Cmd+K, or the header button. Combobox + listbox, arrow keys, Enter, Esc. Pages, topics, problems, companies. Disabled in sessions. |
+| Guided tour | Explains a screen the first time | Spotlight on the element a step explains, a card beside it (a sheet under 640 px). See Tour rules. |
 | State block | Empty, error, loading | One block with a hex, a title, one line, one action. Loading uses skeleton rows the height of real rows. |
 | Spinner | Work in progress | A rotating hex. |
 
@@ -105,6 +106,14 @@ Helpers in `src/js/ui/dom.js` build these with `h()` and text nodes only (never 
 - The panel is the zoom: no pan, no zoom, no minimap.
 - Every district is a focusable control with a full accessible name; arrows move by geometry; Enter selects and updates the hash (`#/map/<topic>`) without re-routing.
 - Map / List show the same model; List is the screen-reader route.
+
+## Tour rules
+
+- One site tour (first visit to any browse page) and one guide per mode (Interview, Battle, Mentor), each shown once per device and replayable: the footer and the palette for the site tour, "How it works" on a setup page, the mentor's "?" button. Content lives in `src/js/data/tours.js`.
+- Short and simple: at most 4 steps, a title of 24 characters and one line of 80; the same voice as the rest of the site (`validateTour` enforces it).
+- A step points at one real element: the spotlight rings it in amber and the scrim dims the rest. The card goes below, above or beside it and never covers it; on a phone it is a sheet on the edge away from the target. Steps without a target are centred.
+- A native modal `<dialog>`: focus stays in the card and starts on Next; Esc and Skip close it; arrow keys move between steps; every close marks the tour seen. Clicking the scrim does nothing, so a stray tap cannot end an explanation.
+- Never during a session (lockdown), never over another dialog, never in place of content: the site works the same with every tour skipped.
 
 ## Motion rules
 

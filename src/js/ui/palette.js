@@ -21,9 +21,11 @@ const PAGES = [
   { kind: 'page', id: 'interview', label: 'Interview simulator', href: '#/interview', keywords: 'mock oa timed exam' },
   { kind: 'page', id: 'battle', label: 'Battle a bot', href: '#/battle', keywords: 'race versus' },
   { kind: 'page', id: 'modes', label: 'Modes', href: '#/modes', keywords: 'practice' },
+  // An action, not a page: main.js starts the tour where you are.
+  { kind: 'action', id: 'site-tour', label: 'Site tour', keywords: 'guide help walkthrough onboarding how', run: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'site' })) },
 ];
 
-const KIND_LABEL = { page: 'Page', problem: 'Problem', topic: 'Topic', company: 'Company' };
+const KIND_LABEL = { page: 'Page', action: 'Guide', problem: 'Problem', topic: 'Topic', company: 'Company' };
 
 /** Company entries for search; the sets load once, shared with the companies pages. */
 const loadCompanies = () =>
@@ -78,7 +80,8 @@ export function openPalette() {
   };
   const go = (item) => {
     close();
-    if (item) location.hash = item.href;
+    if (item?.run) item.run();
+    else if (item) location.hash = item.href;
   };
   const render = () => {
     results = searchPalette(items, input.value, 9);

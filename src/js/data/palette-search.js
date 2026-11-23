@@ -7,7 +7,7 @@
  */
 
 /**
- * @typedef {{ kind: 'page'|'problem'|'topic'|'company', id: string, label: string, hint?: string, href: string, keywords?: string }} PaletteItem
+ * @typedef {{ kind: 'page'|'action'|'problem'|'topic'|'company', id: string, label: string, hint?: string, href?: string, run?: () => void, keywords?: string }} PaletteItem
  */
 
 const KIND_ORDER = { page: 0, problem: 1, topic: 2, company: 3 };
