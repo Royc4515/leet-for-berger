@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed (clarity and motion, owner's request)
+- **Status colours you read at a glance**: green solved, a green ring solved with help, coral tried and not solved yet, grey not started, on every hex, row, strip, calendar day, progress bar and company fill. Amber now only means what to do now (your next problem, the primary action, where you are). Difficulty moved to teal, gold and rose so it never reads as a status. Legends and guides say so.
+- **Motion everywhere, measured smooth**: pages cross-fade (View Transitions; header and tab bar stay still), one highlight slides between nav items and segmented options, a soft spotlight follows the mouse over cards and they lift with a spring, cards and sections rise in as you scroll (scroll-driven, no JS), map districts lift and hexes swell, a topic's road draws itself while its blocks rise and hexes pop, subtopic tiles rise in order, the daily calendar fills in as a wave, the streak ignites once, and an Accepted verdict bursts green hexes (bigger, green and amber, on a first solve) while a failed submit shakes. All transform and opacity, all off under reduced motion. New helpers in `src/js/ui/motion.js`: `glide`, `installSpotlight`, `burst`, `shake`.
+- **Faster page changes**: the Problems list draws its first screenful at once and streams the rest between frames (`aria-busy` while it fills), and a skeleton shows only when a view is slow; a 4x-throttled trace of route changes, map zooms, card hovers, scrolling and a verdict holds a median 17 ms frame.
+
 ### Changed (F6 redesign: Atlas)
 - **A new design for the whole site** (`docs/DESIGN.md`, decision in `docs/research/DESIGN_DIRECTIONS.md`): a warm graphite map with one amber lamp colour. Every problem is a hex: on the map, as the status mark in lists, as a day in the daily calendar, as a test case in the verdict. Chosen from three prototyped directions (Atlas, Transit, Orbit) after research on 63 captured sites (`docs/research/DESIGN_REFERENCES.md`).
 - New tokens (colour, type, spacing, radius, elevation, motion), a display face (Bricolage Grotesque, self-hosted, ADR 0009), a hex logo, favicon and social preview image (`src/brand/`), a warm editor theme, and one rule set for every component. `tests/design-tokens.test.js` now also fails on any literal colour or duration in a component rule.

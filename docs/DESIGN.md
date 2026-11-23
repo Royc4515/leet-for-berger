@@ -1,6 +1,6 @@
 # Design system: Atlas
 
-Direction (stage F6, `docs/research/DESIGN_DIRECTIONS.md`): **a territory you light up.** The curriculum is a map of 26 topics in six tiers; every problem is a hex; solving one lights it. The hex is the unit everywhere: on the map, as the status mark in lists, as a day in the daily calendar, as a test case in the verdict, as the company mark and the logo. The ground is warm graphite; there is one lamp colour, amber, and it means **light**: what you have solved and the next thing to do.
+Direction (stage F6, `docs/research/DESIGN_DIRECTIONS.md`): **a territory you light up.** The curriculum is a map of 26 topics in six tiers; every problem is a hex; solving one lights it. The hex is the unit everywhere: on the map, as the status mark in lists, as a day in the daily calendar, as a test case in the verdict, as the company mark and the logo. The ground is warm graphite. Status is told by plain colours (the owner asked for success and failure at a glance): **green** solved, a **green ring** solved with help, **coral** tried and not solved yet, **grey** not started. There is one lamp colour, **amber**, and it only ever means **what to do now**: your next problem, the primary action, where you are.
 
 Everything lives in [`src/css/app.css`](../src/css/app.css): tokens in `:root` at the top, component rules below, view rules last. Component rules never use a literal colour, font size, radius, shadow or duration; `tests/design-tokens.test.js` enforces contrast, the type floor and token use.
 
@@ -34,14 +34,25 @@ Replaces the F5 "quiet instrument" system (`docs/DESIGN_PLAN.md`, kept for histo
 
 | Token | Value | Meaning |
 |---|---|---|
-| `--accent` | `#f3a93c` | Solved (lit hexes, progress fills), the primary action, the current position |
+| `--accent` | `#f3a93c` | The next problem (its ring), the primary action, the current position, the streak. Never a status. |
 | `--accent-hover`, `--accent-ink`, `--accent-soft`, `--accent-line`, `--accent-glow`, `--accent-dim` | | Hover, ink on amber, tints, the assisted (solved with help) hex |
 | `--focus` | `#ffc874` | Keyboard focus ring, everywhere |
 | `--ok`, `--bad`, `--warn`, `--info` (+ `-soft`) | green, red, yellow, blue | Test results, errors, warnings, informational marks (the IL mark). Never decoration. |
 | `--bad-solid` / `--bad-ink` | `#c63a2c` / white | Danger buttons (5.1:1) |
 | `--easy`, `--medium`, `--hard` | green, gold, red | Difficulty, always with pips and the word |
 
-Selection is shown by an outline and a check mark, not by amber fill alone; amber fill means "lit".
+Selection is shown by an outline and a check mark, not by amber fill alone.
+
+### Status
+
+| Token | Value | Means |
+|---|---|---|
+| `--hex-solved` | `--ok` (green) | Solved: hexes, progress fills, a day you solved something, a company's fill |
+| `--hex-assisted` | green, drawn as a ring | Solved with help (after Reveal) |
+| `--hex-tried` | `#d9634f` (coral) | Tried and not solved yet |
+| `--hex-new` | `#2d2a24` | Not started |
+
+Difficulty moved off the status colours so the two never read alike: `--easy` teal `#3ec5b4`, `--medium` gold, `--hard` rose `#ff6b94`, always with pips and the word.
 
 ### Type
 
@@ -82,7 +93,7 @@ Easing: `--ease` (out, default), `--ease-in-out` (things that move across the sc
 | Segmented | One of several views | Rectangular track; Map / List, Status / Difficulty / Company, Hiring / Top / All. |
 | Tag | Static label | 4 px radius, no border; `tag-muted` outlined, `tag-live` green, `tag-lamp` amber. Never clickable. |
 | Difficulty | Easy / Medium / Hard | Three pips (1, 2 or 3 filled) + the word in the semantic colour. Reads without colour. |
-| Status hex | A problem's state | Hex mark: grey (not started), ring (tried), amber (solved), dim amber (solved with help). Always paired with a word or an accessible name. |
+| Status hex | A problem's state | Hex mark: grey (not started), coral (tried), green (solved), green ring (solved with help); an amber ring marks your next problem. Always paired with a word or an accessible name. |
 | Company mark | Identifies a company | Hex tile with a two-letter monogram in the display face; a blue dot for major Israeli presence; an outline ring for tier-1 companies. No logos (DESIGN_DIRECTIONS.md). |
 | Card | Groups content or is one link | Whole card is one `<a>` or `<button>` when clickable. No card in a card. |
 | Table / list row | Lists of problems | Status first column, title link stretched over the row (`.row-link`), 48 px rows; stacked two-line rows under 640 px. |
@@ -119,11 +130,15 @@ Helpers in `src/js/ui/dom.js` build these with `h()` and text nodes only (never 
 
 ## Motion rules
 
-- One orchestrated moment per screen at most; everything else is a 90 to 220 ms state change.
-- Animate `transform` and `opacity` only. No animation loop runs while the user types.
-- The verdict: 15 case hexes resolve left to right (35 ms stagger, 260 ms each); the verdict word rises (180 ms). Failures get no extra motion.
-- Milestones (first solve, a topic opening) play once, never on every Accepted.
-- No marquees, rotators, looping shimmers, parallax or scroll-jacking.
+- The owner asked for motion that impresses and stays perfectly smooth. Every effect animates `transform` and `opacity` (the compositor runs them), costs nothing while idle, and no animation loop runs while the user types. Measured with `scripts/design` style traces: interactions hold a median 17 ms frame at 1x and 4x CPU throttling.
+- **Pages**: a View Transition cross-fades page to page (old page fades back 140 ms, new one rises 220 ms); the header and the phone tab bar are their own groups and stay still. A slow-loading view shows its skeleton only after 160 ms.
+- **Gliders**: one highlight slides to the active item (segmented controls, the header nav, the phone tab bar) with a small spring, instead of jumping (`glide` in `ui/motion.js`).
+- **Spotlight**: a soft light follows the mouse over cards (`installSpotlight`, one passive listener, one style write per frame, mouse and pen only); cards lift 2 to 3 px with a spring.
+- **Scroll**: cards and sections rise into place as they scroll in, driven by the scroll itself (`animation-timeline: view()`, no JS); never table rows.
+- **Map**: districts lift and hexes swell under the pointer; a zoom grows the new level out of what you picked; on a topic the road draws itself from the first subtopic to the last while blocks rise and hexes pop; subtopic tiles rise in order.
+- **The verdict**: 15 case hexes resolve left to right (35 ms stagger, 260 ms each); the verdict word rises. Accepted sends a burst of green hexes from the verdict (a bigger green and amber burst on a first solve); a failed submit gives the word a short shake.
+- **Daily**: the 16-week calendar fills in as a wave from the top left; the streak chip ignites once when today's first solve lights it.
+- No marquees, rotators, looping shimmers, parallax or scroll-jacking; the only loop is the next problem's pulse ring.
 - `prefers-reduced-motion: reduce` makes every animation and transition effectively instant; nothing is skipped, only not moved. The e2e suite runs a reduced-motion pass.
 
 ## Accessibility rules
@@ -143,7 +158,7 @@ Short, direct, from the user's side ("Opens after Two Pointers", not "prerequisi
 
 1. Every browse page opens the same way: an eyebrow with a fact, the title, one line of context, at most one row of controls on the right.
 2. One primary button per screen.
-3. Amber means lit (solved, progress), the primary action, or the current position. Status uses green, red and neutral words.
+3. Status is green (solved), coral (tried), grey (not started), with a word. Amber means the next thing to do, the primary action or the current position, never a status.
 4. Filters are chips, exclusive scopes are segmented, long option lists use the shared picker; a native `<select>` only in dense toolbars (language, company lens).
 5. Every page ends with the shared footer, except the workspace and sessions.
 6. New colours, sizes, radii, shadows and durations come from tokens.

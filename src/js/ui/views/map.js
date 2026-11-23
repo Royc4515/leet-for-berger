@@ -34,7 +34,7 @@ const TIER_SHORT = ['Vocabulary', 'First patterns', 'Built on patterns', 'Core s
 const STATE_WORD = { locked: 'Locked', open: 'Open', started: 'In progress', mastered: 'Mastered' };
 const STATUS_WORD = { new: 'Not started', attempted: 'Tried', solved: 'Solved', assisted: 'Solved with help' };
 const CONCEPT_WORD = { new: 'Not started', started: 'In progress', done: 'Done' };
-const CONCEPT_HEX = { new: 'new', started: 'attempted', done: 'solved' };
+const CONCEPT_HEX = { new: 'new', started: 't-started', done: 'solved' };
 const TOP = { topic: null, concept: null, problem: null };
 
 /** Minimal SVG element factory (h() builds HTML elements only). */
@@ -201,8 +201,10 @@ function mountMap(root, { store, placed, path, parts }) {
     'ul.map-legend',
     { 'aria-label': 'Legend' },
     h('li', {}, h('span.hexmark.solved', { 'aria-hidden': 'true' }), 'Solved'),
-    h('li', {}, h('span.hexmark.attempted', { 'aria-hidden': 'true' }), 'Tried'),
+    h('li', {}, h('span.hexmark.assisted', { 'aria-hidden': 'true' }), 'Solved with help'),
+    h('li', {}, h('span.hexmark.attempted', { 'aria-hidden': 'true' }), 'Tried, not solved yet'),
     h('li', {}, h('span.hexmark', { 'aria-hidden': 'true' }), 'Not started'),
+    h('li', {}, h('span.hexmark.next', { 'aria-hidden': 'true' }), 'Your next problem'),
     h('li', {}, h('span.legend-path', { 'aria-hidden': 'true' }), 'On the learning path'),
     h('li', {}, h('span.legend-lock', { 'aria-hidden': 'true' }), `Locked: solve ${READY_SOLVES} in each topic before it`),
   );
@@ -350,7 +352,7 @@ function mountMap(root, { store, placed, path, parts }) {
     const byId = new Map(cs.map((c) => [c.id, c]));
     const roads = L.roads.map((r) => {
       const [a, c1, c2, b] = r.points;
-      return s('path', { class: `road${byId.get(r.from).state === 'done' ? ' is-chain' : ' is-lit'}`, d: `M${a.x},${a.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${b.x},${b.y}` });
+      return s('path', { class: `road${byId.get(r.from).state === 'done' ? ' is-chain' : ' is-lit'}`, d: `M${a.x},${a.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${b.x},${b.y}`, pathLength: 1, style: `--i:${L.blocks.findIndex((x) => x.id === r.from)}` });
     });
     const blocks = L.blocks.map((b) => {
       const c = byId.get(b.id);
@@ -374,6 +376,8 @@ function mountMap(root, { store, placed, path, parts }) {
       s('g', { class: 'districts' }, blocks),
     );
     mount(stage, svg);
+    // The road draws itself from the first subtopic to the last while the blocks rise (CSS).
+    if (!reducedMotion()) svg.classList.add('is-entering');
   }
 
   /* Levels 2 and 3: one subtopic's problems as named tiles; a picked problem gets the panel */
@@ -411,7 +415,11 @@ function mountMap(root, { store, placed, path, parts }) {
       h(
         'div.map-concept',
         {},
-        h('ol.map-tiles', { 'aria-label': `${c.title}: ${c.total} ${c.total === 1 ? 'problem' : 'problems'}` }, c.problems.map(tile)),
+        h('ol.map-tiles', { 'aria-label': `${c.title}: ${c.total} ${c.total === 1 ? 'problem' : 'problems'}` }, c.problems.map((pid, n) => {
+          const li = tile(pid);
+          li.style.setProperty('--i', String(n));
+          return li;
+        })),
         h('nav.map-siblings', { 'aria-label': 'Other subtopics' }, sibling(i - 1, 'prev'), sibling(i + 1, 'next')),
       ),
     );

@@ -12,7 +12,8 @@ import { services } from './auth/services.js';
 import { catalogEntry, loadProblem } from './problems/index.js';
 import { h, mount, toast, stateBlock, loadingState, siteFooter } from './ui/dom.js';
 import { loadSeen, hasSeen } from './state/tours.js';
-import { tourForRoute } from './data/tours.js';
+import { tourForRoute } from './data/tour-routes.js';
+import { viewTransition, glide, installSpotlight, animate, DUR, EASE } from './ui/motion.js';
 
 const store = createStore();
 const view = document.getElementById('view');
@@ -122,8 +123,8 @@ async function route() {
   }
   cleanup = () => {};
   mountedRe = null;
-  view.className = 'view';
   if (!match) {
+    view.className = 'view';
     cleanup = renderNotFound(view);
     setActiveNav(null);
     setHeaderTitle('Not found');
@@ -133,27 +134,53 @@ async function route() {
   const groups = hash.match(re);
   setActiveNav(nav);
   setHeaderTitle(typeof title === 'function' ? title(groups) : title);
-  mount(view, h('div.page', {}, loadingState({ label: 'Loading page...' })));
+  // A skeleton only when the view module is slow to arrive; a quick load cross-fades from the old
+  // page straight to the new one, with no flash of grey in between.
+  const skeleton = setTimeout(() => {
+    if (token !== navToken) return;
+    view.className = 'view';
+    mount(view, h('div.page', {}, loadingState({ label: 'Loading page...' })));
+  }, 160);
   let mounter;
   try {
     mounter = await load(hash, groups);
   } catch {
+    clearTimeout(skeleton);
     // Offline or a stale deploy; no console.error here, the browser already logged the failed fetch.
-    if (token === navToken) cleanup = renderNotFound(view, 'Could not load this page. Check your connection and reload.', 'Could not load', 'error');
+    if (token === navToken) {
+      view.className = 'view';
+      cleanup = renderNotFound(view, 'Could not load this page. Check your connection and reload.', 'Could not load', 'error');
+    }
     return;
   }
+  clearTimeout(skeleton);
   if (token !== navToken) return;
-  cleanup = mounter(view) ?? (() => {});
-  mountedRe = re;
+  const swap = () => {
+    // A newer navigation won while this one waited for its transition: let that one mount.
+    if (token !== navToken) return;
+    view.className = 'view';
+    cleanup = mounter(view) ?? (() => {});
+    mountedRe = re;
+  };
+  // Page to page is a cross-fade (View Transitions, where the browser has them and motion is on);
+  // the first page of a visit just appears.
+  if (hasMounted) await viewTransition(swap);
+  else swap();
+  hasMounted = true;
+  if (token !== navToken) return;
   view.focus({ preventScroll: true });
   maybePageTour(hash, token);
 }
+let hasMounted = false;
 
 function setActiveNav(key) {
   document.querySelectorAll('[data-nav]').forEach((a) => {
     if (a.dataset.nav === key) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
+  // One highlight slides between nav items instead of jumping (ui/motion.js glide).
+  glide(document.querySelector('.nav'), '[aria-current="page"]');
+  glide(document.querySelector('.tab-bar'), '[aria-current="page"]');
 }
 
 function renderStreak() {
@@ -164,14 +191,20 @@ function renderStreak() {
   const label = streak ? `${streak}-day streak${today ? '' : ', solve one today to keep it'}` : 'No streak yet';
   streakChip.title = label;
   streakChip.href = '#/daily';
-  streakChip.classList.toggle('is-active', streak > 0 && today);
+  const wasLit = streakChip.classList.contains('is-active');
+  const lit = streak > 0 && today;
+  streakChip.classList.toggle('is-active', lit);
   mount(
     streakChip,
     h('span.streak-icon', { 'aria-hidden': 'true' }),
     h('span.streak-count', { 'aria-hidden': 'true' }, String(streak)),
     h('span.sr-only', {}, label),
   );
+  // The first solve of the day lights the streak: it ignites once, then stays still.
+  if (lit && !wasLit && streakRendered) animate(streakChip.querySelector('.streak-icon'), [{ transform: 'scale(0.4) rotate(-30deg)', opacity: 0.4 }, { transform: 'scale(1.45) rotate(8deg)', opacity: 1, offset: 0.55 }, { transform: 'scale(1) rotate(0deg)', opacity: 1 }], { duration: DUR.stage, easing: EASE.spring });
+  streakRendered = true;
 }
+let streakRendered = false;
 
 /* ---------- Command palette (Ctrl/Cmd+K), loaded on first use ---------- */
 const openPalette = () =>
@@ -192,6 +225,7 @@ document.addEventListener('keydown', (e) => {
 
 store.subscribe(renderStreak);
 renderStreak();
+installSpotlight();
 window.addEventListener('hashchange', route);
 route();
 

@@ -74,6 +74,8 @@ async function check(name, fn) {
 const expectText = async (sel, re, timeout = 15000) => {
   await page.waitForFunction(([s, src]) => new RegExp(src).test(document.querySelector(s)?.textContent ?? ''), [sel, re.source], { timeout });
 };
+// A route change cross-fades (View Transitions); hit-testing by coordinates waits for the live page.
+const settled = (p = page) => p.waitForFunction(() => !document.documentElement.dataset.transition, null, { timeout: 5000 });
 const expectDialog = (p, re) =>
   p.waitForFunction((src) => new RegExp(src).test(document.querySelector('dialog.modal')?.textContent ?? ''), re.source, { timeout: 5000 });
 const setCode = (code) => page.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
@@ -134,6 +136,9 @@ try {
     await shot('01-dashboard');
 
     // Topic disclosure, result count, empty state with Clear filters restoring the full list.
+    // The list streams in after the first screenful (aria-busy while it fills).
+    const filled = () => page.waitForSelector('.dashboard-table tbody:not([aria-busy])');
+    await filled();
     const totalRows = await page.locator('.dashboard-table tbody tr').count();
     await page.click('.topic-toggle');
     await page.waitForSelector('#dashboard-topics:not([hidden])');
@@ -149,6 +154,7 @@ try {
     if (!(await page.evaluate(() => document.querySelector('.topic-toggle').classList.contains('is-active')))) {
       throw new Error('topic toggle missing .is-active when a topic is chosen');
     }
+    await filled();
     const graphRows = await page.locator('.dashboard-table tbody tr').count();
     if (!(graphRows > 0 && graphRows < totalRows)) throw new Error(`Graphs filter did not narrow rows (${graphRows} vs ${totalRows})`);
     await page.focus('#dashboard-topics .chip:has-text("Graphs")');
@@ -165,6 +171,7 @@ try {
     if (await page.evaluate(() => document.querySelector('.topic-toggle').classList.contains('is-active'))) {
       throw new Error('Clear filters did not remove .is-active from topic toggle');
     }
+    await filled();
     const restoredRows = await page.locator('.dashboard-table tbody tr').count();
     if (restoredRows !== totalRows) throw new Error(`Clear filters restored ${restoredRows} rows, expected ${totalRows}`);
     if ((await page.evaluate(() => document.activeElement?.matches('input.dashboard-search'))) !== true) {
@@ -222,6 +229,9 @@ try {
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/);
     await expectText('.result-head', /15 \/ 15/);
+    // The Accepted burst: hexes fly from the verdict, then clean themselves up.
+    await page.waitForSelector('.burst .burst-hex', { state: 'attached', timeout: 3000 });
+    await page.waitForSelector('.burst', { state: 'detached', timeout: 5000 });
     await shot('03-accepted');
   });
 
@@ -1071,6 +1081,7 @@ try {
     ]) {
       await page.goto(`${BASE}${setup.url}`);
       await page.waitForSelector(setup.wait, { timeout: 30000 });
+      await settled();
       const checkBar = await page.evaluate((label) => {
         const btn = [...document.querySelectorAll('.setup-bar button')].find((b) => b.textContent.trim() === label);
         const tab = document.querySelector('.tab-bar');
@@ -1274,6 +1285,7 @@ try {
       const bad = await undersized();
       if (bad.length) throw new Error(`${sc.url} has touch targets under 44px:\n  ${bad.join('\n  ')}`);
       if (sc.startButton) {
+        await settled(touch);
         const startCheck = await touch.evaluate((label) => {
           const btn = [...document.querySelectorAll('.setup-bar button')].find((b) => b.textContent.trim() === label);
           const tab = document.querySelector('.tab-bar');
@@ -1997,6 +2009,36 @@ try {
       if (m.last) break;
     }
     await ctx.close();
+  });
+
+  await check('clarity and motion: status reads green, coral, grey; the nav highlight follows the page; cards light under the mouse', async () => {
+    await page.goto(`${BASE}#/map`);
+    await page.waitForSelector('.map-legend .hexmark.solved');
+    const colours = await page.evaluate(() => {
+      const bg = (sel) => getComputedStyle(document.querySelector(sel)).backgroundColor;
+      return { solved: bg('.map-legend .hexmark.solved'), tried: bg('.map-legend .hexmark.attempted'), fresh: bg('.map-legend .hexmark:not(.solved):not(.attempted):not(.assisted):not(.next)') };
+    });
+    if (colours.solved !== 'rgb(95, 201, 143)' || colours.tried !== 'rgb(217, 99, 79)' || colours.fresh !== 'rgb(45, 42, 36)') throw new Error(`status colours: ${JSON.stringify(colours)}`);
+    // One glider in the header nav sits on the active page and moves with it.
+    const at = () =>
+      page.evaluate(() => {
+        const g = document.querySelector('.nav > .glider').getBoundingClientRect();
+        const a = document.querySelector('.nav a[aria-current="page"]').getBoundingClientRect();
+        return Math.abs(g.left - a.left) < 2 && Math.abs(g.width - a.width) < 2;
+      });
+    await page.waitForFunction(() => document.querySelector('.nav')?.classList.contains('glider-ready'));
+    await page.waitForTimeout(350);
+    if (!(await at())) throw new Error('the nav glider is not on Map');
+    await page.click('.nav [data-nav="companies"]');
+    await page.waitForSelector('.company-card');
+    await settled();
+    await page.waitForTimeout(350);
+    if (!(await at())) throw new Error('the nav glider did not follow to Companies');
+    // The spotlight: the card under the mouse lights from the pointer's position.
+    const card = await page.locator('.company-card').first().boundingBox();
+    await page.mouse.move(card.x + 20, card.y + 12);
+    await page.mouse.move(card.x + 40, card.y + 20, { steps: 3 });
+    await page.waitForFunction(() => document.querySelector('.company-card.is-spot')?.style.getPropertyValue('--mx'));
   });
 
   await check('reduced motion: every route renders with animations effectively off and nothing left hidden', async () => {

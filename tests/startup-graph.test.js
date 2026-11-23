@@ -28,7 +28,9 @@ function closure(entry) {
   return [...seen].map((f) => relative(SRC, f)).sort();
 }
 
-const CAP = 16;
+// 17: ui/motion.js joined at startup (page cross-fades, the nav glider and the card spotlight run
+// from the router), data/tour-routes.js picks a page's tour; the tours' copy itself loads on demand.
+const CAP = 17;
 const files = closure(ENTRY);
 
 test('the static startup graph from main.js stays out of views, problems and the engine', () => {

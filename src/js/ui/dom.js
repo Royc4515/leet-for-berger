@@ -2,6 +2,7 @@
  * Minimal DOM helpers. No framework on purpose: zero build step keeps the repo
  * deployable to GitHub Pages as-is and keeps Claude Code edits easy to review.
  */
+import { glide } from './motion.js';
 
 /**
  * Hyperscript-style element factory. Children that are strings become text nodes,
@@ -185,6 +186,7 @@ export function segmented({ label, options, value, onChange }) {
         'aria-pressed': String(o.value === value),
         onClick: () => {
           buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(options[i].value === o.value)));
+          glide(group, '[aria-pressed="true"]');
           onChange(o.value);
         },
       },
@@ -192,6 +194,8 @@ export function segmented({ label, options, value, onChange }) {
     ),
   );
   group.append(...buttons);
+  // The selected background slides between options (ui/motion.js); placed once the group is on screen.
+  glide(group, '[aria-pressed="true"]');
   return group;
 }
 

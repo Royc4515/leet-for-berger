@@ -29,14 +29,14 @@ export const TOURS = {
     id: 'welcome',
     label: 'Welcome',
     prefix: true,
-    steps: [{ title: 'Every problem is a hex', body: 'Solve one and it lights up amber. Each page explains itself the first time.' }],
+    steps: [{ title: 'Every problem is a hex', body: 'Green is solved, coral tried, grey not started. Amber is your next step.' }],
   },
   problems: {
     id: 'problems',
     label: 'Problems',
     steps: [
       { target: ['.today-daily'], title: "Today's problem", body: 'One problem a day, the same for everyone.' },
-      { target: ['.dashboard-filters'], title: 'Every problem', body: 'Search, or filter by difficulty and topic.' },
+      { target: ['.dashboard-filters'], title: 'Every problem', body: 'Search, or filter by difficulty and topic. Solved ones turn green.' },
       { target: ['nav.view-switch'], title: 'List or map', body: 'The same problems, drawn as a map.' },
       { target: ['#palette-trigger'], title: 'Find anything', body: 'Use search, or press Ctrl K, and type a few letters.' },
     ],
@@ -45,7 +45,7 @@ export const TOURS = {
     id: 'map',
     label: 'Map',
     steps: [
-      { target: ['.map-canvas'], title: 'Every topic', body: 'Each block is a topic. Each hex inside is a problem.' },
+      { target: ['.map-canvas'], title: 'Every topic', body: 'Each block is a topic, each hex a problem: green solved, coral tried.' },
       { target: ['.map-canvas .district.has-next', '.map-canvas .district'], title: 'Zoom in', body: 'Click a topic for its subtopics, then a subtopic for its problems.' },
       { target: ['.map-lens'], title: 'Colour by', body: 'Your progress, difficulty, or what one company asks.' },
       { target: ['.map-brief'], title: 'Where to go next', body: 'The panel always points at your next problem.' },
@@ -65,7 +65,7 @@ export const TOURS = {
     label: 'Daily',
     steps: [
       { target: ['.today-daily'], title: "Today's problem", body: 'New at midnight. Solve it to keep your streak.' },
-      { target: ['.cal-scroll'], title: 'Your last 16 weeks', body: 'A lit hex is a day you solved something.' },
+      { target: ['.cal-scroll'], title: 'Your last 16 weeks', body: 'A green hex is a day you solved something.' },
     ],
   },
   companies: {
@@ -135,29 +135,9 @@ export const TOURS = {
 /** The modes on the Modes hub, each with its own tour, in hub order. */
 export const MODE_TOURS = ['interview', 'battle', 'mentor'];
 
-/** Route patterns and the tour each page shows on its first visit, first match wins. */
-const ROUTE_TOURS = [
-  [/^#?\/?$/, 'problems'],
-  [/^#\/problem\/[\w-]+$/, 'workspace'],
-  [/^#\/map(\/|$)/, 'map'],
-  [/^#\/daily$/, 'daily'],
-  [/^#\/path$/, 'path'],
-  [/^#\/companies$/, 'companies'],
-  [/^#\/companies\/[\w-]+$/, 'company'],
-  [/^#\/modes$/, 'modes'],
-  [/^#\/interview$/, 'interview'],
-  [/^#\/battle$/, 'battle'],
-];
-
-/**
- * The tour a route shows on its first visit (and replays from "Guide for this page").
- * @param {string} hash location.hash, '' for the home page
- * @returns {string|null} a TOURS id
- */
-export function tourForRoute(hash) {
-  const route = hash || '#/';
-  return ROUTE_TOURS.find(([re]) => re.test(route))?.[1] ?? null;
-}
+// The route -> tour table lives in data/tour-routes.js: main.js needs it at startup, the copy above
+// only when a tour opens (tests/startup-graph.test.js).
+export { tourForRoute } from './tour-routes.js';
 
 /**
  * Checks a tour against TOUR_LIMITS and the house voice (docs/DESIGN.md: no em dashes, no
