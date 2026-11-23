@@ -379,6 +379,12 @@ const CONTENT_IDS = {
   'maximum-profit-in-job-scheduling': ['best-job-selection', 'verified'],
   // Limit raised to 10^5 nodes so trying every start node times out.
   'collect-coins-in-a-tree': ['coin-sweep', 'verified'],
+  // Wave F2-4 (Nvidia), group A
+  'maximum-number-of-visible-points': ['view-cone', 'verified'],
+  'rectangle-area': ['cover-area', 'verified'],
+  'max-sum-of-a-pair-with-equal-sum-of-digits': ['digit-sum-pair', 'verified'],
+  'minimum-absolute-difference': ['closest-gaps', 'verified'],
+  'power-of-two': ['two-power-check', 'verified'],
 };
 
 const WINDOWS = [
@@ -406,7 +412,7 @@ const REPORTED_FREQUENCY = 50;
 const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice', 'hand-picked'];
 
 /** Problems authored on purpose although no selection rule picks them (few companies, no list). */
-const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray', 'collect-coins-in-a-tree']);
+const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray', 'collect-coins-in-a-tree', 'rectangle-area', 'max-sum-of-a-pair-with-equal-sum-of-digits']);
 
 const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
 

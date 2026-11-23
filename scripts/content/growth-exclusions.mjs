@@ -33,6 +33,8 @@ export const GROWTH_EXCLUSIONS = {
   // fixed-size
   'add-without-plus': { reason: 'fixed-size', why: 'two 32-bit integers, at most 32 carry steps' },
   'base-four-check': { reason: 'fixed-size', why: 'one 32-bit integer' },
+  'two-power-check': { reason: 'fixed-size', why: 'one 32-bit integer' },
+  'cover-area': { reason: 'fixed-size', why: 'eight coordinates, two rectangles' },
   'bit-count': { reason: 'fixed-size', why: 'one 32-bit integer, at most 32 steps' },
   'digit-flip': { reason: 'fixed-size', why: 'one 32-bit integer, at most 10 digits' },
   'digit-palindrome': { reason: 'fixed-size', why: 'one 32-bit integer, at most 10 digits' },
