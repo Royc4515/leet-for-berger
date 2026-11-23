@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added (wave F2-4, Nvidia, group D)
+- Five Nvidia company problems closing Wave F2-4 (220 -> 225 problems), each with original wording, 15 test cases (5 visible, 10 hidden), Socratic hints, walkthrough prose, unit tests against brute force, `n` growth feedback, and verified solutions in all 8 languages (Python, JavaScript, TypeScript, Java, C++, C, C#, Go):
+  - **Smallest Positive Gap** (`smallest-positive-gap`, Hard, LeetCode 41): in-place O(n) cyclic placement in O(1) extra space (linked to `first-missing-positive` family).
+  - **Sorted List Dedupe** (`sorted-list-dedupe`, Easy, LeetCode 83): single-pass O(n) linked-list deduplication with limit raised to 10^5 nodes (linked to `dedupe-sorted-list` family).
+  - **List Midpoint** (`list-midpoint`, Easy, LeetCode 876): fast/slow pointer linked-list midpoint with limit raised to 10^5 nodes (linked to `middle-of-list` family).
+  - **Bit Sum Subarrays** (`bit-sum-subarrays`, Medium, LeetCode 930): `atMost(goal) - atMost(goal - 1)` O(n) sliding window with limit raised to 10^5 and 64-bit integer return.
+  - **Largest Ones Square** (`largest-ones-square`, Medium, LeetCode 221): rolling 1D O(m * n) dynamic programming over 0/1 integer grids returning maximum square area.
+- First Lone Character's growth ladder trimmed from `512000..8192000` to `256000..4096000` so runs stay comfortably inside the 5 s browser budget (review nit on group B).
+- Index links in `scripts/content/build-index.mjs` (`binary-subarrays-with-sum` hand-picked), subtopic `sliding-window/variable-window` in `content/subtopics.json`, and `EY`, `GSA Capital`, `Oppo`, `Qualtrics`, and `SoundHound` in `content/israel-hiring.json` (`none`, tier 3, unverified).
+
 ### Added (wave F2-4, Nvidia, group B)
 - Five Nvidia company problems (215 -> 220 problems), each with original wording, 15 test cases (5 visible, 10 hidden), Socratic hints, walkthrough prose, unit tests against brute force, and verified solutions in all 8 languages (Python, JavaScript, TypeScript, Java, C++, C, C#, Go):
   - **Number in Words** (`number-in-words`, Hard, LeetCode 273): base-1000 English spelling for 32-bit integers (`fixed-size` growth exclusion).

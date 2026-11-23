@@ -398,6 +398,16 @@ const CONTENT_IDS = {
   // LeetCode's class takes another instance; ours takes both vectors as sorted [index, value] lists.
   'dot-product-of-two-sparse-vectors': ['sparse-dot', 'verified'],
   'counting-bits': ['bit-tally', 'verified'],
+  // Wave F2-4 (Nvidia), group D
+  'first-missing-positive': ['smallest-positive-gap', 'verified'],
+  // Limit raised from 300 to 10^5 nodes so quadratic rescans and deep recursion fail clearly.
+  'remove-duplicates-from-sorted-list': ['sorted-list-dedupe', 'verified'],
+  // Limit raised from 100 to 10^5 nodes so single-pass O(n) traversal is tested at scale.
+  'middle-of-the-linked-list': ['list-midpoint', 'verified'],
+  // Limit raised from 3 * 10^4 to 10^5 with a 64-bit integer return (up to 5 * 10^9) so O(n^2) times out.
+  'binary-subarrays-with-sum': ['bit-sum-subarrays', 'verified'],
+  // Cells are 0/1 integers instead of '0'/'1' characters.
+  'maximal-square': ['largest-ones-square', 'verified'],
 };
 
 const WINDOWS = [
@@ -433,6 +443,7 @@ const HAND_PICKED = new Set([
   'max-sum-of-a-pair-with-equal-sum-of-digits',
   'count-the-number-of-good-subsequences',
   'remove-stones-to-minimize-the-total',
+  'binary-subarrays-with-sum',
 ]);
 
 const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
