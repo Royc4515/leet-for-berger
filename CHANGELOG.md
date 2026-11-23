@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added (wave F2-4, Nvidia, group B)
+- Five Nvidia company problems (215 -> 220 problems), each with original wording, 15 test cases (5 visible, 10 hidden), Socratic hints, walkthrough prose, unit tests against brute force, and verified solutions in all 8 languages (Python, JavaScript, TypeScript, Java, C++, C, C#, Go):
+  - **Number in Words** (`number-in-words`, Hard, LeetCode 273): base-1000 English spelling for 32-bit integers (`fixed-size` growth exclusion).
+  - **First Lone Character** (`first-lone-char`, Easy, LeetCode 387): two-pass O(n) frequency scan with O(1) space and `n` growth spec.
+  - **Repeat Check** (`repeat-check`, Easy, LeetCode 217): hash-set duplicate detection (linked to the `contains-duplicate` family) with `n` growth spec.
+  - **Best Triple Product** (`best-triple-product`, Easy, LeetCode 628): single-pass five-extreme tracker (linked to the `maximum-product-of-three-numbers` family) with `n` growth spec.
+  - **Balanced Subsequence Count** (`balanced-subsequence-count`, Medium, LeetCode 2539): modular combinatorics over shared character frequency `k = 1..maxFreq` with `n` growth spec.
+- Index links in `scripts/content/build-index.mjs` (`count-the-number-of-good-subsequences` hand-picked), plus `Attentive`, `Faire`, `Fidelity`, `Gusto`, and `TuSimple` in `content/israel-hiring.json` (`none`, tier 3, unverified).
+
 ### Added (wave F2-4, Nvidia, group C)
 - Five problems Nvidia asks, each with 8 verified solutions, 15 cases, hints and a walkthrough: Collinear Max (Hard, reduced integer directions per anchor, LeetCode 149), Most Events (greedy over days with a min-heap of end days, 1353), Stone Halving (max-heap, k halvings, 1962), Sparse Dot (two-pointer merge of sorted [index, value] lists, based on 1570), Bit Tally (tally[i] = tally[i >> 1] + (i & 1), 338). Nvidia's top 60 on the site is now complete (57 -> 60).
 - Sparse Dot reframes LeetCode's class (whose method takes another instance, which the harness cannot pass) as a function over both vectors in compressed form, with indices up to 10^9 so a dense array is not an option.

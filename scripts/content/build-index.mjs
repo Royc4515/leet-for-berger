@@ -385,6 +385,12 @@ const CONTENT_IDS = {
   'max-sum-of-a-pair-with-equal-sum-of-digits': ['digit-sum-pair', 'verified'],
   'minimum-absolute-difference': ['closest-gaps', 'verified'],
   'power-of-two': ['two-power-check', 'verified'],
+  // Wave F2-4 (Nvidia), group B
+  'integer-to-english-words': ['number-in-words', 'verified'],
+  'first-unique-character-in-a-string': ['first-lone-char', 'verified'],
+  'contains-duplicate': ['repeat-check', 'verified'],
+  'maximum-product-of-three-numbers': ['best-triple-product', 'verified'],
+  'count-the-number-of-good-subsequences': ['balanced-subsequence-count', 'verified'],
   // Wave F2-4 (Nvidia), group C
   'max-points-on-a-line': ['collinear-max', 'verified'],
   'maximum-number-of-events-that-can-be-attended': ['most-events', 'verified'],
@@ -419,7 +425,15 @@ const REPORTED_FREQUENCY = 50;
 const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice', 'hand-picked'];
 
 /** Problems authored on purpose although no selection rule picks them (few companies, no list). */
-const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray', 'collect-coins-in-a-tree', 'rectangle-area', 'max-sum-of-a-pair-with-equal-sum-of-digits', 'remove-stones-to-minimize-the-total']);
+const HAND_PICKED = new Set([
+  'find-consecutive-integers-from-a-data-stream',
+  'find-the-longest-equal-subarray',
+  'collect-coins-in-a-tree',
+  'rectangle-area',
+  'max-sum-of-a-pair-with-equal-sum-of-digits',
+  'count-the-number-of-good-subsequences',
+  'remove-stones-to-minimize-the-total',
+]);
 
 const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
