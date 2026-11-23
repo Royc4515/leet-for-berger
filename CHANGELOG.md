@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Collinear Max's growth ladder is now 125 to 1000 points (was 250 to 2000): the 2000 size pushed a run to about 5.4 s, over the browser's 5 s budget; a run now takes about 1.2 s and still reads quadratic. The unused `gcd` helper in its problem file is removed (review nits on group C).
+
 ### Added (wave F2-4, Nvidia, group D)
 - Five Nvidia company problems closing Wave F2-4 (220 -> 225 problems), each with original wording, 15 test cases (5 visible, 10 hidden), Socratic hints, walkthrough prose, unit tests against brute force, `n` growth feedback, and verified solutions in all 8 languages (Python, JavaScript, TypeScript, Java, C++, C, C#, Go):
   - **Smallest Positive Gap** (`smallest-positive-gap`, Hard, LeetCode 41): in-place O(n) cyclic placement in O(1) extra space (linked to `first-missing-positive` family).

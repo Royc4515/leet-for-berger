@@ -19,13 +19,6 @@ import { randInt } from '../../engine/growth-inputs.js';
 const MAX_N = 300;
 const LIMIT = 10000;
 
-const gcd = (a, b) => {
-  let x = Math.abs(a);
-  let y = Math.abs(b);
-  while (y) [x, y] = [y, x % y];
-  return x;
-};
-
 /**
  * Reference: exact collinearity by cross products over every pair (O(n^3), independent of the
  * slope-hashing solutions; n is at most 300).
@@ -197,7 +190,7 @@ export const problem = {
   growth: {
     target: 'n^2',
     n: 'points.length',
-    sizes: [250, 500, 1000, 2000],
+    sizes: [125, 250, 500, 1000],
     input: (n, seed) => [randomPoints(seed, n)],
   },
 };
