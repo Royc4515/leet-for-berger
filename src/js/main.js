@@ -43,13 +43,14 @@ async function loadProblemRoute(_, [, id]) {
   return (root) => m.renderWorkspace(root, { problem, store });
 }
 
-function renderNotFound(root, message = 'Page not found.', title = 'Not found', kind = 'empty') {
+function renderNotFound(root, message = 'This page is not on the map. The link may be old, or the address has a typo.', title = 'Not found', kind = 'empty') {
+  const retry = kind === 'error' ? { label: 'Try again', onClick: () => location.reload() } : { label: 'Open the map', href: '#/map' };
   mount(
     root,
     h(
       'div.page.page-narrow',
       {},
-      stateBlock({ title, body: message, kind, headingTag: 'h1', action: { label: 'Back to problems', href: '#/' } }),
+      stateBlock({ title, body: message, kind, headingTag: 'h1', action: retry, secondary: { label: 'Back to problems', href: '#/' } }),
       siteFooter(),
     ),
   );

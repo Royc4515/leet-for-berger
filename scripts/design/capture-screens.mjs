@@ -34,6 +34,8 @@ const scenarios = [
   { name: 'dashboard-first-visit', hash: '#/' },
   { name: 'dashboard-returning', hash: '#/', state: returning },
   { name: 'map', hash: '#/map', state: returning },
+  { name: 'daily', hash: '#/daily', state: returning },
+  { name: 'map-list', hash: '#/map', state: returning, list: true },
   { name: 'path-returning', hash: '#/path', state: returning },
   { name: 'path-first-visit', hash: '#/path' },
   { name: 'companies', hash: '#/companies', state: returning },
