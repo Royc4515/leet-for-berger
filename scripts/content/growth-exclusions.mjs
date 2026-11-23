@@ -23,6 +23,8 @@ export const EXCLUSION_REASONS = {
     'Exponential search on a tiny n, or a backtracking search whose time depends on the contents (letters on a board, word lengths) far more than on the size, so no generator gives a clean power law.',
   sublinear:
     'The target is O(log n): one call takes microseconds at every size a browser can build, under the 1 ms the estimator needs, so every run reads inconclusive.',
+  'too-fast':
+    'A linear pass of a few nanoseconds per element over an input that is costly to build (one small array per element): the sizes a browser can build within its 5 s budget all run under the 1 ms the estimator needs on a CI runner, so every run reads inconclusive.',
 };
 
 /** Exclusion by problem kind (catalog `kind`), so new problems of that kind need no entry. */
@@ -51,6 +53,9 @@ export const GROWTH_EXCLUSIONS = {
   'bst-min-gap': { reason: 'fixed-size', why: 'values are distinct integers in 0..10^5, so a BST has at most 100001 nodes and one call takes about 3 ms, too short for a margin on a faster runner' },
   'zero-by-powers': { reason: 'fixed-size', why: 'one 32-bit integer, O(log n) steps' },
   'roman-numeral-value': { reason: 'fixed-size', why: 'a valid numeral for 1 to 3999 has at most 15 symbols; a longer one is not a valid input' },
+  'bit-tally': { reason: 'fixed-size', why: 'n is a value of at most 10^5, so one call fills at most 100001 counts in about 0.3 ms' },
+  // too-fast
+  'sparse-dot': { reason: 'too-fast', why: 'a two-pointer merge at a few ns per [index, value] pair; 1.6 * 10^6 pairs take about 5 ms locally and under 2 ms on CI, and larger lists cost more to build than the browser budget allows' },
   // output-bound
   'all-orderings': { reason: 'output-bound', why: 'n! orderings of n values' },
   'balanced-pairs': { reason: 'output-bound', why: 'Catalan(n) strings, 58786 at n = 11' },

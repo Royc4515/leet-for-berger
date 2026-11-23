@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added (wave F2-4, Nvidia, group C)
+- Five problems Nvidia asks, each with 8 verified solutions, 15 cases, hints and a walkthrough: Collinear Max (Hard, reduced integer directions per anchor, LeetCode 149), Most Events (greedy over days with a min-heap of end days, 1353), Stone Halving (max-heap, k halvings, 1962), Sparse Dot (two-pointer merge of sorted [index, value] lists, based on 1570), Bit Tally (tally[i] = tally[i >> 1] + (i & 1), 338). Nvidia's top 60 on the site is now complete (57 -> 60).
+- Sparse Dot reframes LeetCode's class (whose method takes another instance, which the harness cannot pass) as a function over both vectors in compressed form, with indices up to 10^9 so a dense array is not an option.
+- Growth feedback from the start for Collinear Max (`n^2`), Most Events and Stone Halving (`n log n`); Most Events stops at 64000 events, below the pair-sorting bend Merge Ranges also hit. Bit Tally is excluded as `fixed-size` (n is a value of at most 10^5).
+- New growth exclusion reason `too-fast` (`scripts/content/growth-exclusions.mjs`, docs/PROBLEM_FORMAT.md): a linear pass of a few ns per element over an input that is costly to build, so no size the browser can build in 5 s runs past the 1 ms the estimator needs on CI. Sparse Dot is the first (and only) problem with it.
+- Digit Sum Pair's growth ladder is halved to 62500 to 10^6 so a run stays inside the browser's 5 s budget (review nit on group A).
+- Index links in `scripts/content/build-index.mjs` (Stone Halving hand-picked), a subtopic for Stone Halving (`heap/greedy-with-heap`), and Bill Com and Gopuff in `content/israel-hiring.json` (none, tier 3, unverified).
+
 ### Added (wave F2-4, Nvidia, group A)
 - Five problems Nvidia asks, each with 8 verified solutions, 15 cases, hints and a walkthrough: View Cone (Hard, polar angles and a wrapping window, LeetCode 1610), Cover Area (union of two rectangles, 223), Digit Sum Pair (largest pair per digit-sum group, 2342), Closest Gaps (all closest pairs after sorting, 1200), Two Power Check (one set bit, 231). 205 -> 210 problems; Nvidia's top 60 on the site goes from 52 to 57.
 - View Cone compares angles with a 1e-9 tolerance in the reference and every solution, so a point exactly on the edge of the view does not depend on how a language's atan2 rounds.

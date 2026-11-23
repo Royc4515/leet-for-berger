@@ -169,6 +169,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Bill Com": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "BitGo": {
    "israel": "none",
    "tier": 2,
@@ -495,6 +500,11 @@
    "tier": 1,
    "source": "https://en.globes.co.il/en/article-Google-Israel-RD-head-Yossi-Matias-moving-to-global-role-1001477138",
    "rankIL": 10
+  },
+  "Gopuff": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Grab": {
    "israel": "none",

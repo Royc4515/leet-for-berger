@@ -281,6 +281,7 @@
   "remove-duplicates-from-sorted-list-ii": "linked-list/dummy-node-traversal",
   "remove-element": "two-pointers/partition-in-place",
   "remove-linked-list-elements": "linked-list/dummy-node-traversal",
+  "remove-stones-to-minimize-the-total": "heap/greedy-with-heap",
   "reorganize-string": "heap/greedy-with-heap",
   "replace-elements-with-greatest-element-on-right-side": "prefix-sum/prefix-1d",
   "replace-employee-id-with-the-unique-identifier": "sql/joins",

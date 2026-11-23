@@ -385,6 +385,13 @@ const CONTENT_IDS = {
   'max-sum-of-a-pair-with-equal-sum-of-digits': ['digit-sum-pair', 'verified'],
   'minimum-absolute-difference': ['closest-gaps', 'verified'],
   'power-of-two': ['two-power-check', 'verified'],
+  // Wave F2-4 (Nvidia), group C
+  'max-points-on-a-line': ['collinear-max', 'verified'],
+  'maximum-number-of-events-that-can-be-attended': ['most-events', 'verified'],
+  'remove-stones-to-minimize-the-total': ['stone-halving', 'verified'],
+  // LeetCode's class takes another instance; ours takes both vectors as sorted [index, value] lists.
+  'dot-product-of-two-sparse-vectors': ['sparse-dot', 'verified'],
+  'counting-bits': ['bit-tally', 'verified'],
 };
 
 const WINDOWS = [
@@ -412,7 +419,7 @@ const REPORTED_FREQUENCY = 50;
 const COVERAGE_REASONS = ['company-common', 'company-version', 'israeli-company', 'platform-practice', 'hand-picked'];
 
 /** Problems authored on purpose although no selection rule picks them (few companies, no list). */
-const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray', 'collect-coins-in-a-tree', 'rectangle-area', 'max-sum-of-a-pair-with-equal-sum-of-digits']);
+const HAND_PICKED = new Set(['find-consecutive-integers-from-a-data-stream', 'find-the-longest-equal-subarray', 'collect-coins-in-a-tree', 'rectangle-area', 'max-sum-of-a-pair-with-equal-sum-of-digits', 'remove-stones-to-minimize-the-total']);
 
 const companyKey = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
