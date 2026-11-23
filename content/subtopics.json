@@ -25,6 +25,7 @@
   "better-compression-of-string": "sorting-intervals/counting-bucket-sort",
   "binary-gap": "bit-manipulation/masks-and-shifts",
   "binary-search-tree-iterator": "trees/bst-properties",
+  "binary-subarrays-with-sum": "sliding-window/variable-window",
   "binary-tree-cameras": "trees/tree-dp",
   "binary-tree-inorder-traversal": "trees/dfs-traversal",
   "binary-tree-paths": "trees/path-problems",

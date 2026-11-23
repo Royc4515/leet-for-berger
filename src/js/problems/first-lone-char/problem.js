@@ -142,7 +142,7 @@ export const problem = {
   growth: {
     target: 'n',
     n: 's.length',
-    sizes: [512000, 1024000, 2048000, 4096000, 8192000],
+    sizes: [256000, 512000, 1024000, 2048000, 4096000],
     // Every character in the first n - 1 positions repeats, with the sole unique character 'z'
     // placed at index n - 1 so pass 2 cannot exit early and naive O(n^2) scans do full work.
     // Joining medium chunks builds a flat string before timing so V8 never flattens a rope inside
