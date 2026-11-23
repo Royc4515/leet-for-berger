@@ -45,8 +45,9 @@ src/js/config.js          public site config: remote runner URL (empty = editor-
 src/js/problems/<id>/      problem.js + solutions/ (8 language files, or solution.sql); index.js = catalog + loadProblem (lazy, ADR 0008); catalog.js is generated (scripts/content/build-catalog.mjs); hydrate.js
 src/js/state/              progress (pure reducers + localStorage), drafts, sync.js (merge across devices), tours.js (which tours this device has seen)
 src/js/auth/               account.js (Supabase sign-in, inert unless configured), sync-controller.js (ADR 0006), github-sync.js (ADR 0007)
-src/js/modes/              interview.js, battle.js, mock-oa.js (pure session logic and OA problem picking)
+src/js/modes/              interview.js, battle.js, mock-oa.js (pure session logic and OA problem picking), quiz.js (multiple-choice sessions, daily quiz, validateBank)
 src/js/mentor/             mentor providers (scripted today, remote later)
+src/js/data/quiz-bank.js   multiple-choice questions by topic for the Quiz mode (state/quiz-progress.js keeps answers per browser)
 src/js/data/taxonomy.js    learning network: 26 topics, 131 subtopics, ladders, validators
 src/js/data/families.js    problem families, pickVersion per company, distinctProblems
 src/js/data/problem-meta.js companies, best known complexity, family per shipped problem (-> problem-meta.json, scripts/content/build-meta.mjs)
@@ -67,7 +68,7 @@ deploy/supabase/functions/ Edge Functions: github-sync (core.js is unit-tested i
 deploy/piston/             VM kit: Piston image, runtime packages, gate, compose, setup.sh, smoke.mjs, dev/
 db/schema.sql              PostgreSQL schema (ADR 0002); scripts/db/ = git -> database sync + checks
 src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler (Monaco's TS service), resizer, results console, motion.js, palette.js (Ctrl+K), daily-card.js, tour.js (guided tour overlay)
-src/js/ui/views/           dashboard, map, daily, workspace, path, companies, modes (hub, interview, battle)
+src/js/ui/views/           dashboard, map, daily, workspace, path, companies, modes (hub, interview, battle), quiz (hub, play, results, daily quiz)
 scripts/design/            capture-screens.mjs (before/after shots), perf-map.mjs (ADR 0010), social-preview.mjs
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test

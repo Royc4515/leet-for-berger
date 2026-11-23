@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added (Quiz)
+- **Quiz mode** (`#/quiz`, a third card on Modes): multiple-choice questions on the ideas interviews test, made for a phone and no editor. 15 topics, from OOP, SOLID and design patterns to databases, networking, concurrency, system design, testing, security, Git and DevOps, and JavaScript, Python and Java. Pick one topic, a few, or all mixed.
+- Three ways to play: Practice (10 questions, no clock), Sprint (10 against a 2 minute clock) and Survival (until the third wrong answer). Each answer shows the right option and why; results break down by topic, list every miss with its explanation, and offer to retry just the missed ones. Questions not yet answered correctly come first. Keys 1 to 4 (or A to D) answer, Enter moves on.
+- **Daily quiz** (`#/quiz/daily`): 5 questions from 5 topics, the same for everyone that day, with its own streak, shown on the Daily page under the daily problem. The first play counts; a replay is practice.
+- Quiz progress is stored in this browser (`lfb:quiz:v1`) and cleared on sign-out like the rest of a user's data. It does not sync across devices yet.
+
 ### Changed (F6 redesign: Atlas)
 - **A new design for the whole site** (`docs/DESIGN.md`, decision in `docs/research/DESIGN_DIRECTIONS.md`): a warm graphite map with one amber lamp colour. Every problem is a hex: on the map, as the status mark in lists, as a day in the daily calendar, as a test case in the verdict. Chosen from three prototyped directions (Atlas, Transit, Orbit) after research on 63 captured sites (`docs/research/DESIGN_REFERENCES.md`).
 - New tokens (colour, type, spacing, radius, elevation, motion), a display face (Bricolage Grotesque, self-hosted, ADR 0009), a hex logo, favicon and social preview image (`src/brand/`), a warm editor theme, and one rule set for every component. `tests/design-tokens.test.js` now also fails on any literal colour or duration in a component rule.

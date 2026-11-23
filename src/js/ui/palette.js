@@ -20,6 +20,8 @@ const PAGES = [
   { kind: 'page', id: 'companies', label: 'Companies', href: '#/companies', keywords: 'israel hiring' },
   { kind: 'page', id: 'interview', label: 'Interview simulator', href: '#/interview', keywords: 'mock oa timed exam' },
   { kind: 'page', id: 'battle', label: 'Battle a bot', href: '#/battle', keywords: 'race versus' },
+  { kind: 'page', id: 'quiz', label: 'Quiz', href: '#/quiz', keywords: 'multiple choice questions oop design patterns trivia phone' },
+  { kind: 'page', id: 'daily-quiz', label: 'Daily quiz', href: '#/quiz/daily', keywords: 'today multiple choice questions' },
   { kind: 'page', id: 'modes', label: 'Modes', href: '#/modes', keywords: 'practice' },
   // An action, not a page: main.js starts the tour where you are.
   { kind: 'action', id: 'site-tour', label: 'Site tour', keywords: 'guide help walkthrough onboarding how', run: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'site' })) },

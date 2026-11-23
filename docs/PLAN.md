@@ -31,7 +31,7 @@ Platform, practice modes and accounts are done. What limits the site now is how 
 | Area | State | Left |
 |---|---|---|
 | Platform | Done: editor, 15 cases, 8 languages live, dashboard in 0.3 s (ADR 0008) | Small speed steps (F1) |
-| Practice | Done: paths, company practice by Israel hiring, mock OA, daily, weak spots, walkthroughs, battle vs bot | - |
+| Practice | Done: paths, company practice by Israel hiring, mock OA, daily, weak spots, walkthroughs, battle vs bot, multiple-choice quiz with a daily quiz | Quiz progress sync across devices |
 | Content | 225 problems (131 essential + 94 company problems) | Company waves (F2), growth for all (F3) |
 | Accounts | Done: Google and GitHub sign-in, synced progress, GitHub sync of solutions | Owner check of GitHub sync |
 | AI mentor | Scripted hint ladder | Real LLM mentor (F4, needs a budget decision) |
@@ -163,6 +163,7 @@ Every decision that changes direction goes here, newest first. Detailed technica
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-23 | Add a multiple-choice Quiz mode (15 concept topics, practice, sprint and survival, a daily quiz on the Daily page), kept local per browser for now | Interview prep is not only code: screening quizzes and interviews ask about OOP, patterns, databases, networking and design. A quiz needs no editor, so it works on a phone in a few spare minutes. Syncing quiz progress across devices waits until people use it |
 | 2026-11-23 | Stage F6 direction: Atlas (a territory of hex districts, one hex per problem, warm graphite with one amber lamp colour), chosen over Transit (subway lines, light paper) and Orbit (radial sky chart) on a scored comparison; company marks stay letters, not logos; map rendered as plain SVG from a pure static layout (ADR 0010); Bricolage Grotesque added as the display face (ADR 0009) | Only Atlas shows every problem on the map and answers where am I, what is next and why locked without a legend; logo sources cover a quarter of the companies and the best-known brands asked to be removed (`docs/research/DESIGN_DIRECTIONS.md`) |
 | 2026-11-22 | Stage F5 design plan approved with all 6 owner recommendations: self-host Inter and JetBrains Mono (`src/fonts/`), phone bottom tab bar (replaced by Run/Submit bar in workspace), hide header during battle race, 2 mode cards on Modes hub (AI Mentor note only until F4), defer light theme and RTL (`docs/DESIGN.md`) | One shared token system and consistent component rules across desktop and 390 px phone views without adding external runtime CDN dependencies |
 | 2026-11-19 | New order (stage F): last speed steps, then company waves ranked by hiring in Israel, growth for every problem, real AI mentor after a budget decision, then the design session | Platform and practice modes are done; problem count and complexity feedback are what limit the site for an Israeli job seeker |

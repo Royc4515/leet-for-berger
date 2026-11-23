@@ -692,7 +692,7 @@ try {
     await page.waitForSelector('.problem-title');
   });
 
-  await check('modes hub lists 2 mode cards with 1 primary button and an AI Mentor note', async () => {
+  await check('modes hub lists 3 mode cards with 1 primary button and an AI Mentor note', async () => {
     await page.click('a[data-nav="modes"]');
     await page.waitForSelector('.mode-card');
     const hub = await page.evaluate(() => ({
@@ -701,7 +701,7 @@ try {
       mentorHref: document.querySelector('.mentor-note a[href^="#/problem/"]')?.getAttribute('href') ?? '',
       text: document.querySelector('#view')?.textContent ?? '',
     }));
-    if (hub.cards !== 2) throw new Error(`expected 2 mode cards, got ${hub.cards}`);
+    if (hub.cards !== 3) throw new Error(`expected 3 mode cards, got ${hub.cards}`);
     if (hub.primaries !== 1) throw new Error(`expected 1 primary button on modes hub, got ${hub.primaries}`);
     if (!hub.mentorHref) throw new Error('expected AI Mentor note with a link to a problem');
     if (/roadmap|phase \d/i.test(hub.text)) throw new Error('modes hub copy should not mention internal roadmap phases');
@@ -1159,7 +1159,7 @@ try {
     if (!domOrderOk) throw new Error('DOM order is not skip-link -> header -> #view -> tab-bar');
     await page.focus('.skip-link');
     const regions = ['skip'];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 20; i++) {
       await page.keyboard.press('Tab');
       const region = await page.evaluate(() => {
         const el = document.activeElement;
@@ -1264,6 +1264,8 @@ try {
       { url: 'privacy.html', wait: 'article.legal h1', name: '390-touch-privacy' },
       { url: '#/map', wait: '.map-svg .district', name: '390-touch-map' },
       { url: '#/daily', wait: '.cal-day', name: '390-touch-daily' },
+      { url: '#/quiz', wait: '.quiz-topic', name: '390-touch-quiz' },
+      { url: '#/quiz/daily', wait: '.quiz-option', name: '390-touch-quiz-play' },
     ];
     for (const sc of screens) {
       await touch.goto(`${BASE}${sc.url}`);
@@ -1774,6 +1776,82 @@ try {
       throw new Error(`daily page: ${JSON.stringify(d)}`);
     }
     await shot('24-daily');
+  });
+
+  await check('quiz: one topic in practice mode, 10 questions with feedback, results with a review; keys 1-4 and Enter work', async () => {
+    await page.evaluate(() => localStorage.removeItem('lfb:quiz:v1'));
+    await page.goto(`${BASE}#/quiz`);
+    await page.waitForSelector('.quiz-topic');
+    const hub = await page.evaluate(() => ({ topics: document.querySelectorAll('.quiz-topic').length, primaries: document.querySelectorAll('#view .btn-primary').length, all: document.querySelector('.quiz-all')?.getAttribute('aria-pressed') }));
+    if (hub.topics < 12 || hub.primaries !== 1 || hub.all !== 'true') throw new Error(`quiz hub: ${JSON.stringify(hub)}`);
+    await shot('25-quiz-hub');
+    await page.click('.quiz-topic[data-topic="oop"]');
+    await expectText('.quiz-scope', /^1 topic, \d+ questions$/);
+    await page.click('.quiz-start-btn');
+    for (let i = 0; i < 10; i++) {
+      await page.waitForSelector('.quiz-option:not(:disabled)');
+      await expectText('.quiz-counter', new RegExp(`^Question ${i + 1} of 10$`));
+      if (i === 0) await shot('26-quiz-question');
+      // Alternate between the keyboard and a tap so both paths stay covered.
+      if (i % 2) await page.keyboard.press('2');
+      else await page.click('.quiz-option >> nth=0');
+      await page.waitForSelector('.quiz-verdict');
+      const st = await page.evaluate(() => ({ disabled: [...document.querySelectorAll('.quiz-option')].every((b) => b.disabled), correct: document.querySelectorAll('.quiz-option.is-correct').length, why: document.querySelector('.quiz-why')?.textContent.length ?? 0, topic: document.querySelector('.quiz-q-meta .tag')?.textContent }));
+      if (!st.disabled || st.correct !== 1 || st.why < 20 || st.topic !== 'OOP fundamentals') throw new Error(`after answering: ${JSON.stringify(st)}`);
+      if (i === 0) await shot('27-quiz-feedback');
+      if (i % 2) await page.keyboard.press('Enter');
+      else await page.click('.quiz-next');
+    }
+    await page.waitForSelector('.quiz-results');
+    await expectText('.quiz-big', /^\d+ \/ 10$/);
+    const res = await page.evaluate(() => ({ missed: document.querySelectorAll('.quiz-review-item').length, big: document.querySelector('.quiz-big').textContent, saved: JSON.parse(localStorage.getItem('lfb:quiz:v1') ?? '{}') }));
+    const score = Number(res.big.split(' / ')[0]);
+    if (res.missed !== 10 - score || Object.keys(res.saved.questions ?? {}).length !== 10 || res.saved.best?.practice !== score) throw new Error(`results: ${JSON.stringify({ ...res, saved: Object.keys(res.saved) })}`);
+    await shot('28-quiz-results');
+  });
+
+  await check('daily quiz: 5 questions from 5 topics, saved once, shown as done on the Daily page and on replay', async () => {
+    await page.goto(`${BASE}#/quiz/daily`);
+    const topics = new Set();
+    for (let i = 0; i < 5; i++) {
+      await page.waitForSelector('.quiz-option:not(:disabled)');
+      topics.add(await page.textContent('.quiz-q-meta .tag'));
+      await page.click('.quiz-option >> nth=0');
+      await page.click('.quiz-next');
+    }
+    await page.waitForSelector('.quiz-results');
+    await expectText('.quiz-results .eyebrow', /^Daily quiz No\. \d+$/);
+    if (topics.size !== 5) throw new Error(`daily quiz topics: ${[...topics]}`);
+    await page.goto(`${BASE}#/daily`);
+    await page.waitForSelector('.daily-quiz-card');
+    await expectText('.daily-quiz-card', /Done: \d \/ 5 correct\. 1-day quiz streak\./);
+    await page.goto(`${BASE}#/quiz/daily`);
+    await page.waitForSelector('#quiz-done-title');
+    await expectText('.quiz-result-card', /Done for today/);
+  });
+
+  await check('quiz sprint shows a clock, survival shows three lives, and End asks before scoring', async () => {
+    await page.goto(`${BASE}#/quiz`);
+    await page.waitForSelector('.quiz-topic');
+    await page.click('.segmented-btn[data-value="sprint"]');
+    await page.click('.quiz-start-btn');
+    await page.waitForSelector('.quiz-option:not(:disabled)');
+    await expectText('.quiz-clock', /^[12]:\d\d$/);
+    await page.click('.quiz-option >> nth=0');
+    await page.click('.quiz-hud button:has-text("End")');
+    await expectDialog(page, /End the quiz/);
+    await page.click('dialog.modal button:has-text("End quiz")');
+    await page.waitForSelector('.quiz-results');
+    await expectText('.quiz-big', /^\d \/ 10$/);
+    await page.click('.quiz-actions button:has-text("Change setup")');
+    await page.waitForSelector('.quiz-topic');
+    await page.click('.segmented-btn[data-value="survival"]');
+    await page.click('.quiz-start-btn');
+    await page.waitForSelector('.quiz-option:not(:disabled)');
+    const lives = await page.locator('.quiz-life.is-on').count();
+    if (lives !== 3) throw new Error(`survival lives: ${lives}`);
+    await page.click('.quiz-hud button:has-text("Leave")');
+    await page.waitForSelector('.quiz-topic');
   });
 
   await check('command palette: Ctrl+K opens it, typing ranks topics and problems, Enter navigates, Escape closes and restores focus', async () => {
