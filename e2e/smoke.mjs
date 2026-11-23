@@ -1321,7 +1321,8 @@ try {
     if (shapes.chipRadius < 15 || shapes.tagRadius > 4 || shapes.tagBorder !== '0px' || !/✓/.test(shapes.chipCheck)) {
       throw new Error(`chip and tag shapes are not distinct: ${JSON.stringify(shapes)}`);
     }
-    if (shapes.diffDot !== '8px' || !/^(Easy|Medium|Hard)$/.test(shapes.diffText)) throw new Error(`difficulty is not dot plus word: ${JSON.stringify(shapes)}`);
+    // Atlas (docs/DESIGN.md): difficulty is three pips (1, 2 or 3 filled) plus the word, so it reads without colour.
+    if (parseFloat(shapes.diffDot) < 15 || !/^(Easy|Medium|Hard)$/.test(shapes.diffText)) throw new Error(`difficulty is not pips plus word: ${JSON.stringify(shapes)}`);
     await ctx.close();
   });
 
@@ -1803,7 +1804,8 @@ try {
       await rm.waitForSelector(sel, { timeout: 30000 });
       const r = await rm.evaluate(() => {
         const running = document.getAnimations().filter((a) => a.playState === 'running' && Number(a.effect?.getComputedTiming().duration) > 2);
-        const faded = [...document.querySelectorAll('#view *')].filter((el) => el.getClientRects().length && Number(getComputedStyle(el).opacity) < 0.05 && !el.closest('[hidden]')).length;
+        // Monaco's own hover-only parts (fold markers, idle scrollbars) are transparent by design.
+        const faded = [...document.querySelectorAll('#view *')].filter((el) => el.getClientRects().length && Number(getComputedStyle(el).opacity) < 0.05 && !el.closest('[hidden], .monaco-editor')).length;
         return { running: running.map((a) => a.animationName ?? a.constructor.name), faded };
       });
       if (r.running.length || r.faded) throw new Error(`${hash} under reduced motion: ${JSON.stringify(r)}`);

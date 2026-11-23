@@ -470,7 +470,11 @@ kbd,
 /* Phone: the header keeps the mark, the page title, search, streak and account; the five
    destinations move to a bottom tab bar (replaced by Run / Submit inside a problem). */
 @media (max-width: 820px) {
+  /* No backdrop-filter here: it would make the header the containing block of the account
+     menu's fixed sheet and backdrop, collapsing them to the header's height. */
   .app-header {
+    background: var(--bg);
+    backdrop-filter: none;
     gap: var(--s-3);
     padding-inline: max(var(--s-4), env(safe-area-inset-left, 0px)) max(var(--s-4), env(safe-area-inset-right, 0px));
   }
@@ -6098,27 +6102,18 @@ body.resizing-y * {
    Reduced motion: nothing moves, nothing is skipped
    ========================================================================= */
 @media (prefers-reduced-motion: reduce) {
+  /* Every animation here is decoration (entrances, pulses, shimmer, the verdict resolve), so it is
+     switched off outright, never shortened: no element can be caught in a first, faded frame. */
   *,
   *::before,
   *::after {
-    animation-duration: 1ms !important;
-    animation-delay: 1ms !important;
-    animation-iteration-count: 1 !important;
+    animation: none !important;
     transition-duration: 1ms !important;
     transition-delay: 1ms !important;
     scroll-behavior: auto !important;
   }
 
   .next-ring {
-    animation: none !important;
     opacity: 0.9;
-  }
-
-  .skeleton-title,
-  .skeleton-meta,
-  .skeleton-line,
-  .skeleton-hex,
-  .spinner {
-    animation: none !important;
   }
 }
