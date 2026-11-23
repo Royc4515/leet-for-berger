@@ -449,6 +449,11 @@
    "israel": "none",
    "tier": 2
   },
+  "EY": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Faire": {
    "israel": "none",
    "tier": 3,
@@ -533,6 +538,11 @@
   "Graviton": {
    "israel": "none",
    "tier": 3
+  },
+  "GSA Capital": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Gusto": {
    "israel": "none",
@@ -892,6 +902,11 @@
    "israel": "none",
    "tier": 3
   },
+  "Oppo": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Optiver": {
    "israel": "none",
    "tier": 3,
@@ -999,6 +1014,11 @@
    "tier": 2,
    "source": "https://calcalistech.com/ctechnews/article/rytzpacjs",
    "rankIL": 19
+  },
+  "Qualtrics": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Quince": {
    "israel": "none",
@@ -1152,6 +1172,11 @@
    "unverified": true
   },
   "Sony": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
+  "SoundHound": {
    "israel": "none",
    "tier": 3,
    "unverified": true
