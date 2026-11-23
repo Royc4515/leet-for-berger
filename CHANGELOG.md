@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added (docs)
+- Redesign brief (`docs/REDESIGN_BRIEF.md`, `docs/PLAN.md`): the prompt for stage F6, a research-led redesign of the whole site with an interactive Problem Map. Not started.
+
 ### Changed
 - Collinear Max's growth ladder is now 125 to 1000 points (was 250 to 2000): the 2000 size pushed a run to about 5.4 s, over the browser's 5 s budget; a run now takes about 1.2 s and still reads quadratic. The unused `gcd` helper in its problem file is removed (review nits on group C).
 
