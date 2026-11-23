@@ -12,6 +12,7 @@ import { services } from './auth/services.js';
 import { catalogEntry, loadProblem } from './problems/index.js';
 import { h, mount, toast, stateBlock, loadingState, siteFooter } from './ui/dom.js';
 import { loadSeen, hasSeen } from './state/tours.js';
+import { tourForRoute } from './data/tours.js';
 
 const store = createStore();
 const view = document.getElementById('view');
@@ -26,7 +27,8 @@ const headerTitle = document.getElementById('header-title');
 const routes = [
   [/^#?\/?$/, async () => { const m = await import('./ui/views/dashboard.js'); return (root) => m.renderDashboard(root, { store }); }, 'problems', 'Problems'],
   [/^#\/problem\/([\w-]+)$/, loadProblemRoute, 'problems', ([, id]) => catalogEntry(id)?.title ?? 'Problem'],
-  [/^#\/map(?:\/([\w-]+))?$/, async (_, [, topic]) => { const m = await import('./ui/views/map.js'); return (root) => m.renderMap(root, { store, topic: topic ?? null }); }, 'map', 'Map'],
+  // Map levels (#/map/<topic>/<subtopic>/<problem>) zoom inside one mounted view: see `update` in route().
+  [/^#\/map(?:\/([\w-]+)(?:\/([\w-]+)(?:\/([\w-]+))?)?)?$/, async (_, [, ...parts]) => { const m = await import('./ui/views/map.js'); return (root) => m.renderMap(root, { store, parts }); }, 'map', 'Map'],
   [/^#\/daily$/, async () => { const m = await import('./ui/views/daily.js'); return (root) => m.renderDaily(root, { store }); }, 'problems', 'Daily challenge'],
   [/^#\/path$/, async () => { const m = await import('./ui/views/path.js'); return (root) => m.renderPath(root, { store }); }, 'path', 'Learning Path'],
   [/^#\/companies$/, async () => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompanies(root, { store }); }, 'companies', 'Companies'],
@@ -59,33 +61,40 @@ function renderNotFound(root, message = 'This page is not on the map. The link m
 }
 
 let cleanup = () => {};
+// The route pattern of the mounted view. A view whose cleanup carries `update(groups)` (the map's
+// zoom levels) is told about a new hash of the same route instead of being torn down and rebuilt,
+// so it can animate between levels and keep its state; Back and Forward still work, being hashes.
+let mountedRe = null;
 // Bumped on every navigation: a view that finishes loading after the hash moved on must not render.
 let navToken = 0;
 
 /* ---------- Guided tours (data/tours.js) ---------- */
-// The site tour starts on the first visit to a browse page. Interview, battle and the workspace
-// start their own mode tours. The overlay module loads only when a tour is due or asked for.
-const SITE_TOUR_ROUTE = /^#?\/?$|^#\/(map|daily|path|companies|modes)\b/;
+// Every page explains itself on its first visit (the mentor's tour opens with its panel). The
+// overlay module loads only when a tour is due or asked for.
 let closeTour = () => {};
 const loadTour = () => import('./ui/tour.js');
 
-function maybeSiteTour(hash, token) {
-  if (!SITE_TOUR_ROUTE.test(hash) || hasSeen(loadSeen(), 'site')) return;
+function maybePageTour(hash, token) {
+  const id = tourForRoute(hash);
+  if (!id || hasSeen(loadSeen(), id)) return;
   loadTour()
     .then((m) => {
-      if (token === navToken) closeTour = m.startTourIfDue('site');
+      if (token === navToken) closeTour = m.startTourIfDue(id);
     })
     .catch(() => {}); // offline: no tour this time, it stays due
 }
 
-// Replays (the footer, the palette) ask for a tour by id with a 'tour:open' event.
+// Replays (the footer, the palette, "How it works") ask with a 'tour:open' event: a tour id, or
+// 'page' for the page you are on.
 addEventListener('tour:open', (e) => {
+  const id = e.detail === 'page' ? tourForRoute(location.hash) : e.detail;
+  if (!id) return;
   loadTour()
     .then((m) => {
       closeTour();
-      closeTour = m.startTour(e.detail);
+      closeTour = m.startTour(id);
     })
-    .catch(() => toast('The tour could not load. Check your connection and try again.', 'error'));
+    .catch(() => toast('The guide could not load. Check your connection and try again.', 'error'));
 });
 
 function setHeaderTitle(text) {
@@ -94,6 +103,16 @@ function setHeaderTitle(text) {
 
 async function route() {
   const token = ++navToken;
+  const hash = location.hash || '#/';
+  const match = routes.find(([re]) => re.test(hash));
+  closeTour();
+  closeTour = () => {};
+  if (match && match[0] === mountedRe && typeof cleanup.update === 'function') {
+    const groups = hash.match(match[0]);
+    setHeaderTitle(typeof match[3] === 'function' ? match[3](groups) : match[3]);
+    cleanup.update(groups);
+    return;
+  }
   // Every view returns a cleanup; skipping it leaks Monaco instances, intervals and listeners.
   // It always runs for the previous view, and is a no-op until a view is mounted (set below).
   try {
@@ -102,10 +121,7 @@ async function route() {
     console.error('View cleanup failed', err);
   }
   cleanup = () => {};
-  closeTour();
-  closeTour = () => {};
-  const hash = location.hash || '#/';
-  const match = routes.find(([re]) => re.test(hash));
+  mountedRe = null;
   view.className = 'view';
   if (!match) {
     cleanup = renderNotFound(view);
@@ -128,8 +144,9 @@ async function route() {
   }
   if (token !== navToken) return;
   cleanup = mounter(view) ?? (() => {});
+  mountedRe = re;
   view.focus({ preventScroll: true });
-  maybeSiteTour(hash, token);
+  maybePageTour(hash, token);
 }
 
 function setActiveNav(key) {

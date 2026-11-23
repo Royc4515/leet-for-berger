@@ -54,10 +54,10 @@ src/js/data/company-sets.js practice by company: per-company problem lists, one 
 src/js/data/learning-path.js essential path: 131 problems by tier and topic, easy to hard (-> essential-path.json, same script)
 src/js/data/recommend.js   problem of the day, weak spots from progress
 src/js/data/daily.js       daily challenge maths: number, streaks, rolling count, 16-week calendar
-src/js/data/map-layout.js  Problem Map model: topic states, lock reasons, deterministic layout, keyboard neighbours (ADR 0010)
+src/js/data/map-layout.js  Problem Map model: topic and subtopic states, lock reasons, deterministic layouts (all topics, one topic), keyboard neighbours, map level URLs (ADR 0010 + amendment)
 src/js/data/problem-topics.js taxonomy topic per shipped problem (-> problem-topics.json, build-meta.mjs)
 src/js/data/palette-search.js command palette ranking
-src/js/data/tours.js       guided tour content (site tour + one per mode), validateTour; tour-layout.js = card and spotlight placement (pure)
+src/js/data/tours.js       guided tour content (one per page + welcome + mentor), tourForRoute, validateTour; tour-layout.js = card and spotlight placement (pure)
 src/js/data/company-loader.js fetch loaders for company-sets.json and problem-topics.json
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md)
 scripts/content/           fetch sources, build index, audit

@@ -8,6 +8,8 @@
  * Pure: no DOM, no I/O, no Math.random. Progress is a parameter (state.problems).
  */
 
+import { conceptLabel } from './learning-path.js';
+
 /** Solved problems a prerequisite needs before the topics built on it open. */
 export const READY_SOLVES = 2;
 
@@ -301,4 +303,136 @@ export function neighbours(districts) {
     out.set(d.id, entry);
   }
   return out;
+}
+
+/* ---------- Drill-down: topic, subtopic, problem (owner's request) ---------- */
+
+/**
+ * @typedef {{
+ *   id: string, title: string, problems: string[], total: number, solved: number, attempted: number,
+ *   essential: string|null, next: string|null, state: 'new'|'started'|'done',
+ * }} ConceptState  essential: the learning path's pick here; next: the path pick if unsolved, else the first unsolved
+ */
+
+/**
+ * One topic's subtopics (taxonomy `concepts`) in learning order, with their problems in map order.
+ * @param {{ topic: { id: string, concepts: string[] }, placed: Record<string, Placement>, ids: string[], progress: Record<string, ProblemProgress> }} input
+ * @returns {ConceptState[]} only subtopics that hold at least one published problem
+ */
+export function conceptStates({ topic, placed, ids, progress }) {
+  const statusOf = (id) => problemStatus(progress[id]);
+  return (topic.concepts ?? [])
+    .map((c) => {
+      const problems = ids.filter((id) => placed[id]?.topic === topic.id && placed[id].concept === c);
+      const solved = problems.filter((id) => isSolvedStatus(statusOf(id))).length;
+      const attempted = problems.filter((id) => statusOf(id) === 'attempted').length;
+      const essential = problems.find((id) => placed[id].essential) ?? null;
+      const open = (id) => !isSolvedStatus(statusOf(id));
+      const next = essential && open(essential) ? essential : (problems.find(open) ?? null);
+      const state = problems.length && solved === problems.length ? 'done' : solved || attempted ? 'started' : 'new';
+      return { id: c, title: conceptLabel(c), problems, total: problems.length, solved, attempted, essential, next, state };
+    })
+    .filter((c) => c.total > 0);
+}
+
+/**
+ * @typedef {{ id: string, order: number, x: number, y: number, w: number, h: number, cells: Point[], head: number }} Block
+ * @typedef {{ narrow: boolean, width: number, height: number, r: number, blocks: Block[], roads: Road[] }} TopicLayout
+ */
+
+/**
+ * The topic level: one block per subtopic, in learning order, on a winding road (left to right,
+ * then right to left, like reading a board game), one hex per problem. Pure and deterministic.
+ * @param {{ id: string, count: number }[]} concepts in learning order
+ * @param {{ width: number }} opts available width in CSS pixels
+ * @returns {TopicLayout}
+ */
+export function layoutTopic(concepts, { width }) {
+  const narrow = width < NARROW_WIDTH;
+  const r = narrow ? 9 : 11;
+  const cw = SQRT3 * r;
+  const head = 50;
+  const pad = 12;
+  const gapX = narrow ? 14 : 44;
+  const gapY = narrow ? 30 : 44;
+  const perRow = narrow ? 2 : Math.max(2, Math.min(4, Math.floor((width + gapX) / (220 + gapX))));
+  const boxW = Math.floor((width - gapX * (perRow - 1)) / perRow);
+  const hexCols = Math.max(3, Math.floor((boxW - 2 * pad - cw / 2) / cw));
+  /** @type {Block[]} */
+  const blocks = [];
+  let y = 0;
+  for (let start = 0, row = 0; start < concepts.length; start += perRow, row++) {
+    const list = concepts.slice(start, start + perRow);
+    const shapes = list.map((c) => hexCells(c.count, hexCols, r));
+    const rowH = round(head + Math.max(...shapes.map((sh) => sh.h)) + pad);
+    list.forEach((c, j) => {
+      // Odd rows run right to left, so the road turns down at the end of a row, not back across it.
+      const col = row % 2 ? perRow - 1 - j : j;
+      blocks.push({ id: c.id, order: start + j, x: round(col * (boxW + gapX)), y: round(y), w: boxW, h: rowH, cells: shapes[j].cells.map((cell) => ({ x: round(cell.x + pad), y: round(cell.y + head) })), head });
+    });
+    y = round(y + rowH + gapY);
+  }
+  /** @type {Road[]} */
+  const roads = [];
+  for (let i = 0; i + 1 < blocks.length; i++) {
+    const a = blocks[i];
+    const b = blocks[i + 1];
+    if (a.y === b.y) {
+      const rightward = b.x > a.x;
+      const p = { x: rightward ? a.x + a.w : a.x, y: round(a.y + a.h / 2) };
+      const q = { x: rightward ? b.x : b.x + b.w, y: round(b.y + b.h / 2) };
+      const mx = round((p.x + q.x) / 2);
+      roads.push({ from: a.id, to: b.id, points: [p, { x: mx, y: p.y }, { x: mx, y: q.y }, q] });
+    } else {
+      const p = { x: round(a.x + a.w / 2), y: round(a.y + a.h) };
+      const q = { x: round(b.x + b.w / 2), y: b.y };
+      const my = round((p.y + q.y) / 2);
+      roads.push({ from: a.id, to: b.id, points: [p, { x: p.x, y: my }, { x: q.x, y: my }, q] });
+    }
+  }
+  const height = blocks.length ? round(Math.max(...blocks.map((b) => b.y + b.h)) + 4) : 0;
+  return { narrow, width, height, r, blocks, roads };
+}
+
+/**
+ * @typedef {{ topic: string|null, concept: string|null, problem: string|null }} MapLevel
+ */
+
+/**
+ * Reads `#/map/<topic>/<subtopic>/<problem>`. Anything unknown, or a subtopic or problem that
+ * belongs elsewhere, falls back to the deepest valid level above it, so an old link still lands.
+ * @param {(string|undefined)[]} parts the route's captured segments
+ * @param {{ topics: { id: string, concepts?: string[] }[], placed: Record<string, Placement>, published: Set<string> }} known
+ * @returns {MapLevel}
+ */
+export function parseMapLevel(parts, { topics, placed, published }) {
+  const [t, c, p] = parts;
+  const out = { topic: null, concept: null, problem: null };
+  const topic = topics.find((x) => x.id === t);
+  if (!topic) return out;
+  out.topic = topic.id;
+  if (!c || !(topic.concepts ?? []).includes(c)) return out;
+  out.concept = c;
+  if (p && published.has(p) && placed[p]?.topic === topic.id && placed[p].concept === c) out.problem = p;
+  return out;
+}
+
+/**
+ * @param {MapLevel} level
+ * @returns {string} the level's hash
+ */
+export function mapLevelHash(level) {
+  return ['#/map', level.topic, level.topic && level.concept, level.topic && level.concept && level.problem].filter(Boolean).join('/');
+}
+
+/**
+ * The level one step up (what Esc and the breadcrumb go back to).
+ * @param {MapLevel} level
+ * @returns {MapLevel|null} null at the top
+ */
+export function parentLevel(level) {
+  if (level.problem) return { ...level, problem: null };
+  if (level.concept) return { ...level, concept: null };
+  if (level.topic) return { topic: null, concept: null, problem: null };
+  return null;
 }

@@ -14,22 +14,17 @@ import { israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/i
 import { usedTopics, pickRandom } from '../../modes/battle-picker.js';
 import { LAST_SESSIONS_KEY } from '../../state/user-data.js';
 import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
-import { startTour, startTourIfDue } from '../tour.js';
 
 /**
- * A mode's guided tour (data/tours.js): it starts on the first visit to the setup page and the
- * "How it works" button replays it. The returned close goes in the view's cleanup.
+ * "How it works" for a mode's setup page. The first visit's tour is started by the router
+ * (main.js, data/tours.js tourForRoute); this button replays it through the same event.
  * @param {string} id
  * @returns {{ replay: HTMLElement, close: () => void }}
  */
 function modeTour(id) {
-  let close = startTourIfDue(id);
   const replay = h('button.btn.btn-ghost.btn-sm.tour-replay', { type: 'button', 'aria-haspopup': 'dialog' }, 'How it works');
-  replay.addEventListener('click', () => {
-    close();
-    close = startTour(id);
-  });
-  return { replay, close: () => close() };
+  replay.addEventListener('click', () => dispatchEvent(new CustomEvent('tour:open', { detail: id })));
+  return { replay, close: () => {} };
 }
 
 function loadLastResults() {

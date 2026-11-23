@@ -1896,6 +1896,201 @@ body.lockdown .toast-host {
   overflow: visible;
 }
 
+/* Drill-down (#/map/<topic>/<subtopic>/<problem>): breadcrumb, then the level's canvas. */
+.map-main {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.map-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-4);
+  min-height: var(--ctl-md);
+}
+
+.map-crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+
+.map-crumbs li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--muted);
+}
+
+.map-crumbs li + li::before {
+  content: '\203A';
+  color: var(--muted);
+}
+
+.map-crumbs a {
+  color: var(--text-2);
+  text-decoration: none;
+  border-radius: var(--r-tag);
+}
+
+.map-crumbs a:hover {
+  color: var(--accent);
+}
+
+.map-crumbs [aria-current] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.map-crumb-hint {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+
+/* Scrolled to after a zoom: land below the sticky header, not under it. */
+.map-crumbs,
+.map-brief {
+  scroll-margin-top: calc(var(--header-h) + var(--s-3));
+}
+
+/* No Esc key on a touch screen: the breadcrumb is the way back up. */
+@media (pointer: coarse) {
+  .map-crumb-hint {
+    display: none;
+  }
+}
+
+/* On a phone the overview hides roads, but on a topic the road is the reading order. */
+.map-svg.map-topic.is-narrow .road {
+  opacity: 1;
+}
+
+.b-order {
+  fill: var(--accent);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.block.c-done .d-count {
+  fill: var(--accent);
+}
+
+.block.has-next .land {
+  stroke: var(--accent-line);
+}
+
+/* Subtopic level: its problems as named hex tiles */
+.map-concept {
+  display: grid;
+  gap: var(--s-5);
+}
+
+.map-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.map-tile {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--s-2);
+  height: 100%;
+  padding: var(--s-4) var(--s-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--panel-2);
+  color: var(--text);
+  text-align: center;
+  text-decoration: none;
+  transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.map-tile:hover {
+  border-color: var(--border-control);
+  background: var(--panel-3);
+}
+
+/* The current tile has its own lit state; the phone's default tap flash would tint it. */
+.map-tile {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-tile.is-current {
+  border-color: var(--accent);
+  background: var(--panel-3);
+  box-shadow: var(--shadow-lamp);
+}
+
+.tile-hex {
+  width: 64px;
+  height: 64px;
+  overflow: visible;
+}
+
+/* The tile hex is drawn in a 100-unit box at 64 px: thicker strokes keep the map's line weight. */
+.tile-hex .hx.is-path {
+  stroke-width: 3;
+}
+
+.tile-hex .hx.attempted,
+.tile-hex .hx.is-next {
+  stroke-width: 5;
+}
+
+.tile-title {
+  font-family: var(--display);
+  font-size: var(--fs-md);
+  font-weight: 650;
+  line-height: var(--lh-snug);
+}
+
+.tile-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+}
+
+.map-siblings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.map-sibling {
+  display: inline-grid;
+  gap: var(--s-half);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  text-decoration: none;
+  border-radius: var(--r-tag);
+}
+
+.map-sibling.is-next {
+  margin-inline-start: auto;
+  text-align: end;
+}
+
+.map-sibling:hover strong {
+  color: var(--accent);
+}
+
 .band-label {
   fill: var(--muted);
   font-family: var(--mono);
@@ -1963,7 +2158,7 @@ body.lockdown .toast-host {
   stroke: var(--border-control);
 }
 
-.district[aria-pressed='true'] .land {
+.district.is-preview .land {
   fill: var(--panel-3);
   stroke: var(--accent);
   stroke-width: 1.5;
@@ -2066,33 +2261,33 @@ body.lockdown .toast-host {
 }
 
 /* Lenses */
-.map-svg[data-lens='difficulty'] .hx {
+.map-canvas[data-lens='difficulty'] .hx {
   stroke: none;
 }
 
-.map-svg[data-lens='difficulty'] .hx.d-easy {
+.map-canvas[data-lens='difficulty'] .hx.d-easy {
   fill: color-mix(in srgb, var(--easy) 70%, var(--panel-2));
 }
 
-.map-svg[data-lens='difficulty'] .hx.d-medium {
+.map-canvas[data-lens='difficulty'] .hx.d-medium {
   fill: color-mix(in srgb, var(--medium) 70%, var(--panel-2));
 }
 
-.map-svg[data-lens='difficulty'] .hx.d-hard {
+.map-canvas[data-lens='difficulty'] .hx.d-hard {
   fill: color-mix(in srgb, var(--hard) 70%, var(--panel-2));
 }
 
-.map-svg[data-lens='difficulty'] .hx.solved,
-.map-svg[data-lens='difficulty'] .hx.assisted {
+.map-canvas[data-lens='difficulty'] .hx.solved,
+.map-canvas[data-lens='difficulty'] .hx.assisted {
   stroke: var(--text);
   stroke-width: 1.6;
 }
 
-.map-svg.has-company .hx:not(.in-company) {
+.map-canvas.has-company .hx:not(.in-company) {
   opacity: 0.18;
 }
 
-.map-svg.has-company .hx.in-company:not(.solved):not(.assisted) {
+.map-canvas.has-company .hx.in-company:not(.solved):not(.assisted) {
   fill: var(--text-2);
 }
 
@@ -2158,6 +2353,20 @@ body.lockdown .toast-host {
 
 .map-brief .eyebrow {
   margin: 0;
+}
+
+/* A long problem title wraps inside its button instead of widening the panel. */
+.map-brief {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.map-brief .btn-block {
+  height: auto;
+  min-height: var(--ctl-md);
+  padding-block: var(--s-2);
+  line-height: var(--lh-snug);
+  white-space: normal;
+  text-align: center;
 }
 
 .brief-title {
@@ -2242,6 +2451,43 @@ body.lockdown .toast-host {
   padding: 0;
   list-style: none;
   border-top: 1px solid var(--border);
+}
+
+.brief-concepts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+
+.brief-concepts .brief-row {
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+}
+
+.brief-count {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.brief-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  font-size: var(--fs-sm);
+}
+
+.brief-meta .status-word {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  color: var(--text-2);
+}
+
+.brief-asked {
+  margin: 0;
 }
 
 .brief-row {
@@ -6222,6 +6468,8 @@ body.resizing-y * {
   .btn-link,
   .site-links a,
   .site-links-tour,
+  .map-crumbs a,
+  .map-sibling,
   .path-prereqs a,
   .problem-crumb a,
   .legal a:not(.btn) {

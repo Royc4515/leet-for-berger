@@ -98,18 +98,20 @@ Helpers in `src/js/ui/dom.js` build these with `h()` and text nodes only (never 
 
 ## Map rules
 
-- Tiers read left to right (columns); on a phone, top to bottom (bands of two districts). Never a shrunk desktop map.
-- A district shows its name, "solved/total" and one hex per problem. Path problems carry a thin outline.
+- Four levels, each a hash: all topics (`#/map`), one topic and its subtopics (`#/map/<topic>`), one subtopic and its problems (`#/map/<topic>/<subtopic>`), one problem picked (`.../<problem>`). A breadcrumb above the canvas names the level; Esc and Back go up one.
+- Going in, the new level grows out of what you picked; going out, the level above settles back around it. One motion, transform and opacity, 360 ms; none under reduced motion.
+- All topics: tiers read left to right (columns); on a phone, top to bottom (bands of two districts). Never a shrunk desktop map. A district shows its name, "solved/total" and one hex per problem. Path problems carry a thin outline.
+- One topic: its subtopics in learning order, numbered, on a winding road (left to right, then back), one hex per problem. A hex is a shortcut to its problem. On a phone the road stays visible: it is the reading order.
+- One subtopic: its problems as named hex tiles with difficulty and the Path tag; the picked one is lit and the panel shows its card with Open.
 - **Locked** = dashed fog, the word "locked", and a one-sentence reason in the panel ("Opens after Two Pointers (1 of 2 solved). You can still practice it now."). Locked is advice; everything still opens.
-- **You are here**: the district holding the learning path's next problem is selected on arrival, and that hex carries a single pulsing ring (static under reduced motion).
-- Pointing at or focusing a district lights its whole prerequisite chain in amber and its dependants in a dashed line. On a phone only the selected district's roads show.
-- The panel is the zoom: no pan, no zoom, no minimap.
-- Every district is a focusable control with a full accessible name; arrows move by geometry; Enter selects and updates the hash (`#/map/<topic>`) without re-routing.
+- **You are here**: the district and the subtopic holding your next problem carry a single pulsing ring on that hex (static under reduced motion); the panel defaults to your next topic.
+- Pointing at or focusing a district lights its whole prerequisite chain in amber and its dependants in a dashed line, and the panel follows. On a phone only the selected district's roads show.
+- Every district and subtopic block is a focusable control with a full accessible name; arrows move by geometry; Enter zooms in. Tiles are links.
 - Map / List show the same model; List is the screen-reader route.
 
 ## Tour rules
 
-- One site tour (first visit to any browse page) and one guide per mode (Interview, Battle, Mentor), each shown once per device and replayable: the footer and the palette for the site tour, "How it works" on a setup page, the mentor's "?" button. Content lives in `src/js/data/tours.js`.
+- Every page explains itself the first time it opens (Problems, Map, Path, Daily, Companies, a company, Modes, a problem, Interview, Battle), and the mentor's panel on its first open. The first tour a device sees opens with a one-step welcome. Each is shown once per device and replayable: "Guide for this page" in the footer and the palette, "How it works" on a setup page, the mentor's "?" button. Content lives in `src/js/data/tours.js`; `tourForRoute` maps a route to its tour.
 - Short and simple: at most 4 steps, a title of 24 characters and one line of 80; the same voice as the rest of the site (`validateTour` enforces it).
 - A step points at one real element: the spotlight rings it in amber and the scrim dims the rest. The card goes below, above or beside it and never covers it; on a phone it is a sheet on the edge away from the target. Steps without a target are centred.
 - A native modal `<dialog>`: focus stays in the card and starts on Next; Esc and Skip close it; arrow keys move between steps; every close marks the tour seen. Clicking the scrim does nothing, so a stray tap cannot end an explanation.
