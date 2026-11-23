@@ -133,6 +133,11 @@
    "israel": "none",
    "tier": 2
   },
+  "Attentive": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Audible": {
    "israel": "none",
    "tier": 2,
@@ -444,9 +449,19 @@
    "israel": "none",
    "tier": 2
   },
+  "Faire": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
+  },
   "Fast": {
    "israel": "none",
    "tier": 3
+  },
+  "Fidelity": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Fiverr": {
    "israel": "major",
@@ -518,6 +533,11 @@
   "Graviton": {
    "israel": "none",
    "tier": 3
+  },
+  "Gusto": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Harness": {
    "israel": "none",
@@ -1249,6 +1269,11 @@
   "Turing": {
    "israel": "none",
    "tier": 3
+  },
+  "TuSimple": {
+   "israel": "none",
+   "tier": 3,
+   "unverified": true
   },
   "Twilio": {
    "israel": "none",

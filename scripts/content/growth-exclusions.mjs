@@ -45,6 +45,7 @@ export const GROWTH_EXCLUSIONS = {
   'grammar-symbol': { reason: 'fixed-size', why: 'n <= 30 rows, so at most 30 steps' },
   'lock-steps': { reason: 'fixed-size', why: 'the state space is fixed at 10^4 four-digit codes' },
   'mirror-bits': { reason: 'fixed-size', why: 'one 32-bit integer, 32 steps' },
+  'number-in-words': { reason: 'fixed-size', why: 'one 32-bit integer, at most 4 three-digit groups' },
   'one-swap-max': { reason: 'fixed-size', why: 'one integer of at most 9 digits' },
   'power-mod': { reason: 'fixed-size', why: 'a 64-bit exponent, at most 64 squarings' },
   'stone-take-game': { reason: 'fixed-size', why: 'O(1): the answer is n % 4' },
