@@ -3,9 +3,11 @@
 ## [Unreleased]
 
 ### Added (Quiz)
-- **Quiz mode** (`#/quiz`, a third card on Modes): multiple-choice questions on the ideas interviews test, made for a phone and no editor. 15 topics, from OOP, SOLID and design patterns to databases, networking, concurrency, system design, testing, security, Git and DevOps, and JavaScript, Python and Java. Pick one topic, a few, or all mixed.
-- Three ways to play: Practice (10 questions, no clock), Sprint (10 against a 2 minute clock) and Survival (until the third wrong answer). Each answer shows the right option and why; results break down by topic, list every miss with its explanation, and offer to retry just the missed ones. Questions not yet answered correctly come first. Keys 1 to 4 (or A to D) answer, Enter moves on.
-- **Daily quiz** (`#/quiz/daily`): 5 questions from 5 topics, the same for everyone that day, with its own streak, shown on the Daily page under the daily problem. The first play counts; a replay is practice.
+- **Quiz mode** (`#/quiz`, a third card on Modes): 526 multiple-choice questions on the ideas student and first-job interviews test, in 18 topics: OOP, data structures, algorithms and Big-O, SQL, concurrency, operating systems, networking, SOLID, design patterns, testing, Git, security basics, junior system design, Java, Python, JavaScript, C and C++, and bits and numbers. Pick one topic, a few, or all mixed. Made for a phone and no editor.
+- **English or Hebrew**: every question is also in Hebrew, with technical terms kept in English as interviewers say them; right-to-left text, code stays left-to-right. The choice is remembered on the device.
+- Three ways to play: Practice (10 questions, no clock), Sprint (10 against a 2 minute clock) and Survival (until the third wrong answer). Each answer shows the right option and why, and after a miss also why the chosen option is wrong, with a link to read more. Results break down by topic, review every miss, and offer to retry just the missed ones. Questions not yet answered correctly come first. Keys 1 to 4 (or A to D) answer, Enter moves on.
+- **Daily quiz** (`#/quiz/daily`): 5 questions from 5 topics, the same for everyone that day in either language, with its own streak, shown on the Daily page under the daily problem. The first play counts; a replay is practice.
+- How the bank was made: concepts mapped from interview-prep sources and Israeli student interview reports, every question written in our own words, every code snippet run (Java, Python, Node, gcc/clang with sanitizers, SQLite), every question solved blind by a separate reviewer in both languages, and a second-model review of the whole bank. Source in `content/quiz/`, built by `scripts/content/build-quiz.mjs`; a session downloads only the topics it needs.
 - Quiz progress is stored in this browser (`lfb:quiz:v1`) and cleared on sign-out like the rest of a user's data. It does not sync across devices yet.
 
 ### Changed (F6 redesign: Atlas)

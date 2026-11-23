@@ -1,0 +1,548 @@
+[
+ {
+  "id": "design-patterns-singleton-good-fit",
+  "topic": "design-patterns",
+  "subtopic": "singleton",
+  "concepts": [
+   "singleton",
+   "global-state"
+  ],
+  "level": "easy",
+  "q": "Which of these needs is the most reasonable fit for the Singleton pattern?",
+  "options": [
+   "A User object for each person who logs in",
+   "One shared settings object loaded once from a config file",
+   "Any data that two classes need to share with each other at run time",
+   "A Point(x, y) value created thousands of times per second"
+  ],
+  "answer": 1,
+  "why": "Singleton fits when the program truly needs exactly one instance with one access point, like settings read once at startup. Even then, many teams create it once and pass it in, which keeps code easy to test.",
+  "wrong": [
+   "There are many users, each with their own state, so one instance is wrong by definition.",
+   null,
+   "Sharing data is better done by passing objects; a singleton for this creates hidden global state.",
+   "Small value objects are meant to be created freely; one shared Point cannot hold different values."
+  ],
+  "ref": "https://java-design-patterns.com/patterns/singleton/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "איזה מהצרכים האלה הכי סביר להתאים ל-Singleton pattern?",
+   "options": [
+    "object מסוג User לכל אדם שמתחבר",
+    "object הגדרות משותף אחד שנטען פעם אחת מקובץ config",
+    "כל מידע ששני classes צריכים לשתף ביניהם ב-runtime",
+    "ערך Point(x, y) שנוצר אלפי פעמים בשנייה"
+   ],
+   "why": "Singleton מתאים כשהתוכנית באמת צריכה instance אחד בדיוק עם נקודת גישה אחת, כמו הגדרות שנקראות פעם אחת בעלייה. גם אז, הרבה צוותים יוצרים אותו פעם אחת ומעבירים אותו פנימה, וכך קל לבדוק את הקוד.",
+   "wrong": [
+    "יש הרבה משתמשים, ולכל אחד state משלו, ולכן instance אחד שגוי מעצם ההגדרה.",
+    null,
+    "עדיף לשתף מידע באמצעות העברת objects: singleton לצורך הזה יוצר state גלובלי מוסתר.",
+    "value objects קטנים נועדו להיווצר בחופשיות: Point משותף אחד לא יכול להחזיק ערכים שונים."
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-singleton-hurts-testing",
+  "topic": "design-patterns",
+  "subtopic": "singleton",
+  "concepts": [
+   "singleton",
+   "testability",
+   "hidden-dependency"
+  ],
+  "level": "medium",
+  "q": "Database is a Singleton. A unit test for priceWithTax() wants a fake price instead of a real database. Why is that hard, and what helps?",
+  "code": "class PriceService {\n    double priceWithTax(String sku) {\n        double base = Database.getInstance().findPrice(sku);\n        return base * 1.17;\n    }\n}",
+  "lang": "java",
+  "options": [
+   "getInstance() is not thread-safe; making it synchronized lets tests replace it",
+   "Each test can call getInstance() and gets a fresh, empty Database",
+   "Make the Database constructor public so tests can create their own copy",
+   "The dependency is hidden inside the method; pass a price source in instead"
+  ],
+  "answer": 3,
+  "why": "PriceService reaches for a global, so a test cannot swap it. Passing a price source (or the Database behind an interface) into the constructor makes the dependency visible. The app can still create just one real instance and share it.",
+  "wrong": [
+   "Thread safety is a separate issue; locking does not let a test swap in a fake.",
+   "getInstance() returns the same object every time, so state also leaks from one test to the next.",
+   "PriceService still calls getInstance(), so a copy the test creates is never used.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Database הוא Singleton. unit test של priceWithTax() רוצה מחיר מזויף במקום מסד נתונים אמיתי. למה זה קשה, ומה עוזר?",
+   "options": [
+    "getInstance() לא thread-safe, והפיכתה ל-synchronized מאפשרת ל-tests להחליף אותה",
+    "כל test יכול לקרוא ל-getInstance() ולקבל Database חדש וריק",
+    "להפוך את ה-constructor של Database ל-public כדי שה-tests יוכלו ליצור עותק משלהם",
+    "התלות מוסתרת בתוך ה-method: עדיף להעביר פנימה מקור מחירים"
+   ],
+   "why": "PriceService פונה ל-global, ולכן test לא יכול להחליף אותו. העברה של מקור מחירים (או של ה-Database מאחורי interface) ל-constructor הופכת את התלות לגלויה. האפליקציה עדיין יכולה ליצור רק instance אמיתי אחד ולשתף אותו.",
+   "wrong": [
+    "thread safety היא בעיה נפרדת: lock לא מאפשר ל-test להכניס fake במקום.",
+    "getInstance() מחזירה כל פעם את אותו object, ולכן גם state דולף מ-test אחד לבא אחריו.",
+    "PriceService עדיין קורא ל-getInstance(), ולכן עותק שה-test יוצר אף פעם לא נמצא בשימוש.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-singleton-lazy-init-race",
+  "topic": "design-patterns",
+  "subtopic": "singleton",
+  "concepts": [
+   "singleton",
+   "lazy-initialization",
+   "race-condition"
+  ],
+  "level": "medium",
+  "q": "Two threads call Logger.getInstance() at the same moment, the first time it is used. What can happen with this code?",
+  "code": "class Logger {\n    private static Logger instance;\n    private Logger() { }\n\n    static Logger getInstance() {\n        if (instance == null) {\n            instance = new Logger();\n        }\n        return instance;\n    }\n}",
+  "lang": "java",
+  "options": [
+   "Both may see null and each create a Logger, so two instances exist",
+   "Nothing: static fields are thread-safe in Java by default",
+   "The two threads deadlock, waiting on each other inside getInstance()",
+   "The second thread gets null back, because the first is still in new"
+  ],
+  "answer": 0,
+  "why": "The null check and the assignment are separate steps. Both threads can pass the check before either one assigns, so the constructor runs twice. Common fixes are creating the instance eagerly or guarding the creation with synchronization.",
+  "wrong": [
+   null,
+   "Static means one per class, not thread-safe; nothing here stops two threads from interleaving.",
+   "No locks are taken, so there is nothing to wait on and no deadlock.",
+   "A thread that sees null creates and assigns its own Logger, so this method never returns null."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/concurrency/interfere.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני threads קוראים ל-Logger.getInstance() באותו רגע, בפעם הראשונה שמשתמשים בו. מה יכול לקרות עם הקוד הזה?",
+   "options": [
+    "שניהם עלולים לראות null וכל אחד ייצור Logger, כך שיהיו שני instances",
+    "כלום: static fields הם thread-safe ב-Java כברירת מחדל",
+    "שני ה-threads נכנסים ל-deadlock ומחכים זה לזה בתוך getInstance()",
+    "ה-thread השני מקבל null, כי הראשון עדיין בתוך ה-new"
+   ],
+   "why": "בדיקת ה-null וההשמה הן שני צעדים נפרדים. שני ה-threads יכולים לעבור את הבדיקה לפני שאחד מהם מבצע השמה, ולכן ה-constructor רץ פעמיים. התיקונים הנפוצים הם ליצור את ה-instance מראש (eagerly) או להגן על היצירה עם synchronization.",
+   "wrong": [
+    null,
+    "static אומר אחד לכל class, לא thread-safe: שום דבר כאן לא מונע משני threads להשתלב זה בזה.",
+    "לא נלקחים כאן locks, ולכן אין על מה לחכות ואין deadlock.",
+    "thread שרואה null יוצר Logger משלו ומציב אותו, ולכן ה-method הזו אף פעם לא מחזירה null."
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-factory-type-from-input",
+  "topic": "design-patterns",
+  "subtopic": "factory",
+  "concepts": [
+   "factory",
+   "creation",
+   "runtime-type"
+  ],
+  "level": "easy",
+  "q": "An app picks a parser from the file extension at run time: .csv gets CsvParser, .json gets JsonParser. Callers should not know the concrete classes. Which pattern fits?",
+  "options": [
+   "Singleton, so the whole program shares a single parser object",
+   "Observer, so every parser is notified each time a file is opened",
+   "Factory: one place maps the extension to a Parser and returns it",
+   "Decorator, so each new parser wraps the one before it"
+  ],
+  "answer": 2,
+  "why": "The concrete type depends on data known only at run time. A factory keeps that decision, and every new, in one place and returns the common Parser type. Callers just call parse(), and adding XML changes only the factory.",
+  "wrong": [
+   "Singleton controls how many instances exist, not which class to create.",
+   "Observer is about reacting to events, not about choosing and creating an object.",
+   null,
+   "Decorator adds behaviour to one object by wrapping it; it does not choose between types."
+  ],
+  "ref": "https://java-design-patterns.com/patterns/factory/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אפליקציה בוחרת parser לפי סיומת הקובץ ב-runtime: .csv מקבל CsvParser, .json מקבל JsonParser. הקוד הקורא לא אמור להכיר את ה-classes הקונקרטיים. איזה pattern מתאים?",
+   "options": [
+    "Singleton, כך שכל התוכנית חולקת object אחד של parser",
+    "Observer, כך שכל parser מקבל הודעה בכל פעם שקובץ נפתח",
+    "Factory: מקום אחד ממפה את הסיומת ל-Parser ומחזיר אותו",
+    "Decorator, כך שכל parser חדש עוטף את זה שלפניו"
+   ],
+   "why": "הטיפוס הקונקרטי תלוי בנתונים שידועים רק ב-runtime. factory שומר את ההחלטה הזו, ואת כל ה-new, במקום אחד ומחזיר את הטיפוס המשותף Parser. הקוד הקורא פשוט קורא ל-parse(), והוספת XML משנה רק את ה-factory.",
+   "wrong": [
+    "Singleton שולט בכמה instances קיימים, לא באיזה class ליצור.",
+    "Observer עוסק בתגובה לאירועים, לא בבחירה ויצירה של object.",
+    null,
+    "Decorator מוסיף התנהגות ל-object אחד על ידי עטיפה שלו: הוא לא בוחר בין טיפוסים."
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-factory-vs-builder",
+  "topic": "design-patterns",
+  "subtopic": "factory",
+  "concepts": [
+   "factory",
+   "builder",
+   "telescoping-constructor"
+  ],
+  "level": "medium",
+  "q": "An HttpRequest has a required URL and eight optional settings. Constructors with long parameter lists keep causing mix-ups. A teammate suggests a Factory. Which pattern fits better?",
+  "options": [
+   "Factory, since any pattern that creates objects solves this",
+   "Builder: set only the options you need, by name, then build()",
+   "Singleton, so a single shared request is configured once for everyone",
+   "Adapter, so the long constructor gets a shorter interface"
+  ],
+  "answer": 1,
+  "why": "The problem is assembling one complex object with many optional parts, which is what Builder is for: named steps, defaults for the rest, and often an immutable result. A Factory answers a different question: which class to create.",
+  "wrong": [
+   "Both are creational but solve different problems; a factory still needs all the values passed in.",
+   null,
+   "Requests differ from call to call; sharing one would mix settings between callers.",
+   "Adapter converts one existing interface into another that a client expects; it does not help with optional arguments."
+  ],
+  "ref": "https://java-design-patterns.com/patterns/builder/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-HttpRequest יש URL חובה ושמונה הגדרות אופציונליות. constructors עם רשימות פרמטרים ארוכות גורמים שוב ושוב לבלבולים. חבר צוות מציע Factory. איזה pattern מתאים יותר?",
+   "options": [
+    "Factory, כי כל pattern שיוצר objects פותר את זה",
+    "Builder: קובעים לפי שם רק את האפשרויות שצריך, ואז build()",
+    "Singleton, כך ש-request משותף אחד מוגדר פעם אחת לכולם",
+    "Adapter, כך שה-constructor הארוך יקבל interface קצר יותר"
+   ],
+   "why": "הבעיה היא הרכבה של object מורכב אחד עם הרבה חלקים אופציונליים, ובשביל זה בדיוק יש Builder: צעדים עם שמות, ברירות מחדל לכל השאר, ולעיתים קרובות תוצאה immutable. Factory עונה על שאלה אחרת: איזה class ליצור.",
+   "wrong": [
+    "שניהם creational אבל פותרים בעיות שונות: factory עדיין צריך לקבל את כל הערכים.",
+    null,
+    "requests שונים מקריאה לקריאה: שיתוף של אחד היה מערבב הגדרות בין קוראים שונים.",
+    "Adapter ממיר interface קיים אחד ל-interface אחר שה-client מצפה לו: הוא לא עוזר עם ארגומנטים אופציונליים."
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-strategy-pick-at-runtime",
+  "topic": "design-patterns",
+  "subtopic": "strategy",
+  "concepts": [
+   "strategy",
+   "runtime-choice",
+   "ocp"
+  ],
+  "level": "easy",
+  "q": "Checkout must price shipping as standard, express or store pickup, chosen by the user at run time, and more options are planned. Which pattern fits?",
+  "options": [
+   "Strategy: one ShippingCost interface with a class per option",
+   "Observer: each option subscribes to the checkout's events",
+   "Singleton: one global shipping calculator for every option",
+   "Adapter: convert express pricing into the standard interface"
+  ],
+  "answer": 0,
+  "why": "The algorithms are interchangeable and selected at run time, which is the core of Strategy. Checkout calls cost(order) on whichever option it was given, and a new option is a new class, with no if-chain inside Checkout.",
+  "wrong": [
+   null,
+   "Observer notifies many listeners of an event; here the code must pick and run one calculation.",
+   "One calculator for every option brings the if-chain back inside it.",
+   "Adapter fits an existing incompatible class into an interface; nothing here needs converting."
+  ],
+  "ref": "https://java-design-patterns.com/patterns/strategy/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-Checkout צריך לתמחר משלוח כרגיל, אקספרס או איסוף מהחנות, לפי בחירת המשתמש ב-runtime, ומתוכננות עוד אפשרויות. איזה pattern מתאים?",
+   "options": [
+    "Strategy: interface אחד בשם ShippingCost עם class לכל אפשרות",
+    "Observer: כל אפשרות נרשמת לאירועים של ה-checkout",
+    "Singleton: מחשבון משלוח גלובלי אחד לכל האפשרויות",
+    "Adapter: להמיר את תמחור האקספרס ל-interface הרגיל"
+   ],
+   "why": "האלגוריתמים ניתנים להחלפה ונבחרים ב-runtime, וזה הלב של Strategy. Checkout קורא ל-cost(order) על האפשרות שקיבל, ואפשרות חדשה היא class חדש, בלי שרשרת if בתוך Checkout.",
+   "wrong": [
+    null,
+    "Observer מודיע להרבה listeners על אירוע, וכאן הקוד צריך לבחור חישוב אחד ולהריץ אותו.",
+    "מחשבון אחד לכל האפשרויות מחזיר את שרשרת ה-if לתוכו.",
+    "Adapter מתאים class קיים ולא תואם ל-interface, ושום דבר כאן לא צריך המרה."
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-strategy-as-function",
+  "topic": "design-patterns",
+  "subtopic": "strategy",
+  "concepts": [
+   "strategy",
+   "first-class-functions",
+   "pattern-recognition"
+  ],
+  "level": "medium",
+  "q": "A reviewer says this is not the Strategy pattern, because there is no Strategy interface or class. Is the reviewer right?",
+  "code": "def by_price(p):\n    return p[\"price\"]\n\ndef by_rating(p):\n    return -p[\"rating\"]\n\ndef show(products, order):\n    for p in sorted(products, key=order):\n        print(p[\"name\"])\n\nitems = [{\"name\": \"pen\", \"price\": 3, \"rating\": 4}, {\"name\": \"ink\", \"price\": 9, \"rating\": 5}]\nshow(items, by_rating)",
+  "lang": "python",
+  "options": [
+   "Yes: Strategy needs an abstract base class and one subclass per algorithm",
+   "Yes: passing a function as an argument is the Observer pattern",
+   "Yes: it is Factory, because order decides which list is created",
+   "No: show() takes an interchangeable algorithm, and a function can be one"
+  ],
+  "answer": 3,
+  "why": "Strategy is the idea of passing in an interchangeable algorithm, not a fixed class shape. In Python, and with Java lambdas, a function with the right signature is enough: by_price and by_rating are strategies that show() uses without knowing which one it got.",
+  "wrong": [
+   "Classes are one way to write strategies; with first-class functions, the function is the strategy.",
+   "Observer registers listeners to be told about events; here the function only computes a sort key.",
+   "sorted() always builds a new list; order only decides how it is sorted, not what kind of object is made.",
+   null
+  ],
+  "ref": "https://docs.python.org/3/howto/sorting.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "reviewer אומר שזה לא Strategy pattern, כי אין interface או class של Strategy. האם ה-reviewer צודק?",
+   "options": [
+    "כן: Strategy דורש abstract base class ו-subclass לכל אלגוריתם",
+    "כן: העברת function כארגומנט היא Observer pattern",
+    "כן: זה Factory, כי order מחליט איזו list נוצרת",
+    "לא: show() מקבלת אלגוריתם שאפשר להחליף, ו-function יכולה להיות אלגוריתם כזה"
+   ],
+   "why": "Strategy הוא הרעיון של העברת אלגוריתם שאפשר להחליף, לא צורה קבועה של class. ב-Python, וגם עם lambdas ב-Java, מספיקה function עם ה-signature הנכונה: by_price ו-by_rating הן strategies ש-show() משתמשת בהן בלי לדעת איזו מהן קיבלה.",
+   "wrong": [
+    "classes הם דרך אחת לכתוב strategies, ועם first-class functions, ה-function היא ה-strategy.",
+    "Observer רושם listeners כדי לעדכן אותם על אירועים, וכאן ה-function רק מחשבת key למיון.",
+    "sorted() תמיד בונה list חדשה, ו-order רק קובע איך היא ממוינת, לא איזה סוג object נוצר.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-observer-many-reactions",
+  "topic": "design-patterns",
+  "subtopic": "observer",
+  "concepts": [
+   "observer",
+   "loose-coupling",
+   "publish-subscribe"
+  ],
+  "level": "easy",
+  "q": "When a stock price changes, a chart, an alert service and a logger must all react. New reactions will be added later without editing the Stock class. Which pattern fits?",
+  "options": [
+   "Strategy: Stock picks exactly one of the three reactions at run time",
+   "Factory: Stock creates the chart, alert and logger itself",
+   "Observer: listeners subscribe to Stock and get notified on change",
+   "Singleton: one global Stock that everyone polls in a loop"
+  ],
+  "answer": 2,
+  "why": "Many independent parties must react to one change, and the subject should not know who they are. Observer lets each listener register itself while Stock just loops over its subscribers. A new reaction is a new subscriber.",
+  "wrong": [
+   "Strategy chooses one algorithm; here every reaction must run on each change.",
+   "If Stock creates its listeners, it must be edited for every new one, the opposite of the goal.",
+   null,
+   "Polling wastes work and ties everyone to a global; Observer pushes each change instead."
+  ],
+  "ref": "https://java-design-patterns.com/patterns/observer/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כשמחיר מניה משתנה, גרף, שירות התראות ו-logger צריכים כולם להגיב. בהמשך יתווספו עוד תגובות בלי לערוך את ה-class Stock. איזה pattern מתאים?",
+   "options": [
+    "Strategy: Stock בוחר ב-runtime בדיוק אחת משלוש התגובות",
+    "Factory: Stock יוצר בעצמו את הגרף, ההתראה וה-logger",
+    "Observer: listeners נרשמים ל-Stock ומקבלים הודעה כשיש שינוי",
+    "Singleton: Stock גלובלי אחד שכולם בודקים שוב ושוב בלולאה (polling)"
+   ],
+   "why": "הרבה גורמים בלתי תלויים צריכים להגיב לשינוי אחד, וה-subject לא אמור לדעת מי הם. Observer מאפשר לכל listener להירשם בעצמו, ו-Stock רק עובר בלולאה על המנויים שלו. תגובה חדשה היא מנוי חדש.",
+   "wrong": [
+    "Strategy בוחר אלגוריתם אחד, וכאן כל התגובות צריכות לרוץ בכל שינוי.",
+    "אם Stock יוצר את ה-listeners שלו, צריך לערוך אותו עבור כל אחד חדש, ההפך מהמטרה.",
+    null,
+    "polling מבזבז עבודה וקושר את כולם ל-global, ו-Observer דוחף כל שינוי במקום זה."
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-observer-forgotten-unsubscribe",
+  "topic": "design-patterns",
+  "subtopic": "observer",
+  "concepts": [
+   "observer",
+   "unsubscribe",
+   "memory-leak"
+  ],
+  "level": "medium",
+  "q": "Each time a dialog opens, it subscribes to the bus, and it never unsubscribes. After the dialog is opened and closed three times, what does publish print?",
+  "code": "class Bus:\n    def __init__(self):\n        self.handlers = []\n    def subscribe(self, fn):\n        self.handlers.append(fn)\n    def publish(self, msg):\n        for fn in self.handlers:\n            fn(msg)\nbus = Bus()\nfor n in range(3):  # the dialog is opened and closed three times\n    bus.subscribe(lambda msg: print(\"dialog got\", msg))\nbus.publish(\"saved\")",
+  "lang": "python",
+  "options": [
+   "One line, since a new subscribe call replaces the earlier handler",
+   "Three lines, because the bus still holds all three handlers",
+   "Nothing, because the closed dialogs were garbage collected",
+   "An error, because the first two dialogs no longer exist"
+  ],
+  "answer": 1,
+  "why": "The bus's list keeps a reference to each handler, so the closed dialogs stay alive and still react. This is the classic observer leak: memory grows and stale handlers keep running. Unsubscribe when the listener is closed.",
+  "wrong": [
+   "append adds to the list; nothing removes the older handlers.",
+   null,
+   "An object stays in memory while something still references it, and the bus does.",
+   "The handlers are still referenced, so they exist and run without error."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "בכל פעם שדיאלוג נפתח, הוא נרשם ל-bus, והוא אף פעם לא מבטל את הרישום. אחרי שהדיאלוג נפתח ונסגר שלוש פעמים, מה publish תדפיס?",
+   "options": [
+    "שורה אחת, כי קריאת subscribe חדשה מחליפה את ה-handler הקודם",
+    "שלוש שורות, כי ה-bus עדיין מחזיק את שלושת ה-handlers",
+    "כלום, כי הדיאלוגים הסגורים נאספו על ידי ה-garbage collector",
+    "שגיאה, כי שני הדיאלוגים הראשונים כבר לא קיימים"
+   ],
+   "why": "ה-list של ה-bus שומרת reference לכל handler, ולכן הדיאלוגים הסגורים נשארים חיים ועדיין מגיבים. זו דליפת observer קלאסית: הזיכרון גדל ו-handlers ישנים ממשיכים לרוץ. צריך לבטל את הרישום כשה-listener נסגר.",
+   "wrong": [
+    "append מוסיפה ל-list, ושום דבר לא מסיר את ה-handlers הישנים.",
+    null,
+    "object נשאר בזיכרון כל עוד משהו עדיין מחזיק reference אליו, וה-bus מחזיק.",
+    "עדיין יש references ל-handlers, ולכן הם קיימים ורצים בלי שגיאה."
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-observer-order-dependency",
+  "topic": "design-patterns",
+  "subtopic": "observer",
+  "concepts": [
+   "observer",
+   "notification-order",
+   "hidden-dependency"
+  ],
+  "level": "hard",
+  "q": "On a price change, CacheUpdater writes the new price to a cache and PriceLabel reads the cache to redraw. It works only because CacheUpdater subscribed first. Which fix keeps the subject unaware of its listeners?",
+  "options": [
+   "Add a comment that CacheUpdater must always be subscribed first",
+   "Make the cache a Singleton so both listeners use the same instance",
+   "Have the subject call CacheUpdater, then PriceLabel, directly by name",
+   "Put the new price in the event, so PriceLabel stops reading the cache"
+  ],
+  "answer": 3,
+  "why": "Observers should not rely on notification order. PriceLabel only needs the new price, so carrying it in the event removes the hidden dependency on the cache being written first. The subject still just notifies subscribers, and order no longer matters.",
+  "wrong": [
+   "A comment does not stop the next change from reordering subscriptions and breaking it again.",
+   "They already share one cache; the bug is about when it is written, not how many caches exist.",
+   "It works, but the subject now knows its concrete listeners and their order, which is what the question rules out.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "בשינוי מחיר, CacheUpdater כותב את המחיר החדש ל-cache ו-PriceLabel קורא את ה-cache כדי לצייר מחדש. זה עובד רק כי CacheUpdater נרשם ראשון. איזה תיקון משאיר את ה-subject לא מודע ל-listeners שלו?",
+   "options": [
+    "להוסיף הערה ש-CacheUpdater חייב תמיד להירשם ראשון",
+    "להפוך את ה-cache ל-Singleton כדי ששני ה-listeners ישתמשו באותו instance",
+    "לגרום ל-subject לקרוא ישירות בשם ל-CacheUpdater ואחריו ל-PriceLabel",
+    "לשים את המחיר החדש באירוע, כך ש-PriceLabel כבר לא יקרא את ה-cache"
+   ],
+   "why": "observers לא אמורים להסתמך על סדר ההודעות. PriceLabel צריך רק את המחיר החדש, ולכן העברתו באירוע מסירה את התלות המוסתרת בכך שה-cache ייכתב קודם. ה-subject עדיין רק מודיע למנויים, והסדר כבר לא משנה.",
+   "wrong": [
+    "הערה לא מונעת מהשינוי הבא לשנות את סדר הרישום ולשבור את זה שוב.",
+    "הם כבר חולקים cache אחד: ה-bug עוסק בזמן שבו הוא נכתב, לא בכמה caches קיימים.",
+    "זה עובד, אבל עכשיו ה-subject מכיר את ה-listeners הקונקרטיים שלו ואת הסדר שלהם, ובדיוק את זה השאלה פוסלת.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-adapter-third-party-api",
+  "topic": "design-patterns",
+  "subtopic": "adapter-decorator",
+  "concepts": [
+   "adapter",
+   "interface-mismatch",
+   "third-party"
+  ],
+  "level": "easy",
+  "q": "Your code expects a PaymentGateway interface with pay(amount). A vendor SDK you cannot change offers sendPayment(cents, currency). Which pattern lets your code use the SDK?",
+  "options": [
+   "Adapter: a class implements PaymentGateway and calls the SDK inside",
+   "Decorator: wrap PaymentGateway so that it also gains a sendPayment method",
+   "Observer: subscribe the SDK to PaymentGateway's events",
+   "Singleton: share one SDK instance across the whole app"
+  ],
+  "answer": 0,
+  "why": "Adapter converts one interface into the one the client expects. The adapter's pay(amount) converts the amount to cents and calls sendPayment. Your code depends only on PaymentGateway, and the SDK stays untouched.",
+  "wrong": [
+   null,
+   "Decorator keeps the same interface and adds behaviour; the problem here is two different interfaces.",
+   "Nothing here is an event; the code needs a call translated, not a notification.",
+   "How many SDK objects exist does not fix the mismatch between pay and sendPayment."
+  ],
+  "ref": "https://java-design-patterns.com/patterns/adapter/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "הקוד מצפה ל-interface בשם PaymentGateway עם pay(amount). SDK של ספק, שאי אפשר לשנות, מציע sendPayment(cents, currency). איזה pattern מאפשר לקוד להשתמש ב-SDK?",
+   "options": [
+    "Adapter: class מממש את PaymentGateway וקורא ל-SDK בפנים",
+    "Decorator: לעטוף את PaymentGateway כך שתהיה לו גם method בשם sendPayment",
+    "Observer: לרשום את ה-SDK לאירועים של PaymentGateway",
+    "Singleton: לשתף instance אחד של ה-SDK בכל האפליקציה"
+   ],
+   "why": "Adapter ממיר interface אחד ל-interface שה-client מצפה לו. ה-pay(amount) של ה-adapter ממירה את הסכום לסנטים וקוראת ל-sendPayment. הקוד תלוי רק ב-PaymentGateway, וה-SDK נשאר בלי שינוי.",
+   "wrong": [
+    null,
+    "Decorator שומר על אותו interface ומוסיף התנהגות, והבעיה כאן היא שני interfaces שונים.",
+    "אין כאן שום אירוע: הקוד צריך תרגום של קריאה, לא הודעה.",
+    "כמה objects של SDK קיימים לא פותר את חוסר ההתאמה בין pay ל-sendPayment."
+   ]
+  }
+ },
+ {
+  "id": "design-patterns-decorator-wrapping-order",
+  "topic": "design-patterns",
+  "subtopic": "adapter-decorator",
+  "concepts": [
+   "decorator",
+   "composition",
+   "wrapping-order"
+  ],
+  "level": "medium",
+  "q": "Bold and Italic each wrap another Text and add tags around its output. What does this print?",
+  "code": "interface Text { String render(); }\nclass Plain implements Text {\n    public String render() { return \"hi\"; }\n}\nclass Bold implements Text {\n    private final Text inner;\n    Bold(Text inner) { this.inner = inner; }\n    public String render() { return \"<b>\" + inner.render() + \"</b>\"; }\n}\n// Italic is written the same way, with <i> and </i>\nText t = new Italic(new Bold(new Plain()));\nSystem.out.println(t.render());",
+  "lang": "java",
+  "options": [
+   "<b><i>hi</i></b>",
+   "<i>hi</i>",
+   "<i><b>hi</b></i>",
+   "hi"
+  ],
+  "answer": 2,
+  "why": "Each decorator calls the object it wraps, then adds its own tags. Italic is outermost, so its tags are outermost. Wrapping at run time combines features freely, instead of a subclass for every mix like BoldItalicText.",
+  "wrong": [
+   "The order is reversed: the outermost wrapper, Italic, adds the outermost tags.",
+   "A decorator calls the object it wraps, so Bold's tags are kept, not replaced.",
+   null,
+   "Each wrapper's render() adds its tags; nothing skips them."
+  ],
+  "ref": "https://java-design-patterns.com/patterns/decorator/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Bold ו-Italic עוטפים כל אחד Text אחר ומוסיפים tags סביב הפלט שלו. מה יודפס?",
+   "options": [
+    "<b><i>hi</i></b>",
+    "<i>hi</i>",
+    "<i><b>hi</b></i>",
+    "hi"
+   ],
+   "why": "כל decorator קורא ל-object שהוא עוטף, ואז מוסיף את ה-tags שלו. Italic הוא החיצוני ביותר, ולכן ה-tags שלו חיצוניים. עטיפה ב-runtime משלבת features בחופשיות, במקום subclass לכל שילוב כמו BoldItalicText.",
+   "wrong": [
+    "הסדר הפוך: העוטף החיצוני ביותר, Italic, מוסיף את ה-tags החיצוניים.",
+    "decorator קורא ל-object שהוא עוטף, ולכן ה-tags של Bold נשמרים ולא מוחלפים.",
+    null,
+    "ה-render() של כל עוטף מוסיף את ה-tags שלו, ושום דבר לא מדלג עליהם."
+   ]
+  }
+ }
+]

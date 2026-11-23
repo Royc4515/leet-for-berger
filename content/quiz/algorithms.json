@@ -1,0 +1,2666 @@
+[
+ {
+  "id": "algorithms-halving-loop",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "log-n",
+   "halving",
+   "code-to-complexity"
+  ],
+  "level": "easy",
+  "q": "What is the time complexity of count_halvings(n)?",
+  "code": "def count_halvings(n):\n    steps = 0\n    while n > 1:\n        n = n // 2\n        steps += 1\n    return steps\n\nprint(count_halvings(1_000_000))",
+  "lang": "python",
+  "options": [
+   "O(n): the loop runs once for each value from n down to 1",
+   "O(log n): it counts how many times n can be halved",
+   "O(n / 2): halving cuts the work in half",
+   "O(sqrt(n)): the value shrinks faster than linearly"
+  ],
+  "answer": 1,
+  "why": "The loop runs as many times as n can be halved before reaching 1, which is about log2(n). That is why one million takes only 19 steps, and doubling n adds just one more step.",
+  "wrong": [
+   "n drops by half each step, not by 1, so most values are skipped. For n = 1,000,000 it prints only 19.",
+   null,
+   "Halving the value each step is not the same as doing half the steps. And O(n / 2) would just be O(n).",
+   "Square root growth comes from loops like while i * i <= n. Repeated halving gives a logarithm, which is far smaller."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מה סיבוכיות הזמן של count_halvings(n)?",
+   "options": [
+    "O(n): הלולאה רצה פעם אחת לכל ערך מ-n ועד 1",
+    "O(log n): היא סופרת כמה פעמים אפשר לחצות את n",
+    "O(n / 2): החציה חותכת את העבודה בחצי",
+    "O(sqrt(n)): הערך קטן מהר יותר מאשר ליניארית"
+   ],
+   "why": "הלולאה רצה כמספר הפעמים שאפשר לחצות את n עד שמגיעים ל-1, בערך log2(n). לכן מיליון לוקח רק 19 צעדים, והכפלה של n מוסיפה רק צעד אחד.",
+   "wrong": [
+    "n יורד בחצי בכל צעד, לא ב-1, אז רוב הערכים מדולגים. עבור n = 1,000,000 מודפס רק 19.",
+    null,
+    "חציית הערך בכל צעד זה לא אותו דבר כמו לבצע חצי מהצעדים. וחוץ מזה O(n / 2) הוא פשוט O(n).",
+    "גדילה של שורש ריבועי מגיעה מלולאות כמו while i * i <= n. חציה חוזרת נותנת לוגריתם, שקטן בהרבה."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-dependent-nested-loops",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "nested-loops",
+   "quadratic",
+   "drop-constants",
+   "code-to-complexity"
+  ],
+  "level": "easy",
+  "q": "countPairs compares every pair of positions once. The inner loop starts at i + 1, so it gets shorter each time. What is the time complexity?",
+  "code": "static int countPairs(int[] a) {\n    int n = a.length, count = 0;\n    for (int i = 0; i < n; i++) {\n        for (int j = i + 1; j < n; j++) {\n            if (a[i] == a[j]) count++;\n        }\n    }\n    return count;\n}",
+  "lang": "java",
+  "options": [
+   "O(n log n), because the inner loop keeps shrinking",
+   "O(n), because each pair is checked only once",
+   "O(n^2 / 2), which is a smaller class than O(n^2)",
+   "O(n^2): the comparisons add up to about n^2 / 2"
+  ],
+  "answer": 3,
+  "why": "The inner loop runs n - 1, n - 2, ..., 1, 0 times, which adds up to n(n - 1) / 2. Constant factors are dropped, so this is O(n^2). Starting j at i + 1 halves the work but does not change the growth rate.",
+  "wrong": [
+   "The inner loop shrinks by one each time, not by half. The total is n(n - 1) / 2 comparisons, which is quadratic.",
+   "There are about n^2 / 2 pairs, so checking each pair once is still quadratic work.",
+   "Big-O drops constant factors. n^2 / 2 and n^2 are the same class.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "countPairs משווה כל זוג מיקומים פעם אחת. הלולאה הפנימית מתחילה ב-i + 1, אז היא מתקצרת בכל פעם. מה סיבוכיות הזמן?",
+   "options": [
+    "O(n log n), כי הלולאה הפנימית ממשיכה להתקצר",
+    "O(n), כי כל זוג נבדק רק פעם אחת",
+    "O(n^2 / 2), שזו מחלקה קטנה יותר מ-O(n^2)",
+    "O(n^2): ההשוואות מצטברות לבערך n^2 / 2"
+   ],
+   "why": "הלולאה הפנימית רצה n - 1, n - 2, ..., 1, 0 פעמים, ובסך הכול n(n - 1) / 2. מקדמים קבועים נזרקים, אז זה O(n^2). התחלת j ב-i + 1 חוצה את העבודה, אבל לא משנה את קצב הגדילה.",
+   "wrong": [
+    "הלולאה הפנימית מתקצרת באחד בכל פעם, לא בחצי. הסך הכול הוא n(n - 1) / 2 השוואות, וזה ריבועי.",
+    "יש בערך n^2 / 2 זוגות, אז בדיקה של כל זוג פעם אחת היא עדיין עבודה ריבועית.",
+    "Big-O זורק מקדמים קבועים. n^2 / 2 ו-n^2 הם אותה מחלקה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-sequential-loops-add",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "sequential-loops",
+   "linear",
+   "drop-constants"
+  ],
+  "level": "easy",
+  "q": "A function makes one pass over n numbers to find the maximum, then a second, separate pass to count how often that maximum appears. What is its time complexity?",
+  "options": [
+   "O(n): the two passes add up to 2n steps",
+   "O(n^2), because there are two loops",
+   "O(2n), which grows faster than O(n)",
+   "O(n log n), because the second pass depends on the first"
+  ],
+  "answer": 0,
+  "why": "Sequential loops add: n + n = 2n steps, and the constant 2 is dropped. Loops only multiply when one runs inside the other.",
+  "wrong": [
+   null,
+   "The loops run one after the other, not one inside the other. Their costs add (n + n), they do not multiply.",
+   "2n is n times a constant, and Big-O drops constants. Two passes are still linear.",
+   "Using a result from the first pass does not add a log factor. Each pass is a plain linear scan."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "function עוברת פעם אחת על n מספרים כדי למצוא את המקסימום, ואז עוברת מעבר שני נפרד כדי לספור כמה פעמים המקסימום מופיע. מה סיבוכיות הזמן שלה?",
+   "options": [
+    "O(n): שני המעברים מצטברים ל-2n צעדים",
+    "O(n^2), כי יש שתי לולאות",
+    "O(2n), שגדל מהר יותר מ-O(n)",
+    "O(n log n), כי המעבר השני תלוי בראשון"
+   ],
+   "why": "לולאות עוקבות מתחברות: n + n = 2n צעדים, והקבוע 2 נזרק. לולאות מוכפלות רק כשאחת רצה בתוך השנייה.",
+   "wrong": [
+    null,
+    "הלולאות רצות אחת אחרי השנייה, לא אחת בתוך השנייה. העלויות שלהן מתחברות (n + n), הן לא מוכפלות.",
+    "2n הוא n כפול קבוע, ו-Big-O זורק קבועים. שני מעברים הם עדיין ליניאריים.",
+    "שימוש בתוצאה מהמעבר הראשון לא מוסיף פקטור log. כל מעבר הוא סריקה ליניארית פשוטה."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-two-input-sizes",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "multiple-inputs",
+   "nested-loops",
+   "hash-set"
+  ],
+  "level": "medium",
+  "q": "For each of n user names, code loops over a blocklist of m names that grows over time and compares them. A reviewer calls it O(n^2). What is the most accurate bound?",
+  "options": [
+   "O(n^2)",
+   "O(n + m)",
+   "O(n * m)",
+   "O(n)"
+  ],
+  "answer": 2,
+  "why": "Each of the n names is compared with each of the m blocked names, so there are n * m comparisons. Keep separate letters for inputs of different sizes. Putting the blocklist in a set would bring it down to O(n + m).",
+  "wrong": [
+   "That treats both inputs as the same size. With 1,000,000 users and 10 blocked names, the real work is far below n^2.",
+   "The loops are nested: every user is compared with every blocked name, so the costs multiply.",
+   null,
+   "The blocklist grows, so its size is an input. Dropping m hides real cost as the list gets longer."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "לכל אחד מ-n שמות משתמש, הקוד עובר בלולאה על רשימת חסימה של m שמות שגדלה עם הזמן ומשווה ביניהם. מישהו ב-code review אומר שזה O(n^2). מה החסם המדויק ביותר?",
+   "options": [
+    "O(n^2)",
+    "O(n + m)",
+    "O(n * m)",
+    "O(n)"
+   ],
+   "why": "כל אחד מ-n השמות מושווה לכל אחד מ-m השמות החסומים, אז יש n * m השוואות. כשיש קלטים בגדלים שונים משתמשים באותיות נפרדות. הכנסת רשימת החסימה ל-set הייתה מורידה את זה ל-O(n + m).",
+   "wrong": [
+    "זה מתייחס לשני הקלטים כאילו הם באותו גודל. עם 1,000,000 משתמשים ו-10 שמות חסומים, העבודה האמיתית נמוכה בהרבה מ-n^2.",
+    "הלולאות מקוננות: כל משתמש מושווה לכל שם חסום, אז העלויות מוכפלות.",
+    null,
+    "רשימת החסימה גדלה, אז הגודל שלה הוא קלט. השמטת m מסתירה עלות אמיתית ככל שהיא מתארכת."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-drop-constants",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "drop-constants",
+   "linear",
+   "practical-performance"
+  ],
+  "level": "easy",
+  "q": "Version A scans a list twice. Version B does the same work in a single pass. A teammate says A is O(2n), a worse complexity class than B. What is right?",
+  "options": [
+   "A is right: O(2n) is a worse class than O(n)",
+   "Neither: Big-O cannot compare two versions of the same code",
+   "Both are O(n); B can still be faster in practice",
+   "Both are O(1), since the number of passes is fixed"
+  ],
+  "answer": 2,
+  "why": "Big-O describes how cost grows, and constant factors are dropped, so 2n and n are both O(n). Constants still matter on a real machine, which is why B can be faster with the same Big-O.",
+  "wrong": [
+   "Big-O ignores constant factors, so O(2n) and O(n) name the same class.",
+   "Big-O can compare any two algorithms by how they grow. Here both grow linearly.",
+   null,
+   "The number of passes is fixed, but each pass still grows with n, so the total is linear."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "גרסה A סורקת list פעמיים. גרסה B עושה את אותה עבודה במעבר אחד. חבר צוות אומר ש-A היא O(2n), מחלקת סיבוכיות גרועה יותר מ-B. מה נכון?",
+   "options": [
+    "הטענה על A נכונה: O(2n) היא מחלקה גרועה יותר מ-O(n)",
+    "אף אחד: Big-O לא יכול להשוות בין שתי גרסאות של אותו קוד",
+    "שתיהן O(n), ו-B עדיין יכולה להיות מהירה יותר בפועל",
+    "שתיהן O(1), כי מספר המעברים קבוע"
+   ],
+   "why": "Big-O מתאר איך העלות גדלה, ומקדמים קבועים נזרקים, אז 2n ו-n הם שניהם O(n). קבועים עדיין משנים על מכונה אמיתית, ולכן B יכולה להיות מהירה יותר עם אותו Big-O.",
+   "wrong": [
+    "Big-O מתעלם ממקדמים קבועים, אז O(2n) ו-O(n) הם אותה מחלקה.",
+    "Big-O יכול להשוות כל שני אלגוריתמים לפי האופן שבו הם גדלים. כאן שניהם גדלים ליניארית.",
+    null,
+    "מספר המעברים קבוע, אבל כל מעבר עדיין גדל עם n, אז הסך הכול ליניארי."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-log-base-irrelevant",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "log-n",
+   "drop-constants"
+  ],
+  "level": "easy",
+  "q": "One textbook writes binary search as O(log2 n), another as O(log10 n), and many just write O(log n). Why is that fine?",
+  "options": [
+   "Logs of different bases differ only by a constant factor",
+   "Because n is always a power of 2 in practice",
+   "It is not fine: O(log2 n) grows faster, so it is a different class",
+   "Because logarithms grow so slowly that they count as O(1)"
+  ],
+  "answer": 0,
+  "why": "log2 n = log10 n / log10 2, so switching bases multiplies by a fixed number (about 3.32). Big-O drops constant factors, so every base gives the same class.",
+  "wrong": [
+   null,
+   "n can be any size. The base does not matter for any n, power of 2 or not.",
+   "log2 n is about 3.32 times log10 n for every n. A fixed multiplier never changes the class.",
+   "log n keeps growing with n, slowly but without limit, so it is not constant."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ספר לימוד אחד כותב binary search כ-O(log2 n), אחר כ-O(log10 n), ורבים כותבים פשוט O(log n). למה זה בסדר?",
+   "options": [
+    "לוגריתמים בבסיסים שונים נבדלים רק במקדם קבוע",
+    "כי בפועל n הוא תמיד חזקה של 2",
+    "זה לא בסדר: O(log2 n) גדל מהר יותר, אז זו מחלקה אחרת",
+    "כי לוגריתמים גדלים כל כך לאט שהם נחשבים O(1)"
+   ],
+   "why": "log2 n = log10 n / log10 2, אז החלפת בסיס מכפילה במספר קבוע (בערך 3.32). Big-O זורק מקדמים קבועים, אז כל בסיס נותן את אותה מחלקה.",
+   "wrong": [
+    null,
+    "n יכול להיות בכל גודל. הבסיס לא משנה לאף n, חזקה של 2 או לא.",
+    "log2 n הוא בערך פי 3.32 מ-log10 n לכל n. מכפיל קבוע אף פעם לא משנה את המחלקה.",
+    "log n ממשיך לגדול עם n, לאט אבל בלי גבול, אז הוא לא קבוע."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-string-concat-loop",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "hidden-cost",
+   "string-concatenation",
+   "immutability",
+   "quadratic"
+  ],
+  "level": "medium",
+  "q": "repeatX builds a string of n characters in a loop. Java strings are immutable. What is the time complexity?",
+  "code": "static String repeatX(int n) {\n    String s = \"\";\n    for (int i = 0; i < n; i++) {\n        s += \"x\";\n    }\n    return s;\n}",
+  "lang": "java",
+  "options": [
+   "O(n): one short append per iteration",
+   "O(n log n): the string grows like a dynamic array",
+   "O(n), since each new string reuses the old one's memory",
+   "O(n^2): each += copies the whole string so far"
+  ],
+  "answer": 3,
+  "why": "Because a String cannot change, s += \"x\" makes a new string and copies the old one into it. The copies cost 1 + 2 + ... + n, which is O(n^2): doubling n roughly quadruples the time. A StringBuilder makes the loop O(n).",
+  "wrong": [
+   "Each += creates a new string and copies every character so far: 1 + 2 + ... + n copies.",
+   "That is how StringBuilder grows. A String cannot grow in place; every += copies the whole thing.",
+   "Immutable strings cannot be extended in place, so the old characters are copied every time.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/StringBuilder.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "repeatX בונה מחרוזת של n תווים בלולאה. מחרוזות ב-Java הן immutable. מה סיבוכיות הזמן?",
+   "options": [
+    "O(n): הוספה קצרה אחת בכל איטרציה",
+    "O(n log n): המחרוזת גדלה כמו dynamic array",
+    "O(n), כי כל מחרוזת חדשה משתמשת מחדש בזיכרון של הקודם",
+    "O(n^2): כל += מעתיק את כל המחרוזת עד עכשיו"
+   ],
+   "why": "מכיוון ש-String לא יכול להשתנות, s += \"x\" יוצר מחרוזת חדשה ומעתיק לתוכו את הישן. ההעתקות עולות 1 + 2 + ... + n, שזה O(n^2): הכפלה של n מכפילה את הזמן בערך פי ארבעה. עם StringBuilder הלולאה היא O(n).",
+   "wrong": [
+    "כל += יוצר מחרוזת חדשה ומעתיק כל תו עד עכשיו: 1 + 2 + ... + n העתקות.",
+    "כך StringBuilder גדל. String לא יכול לגדול במקום: כל += מעתיק את כולו.",
+    "מחרוזות שהן immutable לא יכולות להתארך במקום, אז התווים הישנים מועתקים בכל פעם.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-list-insert-front",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "hidden-cost",
+   "dynamic-array",
+   "quadratic",
+   "python"
+  ],
+  "level": "medium",
+  "q": "reversed_copy builds the reversed list by inserting each item at the front. For a list of n items, what is the time complexity?",
+  "code": "def reversed_copy(items):\n    out = []\n    for x in items:\n        out.insert(0, x)\n    return out\n\nprint(reversed_copy([1, 2, 3, 4]))",
+  "lang": "python",
+  "options": [
+   "O(n): there is exactly one insert per item",
+   "O(n^2): each insert(0, x) shifts the items already in out",
+   "O(n log n): each insert into a list costs O(log n)",
+   "O(n): Python lists are linked lists, so front inserts are cheap"
+  ],
+  "answer": 1,
+  "why": "A Python list stores items in one contiguous array, so inserting at index 0 shifts all current items: 0 + 1 + ... + (n - 1) moves, O(n^2). Appending and then calling reverse(), or a deque with appendleft, makes it O(n).",
+  "wrong": [
+   "insert(0, x) is not O(1) on a Python list. It moves every existing element one slot to the right.",
+   null,
+   "That is a balanced search tree. A Python list is an array, so inserting at the front costs O(length).",
+   "Python lists are dynamic arrays. A collections.deque would make front inserts O(1)."
+  ],
+  "ref": "https://wiki.python.org/moin/TimeComplexity",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "reversed_copy בונה את ה-list ההפוכה על ידי הכנסת כל פריט להתחלה. עבור list של n פריטים, מה סיבוכיות הזמן?",
+   "options": [
+    "O(n): יש בדיוק הכנסה אחת לכל פריט",
+    "O(n^2): כל insert(0, x) מזיז את הפריטים שכבר נמצאים ב-out",
+    "O(n log n): כל הכנסה ל-list עולה O(log n)",
+    "O(n): lists ב-Python הן linked lists, אז הכנסות להתחלה זולות"
+   ],
+   "why": "list ב-Python שומרת פריטים ב-array רציף אחד, אז הכנסה ב-index 0 מזיזה את כל הפריטים הקיימים: 0 + 1 + ... + (n - 1) הזזות, O(n^2). הוספה לסוף ואז קריאה ל-reverse(), או deque עם appendleft, נותנים O(n).",
+   "wrong": [
+    "insert(0, x) הוא לא O(1) ב-list של Python. הוא מזיז כל איבר קיים תא אחד ימינה.",
+    null,
+    "זה balanced search tree. list ב-Python היא array, אז הכנסה להתחלה עולה O(length).",
+    "lists ב-Python הן dynamic arrays. collections.deque היה הופך הכנסות להתחלה ל-O(1)."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-in-on-list",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "hidden-cost",
+   "membership-test",
+   "hash-set",
+   "python"
+  ],
+  "level": "medium",
+  "q": "unique keeps the first copy of each item. For n mostly distinct items, what is its time complexity, and what is the simplest fix?",
+  "code": "def unique(items):\n    seen = []\n    result = []\n    for x in items:\n        if x not in seen:\n            seen.append(x)\n            result.append(x)\n    return result\n\nprint(unique([3, 1, 3, 2, 1]))",
+  "lang": "python",
+  "options": [
+   "O(n^2): x not in seen scans a list; a set makes it O(n)",
+   "O(n): it is a single loop over the items",
+   "O(n log n): Python searches lists with binary search",
+   "O(n^2), and no fix exists: removing duplicates must compare all pairs"
+  ],
+  "answer": 0,
+  "why": "The loop runs n times, and each in on a list is a linear scan, so mostly distinct items give O(n^2). A set checks membership by hash in O(1) on average, so the same loop becomes O(n), and result still keeps the order.",
+  "wrong": [
+   null,
+   "The loop is single, but x not in seen scans the whole list each time, which is O(n) per check.",
+   "in checks a list one element at a time. Binary search needs sorted data and is not what in does.",
+   "A set answers membership in O(1) on average, so each item needs only one check."
+  ],
+  "ref": "https://wiki.python.org/moin/TimeComplexity",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "unique שומרת את העותק הראשון של כל פריט. עבור n פריטים שרובם שונים, מה סיבוכיות הזמן שלה, ומה התיקון הפשוט ביותר?",
+   "options": [
+    "O(n^2): x not in seen סורק list, ו-set הופך את זה ל-O(n)",
+    "O(n): זו לולאה אחת על הפריטים",
+    "O(n log n): Python מחפש ב-lists עם binary search",
+    "O(n^2), ואין תיקון: הסרת כפילויות חייבת להשוות את כל הזוגות"
+   ],
+   "why": "הלולאה רצה n פעמים, וכל in על list הוא סריקה ליניארית, אז פריטים שרובם שונים נותנים O(n^2). set בודק שייכות לפי hash ב-O(1) בממוצע, אז אותה לולאה הופכת ל-O(n), ו-result עדיין שומר על הסדר.",
+   "wrong": [
+    null,
+    "יש לולאה אחת, אבל x not in seen סורק את כל ה-list בכל פעם, שזה O(n) לכל בדיקה.",
+    "in בודק list איבר אחרי איבר. binary search דורש מידע ממוין, וזה לא מה ש-in עושה.",
+    "set עונה על שייכות ב-O(1) בממוצע, אז כל פריט צריך רק בדיקה אחת."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-best-vs-worst-case",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "best-case",
+   "worst-case",
+   "linear-search"
+  ],
+  "level": "easy",
+  "q": "Linear search finds the target at index 0 in some runs. A classmate concludes that linear search is O(1). What is wrong with that reasoning?",
+  "options": [
+   "Nothing: Big-O always describes the best case an algorithm can reach",
+   "Linear search is O(log n) on average",
+   "That is only the best case; the worst case still checks all n items",
+   "Big-O only applies to sorted inputs"
+  ],
+  "answer": 2,
+  "why": "Best, average and worst case are separate questions. The best case of linear search is 1 check, but the average and worst cases grow with n, so linear search is O(n) in the usual worst-case sense.",
+  "wrong": [
+   "Big-O is a bound you state for a chosen case. Unqualified, interview answers usually mean the worst case.",
+   "With no order to exploit, the target is on average about halfway in: n / 2 checks, which is O(n).",
+   null,
+   "Big-O applies to any algorithm and input. Sortedness only decides which algorithms are possible."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "linear search מוצא את המטרה ב-index 0 בחלק מההרצות. חבר ללימודים מסיק ש-linear search הוא O(1). מה לא בסדר בהיגיון הזה?",
+   "options": [
+    "כלום: Big-O תמיד מתאר את המקרה הטוב ביותר שהאלגוריתם יכול להגיע אליו",
+    "linear search הוא O(log n) בממוצע",
+    "זה רק המקרה הטוב. במקרה הגרוע עדיין בודקים את כל n הפריטים",
+    "Big-O חל רק על קלטים ממוינים"
+   ],
+   "why": "מקרה טוב, ממוצע וגרוע הם שאלות נפרדות. המקרה הטוב של linear search הוא בדיקה אחת, אבל הממוצע והגרוע גדלים עם n, אז linear search הוא O(n) במובן הרגיל של המקרה הגרוע.",
+   "wrong": [
+    "Big-O הוא חסם שמציינים עבור מקרה מסוים. כשלא מפרטים, בראיונות בדרך כלל מתכוונים למקרה הגרוע.",
+    "כשאין סדר לנצל, המטרה נמצאת בממוצע בערך באמצע: n / 2 בדיקות, שזה O(n).",
+    null,
+    "Big-O חל על כל אלגוריתם וכל קלט. מיון רק קובע אילו אלגוריתמים אפשריים."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-constraints-hint",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "input-constraints",
+   "estimating",
+   "n-log-n"
+  ],
+  "level": "medium",
+  "q": "A problem says n can be up to 100,000 and the time limit is about one second. Which complexity should you aim for?",
+  "options": [
+   "O(n^2) is fine, since computers do billions of steps a second",
+   "O(n log n) or better: about 1.7 million steps",
+   "O(2^n), as long as the code is well optimized",
+   "Any complexity, since the limit on n is only about memory"
+  ],
+  "answer": 1,
+  "why": "A typical judge manages roughly 10^8 simple steps per second. n log n at n = 100,000 is about 1.7 million steps, while n^2 is 10 billion. The constraint is telling you to avoid quadratic work.",
+  "wrong": [
+   "n^2 is 10^10 steps here. Even at a billion simple steps a second that is many seconds.",
+   null,
+   "2^100000 is astronomically large; no optimization rescues an exponential algorithm at this size.",
+   "The limit on n is the main hint about the time complexity the problem expects."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "בבעיה כתוב ש-n יכול להגיע עד 100,000 ומגבלת הזמן היא בערך שנייה אחת. לאיזו סיבוכיות כדאי לכוון?",
+   "options": [
+    "O(n^2) זה בסדר, כי מחשבים מבצעים מיליארדי צעדים בשנייה",
+    "O(n log n) או טוב יותר: בערך 1.7 מיליון צעדים",
+    "O(2^n), כל עוד הקוד מאופטם היטב",
+    "כל סיבוכיות, כי המגבלה על n היא רק עניין של זיכרון"
+   ],
+   "why": "judge טיפוסי מבצע בערך 10^8 צעדים פשוטים בשנייה. n log n עבור n = 100,000 הוא בערך 1.7 מיליון צעדים, בעוד ש-n^2 הוא 10 מיליארד. המגבלה אומרת להימנע מעבודה ריבועית.",
+   "wrong": [
+    "n^2 כאן הוא 10^10 צעדים. גם במיליארד צעדים פשוטים בשנייה זה הרבה שניות.",
+    null,
+    "2^100000 הוא מספר אסטרונומי: שום אופטימיזציה לא מצילה אלגוריתם אקספוננציאלי בגודל כזה.",
+    "המגבלה על n היא הרמז העיקרי לסיבוכיות הזמן שהבעיה מצפה לה."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-slicing-binary-search",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "hidden-cost",
+   "slicing",
+   "binary-search",
+   "recursion"
+  ],
+  "level": "hard",
+  "q": "This recursive binary search is correct, but it slices the list on each call. On a sorted list of n items, what is its worst-case time?",
+  "code": "def contains(arr, target):\n    if not arr:\n        return False\n    mid = len(arr) // 2\n    if arr[mid] == target:\n        return True\n    if arr[mid] < target:\n        return contains(arr[mid + 1:], target)\n    return contains(arr[:mid], target)\n\nprint(contains(list(range(1_000_000)), 999_999))",
+  "lang": "python",
+  "options": [
+   "O(log n): the list is halved on every call",
+   "O(n log n): each of the log n calls copies n items",
+   "O(n^2): slicing copies the whole list on every single call",
+   "O(n): the copies add up to n/2 + n/4 + ..., about n"
+  ],
+  "answer": 3,
+  "why": "There are about log n calls, but arr[mid + 1:] and arr[:mid] build new lists. The copies cost n/2 + n/4 + ... < n, so the total is O(n), no better than a linear scan. Passing lo and hi indices instead keeps it O(log n).",
+  "wrong": [
+   "The number of calls is O(log n), but each slice copies half the remaining items, and those copies dominate.",
+   "Each call copies only the remaining half, not the full list, so the copies form a shrinking series that sums to about n.",
+   "A slice copies only the part it takes. The parts halve each time, so the total stays linear.",
+   null
+  ],
+  "ref": "https://wiki.python.org/moin/TimeComplexity",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-binary search הרקורסיבי הזה נכון, אבל הוא עושה slicing ל-list בכל קריאה. על list ממוינת של n פריטים, מה זמן הריצה במקרה הגרוע?",
+   "options": [
+    "O(log n): ה-list נחצית בכל קריאה",
+    "O(n log n): כל אחת מ-log n הקריאות מעתיקה n פריטים",
+    "O(n^2): slicing מעתיק את כל ה-list בכל קריאה וקריאה",
+    "O(n): ההעתקות מצטברות ל-n/2 + n/4 + ..., בערך n"
+   ],
+   "why": "יש בערך log n קריאות, אבל arr[mid + 1:] ו-arr[:mid] בונים lists חדשות. ההעתקות עולות n/2 + n/4 + ... < n, אז הסך הכול הוא O(n), לא טוב יותר מסריקה ליניארית. העברה של indexes lo ו-hi במקום זה שומרת על O(log n).",
+   "wrong": [
+    "מספר הקריאות הוא O(log n), אבל כל slice מעתיק חצי מהפריטים שנשארו, וההעתקות האלה הן העלות הדומיננטית.",
+    "כל קריאה מעתיקה רק את החצי שנשאר, לא את כל ה-list, אז ההעתקות יוצרות טור מתכווץ שסכומו בערך n.",
+    "slice מעתיק רק את החלק שהוא לוקח. החלקים נחצים בכל פעם, אז הסך הכול נשאר ליניארי.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-linear-vs-n-log-n-small-n",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "constant-factors",
+   "practical-performance",
+   "growth-rate"
+  ],
+  "level": "easy",
+  "q": "Algorithm A is O(n) but does heavy work per item. Algorithm B is O(n log n) with very light steps. For n = 50, which statement is right?",
+  "options": [
+   "A is always faster, because O(n) beats O(n log n) at every size",
+   "Big-O gives exact times, so just compare 50 with 50 log 50",
+   "B is faster for every n, since its steps are lighter",
+   "B may well be faster; A is only sure to win at large n"
+  ],
+  "answer": 3,
+  "why": "Big-O describes growth and drops constant factors. An O(n) algorithm with a big constant can lose to an O(n log n) one at small n; it is only guaranteed to win beyond some size. When n is small, measure.",
+  "wrong": [
+   "Big-O hides constant factors. At small n a large constant can outweigh the extra log factor.",
+   "Big-O drops constants and lower terms, so it cannot give actual times. Measure instead.",
+   "Light steps help at small n, but n log n grows faster, so A wins once n is large enough.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אלגוריתם A הוא O(n) אבל עושה עבודה כבדה לכל פריט. אלגוריתם B הוא O(n log n) עם צעדים קלים מאוד. עבור n = 50, איזו טענה נכונה?",
+   "options": [
+    "A תמיד מהיר יותר, כי O(n) מנצח את O(n log n) בכל גודל",
+    "Big-O נותן זמנים מדויקים, אז פשוט משווים 50 ל-50 log 50",
+    "B מהיר יותר לכל n, כי הצעדים שלו קלים יותר",
+    "בהחלט ייתכן ש-B מהיר יותר. A מובטח לנצח רק ב-n גדול"
+   ],
+   "why": "Big-O מתאר גדילה וזורק מקדמים קבועים. אלגוריתם O(n) עם קבוע גדול יכול להפסיד לאלגוריתם O(n log n) ב-n קטן. הוא מובטח לנצח רק מעבר לגודל מסוים. כש-n קטן, מודדים.",
+   "wrong": [
+    "Big-O מסתיר מקדמים קבועים. ב-n קטן קבוע גדול יכול לגבור על פקטור ה-log הנוסף.",
+    "Big-O זורק קבועים ואיברים מסדר נמוך, אז הוא לא יכול לתת זמנים אמיתיים. צריך למדוד.",
+    "צעדים קלים עוזרים ב-n קטן, אבל n log n גדל מהר יותר, אז A מנצח כש-n מספיק גדול.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-nested-but-linear",
+  "topic": "algorithms",
+  "subtopic": "big-o",
+  "concepts": [
+   "nested-loops",
+   "two-pointers",
+   "linear",
+   "code-to-complexity"
+  ],
+  "level": "hard",
+  "q": "longest_run returns the length of the longest block of equal neighbours. It has a while loop inside a while loop. What is its time complexity?",
+  "code": "def longest_run(a):\n    best = 0\n    i = 0\n    while i < len(a):\n        j = i\n        while j < len(a) and a[j] == a[i]:\n            j += 1\n        best = max(best, j - i)\n        i = j\n    return best\n\nprint(longest_run([1, 1, 2, 2, 2, 3]))",
+  "lang": "python",
+  "options": [
+   "O(n^2): a loop inside a loop is quadratic",
+   "O(n): j never moves back, and i jumps to j",
+   "O(n^2) in the worst case, when every item is equal",
+   "O(n log n): the inner loop skips over blocks of items"
+  ],
+  "answer": 1,
+  "why": "j only moves forward, and i = j resumes where the inner loop stopped, so over the whole run the inner loop steps through each index once. Total work is O(n). The same reasoning makes two pointer and sliding window code linear.",
+  "wrong": [
+   "Nesting alone does not decide it. Count total steps: j only moves forward, and i jumps to where j stopped.",
+   null,
+   "When all items are equal, the inner loop runs n times once and then i jumps to the end. That is O(n).",
+   "Skipping blocks is not halving anything. The work is simply proportional to n."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "longest_run מחזירה את האורך של הבלוק הארוך ביותר של שכנים שווים. יש בה לולאת while בתוך לולאת while. מה סיבוכיות הזמן שלה?",
+   "options": [
+    "O(n^2): לולאה בתוך לולאה היא ריבועית",
+    "O(n): j אף פעם לא זז אחורה, ו-i קופץ ל-j",
+    "O(n^2) במקרה הגרוע, כשכל הפריטים שווים",
+    "O(n log n): הלולאה הפנימית מדלגת על בלוקים של פריטים"
+   ],
+   "why": "j רק זז קדימה, ו-i = j ממשיך מהמקום שבו הלולאה הפנימית עצרה, אז לאורך כל הריצה הלולאה הפנימית עוברת על כל index פעם אחת. העבודה הכוללת היא O(n). אותו היגיון הופך קוד של two pointers ו-sliding window לליניארי.",
+   "wrong": [
+    "קינון לבד לא קובע. צריך לספור את סך הצעדים: j רק זז קדימה, ו-i קופץ למקום שבו j עצר.",
+    null,
+    "כשכל הפריטים שווים, הלולאה הפנימית רצה n פעמים פעם אחת ואז i קופץ לסוף. זה O(n).",
+    "דילוג על בלוקים לא חוצה כלום. העבודה פשוט פרופורציונלית ל-n."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-unreachable-base-case",
+  "topic": "algorithms",
+  "subtopic": "recursion",
+  "concepts": [
+   "base-case",
+   "stack-overflow",
+   "python"
+  ],
+  "level": "easy",
+  "q": "factorial has a base case for n == 1. What happens when this runs?",
+  "code": "def factorial(n):\n    if n == 1:\n        return 1\n    return n * factorial(n - 1)\n\nprint(factorial(5))\nprint(factorial(0))",
+  "lang": "python",
+  "options": [
+   "120, then 1",
+   "120, then 0",
+   "120, then a RecursionError",
+   "A RecursionError before anything is printed"
+  ],
+  "answer": 2,
+  "why": "factorial(0) skips the base case and calls factorial(-1), which keeps going down and never reaches 1. Python stops it at the recursion limit with RecursionError. A base case of n <= 1 fixes it: the base case must be reachable from every valid input.",
+  "wrong": [
+   "There is no case for 0, so factorial(0) never returns 1; it calls factorial(-1), factorial(-2), and so on.",
+   "Nothing here returns 0. The calls go down forever, past 0, until the stack limit.",
+   null,
+   "factorial(5) does reach n == 1, so 120 is printed first."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-factorial יש base case עבור n == 1. מה יקרה כשזה ירוץ?",
+   "options": [
+    "120, ואז 1",
+    "120, ואז 0",
+    "120, ואז RecursionError",
+    "RecursionError לפני שמשהו מודפס"
+   ],
+   "why": "factorial(0) מדלגת על ה-base case וקוראת ל-factorial(-1), שממשיכה לרדת ואף פעם לא מגיעה ל-1. Python עוצרת את זה במגבלת הרקורסיה עם RecursionError. base case של n <= 1 מתקן את זה: צריך שיהיה אפשר להגיע ל-base case מכל קלט תקין.",
+   "wrong": [
+    "אין מקרה ל-0, אז factorial(0) אף פעם לא מחזירה 1. היא קוראת ל-factorial(-1), ל-factorial(-2) וכן הלאה.",
+    "שום דבר כאן לא מחזיר 0. הקריאות יורדות בלי סוף, מעבר ל-0, עד מגבלת ה-stack.",
+    null,
+    "factorial(5) כן מגיעה ל-n == 1, אז 120 מודפס קודם."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-recursion-depth-limit",
+  "topic": "algorithms",
+  "subtopic": "recursion",
+  "concepts": [
+   "stack-depth",
+   "stack-overflow",
+   "recursion-vs-iteration",
+   "python"
+  ],
+  "level": "medium",
+  "q": "total adds up a list recursively, and its base case is correct. What happens when this runs with Python's default settings?",
+  "code": "def total(items, i=0):\n    if i == len(items):\n        return 0\n    return items[i] + total(items, i + 1)\n\nprint(total(list(range(100))))\nprint(total(list(range(100_000))))",
+  "lang": "python",
+  "options": [
+   "4950, then a RecursionError for the 100,000 item list",
+   "4950, then 4999950000",
+   "4950, then a MemoryError, because the list itself is too large",
+   "A RecursionError on the first call, because i=0 is a shared default"
+  ],
+  "answer": 0,
+  "why": "Recursion depth equals the list length, and every pending call keeps a stack frame. CPython limits the depth to about 1000 by default, so 100,000 levels raise RecursionError. A loop, or sum(items), has no such limit.",
+  "wrong": [
+   null,
+   "The logic is right, but each item adds a stack frame, and 100,000 frames exceed Python's default limit of about 1000.",
+   "A list of 100,000 ints is small. The limit hit is the call depth, not the data size.",
+   "An int default is immutable, so sharing it is harmless. The first call works and prints 4950."
+  ],
+  "ref": "https://docs.python.org/3/library/sys.html#sys.getrecursionlimit",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "total מסכמת list ברקורסיה, וה-base case שלה נכון. מה יקרה כשזה ירוץ עם הגדרות ברירת המחדל של Python?",
+   "options": [
+    "4950, ואז RecursionError עבור ה-list של 100,000 פריטים",
+    "4950, ואז 4999950000",
+    "4950, ואז MemoryError, כי ה-list עצמה גדולה מדי",
+    "RecursionError בקריאה הראשונה, כי i=0 הוא default משותף"
+   ],
+   "why": "עומק הרקורסיה שווה לאורך ה-list, וכל קריאה שממתינה מחזיקה stack frame. CPython מגביל את העומק לבערך 1000 כברירת מחדל, אז 100,000 רמות זורקות RecursionError. ללולאה, או ל-sum(items), אין מגבלה כזו.",
+   "wrong": [
+    null,
+    "הלוגיקה נכונה, אבל כל פריט מוסיף stack frame, ו-100,000 frames חורגים ממגבלת ברירת המחדל של Python, בערך 1000.",
+    "list של 100,000 ints היא קטנה. המגבלה שנפגעת היא עומק הקריאות, לא גודל המידע.",
+    "default מסוג int הוא immutable, אז השיתוף שלו לא מזיק. הקריאה הראשונה עובדת ומדפיסה 4950."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-recursion-uses-stack-space",
+  "topic": "algorithms",
+  "subtopic": "recursion",
+  "concepts": [
+   "space-complexity",
+   "call-stack",
+   "stack-depth"
+  ],
+  "level": "easy",
+  "q": "A recursive function on n items creates no lists, dicts or other data structures, and it calls itself n levels deep. How much extra space does it use?",
+  "options": [
+   "O(1), because it allocates no lists or other data structures",
+   "O(n), for the stack frames of the n pending calls",
+   "O(log n), because the frames are reused",
+   "O(n^2), because each frame copies the data"
+  ],
+  "answer": 1,
+  "why": "Each call waits for the one below it, so at the deepest point n frames sit on the stack at once. Space analysis counts this stack, which is why recursion n levels deep uses O(n) extra space even without data structures.",
+  "wrong": [
+   "Every pending call keeps a frame with its arguments and return address on the call stack. Those frames are memory.",
+   null,
+   "A frame cannot be reused while its call is still waiting for the one below. At depth n, n frames exist at once.",
+   "Passing a list passes a reference, so no copy is made. Only the frames themselves add up."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "function רקורסיבית על n פריטים לא יוצרת lists, dicts או מבני נתונים אחרים, והיא קוראת לעצמה לעומק של n רמות. כמה זיכרון נוסף היא צורכת?",
+   "options": [
+    "O(1), כי היא לא מקצה lists או מבני נתונים אחרים",
+    "O(n), עבור ה-stack frames של n הקריאות הממתינות",
+    "O(log n), כי ה-frames ממוחזרים",
+    "O(n^2), כי כל frame מעתיק את המידע"
+   ],
+   "why": "כל קריאה ממתינה לזו שמתחתיה, אז בנקודה העמוקה ביותר יש n frames על ה-stack בו זמנית. ניתוח זיכרון סופר את ה-stack הזה, ולכן רקורסיה לעומק n רמות צורכת O(n) זיכרון נוסף גם בלי מבני נתונים.",
+   "wrong": [
+    "כל קריאה ממתינה מחזיקה frame עם הארגומנטים וכתובת החזרה שלה על ה-call stack. ה-frames האלה הם זיכרון.",
+    null,
+    "אי אפשר למחזר frame כל עוד הקריאה שלו עדיין ממתינה לזו שמתחתיה. בעומק n, יש n frames בו זמנית.",
+    "העברת list מעבירה reference, אז לא נעשית העתקה. רק ה-frames עצמם מצטברים."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-naive-fib-exponential",
+  "topic": "algorithms",
+  "subtopic": "recursion",
+  "concepts": [
+   "recursion-tree",
+   "exponential",
+   "overlapping-subproblems"
+  ],
+  "level": "medium",
+  "q": "This naive fib counts its own calls; for fib(25) it prints 242785. How does the number of calls grow with n?",
+  "code": "calls = 0\ndef fib(n):\n    global calls\n    calls += 1\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nfib(25)\nprint(calls)",
+  "lang": "python",
+  "options": [
+   "Linearly: one call per value from n down to 0",
+   "Quadratically: about n^2 calls",
+   "Logarithmically: the problem shrinks on every call",
+   "Exponentially: about 1.6 times more per step"
+  ],
+  "answer": 3,
+  "why": "fib(n) calls fib(n - 1) and fib(n - 2), and no result is saved, so the same values are recomputed again and again. The call count grows about 1.6 times per step (fib(26) makes 392,835 calls): exponential time, while the stack depth is only n.",
+  "wrong": [
+   "Each call makes two more, and the same values are recomputed many times, so there are far more calls than n.",
+   "25^2 is only 625, but the count is 242,785. The count multiplies with each step instead of adding.",
+   "n shrinks by only 1 or 2 per call, not by half, and each call branches in two.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-fib הנאיבי הזה סופר את הקריאות של עצמו, ועבור fib(25) הוא מדפיס 242785. איך מספר הקריאות גדל עם n?",
+   "options": [
+    "ליניארית: קריאה אחת לכל ערך מ-n ועד 0",
+    "ריבועית: בערך n^2 קריאות",
+    "לוגריתמית: הבעיה קטנה בכל קריאה",
+    "אקספוננציאלית: בערך פי 1.6 יותר בכל צעד"
+   ],
+   "why": "fib(n) קוראת ל-fib(n - 1) ול-fib(n - 2), ושום תוצאה לא נשמרת, אז אותם ערכים מחושבים שוב ושוב. מספר הקריאות גדל בערך פי 1.6 בכל צעד (fib(26) מבצעת 392,835 קריאות): זמן אקספוננציאלי, בעוד שעומק ה-stack הוא רק n.",
+   "wrong": [
+    "כל קריאה יוצרת שתיים נוספות, ואותם ערכים מחושבים פעמים רבות, אז יש הרבה יותר קריאות מ-n.",
+    "25^2 הוא רק 625, אבל הספירה היא 242,785. הספירה מוכפלת בכל צעד במקום להתווסף.",
+    "n קטן רק ב-1 או 2 בכל קריאה, לא בחצי, וכל קריאה מתפצלת לשתיים.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-tail-call-not-optimized",
+  "topic": "algorithms",
+  "subtopic": "recursion",
+  "concepts": [
+   "tail-recursion",
+   "stack-overflow",
+   "recursion-vs-iteration",
+   "java"
+  ],
+  "level": "medium",
+  "q": "To avoid a stack overflow on deep input, a Java developer rewrites a recursive method so that the recursive call is the very last thing it does. Does that help?",
+  "options": [
+   "No: Java still uses one frame per call; a loop is the fix",
+   "Yes: a tail call always reuses the caller's stack frame, in any language",
+   "Yes, but only if the method is also static",
+   "No, because tail recursion makes the running time exponential"
+  ],
+  "answer": 0,
+  "why": "Tail call elimination is a compiler or runtime feature. The standard JVM does not do it, and neither does CPython, so a tail-recursive method still uses one frame per level. Rewriting it as a loop is the reliable fix.",
+  "wrong": [
+   null,
+   "Some languages guarantee that (Scheme, for one), but Java and Python do not. Every call still pushes a frame.",
+   "static does not matter here. The JVM does no tail call elimination either way.",
+   "Moving the call to the end does not change how many calls are made. The only issue is stack depth."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כדי להימנע מ-stack overflow בקלט עמוק, מפתח Java כותב מחדש method רקורסיבית כך שהקריאה הרקורסיבית היא הדבר האחרון שהיא עושה. זה עוזר?",
+   "options": [
+    "לא: Java עדיין משתמשת ב-frame אחד לכל קריאה, והתיקון הוא לולאה",
+    "כן: tail call תמיד משתמש מחדש ב-stack frame של הקורא, בכל שפה",
+    "כן, אבל רק אם ה-method היא גם static",
+    "לא, כי tail recursion הופך את זמן הריצה לאקספוננציאלי"
+   ],
+   "why": "tail call elimination היא יכולת של ה-compiler או ה-runtime. ה-JVM הסטנדרטי לא עושה את זה, וגם CPython לא, אז method עם tail recursion עדיין משתמשת ב-frame אחד לכל רמה. כתיבה מחדש כלולאה היא התיקון האמין.",
+   "wrong": [
+    null,
+    "יש שפות שמבטיחות את זה (Scheme, למשל), אבל Java ו-Python לא. כל קריאה עדיין דוחפת frame.",
+    "static לא משנה כאן. ה-JVM לא עושה tail call elimination בכל מקרה.",
+    "העברת הקריאה לסוף לא משנה כמה קריאות מתבצעות. הבעיה היחידה היא עומק ה-stack."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-when-recursion-fits",
+  "topic": "algorithms",
+  "subtopic": "recursion",
+  "concepts": [
+   "recursion-vs-iteration",
+   "recursive-structure",
+   "stack-depth"
+  ],
+  "level": "easy",
+  "q": "You need to list every file in a folder, including all nested subfolders. Folders are rarely more than 20 levels deep. Why is recursion a natural fit here?",
+  "options": [
+   "Recursion is always faster than the equivalent loop would be",
+   "Recursion uses less memory than a loop",
+   "A folder holds folders, so the code mirrors the data",
+   "A loop cannot visit nested folders at all"
+  ],
+  "answer": 2,
+  "why": "A folder tree is defined in terms of itself, so \"handle this folder, then each subfolder the same way\" is short and clear. The small depth keeps the stack safe. For very deep data, a loop with an explicit stack avoids overflow.",
+  "wrong": [
+   "Recursion adds call overhead. It is chosen for clarity on recursive data, not for speed.",
+   "Each level adds a stack frame, so recursion usually uses more memory. That is fine here only because the depth is small.",
+   null,
+   "A loop with an explicit stack or queue can visit them too. Recursion is just the simpler way to write it."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צריך לרשום כל קובץ בתיקייה, כולל כל תתי-התיקיות המקוננות. תיקיות לעיתים רחוקות עמוקות מ-20 רמות. למה רקורסיה מתאימה כאן באופן טבעי?",
+   "options": [
+    "רקורסיה תמיד מהירה יותר מהלולאה המקבילה",
+    "רקורסיה צורכת פחות זיכרון מלולאה",
+    "תיקייה מכילה תיקיות, אז הקוד משקף את המידע",
+    "לולאה לא יכולה לבקר בתיקיות מקוננות בכלל"
+   ],
+   "why": "עץ תיקיות מוגדר במונחים של עצמו, אז \"לטפל בתיקייה הזו, ואז בכל תת-תיקייה באותה דרך\" זה קצר וברור. העומק הקטן שומר על ה-stack בטוח. עבור מידע עמוק מאוד, לולאה עם stack מפורש מונעת overflow.",
+   "wrong": [
+    "רקורסיה מוסיפה תקורה של קריאות. בוחרים בה בשביל בהירות על מידע רקורסיבי, לא בשביל מהירות.",
+    "כל רמה מוסיפה stack frame, אז רקורסיה בדרך כלל צורכת יותר זיכרון. זה בסדר כאן רק כי העומק קטן.",
+    null,
+    "גם לולאה עם stack או queue מפורשים יכולה לבקר בהן. רקורסיה היא פשוט הדרך הפשוטה יותר לכתוב את זה."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-base-case-skipped",
+  "topic": "algorithms",
+  "subtopic": "recursion",
+  "concepts": [
+   "base-case",
+   "progress-toward-base",
+   "stack-overflow",
+   "java"
+  ],
+  "level": "medium",
+  "q": "sumTo has a base case for 0, and each call lowers n by 2. What happens when main runs?",
+  "code": "public class Main {\n    static int sumTo(int n) {\n        if (n == 0) return 0;\n        return n + sumTo(n - 2);\n    }\n    public static void main(String[] args) {\n        System.out.println(sumTo(4));\n        System.out.println(sumTo(5));\n    }\n}",
+  "lang": "java",
+  "options": [
+   "6, then 9",
+   "Compile error: sumTo might not return a value",
+   "6, then a StackOverflowError",
+   "6, then the program hangs forever with no error"
+  ],
+  "answer": 2,
+  "why": "sumTo(4) goes 4, 2, 0 and returns 6. sumTo(5) goes 5, 3, 1, -1 and never equals 0, so frames pile up until the JVM throws StackOverflowError. A base case must be reachable: if (n <= 0) would fix it.",
+  "wrong": [
+   "From 5 the values are 5, 3, 1, -1, ...: they jump over 0, so the base case is never hit.",
+   "Every path ends in a return statement, so it compiles.",
+   null,
+   "Each call adds a stack frame, so it does not run forever; it fails as soon as the stack is full."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/StackOverflowError.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-sumTo יש base case עבור 0, וכל קריאה מורידה את n ב-2. מה יקרה כש-main ירוץ?",
+   "options": [
+    "6, ואז 9",
+    "שגיאת compile: ייתכן ש-sumTo לא תחזיר ערך",
+    "6, ואז StackOverflowError",
+    "6, ואז התוכנית נתקעת לנצח בלי שגיאה"
+   ],
+   "why": "sumTo(4) עוברת 4, 2, 0 ומחזירה 6. sumTo(5) עוברת 5, 3, 1, -1 ואף פעם לא שווה ל-0, אז frames נערמים עד שה-JVM זורק StackOverflowError. צריך שיהיה אפשר להגיע ל-base case: if (n <= 0) היה מתקן את זה.",
+   "wrong": [
+    "מ-5 הערכים הם 5, 3, 1, -1, ...: הם קופצים מעל 0, אז אף פעם לא מגיעים ל-base case.",
+    "כל מסלול מסתיים ב-return, אז זה עובר compile.",
+    null,
+    "כל קריאה מוסיפה stack frame, אז זה לא רץ לנצח: זה נכשל ברגע שה-stack מתמלא."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-work-after-recursive-call",
+  "topic": "algorithms",
+  "subtopic": "recursion",
+  "concepts": [
+   "call-stack",
+   "unwinding",
+   "python"
+  ],
+  "level": "easy",
+  "q": "show prints after its recursive call returns. What does show(3) print?",
+  "code": "def show(n):\n    if n == 0:\n        return\n    show(n - 1)\n    print(n, end=\" \")\n\nshow(3)",
+  "lang": "python",
+  "options": [
+   "1 2 3",
+   "3 2 1",
+   "3",
+   "0 1 2 3"
+  ],
+  "answer": 0,
+  "why": "show(3) calls show(2), which calls show(1), which calls show(0), and that returns at once. The prints then run as the calls unwind: 1, then 2, then 3. Code after a recursive call runs in reverse order of the calls.",
+  "wrong": [
+   null,
+   "That would happen if print came before the recursive call. Here each call waits for show(n - 1) to finish first.",
+   "Every call that is not the base case prints once, so three numbers appear.",
+   "show(0) returns at the base case without printing."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "show מדפיסה אחרי שהקריאה הרקורסיבית שלה חוזרת. מה show(3) תדפיס?",
+   "options": [
+    "1 2 3",
+    "3 2 1",
+    "3",
+    "0 1 2 3"
+   ],
+   "why": "show(3) קוראת ל-show(2), שקוראת ל-show(1), שקוראת ל-show(0), וזו חוזרת מיד. ההדפסות רצות כשהקריאות מתפרקות: 1, ואז 2, ואז 3. קוד שאחרי קריאה רקורסיבית רץ בסדר הפוך לסדר הקריאות.",
+   "wrong": [
+    null,
+    "זה היה קורה אם ה-print היה לפני הקריאה הרקורסיבית. כאן כל קריאה ממתינה קודם ש-show(n - 1) תסתיים.",
+    "כל קריאה שאינה ה-base case מדפיסה פעם אחת, אז מופיעים שלושה מספרים.",
+    "show(0) חוזרת ב-base case בלי להדפיס."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-stable-sort-meaning",
+  "topic": "algorithms",
+  "subtopic": "sorting",
+  "concepts": [
+   "stability",
+   "equal-keys"
+  ],
+  "level": "easy",
+  "q": "Orders are already listed by time. You sort them by customer name with a stable sort. What does stability guarantee?",
+  "options": [
+   "The sort never crashes, even on huge inputs",
+   "The same input always gives the same output",
+   "It runs in O(n log n) time even in the worst case",
+   "Orders of the same customer stay in time order"
+  ],
+  "answer": 3,
+  "why": "A stable sort keeps items with equal keys in the order they had before. The orders were by time, so each customer's orders stay in time order. This is what makes sorting in several passes work.",
+  "wrong": [
+   "Stability is not about robustness. It is only about the relative order of items with equal keys.",
+   "Unstable sorts are usually deterministic too. Stability is about equal keys keeping their original order.",
+   "Stability and speed are separate properties. Insertion sort is stable and O(n^2).",
+   null
+  ],
+  "ref": "https://docs.python.org/3/howto/sorting.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ההזמנות כבר מסודרות לפי זמן. ממיינים אותן לפי שם לקוח עם stable sort. מה היציבות מבטיחה?",
+   "options": [
+    "המיון אף פעם לא קורס, גם על קלטים ענקיים",
+    "אותו קלט תמיד נותן אותו פלט",
+    "הוא רץ בזמן O(n log n) גם במקרה הגרוע",
+    "הזמנות של אותו לקוח נשארות בסדר לפי זמן"
+   ],
+   "why": "stable sort שומר על פריטים עם keys שווים באותו סדר שהיה להם קודם. ההזמנות היו לפי זמן, אז ההזמנות של כל לקוח נשארות בסדר לפי זמן. זה מה שמאפשר מיון בכמה מעברים.",
+   "wrong": [
+    "יציבות היא לא עניין של עמידות. היא נוגעת רק לסדר היחסי של פריטים עם keys שווים.",
+    "גם מיונים לא יציבים הם בדרך כלל דטרמיניסטיים. יציבות עוסקת בכך ש-keys שווים שומרים על הסדר המקורי.",
+    "יציבות ומהירות הן תכונות נפרדות. insertion sort הוא יציב ו-O(n^2).",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-stable-multi-key-sort",
+  "topic": "algorithms",
+  "subtopic": "sorting",
+  "concepts": [
+   "stability",
+   "multi-key-sort",
+   "python"
+  ],
+  "level": "medium",
+  "q": "Python's sort is stable. The list is sorted by day, then sorted again by name. What does it print?",
+  "code": "# each order is (customer, day)\norders = [(\"bob\", 3), (\"amy\", 2), (\"bob\", 1), (\"amy\", 1)]\norders.sort(key=lambda o: o[1])   # by day\norders.sort(key=lambda o: o[0])   # then by name\nprint(orders)",
+  "lang": "python",
+  "options": [
+   "[('amy', 2), ('amy', 1), ('bob', 3), ('bob', 1)]",
+   "[('amy', 1), ('amy', 2), ('bob', 1), ('bob', 3)]",
+   "[('bob', 1), ('amy', 1), ('amy', 2), ('bob', 3)]",
+   "The days within each name come out in random order"
+  ],
+  "answer": 1,
+  "why": "The last sort sets the primary order, by name. For equal names a stable sort keeps the order from before, which the first sort made by day. So sorting by the secondary key first and the primary key last gives name, then day.",
+  "wrong": [
+   "That is the original order within each name, as if the first sort never happened. Stability keeps the day order from the first sort.",
+   null,
+   "That is the result of the first sort only. The last sort decides the main order, so names come first.",
+   "The last sort ignores days as a key, but a stable sort keeps equal names in their current order, which is already by day."
+  ],
+  "ref": "https://docs.python.org/3/howto/sorting.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "המיון של Python הוא stable. ה-list ממוינת לפי יום, ואז שוב לפי שם. מה יודפס?",
+   "options": [
+    "[('amy', 2), ('amy', 1), ('bob', 3), ('bob', 1)]",
+    "[('amy', 1), ('amy', 2), ('bob', 1), ('bob', 3)]",
+    "[('bob', 1), ('amy', 1), ('amy', 2), ('bob', 3)]",
+    "הימים בתוך כל שם יוצאים בסדר אקראי"
+   ],
+   "why": "המיון האחרון קובע את הסדר הראשי, לפי שם. עבור שמות שווים, stable sort שומר את הסדר שהיה קודם, שהמיון הראשון קבע לפי יום. לכן מיון לפי ה-key המשני קודם ולפי ה-key הראשי אחרון נותן שם, ואז יום.",
+   "wrong": [
+    "זה הסדר המקורי בתוך כל שם, כאילו המיון הראשון לא קרה. היציבות שומרת את הסדר לפי יום מהמיון הראשון.",
+    null,
+    "זו התוצאה של המיון הראשון בלבד. המיון האחרון קובע את הסדר העיקרי, אז השמות קובעים.",
+    "המיון האחרון לא משתמש בימים כ-key, אבל stable sort שומר שמות שווים בסדר הנוכחי שלהם, שכבר לפי יום."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-quicksort-sorted-input",
+  "topic": "algorithms",
+  "subtopic": "sorting",
+  "concepts": [
+   "quicksort",
+   "worst-case",
+   "pivot-choice"
+  ],
+  "level": "easy",
+  "q": "A quicksort always picks the first element as the pivot. What happens when it is given an array that is already sorted?",
+  "options": [
+   "It slows to O(n^2): one side of every split is empty",
+   "It finishes in O(n), since there is nothing left to move",
+   "It stays O(n log n), as quicksort always is",
+   "It fails, since a sorted array has no valid pivot"
+  ],
+  "answer": 0,
+  "why": "On sorted input the first element is the smallest, so each partition puts nothing on the left and everything else on the right. That gives n levels of up to n work each, O(n^2), and n levels of recursion. A random pivot avoids it in practice.",
+  "wrong": [
+   null,
+   "Quicksort still partitions at every level; sorted input does not let it skip that work.",
+   "O(n log n) is quicksort's average case. With bad pivots it is O(n^2).",
+   "Any element can be a pivot. The problem is that the smallest one makes very unbalanced splits."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/sorting-searching/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "quicksort תמיד בוחר את האיבר הראשון כ-pivot. מה קורה כשמקבלים array שכבר ממוין?",
+   "options": [
+    "הוא מאט ל-O(n^2): צד אחד של כל חלוקה ריק",
+    "הוא מסתיים ב-O(n), כי אין מה להזיז",
+    "הוא נשאר O(n log n), כמו quicksort תמיד",
+    "הוא נכשל, כי ל-array ממוין אין pivot תקין"
+   ],
+   "why": "בקלט ממוין האיבר הראשון הוא הקטן ביותר, אז כל partition לא שם כלום משמאל ואת כל השאר מימין. זה נותן n רמות של עד n עבודה כל אחת, O(n^2), ו-n רמות של רקורסיה. pivot אקראי מונע את זה בפועל.",
+   "wrong": [
+    null,
+    "quicksort עדיין עושה partition בכל רמה, וקלט ממוין לא מאפשר לו לדלג על העבודה הזו.",
+    "O(n log n) הוא המקרה הממוצע של quicksort. עם pivots גרועים הוא O(n^2).",
+    "כל איבר יכול להיות pivot. הבעיה היא שהקטן ביותר יוצר חלוקות מאוד לא מאוזנות."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-in-place-guaranteed-sort",
+  "topic": "algorithms",
+  "subtopic": "sorting",
+  "concepts": [
+   "in-place",
+   "worst-case",
+   "heap-sort",
+   "merge-sort-space"
+  ],
+  "level": "hard",
+  "q": "You must sort a huge array on a device with almost no spare memory, and a slow worst case is not acceptable. Which algorithm meets both needs?",
+  "options": [
+   "Merge sort: O(n log n) on every input, best and worst",
+   "Quicksort: in-place and fast on average",
+   "Heap sort: O(n log n) worst case and in-place",
+   "Insertion sort: in-place and simple"
+  ],
+  "answer": 2,
+  "why": "Heap sort builds a heap inside the array itself and repeatedly moves the largest item to the end. It uses O(1) extra memory and O(n log n) time even in the worst case. It is not stable, but stability was not required.",
+  "wrong": [
+   "Merge sort on an array needs an O(n) buffer for merging, which this device does not have.",
+   "Its worst case is O(n^2) with bad pivots, which the requirement rules out.",
+   null,
+   "It is in-place, but O(n^2) on general input, far too slow for a huge array."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/sorting-searching/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צריך למיין array ענק על מכשיר כמעט בלי זיכרון פנוי, ומקרה גרוע איטי לא מקובל. איזה אלגוריתם עונה על שתי הדרישות?",
+   "options": [
+    "merge sort: O(n log n) על כל קלט, הטוב והגרוע",
+    "quicksort: in-place ומהיר בממוצע",
+    "heap sort: O(n log n) במקרה הגרוע ו-in-place",
+    "insertion sort: in-place ופשוט"
+   ],
+   "why": "heap sort בונה heap בתוך ה-array עצמו ומעביר שוב ושוב את הפריט הגדול ביותר לסוף. הוא צורך O(1) זיכרון נוסף וזמן O(n log n) גם במקרה הגרוע. הוא לא stable, אבל לא דרשו יציבות.",
+   "wrong": [
+    "merge sort על array צריך buffer של O(n) בשביל ה-merge, ולמכשיר הזה אין אותו.",
+    "המקרה הגרוע שלו הוא O(n^2) עם pivots גרועים, והדרישה פוסלת את זה.",
+    null,
+    "הוא in-place, אבל O(n^2) על קלט כללי, איטי מדי בהרבה בשביל array ענק."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-counting-sort-small-range",
+  "topic": "algorithms",
+  "subtopic": "sorting",
+  "concepts": [
+   "counting-sort",
+   "non-comparison-sort",
+   "lower-bound"
+  ],
+  "level": "easy",
+  "q": "You must sort 10 million ages, each a whole number from 0 to 120. Why can this be done in O(n), below the usual O(n log n) for sorting?",
+  "options": [
+   "The n log n bound no longer holds on modern CPUs",
+   "Counting sort tallies each age without comparing items",
+   "Ages are small numbers, so comparing them is free",
+   "Any sort is O(n) when the data holds many duplicate values"
+  ],
+  "answer": 1,
+  "why": "The n log n lower bound applies only to sorts that learn the order by comparing pairs. Counting sort uses the small key range instead: 121 counters, one pass to count, one pass to write out. That is O(n + k) with k = 121.",
+  "wrong": [
+   "The bound is a math fact about comparison sorts, and it holds on any hardware.",
+   null,
+   "Cheap comparisons still need about n log n of them. The trick is to avoid comparisons altogether.",
+   "Not any sort: merge sort still does about n log n work here. Linear time comes from using the small key range directly."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צריך למיין 10 מיליון גילאים, כל אחד מספר שלם בין 0 ל-120. למה אפשר לעשות את זה ב-O(n), מתחת ל-O(n log n) הרגיל של מיון?",
+   "options": [
+    "החסם n log n כבר לא תקף במעבדים מודרניים",
+    "counting sort סופר כל גיל בלי להשוות בין פריטים",
+    "גילאים הם מספרים קטנים, אז ההשוואה ביניהם בחינם",
+    "כל מיון הוא O(n) כשבמידע יש הרבה ערכים כפולים"
+   ],
+   "why": "החסם התחתון n log n חל רק על מיונים שלומדים את הסדר על ידי השוואת זוגות. counting sort משתמש במקום זה בטווח ה-keys הקטן: 121 מונים, מעבר אחד לספירה, ומעבר אחד לכתיבה. זה O(n + k) עם k = 121.",
+   "wrong": [
+    "החסם הוא עובדה מתמטית על comparison sorts, והוא תקף בכל חומרה.",
+    null,
+    "גם השוואות זולות עדיין דורשות בערך n log n מהן. הטריק הוא להימנע מהשוואות לגמרי.",
+    "לא כל מיון: merge sort עדיין עושה כאן בערך n log n עבודה. זמן ליניארי מגיע משימוש ישיר בטווח ה-keys הקטן."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-comparison-sort-lower-bound",
+  "topic": "algorithms",
+  "subtopic": "sorting",
+  "concepts": [
+   "lower-bound",
+   "comparison-sort",
+   "n-log-n"
+  ],
+  "level": "medium",
+  "q": "A classmate claims a general sort that learns the order only by comparing pairs of elements, and runs in O(n) in the worst case. What should you say?",
+  "options": [
+   "Plausible: radix sort already sorts in linear time like that",
+   "Plausible, as long as it is written in a fast compiled language",
+   "Impossible, but only because no sort of any kind can beat O(n^2)",
+   "Impossible: comparison sorts need about n log n comparisons"
+  ],
+  "answer": 3,
+  "why": "n items can be in n factorial different orders, and each yes or no comparison can at best halve the possibilities left. Telling them all apart takes about log2 of n factorial comparisons, which is about n log n. So O(n) worst case is out of reach.",
+  "wrong": [
+   "Radix sort does not compare elements; it reads their digits. So it does not fit the claim.",
+   "The bound counts comparisons, not seconds. No language lowers the number of comparisons needed.",
+   "Merge sort and heap sort are O(n log n) in the worst case, well below n^2.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חבר ללימודים טוען שיש לו מיון כללי שלומד את הסדר רק על ידי השוואת זוגות של איברים, ורץ ב-O(n) במקרה הגרוע. מה צריך לענות?",
+   "options": [
+    "סביר: radix sort כבר ממיין בזמן ליניארי בצורה כזו",
+    "סביר, כל עוד הוא כתוב בשפה מהירה שעוברת compile",
+    "בלתי אפשרי, אבל רק כי שום מיון מאף סוג לא יכול לרדת מתחת ל-O(n^2)",
+    "בלתי אפשרי: comparison sorts צריכים בערך n log n השוואות"
+   ],
+   "why": "n פריטים יכולים להיות ב-n עצרת סדרים שונים, וכל השוואה של כן או לא יכולה לכל היותר לחצות את האפשרויות שנשארו. כדי להבחין בין כולן צריך בערך log2 של n עצרת השוואות, שזה בערך n log n. אז O(n) במקרה הגרוע לא בהישג יד.",
+   "wrong": [
+    "radix sort לא משווה איברים: הוא קורא את הספרות שלהם. אז הוא לא מתאים לטענה.",
+    "החסם סופר השוואות, לא שניות. שום שפה לא מקטינה את מספר ההשוואות הנדרש.",
+    "merge sort ו-heap sort הם O(n log n) במקרה הגרוע, הרבה מתחת ל-n^2.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-insertion-sort-nearly-sorted",
+  "topic": "algorithms",
+  "subtopic": "sorting",
+  "concepts": [
+   "insertion-sort",
+   "adaptive",
+   "nearly-sorted"
+  ],
+  "level": "medium",
+  "q": "A list of 100,000 items is already sorted except for a few items that are slightly out of place. Why can insertion sort be a good choice here?",
+  "options": [
+   "It is O(n log n) in the worst case, like merge sort",
+   "It uses binary search, so each insert is O(log n)",
+   "It is a poor choice: insertion sort is always O(n^2) time",
+   "Items move only a few slots, so it runs in about O(n)"
+  ],
+  "answer": 3,
+  "why": "Insertion sort's work grows with the number of out-of-order pairs. When almost everything is in place, each item is compared once or twice and barely moves, so the total is close to O(n). This is why real sort libraries use it for small or nearly sorted runs.",
+  "wrong": [
+   "Its worst case is O(n^2). Its strength is that its cost depends on how unsorted the input is.",
+   "Plain insertion sort shifts items one slot at a time. The speed here comes from short shifts, not search.",
+   "O(n^2) is the worst case. On nearly sorted input the inner loop stops almost at once.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "list של 100,000 פריטים כבר ממוינת חוץ מכמה פריטים שקצת לא במקום. למה insertion sort יכול להיות בחירה טובה כאן?",
+   "options": [
+    "הוא O(n log n) במקרה הגרוע, כמו merge sort",
+    "הוא משתמש ב-binary search, אז כל הכנסה היא O(log n)",
+    "זו בחירה גרועה: insertion sort הוא תמיד בזמן O(n^2)",
+    "פריטים זזים רק כמה תאים, אז הוא רץ בערך ב-O(n)"
+   ],
+   "why": "העבודה של insertion sort גדלה עם מספר הזוגות שלא בסדר. כשכמעט הכול במקום, כל פריט מושווה פעם או פעמיים וכמעט לא זז, אז הסך הכול קרוב ל-O(n). זו הסיבה שספריות מיון אמיתיות משתמשות בו לרצפים קצרים או כמעט ממוינים.",
+   "wrong": [
+    "המקרה הגרוע שלו הוא O(n^2). החוזק שלו הוא שהעלות תלויה במידה שבה הקלט לא ממוין.",
+    "insertion sort רגיל מזיז פריטים תא אחד בכל פעם. המהירות כאן מגיעה מהזזות קצרות, לא מחיפוש.",
+    "O(n^2) הוא המקרה הגרוע. על קלט כמעט ממוין הלולאה הפנימית עוצרת כמעט מיד.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-in-place-sort-returns-none",
+  "topic": "algorithms",
+  "subtopic": "sorting",
+  "concepts": [
+   "in-place",
+   "aliasing",
+   "python"
+  ],
+  "level": "easy",
+  "q": "rank sorts the list it receives. What does this print?",
+  "code": "def rank(scores):\n    return scores.sort()\n\ndata = [30, 10, 20]\nresult = rank(data)\nprint(data, result)",
+  "lang": "python",
+  "options": [
+   "[30, 10, 20] [10, 20, 30]",
+   "[10, 20, 30] None",
+   "[10, 20, 30] [10, 20, 30]",
+   "[30, 10, 20] None"
+  ],
+  "answer": 1,
+  "why": "list.sort() sorts in place: it rearranges the existing list and returns None, a signal that no new list was made. data and scores are the same list, so data is now sorted. Use sorted(...) when you want a new list.",
+  "wrong": [
+   "list.sort() does not make a sorted copy; that is what sorted(scores) does.",
+   null,
+   "sort() changes the list in place and returns None, so result is None.",
+   "The function received a reference to the same list, so sorting scores also sorts data."
+  ],
+  "ref": "https://docs.python.org/3/howto/sorting.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "rank ממיינת את ה-list שהיא מקבלת. מה יודפס?",
+   "options": [
+    "[30, 10, 20] [10, 20, 30]",
+    "[10, 20, 30] None",
+    "[10, 20, 30] [10, 20, 30]",
+    "[30, 10, 20] None"
+   ],
+   "why": "list.sort() ממיינת in-place: היא מסדרת מחדש את ה-list הקיימת ומחזירה None, סימן שלא נוצרה list חדשה. data ו-scores הן אותה list, אז data ממוינת עכשיו. כשרוצים list חדשה משתמשים ב-sorted(...).",
+   "wrong": [
+    "list.sort() לא יוצרת עותק ממוין. את זה עושה sorted(scores).",
+    null,
+    "sort() משנה את ה-list in-place ומחזירה None, אז result הוא None.",
+    "ה-function קיבלה reference לאותה list, אז מיון של scores ממיין גם את data."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-merge-sort-n-log-n",
+  "topic": "algorithms",
+  "subtopic": "sorting",
+  "concepts": [
+   "merge-sort",
+   "recursion-tree",
+   "n-log-n"
+  ],
+  "level": "medium",
+  "q": "Why is merge sort O(n log n)?",
+  "options": [
+   "About log n levels of halving, each with O(n) merge work",
+   "Each of the n items is compared with log n others in one pass",
+   "It runs a binary search for each of the n items",
+   "Merging two halves costs log n, and there are n merges"
+  ],
+  "answer": 0,
+  "why": "Splitting in half again and again gives about log2(n) levels. At each level the merges together touch every item once, so each level costs O(n). n work per level times log n levels is O(n log n), in every case.",
+  "wrong": [
+   null,
+   "Merging works level by level; there is no single pass that does log n comparisons per item.",
+   "Merge sort never binary searches. The log n comes from the number of halving levels.",
+   "Merging two halves of total size k costs O(k), not log n. Per level, the merges cover all n items."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למה merge sort הוא O(n log n)?",
+   "options": [
+    "בערך log n רמות של חציה, בכל אחת O(n) עבודת merge",
+    "כל אחד מ-n הפריטים מושווה ל-log n אחרים במעבר אחד",
+    "הוא מריץ binary search לכל אחד מ-n הפריטים",
+    "merge של שני חצאים עולה log n, ויש n פעולות merge"
+   ],
+   "why": "חלוקה לחצי שוב ושוב נותנת בערך log2(n) רמות. בכל רמה פעולות ה-merge יחד נוגעות בכל פריט פעם אחת, אז כל רמה עולה O(n). n עבודה לרמה כפול log n רמות זה O(n log n), בכל מקרה.",
+   "wrong": [
+    null,
+    "ה-merge עובד רמה אחרי רמה: אין מעבר יחיד שעושה log n השוואות לכל פריט.",
+    "merge sort אף פעם לא עושה binary search. ה-log n מגיע ממספר רמות החציה.",
+    "merge של שני חצאים בגודל כולל k עולה O(k), לא log n. בכל רמה, פעולות ה-merge מכסות את כל n הפריטים."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-needs-sorted-input",
+  "topic": "algorithms",
+  "subtopic": "binary-search",
+  "concepts": [
+   "sorted-precondition",
+   "correctness"
+  ],
+  "level": "easy",
+  "q": "A standard binary search is run on the unsorted array [7, 1, 9, 3, 5] to look for 1. What happens?",
+  "options": [
+   "It still finds 1, just more slowly than on sorted data",
+   "It can miss 1, by discarding the half that holds it",
+   "It raises an error, because the input is unsorted",
+   "It sorts the array first, then searches"
+  ],
+  "answer": 1,
+  "why": "The middle is 9, and since 1 < 9 it keeps only the left part, [7, 1]. Then it checks 7, and since 1 < 7 it discards 7 and everything after it, so it reports not found. Binary search is only correct on sorted data.",
+  "wrong": [
+   "Binary search discards half the array on each step based on order. Without order it can discard the half that holds the target.",
+   null,
+   "Binary search does not check sortedness; checking would cost O(n). It just gives wrong answers.",
+   "It never reorders the input. Sorting is your job before calling it."
+  ],
+  "ref": "https://docs.python.org/3/library/bisect.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "binary search סטנדרטי מורץ על ה-array הלא ממוין [7, 1, 9, 3, 5] כדי לחפש את 1. מה יקרה?",
+   "options": [
+    "הוא עדיין מוצא את 1, רק לאט יותר מאשר על מידע ממוין",
+    "הוא יכול לפספס את 1, כי הוא זורק את החצי שמכיל אותו",
+    "הוא זורק שגיאה, כי הקלט לא ממוין",
+    "הוא ממיין את ה-array קודם, ואז מחפש"
+   ],
+   "why": "האמצע הוא 9, ומכיוון ש-1 < 9 הוא שומר רק את החלק השמאלי, [7, 1]. אחר כך הוא בודק את 7, ומכיוון ש-1 < 7 הוא זורק את 7 ואת כל מה שאחריו, אז הוא מדווח שלא נמצא. binary search נכון רק על מידע ממוין.",
+   "wrong": [
+    "binary search זורק חצי מה-array בכל צעד על סמך הסדר. בלי סדר הוא יכול לזרוק את החצי שמכיל את המטרה.",
+    null,
+    "binary search לא בודק אם הקלט ממוין, בדיקה כזו הייתה עולה O(n). הוא פשוט נותן תשובות שגויות.",
+    "הוא אף פעם לא מסדר מחדש את הקלט. המיון הוא באחריות הקורא, לפני הקריאה."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-lo-equals-mid-loop",
+  "topic": "algorithms",
+  "subtopic": "binary-search",
+  "concepts": [
+   "invariant",
+   "off-by-one",
+   "infinite-loop",
+   "java"
+  ],
+  "level": "medium",
+  "q": "firstAtLeast should return the index of the first element >= target. It is called with [1, 3, 5, 7] and target 4. What happens?",
+  "code": "static int firstAtLeast(int[] a, int target) {\n    int lo = 0, hi = a.length;\n    while (lo < hi) {\n        int mid = (lo + hi) / 2;\n        if (a[mid] < target) lo = mid;\n        else hi = mid;\n    }\n    return lo;\n}",
+  "lang": "java",
+  "options": [
+   "It returns 2, the index of 5",
+   "It returns 1, the index of 3",
+   "It throws ArrayIndexOutOfBoundsException, since hi starts at a.length",
+   "It loops forever once lo = 1 and hi = 2"
+  ],
+  "answer": 3,
+  "why": "With lo = 1 and hi = 2, mid = 1 and a[1] = 3 < 4, so lo = mid sets lo to 1 again. Nothing changes, forever. Every step must shrink the range: lo = mid + 1 fixes it, and the method returns 2.",
+  "wrong": [
+   "That is the intended answer, but the loop gets stuck before it gets there.",
+   "The loop never ends, so nothing is returned. And a[1] = 3 is below the target anyway.",
+   "mid is always below hi, so a[a.length] is never read.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "firstAtLeast אמורה להחזיר את ה-index של האיבר הראשון שהוא >= target. קוראים לה עם [1, 3, 5, 7] ו-target 4. מה יקרה?",
+   "options": [
+    "היא מחזירה 2, ה-index של 5",
+    "היא מחזירה 1, ה-index של 3",
+    "היא זורקת ArrayIndexOutOfBoundsException, כי hi מתחיל ב-a.length",
+    "היא נכנסת ללולאה אינסופית ברגע ש-lo = 1 ו-hi = 2"
+   ],
+   "why": "כש-lo = 1 ו-hi = 2, mid = 1 ו-a[1] = 3 < 4, אז lo = mid קובע את lo שוב ל-1. שום דבר לא משתנה, לנצח. כל צעד חייב לצמצם את הטווח: lo = mid + 1 מתקן את זה, וה-method מחזירה 2.",
+   "wrong": [
+    "זו התשובה המיועדת, אבל הלולאה נתקעת לפני שהיא מגיעה אליה.",
+    "הלולאה אף פעם לא מסתיימת, אז שום דבר לא מוחזר. וחוץ מזה a[1] = 3 קטן מהמטרה.",
+    "mid תמיד קטן מ-hi, אז a[a.length] אף פעם לא נקרא.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-midpoint-overflow",
+  "topic": "algorithms",
+  "subtopic": "binary-search",
+  "concepts": [
+   "integer-overflow",
+   "midpoint",
+   "java"
+  ],
+  "level": "medium",
+  "q": "In Java, a binary search keeps lo and hi as ints that can reach about 2 billion. Why is mid = lo + (hi - lo) / 2 preferred over (lo + hi) / 2?",
+  "options": [
+   "lo + hi can overflow int and turn negative",
+   "It rounds toward the true middle more accurately",
+   "It is faster, since subtraction is cheaper than addition",
+   "(lo + hi) / 2 can skip the target when the range is odd"
+  ],
+  "answer": 0,
+  "why": "A Java int tops out at about 2.147 billion. With lo = 1.5 billion and hi = 2 billion, lo + hi wraps around and (lo + hi) / 2 is -397483648. hi - lo never leaves the range, so lo + (hi - lo) / 2 is always safe.",
+  "wrong": [
+   null,
+   "Both give the same value whenever there is no overflow. Overflow is the only difference.",
+   "The speed is about the same. The reason is correctness for large values.",
+   "Both round down the same way, so neither skips elements. Only lo + hi can leave the int range."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-Java, binary search מחזיק את lo ו-hi כ-ints שיכולים להגיע לבערך 2 מיליארד. למה מעדיפים mid = lo + (hi - lo) / 2 על פני (lo + hi) / 2?",
+   "options": [
+    "lo + hi יכול לעשות overflow ל-int ולהפוך לשלילי",
+    "הוא מעגל לכיוון האמצע האמיתי בדיוק רב יותר",
+    "הוא מהיר יותר, כי חיסור זול יותר מחיבור",
+    "(lo + hi) / 2 יכול לדלג על המטרה כשהטווח אי-זוגי"
+   ],
+   "why": "int ב-Java מגיע לכל היותר לבערך 2.147 מיליארד. עם lo = 1.5 מיליארד ו-hi = 2 מיליארד, lo + hi גולש ו-(lo + hi) / 2 יוצא -397483648. hi - lo אף פעם לא יוצא מהטווח, אז lo + (hi - lo) / 2 תמיד בטוח.",
+   "wrong": [
+    null,
+    "שניהם נותנים אותו ערך כל עוד אין overflow. overflow הוא ההבדל היחיד.",
+    "המהירות בערך זהה. הסיבה היא נכונות עבור ערכים גדולים.",
+    "שניהם מעגלים כלפי מטה באותה צורה, אז אף אחד לא מדלג על איברים. רק lo + hi יכול לצאת מטווח ה-int."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-search-on-answer",
+  "topic": "algorithms",
+  "subtopic": "binary-search",
+  "concepts": [
+   "search-on-answer",
+   "monotonic-predicate",
+   "complexity"
+  ],
+  "level": "hard",
+  "q": "Packages (n of them, total weight S) must ship in order within D days. You binary search the ship capacity, testing each guess with one O(n) pass. Why is that valid, and what does it cost?",
+  "options": [
+   "The weights are sorted, so it costs O(log n)",
+   "If capacity c works, any larger c works too; O(n log n)",
+   "If capacity c works, any larger c works too; O(n log S)",
+   "It is not valid: binary search needs a sorted array in memory"
+  ],
+  "answer": 2,
+  "why": "Feasibility is monotonic: small capacities fail, and once one succeeds, all larger ones do. So you can binary search for the smallest that succeeds, about log S guesses, each checked by one O(n) pass: O(n log S) in total.",
+  "wrong": [
+   "The weights need not be sorted. The search is over capacities, and each guess costs an O(n) check.",
+   "The log comes from the range of capacities, up to S, not from the number of packages.",
+   null,
+   "Any yes or no test that flips once over a range can be binary searched. No array is needed."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חבילות (n חבילות, משקל כולל S) צריכות להישלח לפי הסדר תוך D ימים. עושים binary search על קיבולת המשלוח, ובודקים כל ניחוש במעבר O(n) אחד. למה זה תקף, וכמה זה עולה?",
+   "options": [
+    "המשקלים ממוינים, אז זה עולה O(log n)",
+    "אם קיבולת c עובדת, כל c גדול יותר עובד גם; O(n log n)",
+    "אם קיבולת c עובדת, כל c גדול יותר עובד גם; O(n log S)",
+    "זה לא תקף: binary search דורש array ממוין בזיכרון"
+   ],
+   "why": "ההיתכנות מונוטונית: קיבולות קטנות נכשלות, וברגע שאחת מצליחה, כל הגדולות ממנה מצליחות. לכן אפשר לעשות binary search על הקטנה ביותר שמצליחה, בערך log S ניחושים, כל אחד נבדק במעבר O(n) אחד: O(n log S) בסך הכול.",
+   "wrong": [
+    "המשקלים לא חייבים להיות ממוינים. החיפוש הוא על קיבולות, וכל ניחוש עולה בדיקה של O(n).",
+    "ה-log מגיע מטווח הקיבולות, עד S, לא ממספר החבילות.",
+    null,
+    "על כל בדיקת כן או לא שמתהפכת פעם אחת לאורך טווח אפשר לעשות binary search. לא צריך array."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-linked-list-no-binary-search",
+  "topic": "algorithms",
+  "subtopic": "binary-search",
+  "concepts": [
+   "random-access",
+   "linked-list",
+   "complexity"
+  ],
+  "level": "medium",
+  "q": "A sorted singly linked list has n nodes. Why does binary search not give O(log n) here?",
+  "options": [
+   "It does give O(log n), since the data is sorted",
+   "Binary search needs unique values, and the list may hold duplicates",
+   "Reaching the middle node takes O(n) steps, so it costs O(n) overall",
+   "It is O(n log n): log n steps, each walking n nodes from the head"
+  ],
+  "answer": 2,
+  "why": "Binary search assumes jumping to the middle is O(1), as with an array index. On a linked list you must walk node by node: n/2, then n/4, and so on, about n steps in total. A plain linear scan is just as fast and simpler.",
+  "wrong": [
+   "Sorted is not enough. Binary search also needs O(1) access to the middle, which a linked list lacks.",
+   "Arrays can hold duplicates too, and binary search copes. The problem is reaching the middle.",
+   null,
+   "Each step walks only through the remaining half: n/2 + n/4 + ... is about n, so the total is O(n)."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-singly linked list ממוינת יש n nodes. למה binary search לא נותן כאן O(log n)?",
+   "options": [
+    "הוא כן נותן O(log n), כי המידע ממוין",
+    "binary search דורש ערכים ייחודיים, וה-list עשויה להכיל כפילויות",
+    "ההגעה ל-node האמצעי לוקחת O(n) צעדים, אז בסך הכול זה עולה O(n)",
+    "זה O(n log n): log n צעדים, כל אחד עובר n nodes מההתחלה"
+   ],
+   "why": "binary search מניח שקפיצה לאמצע היא O(1), כמו עם index ב-array. ב-linked list צריך ללכת node אחרי node: n/2, ואז n/4, וכן הלאה, בערך n צעדים בסך הכול. סריקה ליניארית פשוטה מהירה באותה מידה ופשוטה יותר.",
+   "wrong": [
+    "ממוין זה לא מספיק. binary search צריך גם גישה ב-O(1) לאמצע, ול-linked list אין את זה.",
+    "גם arrays יכולים להכיל כפילויות, ו-binary search מתמודד עם זה. הבעיה היא ההגעה לאמצע.",
+    null,
+    "כל צעד עובר רק דרך החצי שנשאר: n/2 + n/4 + ... זה בערך n, אז הסך הכול הוא O(n)."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-how-many-steps",
+  "topic": "algorithms",
+  "subtopic": "binary-search",
+  "concepts": [
+   "log-n",
+   "halving"
+  ],
+  "level": "easy",
+  "q": "A sorted array holds 1,000,000 numbers. At most about how many comparisons does binary search need to find a value or report that it is missing?",
+  "options": [
+   "About 20",
+   "About 1,000",
+   "About 500,000",
+   "About 1,000,000"
+  ],
+  "answer": 0,
+  "why": "Each comparison halves the remaining range. 2^20 is 1,048,576, so after about 20 halvings one candidate is left. Doubling the array adds just one more comparison.",
+  "wrong": [
+   null,
+   "That is the square root of a million. Binary search halves the range, so the count is log2 of n.",
+   "That is the average for linear search. Binary search discards half the range on every step.",
+   "That is the worst case of linear search, which checks every element."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "array ממוין מכיל 1,000,000 מספרים. לכל היותר, בערך כמה השוואות binary search צריך כדי למצוא ערך או לדווח שהוא חסר?",
+   "options": [
+    "בערך 20",
+    "בערך 1,000",
+    "בערך 500,000",
+    "בערך 1,000,000"
+   ],
+   "why": "כל השוואה חוצה את הטווח שנשאר. 2^20 הוא 1,048,576, אז אחרי בערך 20 חציות נשאר מועמד אחד. הכפלת ה-array מוסיפה רק השוואה אחת.",
+   "wrong": [
+    null,
+    "זה השורש הריבועי של מיליון. binary search חוצה את הטווח, אז המספר הוא log2 של n.",
+    "זה הממוצע של linear search. binary search זורק חצי מהטווח בכל צעד.",
+    "זה המקרה הגרוע של linear search, שבודק כל איבר."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-first-occurrence",
+  "topic": "algorithms",
+  "subtopic": "binary-search",
+  "concepts": [
+   "duplicates",
+   "invariant",
+   "lower-bound-search",
+   "python"
+  ],
+  "level": "medium",
+  "q": "find_first should return the index of the first 2. What does it print?",
+  "code": "def find_first(a, target):\n    lo, hi = 0, len(a) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if a[mid] == target:\n            return mid\n        if a[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1\nprint(find_first([2, 2, 2, 2, 5], 2))",
+  "lang": "python",
+  "options": [
+   "0",
+   "3",
+   "-1",
+   "2"
+  ],
+  "answer": 3,
+  "why": "The first mid is 2, and a[2] == 2, so it returns 2 at once. To find the first occurrence, record mid as a candidate and keep searching left with hi = mid - 1 until the range is empty.",
+  "wrong": [
+   "0 is the right answer, but the code returns as soon as it hits any 2, and the first one it hits is in the middle.",
+   "The first mid is (0 + 4) // 2 = 2, and a[2] already matches.",
+   "The value is present, and the very first mid lands on it.",
+   null
+  ],
+  "ref": "https://docs.python.org/3/library/bisect.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "find_first אמורה להחזיר את ה-index של ה-2 הראשון. מה היא תדפיס?",
+   "options": [
+    "0",
+    "3",
+    "-1",
+    "2"
+   ],
+   "why": "ה-mid הראשון הוא 2, ו-a[2] == 2, אז היא מחזירה 2 מיד. כדי למצוא את המופע הראשון, שומרים את mid כמועמד וממשיכים לחפש שמאלה עם hi = mid - 1 עד שהטווח ריק.",
+   "wrong": [
+    "0 היא התשובה הנכונה, אבל הקוד חוזר ברגע שהוא פוגש 2 כלשהו, והראשון שהוא פוגש נמצא באמצע.",
+    "ה-mid הראשון הוא (0 + 4) // 2 = 2, ו-a[2] כבר תואם.",
+    "הערך קיים, וה-mid הראשון כבר נוחת עליו.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-bfs-fewest-moves",
+  "topic": "algorithms",
+  "subtopic": "bfs-dfs",
+  "concepts": [
+   "bfs",
+   "shortest-path",
+   "unweighted-graph",
+   "grid"
+  ],
+  "level": "easy",
+  "q": "In a grid maze, each move goes to a neighbouring open cell. You need the fewest moves from the start to the exit. Which search fits?",
+  "options": [
+   "DFS, because it heads deep toward the exit quickly",
+   "BFS, because it reaches cells in order of distance",
+   "Either one: both always find the shortest path",
+   "Neither: shortest paths always need Dijkstra's algorithm"
+  ],
+  "answer": 1,
+  "why": "BFS explores all cells 1 move away, then 2, then 3, using a queue. The first time it reaches the exit, no shorter route exists. This holds whenever every edge has the same cost.",
+  "wrong": [
+   "DFS finds a path, but the first path it finds can be long and winding. It does not explore by distance.",
+   null,
+   "Only BFS guarantees it on an unweighted graph. DFS may return a much longer path first.",
+   "Dijkstra's algorithm is for weighted edges. When every move costs 1, plain BFS finds the shortest path and is simpler."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/graph/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "במבוך על גבי grid, כל צעד עובר לתא פתוח שכן. צריך את המספר הקטן ביותר של צעדים מההתחלה ליציאה. איזה חיפוש מתאים?",
+   "options": [
+    "DFS, כי הוא צולל עמוק לכיוון היציאה מהר",
+    "BFS, כי הוא מגיע לתאים לפי סדר המרחק",
+    "כל אחד מהם: שניהם תמיד מוצאים את המסלול הקצר ביותר",
+    "אף אחד: מסלולים קצרים ביותר תמיד דורשים את האלגוריתם של Dijkstra"
+   ],
+   "why": "BFS סורק את כל התאים במרחק צעד אחד, אחר כך 2, אחר כך 3, בעזרת queue. בפעם הראשונה שהוא מגיע ליציאה, אין מסלול קצר יותר. זה נכון בכל פעם שלכל ה-edges יש אותה עלות.",
+   "wrong": [
+    "DFS מוצא מסלול, אבל המסלול הראשון שהוא מוצא יכול להיות ארוך ומפותל. הוא לא סורק לפי מרחק.",
+    null,
+    "רק BFS מבטיח את זה ב-graph לא ממושקל. DFS עלול להחזיר קודם מסלול ארוך בהרבה.",
+    "האלגוריתם של Dijkstra מיועד ל-edges ממושקלים. כשכל צעד עולה 1, BFS רגיל מוצא את המסלול הקצר ביותר והוא פשוט יותר."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-bfs-weighted-edges",
+  "topic": "algorithms",
+  "subtopic": "bfs-dfs",
+  "concepts": [
+   "bfs",
+   "weighted-graph",
+   "shortest-path"
+  ],
+  "level": "medium",
+  "q": "On a road map, roads take different times to drive. Will BFS from your town find the fastest route to another town?",
+  "options": [
+   "No: BFS minimizes the number of roads, not the total time",
+   "Yes: BFS always finds shortest paths",
+   "Yes, if each town's roads are added fastest first",
+   "No: no algorithm can find shortest paths when edges have weights"
+  ],
+  "answer": 0,
+  "why": "BFS treats every edge as length 1, so it finds the route with the fewest roads. With different travel times you need an algorithm that compares total cost, such as Dijkstra's with a priority queue.",
+  "wrong": [
+   null,
+   "Only when every edge costs the same. Two slow roads can take longer than three fast ones.",
+   "BFS still finishes level by level, so it never compares total times; a route with more but faster roads still loses.",
+   "Dijkstra's algorithm does exactly that for non-negative weights."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "במפת כבישים, לכל כביש לוקח זמן נסיעה שונה. האם BFS מעיר המוצא ימצא את המסלול המהיר ביותר לעיר אחרת?",
+   "options": [
+    "לא: BFS ממזער את מספר הכבישים, לא את הזמן הכולל",
+    "כן: BFS תמיד מוצא מסלולים קצרים ביותר",
+    "כן, אם הכבישים של כל עיר מתווספים מהמהיר ביותר",
+    "לא: שום אלגוריתם לא יכול למצוא מסלולים קצרים ביותר כשיש ל-edges משקלים"
+   ],
+   "why": "BFS מתייחס לכל edge כאילו האורך שלו 1, אז הוא מוצא את המסלול עם הכי מעט כבישים. עם זמני נסיעה שונים צריך אלגוריתם שמשווה עלות כוללת, כמו Dijkstra עם priority queue.",
+   "wrong": [
+    null,
+    "רק כשכל ה-edges עולים אותו דבר. שני כבישים איטיים יכולים לקחת יותר זמן משלושה מהירים.",
+    "BFS עדיין מתקדם רמה אחרי רמה, אז הוא אף פעם לא משווה זמנים כוללים: מסלול עם יותר כבישים אבל מהירים יותר עדיין מפסיד.",
+    "האלגוריתם של Dijkstra עושה בדיוק את זה עבור משקלים אי-שליליים."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-dfs-without-visited",
+  "topic": "algorithms",
+  "subtopic": "bfs-dfs",
+  "concepts": [
+   "dfs",
+   "visited-set",
+   "cycles",
+   "python"
+  ],
+  "level": "easy",
+  "q": "This DFS has no visited set. What happens when it runs?",
+  "code": "graph = {\"A\": [\"B\"], \"B\": [\"C\"], \"C\": [\"A\"]}\n\ndef dfs(node):\n    print(node, end=\" \")\n    for nxt in graph[node]:\n        dfs(nxt)\n\ndfs(\"A\")",
+  "lang": "python",
+  "options": [
+   "It prints A B C and stops",
+   "It prints A B C A and stops",
+   "It prints A B C over and over until a RecursionError",
+   "Nothing: Python detects the cycle and raises an error at once"
+  ],
+  "answer": 2,
+  "why": "The graph has the cycle A, B, C, A, and dfs keeps no visited set, so it walks the loop again and again, one stack frame per step, until Python's recursion limit stops it. A visited set, checked before each call, fixes it.",
+  "wrong": [
+   "C links back to A, and nothing records that A was seen, so the search continues.",
+   "Nothing stops the walk when A appears again; it repeats B and C, and so on.",
+   null,
+   "Python does not look for cycles. It runs until the call depth hits the recursion limit."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-DFS הזה אין visited set. מה יקרה כשהוא ירוץ?",
+   "options": [
+    "הוא מדפיס A B C ועוצר",
+    "הוא מדפיס A B C A ועוצר",
+    "הוא מדפיס A B C שוב ושוב עד RecursionError",
+    "כלום: Python מזהה את המעגל וזורקת שגיאה מיד"
+   ],
+   "why": "ב-graph יש את המעגל A, B, C, A, ו-dfs לא מחזיק visited set, אז הוא עובר על הלולאה שוב ושוב, stack frame אחד לכל צעד, עד שמגבלת הרקורסיה של Python עוצרת אותו. visited set שנבדק לפני כל קריאה מתקן את זה.",
+   "wrong": [
+    "C מקושר חזרה ל-A, ושום דבר לא רושם ש-A כבר נראה, אז החיפוש ממשיך.",
+    "שום דבר לא עוצר את המעבר כש-A מופיע שוב: הוא חוזר על B ו-C, וכן הלאה.",
+    null,
+    "Python לא מחפשת מעגלים. היא רצה עד שעומק הקריאות מגיע למגבלת הרקורסיה."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-mark-visited-on-enqueue",
+  "topic": "algorithms",
+  "subtopic": "bfs-dfs",
+  "concepts": [
+   "bfs",
+   "visited-set",
+   "queue"
+  ],
+  "level": "medium",
+  "q": "A BFS marks a node visited, and records its distance, only when the node is taken out of the queue; nodes already visited are skipped. What is the effect?",
+  "options": [
+   "The distances it reports come out wrong for some nodes",
+   "Same distances, but a node can be queued many times",
+   "It loops forever on any graph that contains a cycle",
+   "No effect at all on time or memory"
+  ],
+  "answer": 1,
+  "why": "Marking on enqueue puts each node in the queue once. Marking on dequeue still handles each node once at its correct distance, but in dense graphs the same node can be enqueued by many neighbours first, which wastes memory and time.",
+  "wrong": [
+   "The first time a node leaves the queue is still at its shortest distance, since the queue is in distance order.",
+   null,
+   "Visited nodes are skipped when they leave the queue, so cycles are cut. It only does extra work first.",
+   "Many neighbours can add the same unvisited node before it leaves the queue, so the queue can fill with duplicates."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "BFS מסמן node כ-visited, ורושם את המרחק שלו, רק כשה-node יוצא מה-queue; nodes שכבר visited מדולגים. מה ההשפעה?",
+   "options": [
+    "המרחקים שהוא מדווח יוצאים שגויים עבור חלק מה-nodes",
+    "אותם מרחקים, אבל node יכול להיכנס ל-queue פעמים רבות",
+    "הוא נכנס ללולאה אינסופית על כל graph שיש בו מעגל",
+    "אין שום השפעה על זמן או זיכרון"
+   ],
+   "why": "סימון בזמן ההכנסה מכניס כל node ל-queue פעם אחת. סימון בזמן ההוצאה עדיין מטפל בכל node פעם אחת במרחק הנכון שלו, אבל ב-graphs צפופים אותו node יכול להיכנס קודם ל-queue דרך הרבה שכנים, וזה מבזבז זיכרון וזמן.",
+   "wrong": [
+    "בפעם הראשונה ש-node יוצא מה-queue הוא עדיין במרחק הקצר ביותר שלו, כי ה-queue מסודר לפי מרחק.",
+    null,
+    "nodes שכבר visited מדולגים כשהם יוצאים מה-queue, אז מעגלים נקטעים. הוא רק עושה קודם עבודה מיותרת.",
+    "הרבה שכנים יכולים להוסיף את אותו node שעוד לא visited לפני שהוא יוצא מה-queue, אז ה-queue יכול להתמלא בכפילויות."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-bfs-vs-dfs-memory",
+  "topic": "algorithms",
+  "subtopic": "bfs-dfs",
+  "concepts": [
+   "bfs",
+   "dfs",
+   "memory",
+   "frontier"
+  ],
+  "level": "medium",
+  "q": "A tree is very wide but shallow: every node has 1,000 children and the depth is 3. Which search uses far less memory to visit every node?",
+  "options": [
+   "BFS: it never revisits nodes",
+   "Both use the same memory, since both visit every node",
+   "BFS: a queue takes less memory than a stack",
+   "DFS: it holds about one path, not a whole level"
+  ],
+  "answer": 3,
+  "why": "BFS keeps the whole next level in its queue, and the last level here has 1000^3 nodes. DFS goes down one branch at a time, holding a path of depth 3 plus the siblings still to visit, a few thousand items. For deep, narrow graphs the picture flips.",
+  "wrong": [
+   "Neither revisits nodes in a tree. BFS must hold a whole level, up to a billion nodes here.",
+   "They visit the same nodes in similar time, but what they keep in memory at once differs widely.",
+   "Queues and stacks cost about the same per item. What differs is how many items each holds at once.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "עץ רחב מאוד אבל רדוד: לכל node יש 1,000 ילדים והעומק הוא 3. איזה חיפוש צורך הרבה פחות זיכרון כדי לבקר בכל node?",
+   "options": [
+    "BFS: הוא אף פעם לא מבקר שוב ב-nodes",
+    "שניהם צורכים אותו זיכרון, כי שניהם מבקרים בכל node",
+    "BFS: queue תופס פחות זיכרון מ-stack",
+    "DFS: הוא מחזיק בערך מסלול אחד, לא רמה שלמה"
+   ],
+   "why": "BFS מחזיק את כל הרמה הבאה ב-queue שלו, והרמה האחרונה כאן מכילה 1000^3 nodes. DFS יורד ענף אחד בכל פעם, ומחזיק מסלול בעומק 3 ועוד האחים שעוד צריך לבקר בהם, כמה אלפי פריטים. ב-graphs עמוקים וצרים התמונה מתהפכת.",
+   "wrong": [
+    "אף אחד מהם לא מבקר שוב ב-nodes בעץ. BFS חייב להחזיק רמה שלמה, עד מיליארד nodes כאן.",
+    "הם מבקרים באותם nodes בזמן דומה, אבל מה שהם מחזיקים בזיכרון בו זמנית שונה מאוד.",
+    "queues ו-stacks עולים בערך אותו דבר לכל פריט. מה ששונה הוא כמה פריטים כל אחד מחזיק בו זמנית.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-dfs-path-not-shortest",
+  "topic": "algorithms",
+  "subtopic": "bfs-dfs",
+  "concepts": [
+   "dfs",
+   "shortest-path",
+   "upper-bound"
+  ],
+  "level": "easy",
+  "q": "On an unweighted graph, your DFS found a path from A to B with 7 edges. What can you conclude about the shortest path?",
+  "options": [
+   "It has exactly 7 edges, since DFS finds the shortest path",
+   "It has at least 7 edges",
+   "Nothing at all: the path DFS found might not be a real path",
+   "It has at most 7 edges, but it may be shorter"
+  ],
+  "answer": 3,
+  "why": "Any path found gives an upper bound: the shortest is no longer than 7. DFS does not explore by distance, so a shorter path may exist. Use BFS when you need the fewest edges.",
+  "wrong": [
+   "DFS returns the first path it reaches by going deep; a shorter one may sit in a branch it tried later.",
+   "A found path is an upper bound, not a lower bound. Shorter routes can exist.",
+   "DFS only follows real edges, so the path is valid. It is just not necessarily the shortest.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-graph לא ממושקל, DFS מצא מסלול מ-A ל-B עם 7 edges. מה אפשר להסיק על המסלול הקצר ביותר?",
+   "options": [
+    "יש בו בדיוק 7 edges, כי DFS מוצא את המסלול הקצר ביותר",
+    "יש בו לפחות 7 edges",
+    "שום דבר: ייתכן שהמסלול ש-DFS מצא הוא לא מסלול אמיתי",
+    "יש בו לכל היותר 7 edges, אבל הוא עשוי להיות קצר יותר"
+   ],
+   "why": "כל מסלול שנמצא נותן חסם עליון: הקצר ביותר לא ארוך מ-7. DFS לא סורק לפי מרחק, אז ייתכן שקיים מסלול קצר יותר. כשצריך הכי מעט edges, משתמשים ב-BFS.",
+   "wrong": [
+    "DFS מחזיר את המסלול הראשון שהוא מגיע אליו בצלילה לעומק. מסלול קצר יותר עשוי להיות בענף שהוא ניסה מאוחר יותר.",
+    "מסלול שנמצא הוא חסם עליון, לא חסם תחתון. ייתכנו מסלולים קצרים יותר.",
+    "DFS הולך רק לאורך edges אמיתיים, אז המסלול תקין. הוא פשוט לא בהכרח הקצר ביותר.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-bfs-time-complexity",
+  "topic": "algorithms",
+  "subtopic": "bfs-dfs",
+  "concepts": [
+   "bfs",
+   "adjacency-list",
+   "complexity"
+  ],
+  "level": "easy",
+  "q": "BFS runs on a graph with V vertices and E edges, stored as adjacency lists, with a visited set. What is its time complexity?",
+  "options": [
+   "O(V * E)",
+   "O(V + E)",
+   "O(V^2)",
+   "O(E log V)"
+  ],
+  "answer": 1,
+  "why": "Each vertex enters the queue once thanks to the visited set, and each adjacency list is read once when its vertex is dequeued. Together the lists hold E entries (2E if undirected), so the total is O(V + E).",
+  "wrong": [
+   "Edges are not rescanned for every vertex. Each vertex's list is read once, when that vertex leaves the queue.",
+   null,
+   "That is the cost with an adjacency matrix, where each row has V entries. Lists hold only the real edges.",
+   "The log factor comes from a priority queue, as in Dijkstra's algorithm. BFS uses a plain queue with O(1) operations."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/graph/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "BFS רץ על graph עם V nodes ו-E edges, שמור כ-adjacency lists, עם visited set. מה סיבוכיות הזמן שלו?",
+   "options": [
+    "O(V * E)",
+    "O(V + E)",
+    "O(V^2)",
+    "O(E log V)"
+   ],
+   "why": "כל node נכנס ל-queue פעם אחת הודות ל-visited set, וכל adjacency list נקראת פעם אחת כשה-node שלה יוצא מה-queue. יחד ה-lists מכילות E רשומות (2E ב-graph לא מכוון), אז הסך הכול הוא O(V + E).",
+   "wrong": [
+    "ה-edges לא נסרקים מחדש לכל node. ה-list של כל node נקראת פעם אחת, כשה-node יוצא מה-queue.",
+    null,
+    "זו העלות עם adjacency matrix, שבה לכל שורה יש V רשומות. lists מחזיקות רק את ה-edges האמיתיים.",
+    "פקטור ה-log מגיע מ-priority queue, כמו באלגוריתם של Dijkstra. BFS משתמש ב-queue רגיל עם פעולות של O(1)."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-multi-source-bfs",
+  "topic": "algorithms",
+  "subtopic": "bfs-dfs",
+  "concepts": [
+   "bfs",
+   "multi-source",
+   "grid",
+   "complexity"
+  ],
+  "level": "hard",
+  "q": "In an R x C grid with walls and k hospitals, you need every open cell's distance to its nearest hospital. What is the best plan?",
+  "options": [
+   "One BFS from each hospital, keeping the minimum: O(R * C)",
+   "DFS from each cell until it reaches a hospital, then keep the result",
+   "One BFS that starts with all k hospitals in the queue: O(R * C)",
+   "Sort the hospitals by position, then binary search per cell"
+  ],
+  "answer": 2,
+  "why": "Putting every hospital in the queue at distance 0 makes BFS grow from all of them at once, level by level. Each cell is first reached from its nearest hospital and is visited once, so the whole grid costs O(R * C) whatever k is.",
+  "wrong": [
+   "That is k separate searches, O(k * R * C) in total, which is slow when k is large.",
+   "DFS does not find shortest paths, and starting one from every cell repeats work heavily.",
+   null,
+   "With walls, distance is not ordered by position, so there is nothing to binary search."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-grid בגודל R x C עם קירות ו-k בתי חולים, צריך את המרחק של כל תא פתוח לבית החולים הקרוב אליו. מה התוכנית הטובה ביותר?",
+   "options": [
+    "BFS אחד מכל בית חולים, ושמירת המינימום: O(R * C)",
+    "DFS מכל תא עד שהוא מגיע לבית חולים, ואז שמירת התוצאה",
+    "BFS אחד שמתחיל עם כל k בתי החולים ב-queue: O(R * C)",
+    "למיין את בתי החולים לפי מיקום, ואז binary search לכל תא"
+   ],
+   "why": "הכנסת כל בתי החולים ל-queue במרחק 0 גורמת ל-BFS להתפשט מכולם בבת אחת, רמה אחרי רמה. כל תא מושג לראשונה מבית החולים הקרוב אליו ומבוקר פעם אחת, אז כל ה-grid עולה O(R * C) ולא משנה מה k.",
+   "wrong": [
+    "אלה k חיפושים נפרדים, O(k * R * C) בסך הכול, וזה איטי כש-k גדול.",
+    "DFS לא מוצא מסלולים קצרים ביותר, והפעלה של DFS מכל תא חוזרת על אותה עבודה שוב ושוב.",
+    null,
+    "עם קירות, המרחק לא מסודר לפי מיקום, אז אין על מה לעשות binary search."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-overlap-makes-memo-useful",
+  "topic": "algorithms",
+  "subtopic": "greedy-dp",
+  "concepts": [
+   "overlapping-subproblems",
+   "memoization",
+   "divide-and-conquer"
+  ],
+  "level": "easy",
+  "q": "Memoization turns naive recursive Fibonacci from exponential into linear time. Why does adding a cache to merge sort give no such gain?",
+  "options": [
+   "Its halves never overlap, so no result is reused",
+   "Merge sort is already O(n), so a cache has nothing to save",
+   "Caches only work for numbers, not for arrays",
+   "Merge sort is not recursive, so it has no subproblems"
+  ],
+  "answer": 0,
+  "why": "Memoization pays off only when the same subproblem comes up again and again, as fib(n - 2) does in Fibonacci. Merge sort splits into disjoint halves, so each subarray is sorted exactly once: divide and conquer without overlap.",
+  "wrong": [
+   null,
+   "Merge sort is O(n log n). The cache fails because no subarray is ever sorted twice.",
+   "Any repeated input can be cached. The point is that merge sort never repeats one.",
+   "Merge sort is a classic recursive algorithm. Its subproblems exist; they just never repeat."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/dynamic-programming/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "memoization הופך Fibonacci רקורסיבי נאיבי מזמן אקספוננציאלי לזמן ליניארי. למה הוספת cache ל-merge sort לא נותנת רווח כזה?",
+   "options": [
+    "החצאים שלו אף פעם לא חופפים, אז שום תוצאה לא נעשית בה שימוש חוזר",
+    "merge sort כבר O(n), אז ל-cache אין מה לחסוך",
+    "caches עובדים רק למספרים, לא ל-arrays",
+    "merge sort לא רקורסיבי, אז אין לו תת-בעיות"
+   ],
+   "why": "memoization משתלם רק כשאותה תת-בעיה עולה שוב ושוב, כמו fib(n - 2) ב-Fibonacci. merge sort מתפצל לחצאים זרים, אז כל subarray ממוין בדיוק פעם אחת: divide and conquer בלי חפיפה.",
+   "wrong": [
+    null,
+    "merge sort הוא O(n log n). ה-cache לא עוזר כי אף subarray לא ממוין פעמיים.",
+    "אפשר לשמור ב-cache כל קלט שחוזר. העניין הוא ש-merge sort אף פעם לא חוזר על קלט.",
+    "merge sort הוא אלגוריתם רקורסיבי קלאסי. התת-בעיות שלו קיימות, הן פשוט אף פעם לא חוזרות."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-memoized-fib-linear",
+  "topic": "algorithms",
+  "subtopic": "greedy-dp",
+  "concepts": [
+   "memoization",
+   "complexity",
+   "python"
+  ],
+  "level": "easy",
+  "q": "fib now saves each result in memo before returning it. How does its running time grow with n?",
+  "code": "calls = 0\nmemo = {}\ndef fib(n):\n    global calls\n    calls += 1\n    if n < 2:\n        return n\n    if n not in memo:\n        memo[n] = fib(n - 1) + fib(n - 2)\n    return memo[n]\nprint(fib(30), calls)",
+  "lang": "python",
+  "options": [
+   "Still exponentially, since it is still recursive",
+   "Linearly, O(n): each value is computed once",
+   "Logarithmically, O(log n)",
+   "Constant, O(1), since results come from the dictionary"
+  ],
+  "answer": 1,
+  "why": "Each fib(k) is computed once and stored, and every later request is a dictionary lookup. That is about 2n calls in total, so the time is O(n): it prints 832040 59 for n = 30, and n = 100 makes 199 calls.",
+  "wrong": [
+   "Recursion is not the cost. The cost was recomputing values, and with the memo each fib(k) is computed once.",
+   null,
+   "Every value from n down to 0 is computed once, so the work is about n steps, not log n.",
+   "Only repeat calls hit the dictionary. The first call still has to compute all n values."
+  ],
+  "ref": "https://docs.python.org/3/library/functools.html#functools.cache",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "fib שומרת עכשיו כל תוצאה ב-memo לפני שהיא מחזירה אותה. איך זמן הריצה שלה גדל עם n?",
+   "options": [
+    "עדיין אקספוננציאלית, כי היא עדיין רקורסיבית",
+    "ליניארית, O(n): כל ערך מחושב פעם אחת",
+    "לוגריתמית, O(log n)",
+    "קבוע, O(1), כי התוצאות מגיעות מה-dictionary"
+   ],
+   "why": "כל fib(k) מחושב פעם אחת ונשמר, וכל בקשה מאוחרת יותר היא lookup ב-dictionary. זה בערך 2n קריאות בסך הכול, אז הזמן הוא O(n): עבור n = 30 היא מדפיסה 832040 59, ו-n = 100 מבצע 199 קריאות.",
+   "wrong": [
+    "הרקורסיה היא לא העלות. העלות הייתה חישוב חוזר של ערכים, ועם ה-memo כל fib(k) מחושב פעם אחת.",
+    null,
+    "כל ערך מ-n ועד 0 מחושב פעם אחת, אז העבודה היא בערך n צעדים, לא log n.",
+    "רק קריאות חוזרות מגיעות ל-dictionary. הקריאה הראשונה עדיין צריכה לחשב את כל n הערכים."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-memo-vs-tabulation",
+  "topic": "algorithms",
+  "subtopic": "greedy-dp",
+  "concepts": [
+   "memoization",
+   "tabulation",
+   "stack-depth"
+  ],
+  "level": "medium",
+  "q": "A memoized recursive DP is correct, but for n = 100,000 it crashes in Python with RecursionError. What is the usual fix?",
+  "options": [
+   "Use a larger cache so that more results are kept in memory",
+   "Remove the cache, so that each call keeps a smaller stack frame",
+   "Use a dict instead of a list for the cache",
+   "Rewrite it bottom-up with a loop that fills a table"
+  ],
+  "answer": 3,
+  "why": "Tabulation computes states in dependency order with a loop, so there is no call stack to overflow. Memoization is often easier to write, but its depth can reach the number of states. Raising the recursion limit is a fragile workaround.",
+  "wrong": [
+   "The cache is not the problem; the call depth is. A larger cache leaves the recursion just as deep.",
+   "Without the cache it becomes exponential, and the depth is still about n.",
+   "The type of container does not change the recursion depth.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "DP רקורסיבי עם memoization הוא נכון, אבל עבור n = 100,000 הוא קורס ב-Python עם RecursionError. מה התיקון המקובל?",
+   "options": [
+    "להשתמש ב-cache גדול יותר כדי שיותר תוצאות יישמרו בזיכרון",
+    "להסיר את ה-cache, כדי שכל קריאה תחזיק stack frame קטן יותר",
+    "להשתמש ב-dict במקום list בשביל ה-cache",
+    "לכתוב אותו מחדש bottom-up עם לולאה שממלאת טבלה"
+   ],
+   "why": "tabulation מחשב states לפי סדר התלות בעזרת לולאה, אז אין call stack שיכול לעשות overflow. memoization לרוב קל יותר לכתיבה, אבל העומק שלו יכול להגיע למספר ה-states. העלאת מגבלת הרקורסיה היא פתרון עוקף שביר.",
+   "wrong": [
+    "ה-cache הוא לא הבעיה, עומק הקריאות הוא הבעיה. cache גדול יותר משאיר את הרקורסיה עמוקה באותה מידה.",
+    "בלי ה-cache זה הופך לאקספוננציאלי, והעומק עדיין בערך n.",
+    "סוג המבנה לא משנה את עומק הרקורסיה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-greedy-coin-change-fails",
+  "topic": "algorithms",
+  "subtopic": "greedy-dp",
+  "concepts": [
+   "greedy",
+   "counterexample",
+   "coin-change"
+  ],
+  "level": "easy",
+  "q": "Coins are worth 1, 3 and 4. To make 6, a greedy method always takes the largest coin that fits. What does it return, and is it optimal?",
+  "options": [
+   "4 + 1 + 1, three coins; 3 + 3 needs two",
+   "3 + 3, two coins, which is optimal",
+   "4 + 1 + 1, three coins, and that is optimal",
+   "It fails to make 6 at all"
+  ],
+  "answer": 0,
+  "why": "Taking the largest coin first looks best locally but leaves 2, which needs two 1s. Greedy only works for some coin systems, such as 1, 5, 10, 25. In general, coin change needs DP over the amounts.",
+  "wrong": [
+   null,
+   "Greedy takes 4 first, since it is the largest coin that fits, and then needs 1 + 1.",
+   "3 + 3 makes 6 with two coins, so greedy's answer is not the best.",
+   "There is a 1 coin, so greedy can always finish; it just uses too many coins."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "יש מטבעות של 1, 3 ו-4. כדי להרכיב 6, שיטה greedy תמיד לוקחת את המטבע הגדול ביותר שנכנס. מה היא מחזירה, והאם זה אופטימלי?",
+   "options": [
+    "4 + 1 + 1, שלושה מטבעות; 3 + 3 צריך שניים",
+    "3 + 3, שני מטבעות, וזה אופטימלי",
+    "4 + 1 + 1, שלושה מטבעות, וזה אופטימלי",
+    "היא לא מצליחה להרכיב 6 בכלל"
+   ],
+   "why": "לקיחת המטבע הגדול ביותר קודם נראית הכי טובה מקומית, אבל משאירה 2, שדורש שני מטבעות של 1. greedy עובד רק בחלק ממערכות המטבעות, למשל 1, 5, 10, 25. באופן כללי, בעיית העודף דורשת DP על הסכומים.",
+   "wrong": [
+    null,
+    "greedy לוקח קודם 4, כי זה המטבע הגדול ביותר שנכנס, ואז צריך 1 + 1.",
+    "3 + 3 מרכיב 6 עם שני מטבעות, אז התשובה של greedy היא לא הטובה ביותר.",
+    "יש מטבע של 1, אז greedy תמיד יכול לסיים. הוא פשוט משתמש ביותר מדי מטבעות."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-interval-scheduling-greedy",
+  "topic": "algorithms",
+  "subtopic": "greedy-dp",
+  "concepts": [
+   "greedy",
+   "interval-scheduling",
+   "exchange-argument"
+  ],
+  "level": "medium",
+  "q": "You want to fit as many non-overlapping meetings as possible into one room. Which greedy rule gives an optimal answer?",
+  "options": [
+   "Pick the meeting that starts earliest, then repeat",
+   "Pick the shortest meeting, then repeat",
+   "Pick the meeting that ends earliest, then repeat",
+   "No greedy rule works; this always needs DP"
+  ],
+  "answer": 2,
+  "why": "Finishing earliest leaves the most room for the rest. Any optimal schedule can swap its first meeting for the earliest-ending one without losing a meeting, so the rule never hurts. That swap idea is the usual way to show a greedy rule is safe.",
+  "wrong": [
+   "An early meeting can run all day and block many short ones.",
+   "A short meeting can overlap two others that would both fit without it.",
+   null,
+   "Earliest end time is provably optimal here. DP is needed for variants such as meetings with different values."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "רוצים להכניס כמה שיותר פגישות שלא חופפות לחדר אחד. איזה כלל greedy נותן תשובה אופטימלית?",
+   "options": [
+    "לבחור את הפגישה שמתחילה הכי מוקדם, ולחזור על זה",
+    "לבחור את הפגישה הקצרה ביותר, ולחזור על זה",
+    "לבחור את הפגישה שמסתיימת הכי מוקדם, ולחזור על זה",
+    "שום כלל greedy לא עובד, וזה תמיד דורש DP"
+   ],
+   "why": "סיום מוקדם ככל האפשר משאיר הכי הרבה מקום לשאר. כל לוח זמנים אופטימלי יכול להחליף את הפגישה הראשונה שלו בזו שמסתיימת הכי מוקדם בלי לאבד פגישה, אז הכלל אף פעם לא מזיק. רעיון ההחלפה הזה הוא הדרך המקובלת להראות שכלל greedy בטוח.",
+   "wrong": [
+    "פגישה מוקדמת יכולה להימשך כל היום ולחסום הרבה פגישות קצרות.",
+    "פגישה קצרה יכולה לחפוף לשתי פגישות אחרות ששתיהן היו נכנסות בלעדיה.",
+    null,
+    "זמן הסיום המוקדם ביותר הוא אופטימלי באופן מוכח כאן. DP נדרש לווריאציות כמו פגישות עם ערכים שונים."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-fractional-vs-01-knapsack",
+  "topic": "algorithms",
+  "subtopic": "greedy-dp",
+  "concepts": [
+   "greedy",
+   "knapsack",
+   "when-greedy-fails"
+  ],
+  "level": "medium",
+  "q": "A thief can carry 10 kg and takes items by best value per kg first. In which version of the problem is this rule guaranteed to give the best total?",
+  "options": [
+   "Always, whether items are whole or can be split",
+   "Never: greedy is not guaranteed for any knapsack version",
+   "Only when items can be taken in fractions",
+   "Either version, as long as items are first sorted by weight"
+  ],
+  "answer": 2,
+  "why": "In the fractional knapsack, filling by best ratio is optimal, because leftover space is filled with part of the next item. In the 0/1 knapsack, items are whole, so a ratio choice can leave unusable space; that version needs DP.",
+  "wrong": [
+   "With whole items, a high-ratio item can waste space. Items of 6 kg for 30 and two of 5 kg for 20: greedy gets 30, the best is 40.",
+   "For the fractional version it is optimal: fill with the best ratio, then take part of the next item.",
+   null,
+   "Input order does not matter, since greedy picks by ratio anyway. What matters is whether items can be split."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "גנב יכול לסחוב 10 ק\"ג ולוקח פריטים לפי הערך הטוב ביותר לק\"ג קודם. באיזו גרסה של הבעיה מובטח שהכלל הזה ייתן את הסכום הטוב ביותר?",
+   "options": [
+    "תמיד, בין אם הפריטים שלמים ובין אם אפשר לחלק אותם",
+    "אף פעם: greedy לא מובטח באף גרסה של knapsack",
+    "רק כשאפשר לקחת חלקים מפריטים",
+    "בשתי הגרסאות, כל עוד הפריטים ממוינים קודם לפי משקל"
+   ],
+   "why": "ב-fractional knapsack, מילוי לפי היחס הטוב ביותר הוא אופטימלי, כי המקום שנשאר מתמלא בחלק מהפריט הבא. ב-0/1 knapsack הפריטים שלמים, אז בחירה לפי יחס יכולה להשאיר מקום שאי אפשר לנצל; הגרסה הזו דורשת DP.",
+   "wrong": [
+    "עם פריטים שלמים, פריט עם יחס גבוה יכול לבזבז מקום. פריט של 6 ק\"ג ששווה 30 ושני פריטים של 5 ק\"ג ששווים 20 כל אחד: greedy מקבל 30, והטוב ביותר הוא 40.",
+    "בגרסה ה-fractional הוא אופטימלי: ממלאים לפי היחס הטוב ביותר, ואז לוקחים חלק מהפריט הבא.",
+    null,
+    "סדר הקלט לא משנה, כי greedy בוחר לפי יחס בכל מקרה. מה שמשנה הוא אם אפשר לחלק פריטים."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-rolling-variables",
+  "topic": "algorithms",
+  "subtopic": "greedy-dp",
+  "concepts": [
+   "tabulation",
+   "space-optimization"
+  ],
+  "level": "easy",
+  "q": "A DP for climbing stairs fills ways[i] = ways[i - 1] + ways[i - 2] for i up to n. How much memory does it really need?",
+  "options": [
+   "O(1): only the last two values are ever read",
+   "O(n): a DP always needs its full table",
+   "O(n^2): one row for each step",
+   "O(log n): the table can be halved after each step"
+  ],
+  "answer": 0,
+  "why": "Each value depends only on the previous two, so two variables can roll forward: a, b = b, a + b. Time stays O(n) and extra space drops to O(1). Check which earlier states a step reads before keeping the whole table.",
+  "wrong": [
+   null,
+   "A table is needed only while older entries are still read. Here each step reads just the last two.",
+   "The table is one-dimensional: one number per step, never a grid.",
+   "Nothing is halved. The saving comes from dropping values that will never be read again."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "DP לטיפוס במדרגות ממלא ways[i] = ways[i - 1] + ways[i - 2] עבור i עד n. כמה זיכרון הוא באמת צריך?",
+   "options": [
+    "O(1): רק שני הערכים האחרונים נקראים אי פעם",
+    "O(n): DP תמיד צריך את כל הטבלה שלו",
+    "O(n^2): שורה אחת לכל צעד",
+    "O(log n): אפשר לחצות את הטבלה אחרי כל צעד"
+   ],
+   "why": "כל ערך תלוי רק בשניים הקודמים, אז שני משתנים יכולים להתגלגל קדימה: a, b = b, a + b. הזמן נשאר O(n) והזיכרון הנוסף יורד ל-O(1). לפני ששומרים את כל הטבלה, כדאי לבדוק אילו states קודמים כל צעד קורא.",
+   "wrong": [
+    null,
+    "טבלה נדרשת רק כל עוד רשומות ישנות עדיין נקראות. כאן כל צעד קורא רק את שתי האחרונות.",
+    "הטבלה חד-ממדית: מספר אחד לכל צעד, אף פעם לא grid.",
+    "שום דבר לא נחצה. החיסכון מגיע מזריקת ערכים שלא ייקראו שוב."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-states-times-work",
+  "topic": "algorithms",
+  "subtopic": "greedy-dp",
+  "concepts": [
+   "dp-complexity",
+   "memoization",
+   "state-count"
+  ],
+  "level": "hard",
+  "q": "A memoized function f(i, j) has i from 0 to n - 1 and j from 0 to m - 1. Each new state runs a loop of up to n steps. What is the total time?",
+  "options": [
+   "O(n * m): memoization makes every state cost O(1)",
+   "O(2^(n + m)), since it is still recursion",
+   "O(n^2 + m): the loop and the states add up",
+   "O(n^2 * m): n * m states, each doing O(n) work"
+  ],
+  "answer": 3,
+  "why": "DP time is the number of states times the work per state. There are n * m states, each computed once thanks to the memo, and each costs up to n steps, so O(n^2 * m). Repeated lookups after that are O(1).",
+  "wrong": [
+   "Memoization means each state is computed once, but computing it still costs its loop of n steps.",
+   "Memoization removes the repeated calls, so the work is bounded by the number of states, not exponential.",
+   "The loop runs inside every state, so its cost multiplies by the number of states.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/dynamic-programming/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-function עם memoization f(i, j) יש i מ-0 עד n - 1 ו-j מ-0 עד m - 1. כל state חדש מריץ לולאה של עד n צעדים. מה הזמן הכולל?",
+   "options": [
+    "O(n * m): memoization גורם לכל state לעלות O(1)",
+    "O(2^(n + m)), כי זו עדיין רקורסיה",
+    "O(n^2 + m): הלולאה וה-states מתחברים",
+    "O(n^2 * m): n * m states, כל אחד עושה O(n) עבודה"
+   ],
+   "why": "זמן של DP הוא מספר ה-states כפול העבודה לכל state. יש n * m states, כל אחד מחושב פעם אחת הודות ל-memo, וכל אחד עולה עד n צעדים, אז O(n^2 * m). lookups חוזרים אחרי זה הם O(1).",
+   "wrong": [
+    "memoization אומר שכל state מחושב פעם אחת, אבל החישוב שלו עדיין עולה את הלולאה של n צעדים.",
+    "memoization מסיר את הקריאות החוזרות, אז העבודה חסומה במספר ה-states, ולא אקספוננציאלית.",
+    "הלולאה רצה בתוך כל state, אז העלות שלה מוכפלת במספר ה-states.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "algorithms-prefix-sums-range-queries",
+  "topic": "algorithms",
+  "subtopic": "techniques",
+  "concepts": [
+   "prefix-sums",
+   "range-query",
+   "preprocessing"
+  ],
+  "level": "easy",
+  "q": "An array of n numbers never changes, and you must answer 100,000 queries for the sum from index l to index r. Which approach fits best?",
+  "options": [
+   "Loop from l to r for every query",
+   "Prefix sums: O(n) setup, then O(1) per query",
+   "Sort the array first, then binary search the range",
+   "A sliding window that moves from one query to the next"
+  ],
+  "answer": 1,
+  "why": "With prefix[i] = sum of the first i items, the sum from l to r is prefix[r + 1] - prefix[l]. One O(n) pass of setup, then each query is one subtraction.",
+  "wrong": [
+   "That costs up to O(n) per query, too slow for 100,000 queries on a large array.",
+   null,
+   "Sorting destroys the positions that l and r refer to.",
+   "Queries can jump anywhere, so there is no window that moves steadily forward."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/array/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "array של n מספרים אף פעם לא משתנה, וצריך לענות על 100,000 queries של הסכום מ-index l עד index r. איזו גישה הכי מתאימה?",
+   "options": [
+    "לולאה מ-l עד r לכל query",
+    "prefix sums: הכנה ב-O(n), ואז O(1) לכל query",
+    "למיין את ה-array קודם, ואז binary search על הטווח",
+    "sliding window שזז מ-query אחד לבא אחריו"
+   ],
+   "why": "עם prefix[i] = סכום i הפריטים הראשונים, הסכום מ-l עד r הוא prefix[r + 1] - prefix[l]. מעבר הכנה אחד של O(n), ואז כל query הוא חיסור אחד.",
+   "wrong": [
+    "זה עולה עד O(n) לכל query, איטי מדי ל-100,000 queries על array גדול.",
+    null,
+    "מיון הורס את המיקומים ש-l ו-r מתייחסים אליהם.",
+    "queries יכולים לקפוץ לכל מקום, אז אין חלון שזז קדימה בהדרגה."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-two-pointers-sorted-pair",
+  "topic": "algorithms",
+  "subtopic": "techniques",
+  "concepts": [
+   "two-pointers",
+   "sorted-array",
+   "space-complexity"
+  ],
+  "level": "easy",
+  "q": "A sorted array must be checked for two values that add up to a target, in O(n) time and with O(1) extra memory. Which approach fits?",
+  "options": [
+   "Two pointers, one from each end, moving inward",
+   "Check every pair with two nested loops",
+   "A hash set of the values seen so far",
+   "A sliding window of size 2 over neighbouring values"
+  ],
+  "answer": 0,
+  "why": "If the sum is too small, move the left pointer right; if it is too big, move the right pointer left. Sorting makes each move safe, so each pointer moves at most n times: O(n) time and O(1) memory.",
+  "wrong": [
+   null,
+   "That uses O(1) memory but O(n^2) time, which misses the O(n) goal.",
+   "That is O(n) time but O(n) extra memory, which the requirement rules out.",
+   "The two values need not be next to each other, so a window of neighbours misses most pairs."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/array/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צריך לבדוק אם ב-array ממוין יש שני ערכים שסכומם הוא target, בזמן O(n) ועם O(1) זיכרון נוסף. איזו גישה מתאימה?",
+   "options": [
+    "two pointers, אחד מכל קצה, שזזים פנימה",
+    "לבדוק כל זוג עם שתי לולאות מקוננות",
+    "hash set של הערכים שנראו עד עכשיו",
+    "sliding window בגודל 2 על ערכים שכנים"
+   ],
+   "why": "אם הסכום קטן מדי, מזיזים את ה-pointer השמאלי ימינה; אם הוא גדול מדי, מזיזים את ה-pointer הימני שמאלה. המיון הופך כל הזזה לבטוחה, אז כל pointer זז לכל היותר n פעמים: זמן O(n) וזיכרון O(1).",
+   "wrong": [
+    null,
+    "זה משתמש ב-O(1) זיכרון אבל בזמן O(n^2), ולא עומד ביעד של O(n).",
+    "זה זמן O(n) אבל O(n) זיכרון נוסף, והדרישה פוסלת את זה.",
+    "שני הערכים לא חייבים להיות צמודים, אז חלון של שכנים מפספס את רוב הזוגות."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-sliding-window-positive-values",
+  "topic": "algorithms",
+  "subtopic": "techniques",
+  "concepts": [
+   "sliding-window",
+   "monotonic-condition"
+  ],
+  "level": "medium",
+  "q": "You need the longest stretch of consecutive items with sum at most S. Why does a sliding window work when all values are positive?",
+  "options": [
+   "Sliding windows work the same for any values, positive or not",
+   "Positive values let you sort the array first",
+   "Adding an item only raises the sum, so shrink from the left",
+   "It does not: with positive values you must check all ranges"
+  ],
+  "answer": 2,
+  "why": "With positive values the sum rises as the window grows and falls as it shrinks. So when the sum passes S, moving the left edge right is the only way back, and no skipped start could do better. Each edge moves at most n times: O(n).",
+  "wrong": [
+   "With negatives, adding an item can lower the sum, so shrinking from the left is no longer the only fix, and the method breaks.",
+   "Sorting would break the consecutive requirement, and the window never sorts.",
+   null,
+   "Checking all ranges is the O(n^2) baseline the window improves on. Positive values are exactly what makes the window valid."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צריך את הרצף הארוך ביותר של פריטים עוקבים שסכומם לכל היותר S. למה sliding window עובד כשכל הערכים חיוביים?",
+   "options": [
+    "sliding windows עובדים אותו דבר לכל ערכים, חיוביים או לא",
+    "ערכים חיוביים מאפשרים למיין את ה-array קודם",
+    "הוספת פריט רק מעלה את הסכום, אז מכווצים משמאל",
+    "הוא לא עובד: עם ערכים חיוביים צריך לבדוק את כל הטווחים"
+   ],
+   "why": "עם ערכים חיוביים הסכום עולה כשהחלון גדל ויורד כשהוא מתכווץ. לכן כשהסכום עובר את S, הזזת הקצה השמאלי ימינה היא הדרך היחידה לחזור, ושום נקודת התחלה שדולגה לא יכולה לתת תוצאה טובה יותר. כל קצה זז לכל היותר n פעמים: O(n).",
+   "wrong": [
+    "עם ערכים שליליים, הוספת פריט יכולה להוריד את הסכום, אז כיווץ משמאל כבר לא התיקון היחיד, והשיטה נשברת.",
+    "מיון היה שובר את דרישת הרציפות, והחלון אף פעם לא ממיין.",
+    null,
+    "בדיקת כל הטווחים היא בסיס ה-O(n^2) שהחלון משפר. ערכים חיוביים הם בדיוק מה שהופך את החלון לתקף."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-prefix-sums-with-updates",
+  "topic": "algorithms",
+  "subtopic": "techniques",
+  "concepts": [
+   "prefix-sums",
+   "updates",
+   "trade-offs"
+  ],
+  "level": "medium",
+  "q": "Prefix sums make range-sum queries O(1). What changes if single values in the array are updated as often as ranges are queried?",
+  "options": [
+   "Nothing: updates are O(1) too, just like queries",
+   "Each update can force O(n) prefix values to be rebuilt",
+   "Queries become O(log n), but updates stay O(1)",
+   "Prefix sums stop giving correct answers once values change"
+  ],
+  "answer": 1,
+  "why": "prefix[k] includes item i for every k after i, so one update changes up to n prefix values. With frequent updates that is O(n) per update again. Structures such as a Fenwick tree balance both at O(log n).",
+  "wrong": [
+   "Changing item i changes every prefix sum after i, so one update touches up to n entries.",
+   null,
+   "Plain prefix sums keep O(1) queries. It is the updates that get expensive.",
+   "If you rebuild after each update the answers stay correct. The cost is the problem."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "prefix sums הופכים queries של סכום טווח ל-O(1). מה משתנה אם ערכים בודדים ב-array מתעדכנים באותה תדירות שבה שואלים על טווחים?",
+   "options": [
+    "כלום: גם עדכונים הם O(1), בדיוק כמו queries",
+    "כל עדכון יכול לחייב בנייה מחדש של O(n) ערכי prefix",
+    "queries הופכים ל-O(log n), אבל עדכונים נשארים O(1)",
+    "prefix sums מפסיקים לתת תשובות נכונות ברגע שערכים משתנים"
+   ],
+   "why": "prefix[k] כולל את פריט i לכל k אחרי i, אז עדכון אחד משנה עד n ערכי prefix. עם עדכונים תכופים זה שוב O(n) לכל עדכון. מבנים כמו Fenwick tree מאזנים את שניהם ב-O(log n).",
+   "wrong": [
+    "שינוי של פריט i משנה כל prefix sum אחרי i, אז עדכון אחד נוגע בעד n רשומות.",
+    null,
+    "prefix sums רגילים שומרים על queries של O(1). העדכונים הם שנעשים יקרים.",
+    "אם בונים מחדש אחרי כל עדכון, התשובות נשארות נכונות. הבעיה היא העלות."
+   ]
+  }
+ },
+ {
+  "id": "algorithms-subarray-sum-negatives",
+  "topic": "algorithms",
+  "subtopic": "techniques",
+  "concepts": [
+   "prefix-sums",
+   "hash-map",
+   "sliding-window",
+   "which-technique"
+  ],
+  "level": "medium",
+  "q": "Count the subarrays whose sum is exactly k, where values can be negative. Which technique fits?",
+  "options": [
+   "A sliding window that shrinks when the sum is over k",
+   "Two pointers after sorting the array",
+   "Binary search on the subarray length",
+   "Prefix sums plus a hash map of sums seen so far"
+  ],
+  "answer": 3,
+  "why": "A subarray from i to j sums to k exactly when prefix[j] - prefix[i] = k. Scanning once and counting how many earlier prefix sums equal current - k, using a hash map, gives O(n), whatever the signs.",
+  "wrong": [
+   "With negative values, shrinking does not reliably lower the sum, so the window can skip valid subarrays.",
+   "Sorting scrambles which items are consecutive, so the subarrays are lost.",
+   "Whether a length works is not monotonic here, so there is nothing to binary search.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צריך לספור את ה-subarrays שסכומם בדיוק k, כשערכים יכולים להיות שליליים. איזו טכניקה מתאימה?",
+   "options": [
+    "sliding window שמתכווץ כשהסכום עובר את k",
+    "two pointers אחרי מיון ה-array",
+    "binary search על אורך ה-subarray",
+    "prefix sums ועוד hash map של הסכומים שנראו עד עכשיו"
+   ],
+   "why": "סכום subarray מ-i עד j שווה ל-k בדיוק כאשר prefix[j] - prefix[i] = k. סריקה אחת שסופרת כמה prefix sums קודמים שווים ל-current - k, בעזרת hash map, נותנת O(n), בלי קשר לסימנים.",
+   "wrong": [
+    "עם ערכים שליליים, כיווץ לא מוריד את הסכום באופן אמין, אז החלון יכול לדלג על subarrays תקינים.",
+    "מיון מערבב אילו פריטים עוקבים, אז ה-subarrays אובדים.",
+    "האם אורך מסוים עובד זה לא מונוטוני כאן, אז אין על מה לעשות binary search.",
+    null
+   ]
+  }
+ }
+]

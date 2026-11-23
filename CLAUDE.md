@@ -47,7 +47,7 @@ src/js/state/              progress (pure reducers + localStorage), drafts, sync
 src/js/auth/               account.js (Supabase sign-in, inert unless configured), sync-controller.js (ADR 0006), github-sync.js (ADR 0007)
 src/js/modes/              interview.js, battle.js, mock-oa.js (pure session logic and OA problem picking), quiz.js (multiple-choice sessions, daily quiz, validateBank)
 src/js/mentor/             mentor providers (scripted today, remote later)
-src/js/data/quiz-bank.js   multiple-choice questions by topic for the Quiz mode (state/quiz-progress.js keeps answers per browser)
+src/js/data/quiz-topics.js quiz topics (titles in English and Hebrew); quiz-index.js (generated: id, topic, level) plans sessions; quiz-loader.js fetches quiz/<lang>/<topic>.json on demand; state/quiz-progress.js keeps answers per browser
 src/js/data/taxonomy.js    learning network: 26 topics, 131 subtopics, ladders, validators
 src/js/data/families.js    problem families, pickVersion per company, distinctProblems
 src/js/data/problem-meta.js companies, best known complexity, family per shipped problem (-> problem-meta.json, scripts/content/build-meta.mjs)
@@ -60,7 +60,7 @@ src/js/data/problem-topics.js taxonomy topic per shipped problem (-> problem-top
 src/js/data/palette-search.js command palette ranking
 src/js/data/tours.js       guided tour content (site tour + one per mode), validateTour; tour-layout.js = card and spotlight placement (pure)
 src/js/data/company-loader.js fetch loaders for company-sets.json and problem-topics.json
-content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md)
+content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md); quiz/<topic>.json = quiz source bank, English + Hebrew (scripts/content/build-quiz.mjs builds the site files)
 scripts/content/           fetch sources, build index, audit
 scripts/verify/            verifier helpers (harnesses.mjs re-exports engine/programs; sql, growth)
 deploy/cloudflare-worker/  Worker in front of the runner: CORS, rate limit, size caps, secret (wrangler.toml)

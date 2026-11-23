@@ -6648,6 +6648,32 @@ body.resizing-y * {
   line-height: var(--lh-body);
 }
 
+.quiz-why-not {
+  margin: 0;
+  padding-inline-start: var(--s-3);
+  border-inline-start: 2px solid var(--bad);
+  color: var(--text-2);
+  line-height: var(--lh-body);
+}
+
+.quiz-ref {
+  justify-self: start;
+  color: var(--accent);
+  font-size: var(--fs-sm);
+}
+
+.quiz-lang {
+  margin-bottom: var(--s-5);
+}
+
+.quiz-lang .segmented {
+  justify-self: start;
+}
+
+.quiz-review-label {
+  font-weight: 600;
+}
+
 .quiz-next {
   justify-self: end;
   min-width: 140px;

@@ -1779,7 +1779,7 @@ try {
   });
 
   await check('quiz: one topic in practice mode, 10 questions with feedback, results with a review; keys 1-4 and Enter work', async () => {
-    await page.evaluate(() => localStorage.removeItem('lfb:quiz:v1'));
+    await page.evaluate(() => { localStorage.removeItem('lfb:quiz:v1'); localStorage.setItem('lfb:quiz-lang', 'en'); });
     await page.goto(`${BASE}#/quiz`);
     await page.waitForSelector('.quiz-topic');
     const hub = await page.evaluate(() => ({ topics: document.querySelectorAll('.quiz-topic').length, primaries: document.querySelectorAll('#view .btn-primary').length, all: document.querySelector('.quiz-all')?.getAttribute('aria-pressed') }));
@@ -1796,8 +1796,10 @@ try {
       if (i % 2) await page.keyboard.press('2');
       else await page.click('.quiz-option >> nth=0');
       await page.waitForSelector('.quiz-verdict');
-      const st = await page.evaluate(() => ({ disabled: [...document.querySelectorAll('.quiz-option')].every((b) => b.disabled), correct: document.querySelectorAll('.quiz-option.is-correct').length, why: document.querySelector('.quiz-why')?.textContent.length ?? 0, topic: document.querySelector('.quiz-q-meta .tag')?.textContent }));
-      if (!st.disabled || st.correct !== 1 || st.why < 20 || st.topic !== 'OOP fundamentals') throw new Error(`after answering: ${JSON.stringify(st)}`);
+      const st = await page.evaluate(() => ({ disabled: [...document.querySelectorAll('.quiz-option')].every((b) => b.disabled), correct: document.querySelectorAll('.quiz-option.is-correct').length, wrong: document.querySelectorAll('.quiz-option.is-wrong').length, whyNot: document.querySelector('.quiz-why-not')?.textContent.length ?? 0, why: document.querySelector('.quiz-why')?.textContent.length ?? 0, topic: document.querySelector('.quiz-q-meta .tag')?.textContent }));
+      if (!st.disabled || st.correct !== 1 || st.why < 20 || st.topic !== 'OOP') throw new Error(`after answering: ${JSON.stringify(st)}`);
+      // A miss also explains why the chosen option is wrong.
+      if (st.wrong && st.whyNot < 10) throw new Error(`a miss shows no why-not line: ${JSON.stringify(st)}`);
       if (i === 0) await shot('27-quiz-feedback');
       if (i % 2) await page.keyboard.press('Enter');
       else await page.click('.quiz-next');
@@ -1808,6 +1810,38 @@ try {
     const score = Number(res.big.split(' / ')[0]);
     if (res.missed !== 10 - score || Object.keys(res.saved.questions ?? {}).length !== 10 || res.saved.best?.practice !== score) throw new Error(`results: ${JSON.stringify({ ...res, saved: Object.keys(res.saved) })}`);
     await shot('28-quiz-results');
+  });
+
+  await check('quiz in Hebrew: language toggle persists, right-to-left text, Hebrew counter, code stays left-to-right', async () => {
+    // The previous step leaves #/quiz on its results screen; a same-hash goto would not re-route.
+    await page.goto(`${BASE}#/modes`);
+    await page.goto(`${BASE}#/quiz`);
+    await page.waitForSelector('.quiz-topic');
+    await page.click('.quiz-lang .segmented-btn[data-value="he"]');
+    await page.waitForFunction(() => localStorage.getItem('lfb:quiz-lang') === 'he');
+    await page.click('.quiz-topic[data-topic="c-cpp"]');
+    await page.click('.quiz-start-btn');
+    await page.waitForSelector('.quiz-option:not(:disabled)');
+    const he = await page.evaluate(() => ({
+      dir: document.querySelector('.quiz-card')?.getAttribute('dir'),
+      hebrew: /[֐-׿]/.test(document.querySelector('.quiz-q')?.textContent ?? ''),
+      counter: document.querySelector('.quiz-counter')?.textContent,
+    }));
+    if (he.dir !== 'rtl' || !he.hebrew || !/^שאלה 1 מתוך 10$/.test(he.counter ?? '')) throw new Error(`hebrew play: ${JSON.stringify(he)}`);
+    // Find a question with code to check it stays left to right.
+    for (let i = 0; i < 10; i++) {
+      if (await page.locator('.quiz-code').count()) break;
+      await page.click('.quiz-option >> nth=0');
+      await page.click('.quiz-next');
+      await page.waitForSelector('.quiz-option:not(:disabled), .quiz-results');
+      if (await page.locator('.quiz-results').count()) break;
+    }
+    if (await page.locator('.quiz-code').count()) {
+      const codeDir = await page.getAttribute('.quiz-code', 'dir');
+      if (codeDir !== 'ltr') throw new Error(`code block dir ${codeDir}`);
+    }
+    await shot('29-quiz-hebrew');
+    await page.evaluate(() => localStorage.setItem('lfb:quiz-lang', 'en'));
   });
 
   await check('daily quiz: 5 questions from 5 topics, saved once, shown as done on the Daily page and on replay', async () => {

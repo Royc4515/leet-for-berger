@@ -15,7 +15,8 @@ import { usedTopics, pickRandom } from '../../modes/battle-picker.js';
 import { LAST_SESSIONS_KEY } from '../../state/user-data.js';
 import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
 import { startTour, startTourIfDue } from '../tour.js';
-import { QUIZ_TOPICS, QUIZ_QUESTIONS } from '../../data/quiz-bank.js';
+import { QUIZ_TOPICS } from '../../data/quiz-topics.js';
+import { QUIZ_INDEX } from '../../data/quiz-index.js';
 import { QUIZ_MODES } from '../../modes/quiz.js';
 import { loadQuizProgress } from '../../state/quiz-progress.js';
 import { dayKey } from '../../state/progress.js';
@@ -136,7 +137,7 @@ export function renderModesHub(root) {
           'Live',
           'Multiple-choice questions on the ideas interviews test. No editor, so it works on a phone.',
           quizVisual,
-          [`${QUIZ_QUESTIONS.length} questions in ${QUIZ_TOPICS.length} topics, from OOP and design patterns to system design`, `${QUIZ_MODES.map((m) => m.label).join(', ')}; one topic, a few, or all mixed`, 'A daily quiz of 5 questions, the same for everyone'],
+          [`${QUIZ_INDEX.length} questions in ${QUIZ_TOPICS.length} topics, from OOP and data structures to concurrency and SQL`, `${QUIZ_MODES.map((m) => m.label).join(', ')}; one topic, a few, or all mixed`, 'In English or Hebrew, with a daily quiz of 5 questions'],
           quizToday ? h('p.mode-last', {}, `Daily quiz done today: ${quizToday.correct} / ${quizToday.total}`) : h('p.mode-last.is-empty', {}, h('a', { href: '#/quiz/daily' }, 'Today\'s daily quiz is open.')),
           h('a.btn.btn-secondary', { href: '#/quiz' }, 'Start a quiz'),
         ),

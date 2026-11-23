@@ -1,0 +1,1350 @@
+[
+ {
+  "id": "concurrency-increment-not-atomic",
+  "topic": "concurrency",
+  "subtopic": "race-conditions",
+  "concepts": [
+   "read-modify-write",
+   "atomicity",
+   "lost-update"
+  ],
+  "level": "easy",
+  "q": "Two threads run count++ on the same shared int. Why can one of the increments get lost?",
+  "options": [
+   "It is a read, an add and a write; both threads can read the old value first",
+   "The CPU runs only one thread at a time, so one of the two increments is skipped",
+   "count is not marked volatile; with volatile, each ++ would happen in one step",
+   "count++ is a single machine instruction, so the bug must be in how the threads were started"
+  ],
+  "answer": 0,
+  "why": "count++ is a read-modify-write: load the value, add one, store it. If both threads load 5 before either stores, both store 6 and one increment disappears.",
+  "wrong": [
+   null,
+   "Even on one core the scheduler can switch threads between the load and the store, and that gap is all a race needs.",
+   "volatile is about seeing the latest value; ++ is still three steps, so two threads can still interleave.",
+   "It looks like one step in source code, but it runs as a separate read, add and write."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/concurrency/interfere.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני threads מריצים count++ על אותו int משותף. למה אחת ההגדלות יכולה ללכת לאיבוד?",
+   "options": [
+    "זו קריאה, חיבור וכתיבה, ושני ה-threads יכולים לקרוא קודם את הערך הישן",
+    "ה-CPU מריץ רק thread אחד בכל פעם, ולכן אחת משתי ההגדלות מדולגת",
+    "count לא מסומן כ-volatile, ועם volatile כל ++ היה קורה בצעד אחד",
+    "count++ היא פקודת מכונה אחת, ולכן ה-bug חייב להיות באופן שבו ה-threads הופעלו"
+   ],
+   "why": "count++ הוא read-modify-write: טוענים את הערך, מוסיפים אחד, ושומרים אותו. אם שני ה-threads טוענים 5 לפני שאחד מהם שומר, שניהם שומרים 6 והגדלה אחת נעלמת.",
+   "wrong": [
+    null,
+    "גם על core אחד ה-scheduler יכול להחליף threads בין הטעינה לשמירה, והפער הזה הוא כל מה ש-race צריך.",
+    "volatile עוסק בראיית הערך העדכני, ו-++ הוא עדיין שלושה צעדים, ולכן שני threads עדיין יכולים להשתלב זה בזה.",
+    "בקוד המקור זה נראה כמו צעד אחד, אבל בפועל זה רץ כקריאה, חיבור וכתיבה נפרדים."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-lost-update-trace",
+  "topic": "concurrency",
+  "subtopic": "race-conditions",
+  "concepts": [
+   "lost-update",
+   "interleaving",
+   "read-modify-write"
+  ],
+  "level": "easy",
+  "q": "count is 5. Thread A reads 5, then thread B reads 5, then A writes 6, then B writes 6. What is count now, and why?",
+  "options": [
+   "7: both increments applied, just in a different order",
+   "6: B's write was based on an old read, so A's update is lost",
+   "5: the two writes cancel each other out",
+   "Unknown: the runtime rejects B's write and raises an error instead"
+  ],
+  "answer": 1,
+  "why": "B read the value before A stored its result, so B computed 6 from an old 5 and overwrote A's 6. Two increments ran but the count went up by one. This is called a lost update.",
+  "wrong": [
+   "Each thread adds one to the value it read, and both read 5, so neither can produce 7.",
+   null,
+   "Writes do not cancel; the last write wins, and both writes stored 6.",
+   "Plain memory writes are not checked for conflicts; the second write simply replaces the first."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "count הוא 5. thread A קורא 5, אז thread B קורא 5, אז A כותב 6, ואז B כותב 6. מה ערך count עכשיו, ולמה?",
+   "options": [
+    "7: שתי ההגדלות הופעלו, רק בסדר אחר",
+    "6: הכתיבה של B התבססה על קריאה ישנה, ולכן העדכון של A אבד",
+    "5: שתי הכתיבות מבטלות זו את זו",
+    "לא ידוע: ה-runtime דוחה את הכתיבה של B וזורק שגיאה במקום"
+   ],
+   "why": "B קרא את הערך לפני ש-A שמר את התוצאה שלו, ולכן B חישב 6 מ-5 ישן ודרס את ה-6 של A. רצו שתי הגדלות, אבל count עלה רק באחד. זה נקרא lost update.",
+   "wrong": [
+    "כל thread מוסיף אחד לערך שהוא קרא, ושניהם קראו 5, ולכן אף אחד מהם לא יכול להגיע ל-7.",
+    null,
+    "כתיבות לא מבטלות זו את זו: הכתיבה האחרונה מנצחת, ושתי הכתיבות שמרו 6.",
+    "כתיבות רגילות לזיכרון לא נבדקות לקונפליקטים: הכתיבה השנייה פשוט מחליפה את הראשונה."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-racy-counter-outputs",
+  "topic": "concurrency",
+  "subtopic": "race-conditions",
+  "concepts": [
+   "lost-update",
+   "nondeterminism",
+   "read-modify-write"
+  ],
+  "level": "medium",
+  "q": "Two threads each run count++ 100,000 times on a shared static int, with no locking. Which statement about the printed value is right?",
+  "code": "public class Main {\n    static int count = 0;\n    public static void main(String[] args) throws Exception {\n        Runnable job = () -> { for (int i = 0; i < 100_000; i++) count++; };\n        Thread a = new Thread(job), b = new Thread(job);\n        a.start(); b.start();\n        a.join(); b.join();\n        System.out.println(count);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "Always 200000, since each loop runs all 100,000 times",
+   "Always 100000, since the threads overwrite each other's work",
+   "It may be 200000 or less, and it can change from run to run",
+   "The JVM throws an exception when two threads write count at once"
+  ],
+  "answer": 2,
+  "why": "Each count++ is a separate read, add and write, so increments get lost when the threads interleave. How many are lost depends on timing, so the result changes between runs and is sometimes even correct.",
+  "wrong": [
+   "Every loop does run to the end, but some of its increments are overwritten by the other thread.",
+   "Updates are lost only when the two threads' steps overlap, not on every increment, so the total is rarely exactly 100000.",
+   null,
+   "Java does not detect conflicting writes to plain fields; the program runs and silently prints a wrong number."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/concurrency/interfere.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני threads מריצים כל אחד count++ 100,000 פעמים על static int משותף, בלי locking. איזו טענה על הערך המודפס נכונה?",
+   "options": [
+    "תמיד 200000, כי כל לולאה רצה את כל 100,000 הפעמים",
+    "תמיד 100000, כי ה-threads דורסים זה את העבודה של זה",
+    "הוא יכול להיות 200000 או פחות, והוא יכול להשתנות מהרצה להרצה",
+    "ה-JVM זורק exception כששני threads כותבים ל-count בו זמנית"
+   ],
+   "why": "כל count++ הוא קריאה, חיבור וכתיבה נפרדים, ולכן הגדלות הולכות לאיבוד כשה-threads משתלבים זה בזה. כמה הולכות לאיבוד תלוי בתזמון, ולכן התוצאה משתנה בין הרצות, ולפעמים היא אפילו נכונה.",
+   "wrong": [
+    "כל לולאה אכן רצה עד הסוף, אבל חלק מההגדלות שלה נדרסות על ידי ה-thread השני.",
+    "עדכונים הולכים לאיבוד רק כשהצעדים של שני ה-threads חופפים, לא בכל הגדלה, ולכן הסכום רק לעתים רחוקות יוצא בדיוק 100000.",
+    null,
+    "Java לא מזהה כתיבות מתנגשות ל-fields רגילים: התוכנית רצה ומדפיסה בשקט מספר שגוי."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-check-then-act-withdraw",
+  "topic": "concurrency",
+  "subtopic": "race-conditions",
+  "concepts": [
+   "check-then-act",
+   "atomicity"
+  ],
+  "level": "medium",
+  "q": "Two threads call withdraw(80) at the same time on a balance of 100. Assume a thread switch can happen between any two steps. Which final balances are possible?",
+  "code": "import threading\nbalance = 100\n\ndef withdraw(amount):\n    global balance\n    if balance >= amount:\n        balance -= amount\n\nt1 = threading.Thread(target=withdraw, args=(80,))\nt2 = threading.Thread(target=withdraw, args=(80,))\nt1.start(); t2.start(); t1.join(); t2.join()\nprint(balance)",
+  "lang": "python",
+  "options": [
+   "Only 20: the if check stops the second withdrawal",
+   "20 or -60",
+   "Always -60: both threads start at the same moment",
+   "20, or a RuntimeError because two threads changed balance"
+  ],
+  "answer": 1,
+  "why": "This is check-then-act. Both threads can pass the check while balance is still 100, and then both subtract 80. In CPython this timing is rare, so tests may never show it, but it is legal. The check is only safe if the check and the update run together under one lock.",
+  "wrong": [
+   "The check can run in both threads before either subtracts, so both checks may see 100.",
+   null,
+   "Starting together does not mean the steps overlap; often one thread finishes first and the result is 20.",
+   "Python does not detect two threads writing the same variable; the wrong balance is stored silently."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני threads קוראים ל-withdraw(80) באותו זמן כשה-balance הוא 100. נניח שהחלפת threads יכולה לקרות בין כל שני צעדים. אילו ערכי balance סופיים אפשריים?",
+   "options": [
+    "רק 20: בדיקת ה-if עוצרת את המשיכה השנייה",
+    "20 או -60",
+    "תמיד -60: שני ה-threads מתחילים באותו רגע",
+    "20, או RuntimeError כי שני threads שינו את balance"
+   ],
+   "why": "זה check-then-act. שני ה-threads יכולים לעבור את הבדיקה כשה-balance עדיין 100, ואז שניהם מחסירים 80. ב-CPython התזמון הזה נדיר, כך שייתכן שה-tests אף פעם לא יחשפו אותו, אבל הוא תרחיש חוקי. הבדיקה בטוחה רק אם הבדיקה והעדכון רצים יחד תחת lock אחד.",
+   "wrong": [
+    "הבדיקה יכולה לרוץ בשני ה-threads לפני שאחד מהם מחסיר, ולכן שתי הבדיקות עשויות לראות 100.",
+    null,
+    "התחלה משותפת לא אומרת שהצעדים חופפים: הרבה פעמים thread אחד מסיים קודם והתוצאה היא 20.",
+    "Python לא מזהה ששני threads כותבים לאותו משתנה: ה-balance השגוי נשמר בשקט."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-passing-tests-prove-nothing",
+  "topic": "concurrency",
+  "subtopic": "race-conditions",
+  "concepts": [
+   "nondeterminism",
+   "testing-concurrency"
+  ],
+  "level": "easy",
+  "q": "A test for a multithreaded counter passes 100 times in a row on a laptop, but production shows wrong totals. What is the most likely explanation?",
+  "options": [
+   "Production runs a different version, since 100 passes prove the code is correct",
+   "Laptops run threads one at a time, so races cannot happen in local tests",
+   "The test should run 1,000 times; enough repetitions always expose a race",
+   "The race needs a rare timing, so passing runs do not show it is absent"
+  ],
+  "answer": 3,
+  "why": "Races depend on how the threads happen to interleave. On a quiet machine the bad interleaving may be rare, while production has more load, more cores and longer uptime. Passing tests show the bug was not hit, not that it cannot happen.",
+  "wrong": [
+   "Repeated passes cannot prove a race is absent; the failing interleaving may just not have occurred yet.",
+   "Laptops have several cores, and even one core can switch threads in the middle of an update.",
+   "More runs make a race more likely to show up, but no number of runs guarantees it.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "test ל-counter שרץ בכמה threads עובר 100 פעמים ברצף על לפטופ, אבל ב-production רואים סכומים שגויים. מה ההסבר הסביר ביותר?",
+   "options": [
+    "ב-production רצה גרסה אחרת, כי 100 הצלחות מוכיחות שהקוד נכון",
+    "לפטופים מריצים threads אחד אחרי השני, ולכן races לא יכולים לקרות ב-tests מקומיים",
+    "צריך להריץ את ה-test 1,000 פעמים: מספיק חזרות תמיד יחשפו race",
+    "ה-race דורש תזמון נדיר, ולכן הרצות שעוברות לא מראות שהוא לא קיים"
+   ],
+   "why": "races תלויים באופן שבו ה-threads משתלבים במקרה. על מכונה שקטה השילוב הבעייתי עשוי להיות נדיר, בעוד שב-production יש יותר עומס, יותר cores וזמן ריצה ארוך יותר. tests שעוברים מראים שלא נתקלו ב-bug, לא שהוא לא יכול לקרות.",
+   "wrong": [
+    "הצלחות חוזרות לא יכולות להוכיח שאין race: ייתכן פשוט שהשילוב הכושל עוד לא קרה.",
+    "בלפטופים יש כמה cores, ואפילו core אחד יכול להחליף threads באמצע עדכון.",
+    "יותר הרצות מגדילות את הסיכוי שה-race יופיע, אבל שום מספר הרצות לא מבטיח את זה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "concurrency-read-only-sharing",
+  "topic": "concurrency",
+  "subtopic": "race-conditions",
+  "concepts": [
+   "shared-state",
+   "data-race",
+   "read-only"
+  ],
+  "level": "easy",
+  "q": "Several threads read a configuration map that was fully built before the threads started and is never changed afterwards. Do the reads need a lock?",
+  "options": [
+   "Yes: any data that two threads touch needs a lock",
+   "No: with no thread writing, there is nothing to race on",
+   "Yes: two reads of the same entry at the same instant can corrupt it",
+   "Only if there are more threads than CPU cores"
+  ],
+  "answer": 1,
+  "why": "A race needs at least one thread that writes. The map is complete before the threads start and nobody changes it, so every thread sees the same values and the reads cannot interfere with each other.",
+  "wrong": [
+   "Locks guard against conflicting changes; data that never changes once the threads start can be shared freely.",
+   null,
+   "Reading does not modify memory, so simultaneous reads cannot damage the data.",
+   "The number of cores does not matter; what matters is whether anyone writes."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כמה threads קוראים map של קונפיגורציה שנבנה במלואו לפני שה-threads התחילו ולא משתנה אחר כך אף פעם. האם הקריאות צריכות lock?",
+   "options": [
+    "כן: כל נתון ששני threads נוגעים בו צריך lock",
+    "לא: כשאף thread לא כותב, אין מקום ל-race",
+    "כן: שתי קריאות של אותה רשומה באותו רגע בדיוק יכולות להשחית אותה",
+    "רק אם יש יותר threads מ-cores"
+   ],
+   "why": "race דורש לפחות thread אחד שכותב. ה-map מלא לפני שה-threads מתחילים ואף אחד לא משנה אותו, ולכן כל thread רואה את אותם ערכים והקריאות לא יכולות להפריע זו לזו.",
+   "wrong": [
+    "locks מגנים מפני שינויים מתנגשים. נתונים שלא משתנים מרגע שה-threads מתחילים אפשר לשתף בחופשיות.",
+    null,
+    "קריאה לא משנה את הזיכרון, ולכן קריאות בו זמנית לא יכולות לפגוע בנתונים.",
+    "מספר ה-cores לא משנה. מה שקובע הוא אם מישהו כותב."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-lazy-init-check-then-act",
+  "topic": "concurrency",
+  "subtopic": "race-conditions",
+  "concepts": [
+   "check-then-act",
+   "lazy-initialization"
+  ],
+  "level": "medium",
+  "q": "A cache is created lazily: if instance is None, create it and assign it. Two threads call get_cache() for the first time at the same moment. What can happen?",
+  "options": [
+   "The second thread automatically waits until the first one has finished creating it",
+   "Nothing bad: assigning the new object to instance is a single step",
+   "Both can see None, so two caches get created and one of them is lost",
+   "An error is raised because instance is assigned twice"
+  ],
+  "answer": 2,
+  "why": "This is check-then-act again. Both threads can run the check before either assigns, so each builds its own cache. One assignment overwrites the other, and anything stored in the losing cache is gone. A lock around the check and the creation fixes it.",
+  "wrong": [
+   "Nothing makes a thread wait unless the code takes a lock; a plain if statement never blocks.",
+   "The assignment may be one step, but the check before it is a separate step, and the gap between them is the problem.",
+   null,
+   "Assigning a variable twice is legal; the second value simply replaces the first."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "cache נוצר באופן lazy: אם instance הוא None, יוצרים אותו ומציבים אותו. שני threads קוראים ל-get_cache() בפעם הראשונה באותו רגע. מה יכול לקרות?",
+   "options": [
+    "ה-thread השני מחכה אוטומטית עד שהראשון מסיים ליצור אותו",
+    "שום דבר רע: השמת ה-object החדש ל-instance היא צעד אחד",
+    "שניהם יכולים לראות None, ולכן נוצרים שני caches ואחד מהם הולך לאיבוד",
+    "נזרקת שגיאה כי ל-instance מתבצעת השמה פעמיים"
+   ],
+   "why": "זה שוב check-then-act. שני ה-threads יכולים להריץ את הבדיקה לפני שאחד מהם מבצע השמה, ולכן כל אחד בונה cache משלו. השמה אחת דורסת את השנייה, וכל מה שנשמר ב-cache שהפסיד נעלם. lock סביב הבדיקה והיצירה פותר את זה.",
+   "wrong": [
+    "שום דבר לא גורם ל-thread לחכות אלא אם הקוד לוקח lock. הוראת if רגילה אף פעם לא חוסמת.",
+    "ההשמה אולי צעד אחד, אבל הבדיקה שלפניה היא צעד נפרד, והפער ביניהן הוא הבעיה.",
+    null,
+    "השמה למשתנה פעמיים היא חוקית: הערך השני פשוט מחליף את הראשון."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-atomic-parts-not-whole",
+  "topic": "concurrency",
+  "subtopic": "race-conditions",
+  "concepts": [
+   "atomicity",
+   "invariant",
+   "atomic-variable"
+  ],
+  "level": "hard",
+  "q": "Two balances a and b are atomic integers. A transfer atomically subtracts 50 from a, then atomically adds 50 to b. Another thread sums a + b for a report. What can it see?",
+  "options": [
+   "Always the right total: each balance is atomic, so the transfer is too",
+   "A corrupted value inside a or b, because atomic types protect only reads",
+   "Always the right total: the reader waits while any atomic update is running",
+   "A total off by 50, depending on when it reads each of the two balances"
+  ],
+  "answer": 3,
+  "why": "Each single update is atomic, but the transfer is two separate updates. A reader that runs between them sees money taken from a and not yet added to b (50 short), or reads a before and b after (50 over). A rule that spans two variables needs one lock around both steps, and the reader must take it too.",
+  "wrong": [
+   "Atomic variables make each single operation indivisible, not a sequence of two operations.",
+   "Atomic types protect each update as well, so a and b each always hold a valid value.",
+   "Atomic operations do not make other threads wait; the reader runs whenever it is scheduled.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שתי יתרות, a ו-b, הן atomic integers. העברה מחסירה 50 מ-a באופן atomic, ואז מוסיפה 50 ל-b באופן atomic. thread אחר מחשב a + b בשביל דוח. מה הוא יכול לראות?",
+   "options": [
+    "תמיד את הסכום הנכון: כל יתרה היא atomic, ולכן גם ההעברה",
+    "ערך משובש בתוך a או b, כי טיפוסי atomic מגינים רק על קריאות",
+    "תמיד את הסכום הנכון: הקורא מחכה בזמן שעדכון atomic כלשהו רץ",
+    "סכום שסוטה ב-50, תלוי מתי הוא קורא כל אחת משתי היתרות"
+   ],
+   "why": "כל עדכון בודד הוא atomic, אבל ההעברה היא שני עדכונים נפרדים. קורא שרץ ביניהם רואה כסף שירד מ-a ועוד לא נוסף ל-b (חסרים 50), או קורא את a לפני ואת b אחרי (עודף של 50). כלל שחל על שני משתנים דורש lock אחד סביב שני הצעדים, וגם הקורא חייב לקחת אותו.",
+   "wrong": [
+    "משתנים atomic הופכים כל פעולה בודדת לבלתי ניתנת לחלוקה, לא רצף של שתי פעולות.",
+    "טיפוסי atomic מגינים גם על כל עדכון, ולכן a ו-b תמיד מחזיקים ערך תקין.",
+    "פעולות atomic לא גורמות ל-threads אחרים לחכות: הקורא רץ מתי שה-scheduler מתזמן אותו.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "concurrency-mutex-purpose",
+  "topic": "concurrency",
+  "subtopic": "locks",
+  "concepts": [
+   "mutex",
+   "mutual-exclusion",
+   "critical-section"
+  ],
+  "level": "easy",
+  "q": "What does wrapping an update in a mutex (lock) guarantee when several threads run it?",
+  "options": [
+   "Only one thread at a time runs the locked section",
+   "The threads run the code faster, since they no longer compete",
+   "The locked code always runs on one dedicated CPU core",
+   "Threads enter the locked section in the order they were created"
+  ],
+  "answer": 0,
+  "why": "A mutex gives mutual exclusion: a thread must hold the lock to enter, and the others block until it is released. The steps inside then cannot interleave with the same steps in another thread.",
+  "wrong": [
+   null,
+   "Locking usually slows threads down, since they wait; it buys correctness, not speed.",
+   "A lock does not choose a core; it only controls who may enter.",
+   "A plain lock makes no promise about order; any waiting thread may get it next."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/threads-locks.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מה מובטח כשעוטפים עדכון ב-mutex (lock) וכמה threads מריצים אותו?",
+   "options": [
+    "רק thread אחד בכל פעם מריץ את הקטע הנעול",
+    "ה-threads מריצים את הקוד מהר יותר, כי הם כבר לא מתחרים",
+    "הקוד הנעול תמיד רץ על core ייעודי אחד",
+    "threads נכנסים לקטע הנעול לפי הסדר שבו הם נוצרו"
+   ],
+   "why": "mutex נותן mutual exclusion: thread חייב להחזיק ב-lock כדי להיכנס, והאחרים נחסמים עד שהוא משוחרר. כך הצעדים שבפנים לא יכולים להשתלב עם אותם צעדים ב-thread אחר.",
+   "wrong": [
+    null,
+    "lock בדרך כלל מאט threads, כי הם מחכים. הוא קונה נכונות, לא מהירות.",
+    "lock לא בוחר core. הוא רק קובע מי רשאי להיכנס.",
+    "lock רגיל לא מבטיח שום סדר: כל thread שמחכה יכול לקבל אותו הבא בתור."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-lock-fixes-counter",
+  "topic": "concurrency",
+  "subtopic": "locks",
+  "concepts": [
+   "mutex",
+   "critical-section",
+   "read-modify-write"
+  ],
+  "level": "easy",
+  "q": "Two threads each add 1 to count 100,000 times, and every update holds the same shared lock. What does the program print?",
+  "code": "import threading\ncount = 0\nlock = threading.Lock()\ndef work():\n    global count\n    for _ in range(100_000):\n        with lock:\n            count += 1\nts = [threading.Thread(target=work) for _ in range(2)]\nfor t in ts: t.start()\nfor t in ts: t.join()\nprint(count)",
+  "lang": "python",
+  "options": [
+   "Always 200000",
+   "200000 or less, varying between runs",
+   "Always 100000",
+   "Nothing: it hangs, since the lock is taken 200,000 times"
+  ],
+  "answer": 0,
+  "why": "Both threads use the same lock, and the read, add and write all happen while holding it, so no update can be lost. The with block releases the lock at the end of each iteration, so the other thread gets its turn.",
+  "wrong": [
+   null,
+   "That is the result without a lock; here the whole read-modify-write is protected.",
+   "Neither thread overwrites the other's work, since each update finishes before the other thread can read count.",
+   "with releases the lock when the block ends, so it can be taken again and again."
+  ],
+  "ref": "https://docs.python.org/3/library/threading.html#lock-objects",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני threads מוסיפים כל אחד 1 ל-count 100,000 פעמים, וכל עדכון מחזיק את אותו lock משותף. מה התוכנית תדפיס?",
+   "options": [
+    "תמיד 200000",
+    "200000 או פחות, משתנה בין הרצות",
+    "תמיד 100000",
+    "כלום: היא נתקעת, כי ה-lock נלקח 200,000 פעמים"
+   ],
+   "why": "שני ה-threads משתמשים באותו lock, והקריאה, החיבור והכתיבה קורים כולם בזמן שהוא מוחזק, ולכן שום עדכון לא יכול ללכת לאיבוד. בלוק ה-with משחרר את ה-lock בסוף כל איטרציה, כך שה-thread השני מקבל את התור שלו.",
+   "wrong": [
+    null,
+    "זו התוצאה בלי lock. כאן כל ה-read-modify-write מוגן.",
+    "אף thread לא דורס את העבודה של השני, כי כל עדכון מסתיים לפני שה-thread השני יכול לקרוא את count.",
+    "with משחרר את ה-lock כשהבלוק מסתיים, ולכן אפשר לקחת אותו שוב ושוב."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-semaphore-connection-pool",
+  "topic": "concurrency",
+  "subtopic": "locks",
+  "concepts": [
+   "semaphore",
+   "mutex",
+   "resource-limit"
+  ],
+  "level": "easy",
+  "q": "A service has 3 database connections and many worker threads. At most 3 workers may use a connection at the same time. Which tool fits best?",
+  "options": [
+   "One mutex around every database call",
+   "A separate mutex for each worker thread",
+   "A counting semaphore that starts at 3",
+   "A semaphore that starts at 0 and counts up as workers arrive"
+  ],
+  "answer": 2,
+  "why": "A counting semaphore holds a number of permits. A worker takes one before using a connection and returns it after. With 3 permits, a fourth worker waits until one is returned. A mutex is like the case of exactly one permit.",
+  "wrong": [
+   "A mutex lets only one thread in, so two of the three connections would sit idle.",
+   "A lock that only its own thread uses never makes anyone wait, so it limits nothing.",
+   null,
+   "Starting at 0 blocks even the first worker; the count should start at the number of free connections."
+  ],
+  "ref": "https://docs.python.org/3/library/threading.html#semaphore-objects",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "לשירות יש 3 חיבורים למסד הנתונים והרבה worker threads. לכל היותר 3 workers יכולים להשתמש בחיבור בו זמנית. איזה כלי הכי מתאים?",
+   "options": [
+    "mutex אחד סביב כל קריאה למסד הנתונים",
+    "mutex נפרד לכל worker thread",
+    "counting semaphore שמתחיל ב-3",
+    "semaphore שמתחיל ב-0 ועולה ככל שמגיעים workers"
+   ],
+   "why": "counting semaphore מחזיק מספר permits. worker לוקח permit לפני שהוא משתמש בחיבור ומחזיר אותו אחר כך. עם 3 permits, worker רביעי מחכה עד שאחד מוחזר. mutex הוא כמו המקרה של permit אחד בדיוק.",
+   "wrong": [
+    "mutex מכניס רק thread אחד, ולכן שניים משלושת החיבורים לא ינוצלו.",
+    "lock שרק ה-thread שלו משתמש בו אף פעם לא גורם לאף אחד לחכות, ולכן הוא לא מגביל כלום.",
+    null,
+    "התחלה ב-0 חוסמת אפילו את ה-worker הראשון. הספירה צריכה להתחיל במספר החיבורים הפנויים."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-synchronized-different-objects",
+  "topic": "concurrency",
+  "subtopic": "locks",
+  "concepts": [
+   "mutex",
+   "lock-identity",
+   "shared-state"
+  ],
+  "level": "medium",
+  "q": "run() is synchronized, and each thread gets its own Worker object. Both add to the static field total. What can this print?",
+  "code": "public class Main {\n    public static void main(String[] args) throws Exception {\n        Thread a = new Thread(new Worker()), b = new Thread(new Worker());\n        a.start(); b.start(); a.join(); b.join();\n        System.out.println(Worker.total);\n    }\n}\nclass Worker implements Runnable {\n    static int total = 0;\n    public synchronized void run() { for (int i = 0; i < 100_000; i++) total++; }\n}",
+  "lang": "java",
+  "options": [
+   "Always 200000: synchronized stops the threads from overlapping",
+   "Compile error: a synchronized method cannot change a static field",
+   "Nothing: the second thread waits forever for the first thread's lock",
+   "200000 or less, since the two threads hold different locks"
+  ],
+  "answer": 3,
+  "why": "A synchronized instance method locks this, the object it is called on. Each thread has its own Worker, so each holds a different lock, and nothing stops them from updating the shared total at the same time. Both must lock one shared object.",
+  "wrong": [
+   "synchronized only excludes threads that lock the same object; here the objects differ.",
+   "A synchronized method may change static fields; the problem is which lock it holds, not what it touches.",
+   "The threads lock different objects, so neither ever waits for the other.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/concurrency/syncmeth.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "run() היא synchronized, וכל thread מקבל object משלו מסוג Worker. שניהם מוסיפים ל-static field בשם total. מה זה יכול להדפיס?",
+   "options": [
+    "תמיד 200000: synchronized מונע מה-threads לחפוף",
+    "שגיאת compile: method שהיא synchronized לא יכולה לשנות static field",
+    "כלום: ה-thread השני מחכה לנצח ל-lock של ה-thread הראשון",
+    "200000 או פחות, כי שני ה-threads מחזיקים locks שונים"
+   ],
+   "why": "instance method שהיא synchronized נועלת את this, ה-object שעליו היא נקראת. לכל thread יש Worker משלו, ולכן כל אחד מחזיק lock אחר, ושום דבר לא מונע מהם לעדכן את ה-total המשותף באותו זמן. שניהם חייבים לנעול object משותף אחד.",
+   "wrong": [
+    "synchronized מונע חפיפה רק בין threads שנועלים את אותו object. כאן ה-objects שונים.",
+    "method שהיא synchronized רשאית לשנות static fields. הבעיה היא איזה lock היא מחזיקה, לא במה היא נוגעת.",
+    "ה-threads נועלים objects שונים, ולכן אף אחד מהם לא מחכה לשני אף פעם.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "concurrency-lock-held-during-slow-call",
+  "topic": "concurrency",
+  "subtopic": "locks",
+  "concepts": [
+   "lock-scope",
+   "contention",
+   "critical-section"
+  ],
+  "level": "medium",
+  "q": "A web handler holds one global lock for its whole body, including a 2-second call to a payment service. Under load, what is the main problem?",
+  "options": [
+   "Requests run one at a time, each waiting behind slow payment calls",
+   "The lock expires after a while and lets every request in at once",
+   "Data can be corrupted, since the lock is released during the network call",
+   "None: a bigger lock is always safer, and that safety costs nothing"
+  ],
+  "answer": 0,
+  "why": "Only one thread can hold the lock, and it keeps it during the slow call, so other requests queue up even when they touch different data. Lock only the code that touches shared state, and do slow I/O outside the lock.",
+  "wrong": [
+   null,
+   "Plain locks do not expire; waiting threads stay blocked until the holder releases.",
+   "A lock stays held until the code releases it, network call or not.",
+   "A wider lock is no less correct, but it removes concurrency and can make the service crawl."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "handler של שרת web מחזיק lock גלובלי אחד לאורך כל הגוף שלו, כולל קריאה של 2 שניות לשירות תשלומים. מה הבעיה העיקרית תחת עומס?",
+   "options": [
+    "ה-requests רצים אחד אחד, וכל אחד מחכה מאחורי קריאות תשלום איטיות",
+    "ה-lock פג אחרי זמן מה ומכניס את כל ה-requests בבת אחת",
+    "נתונים יכולים להשתבש, כי ה-lock משתחרר בזמן הקריאה ברשת",
+    "אין בעיה: lock גדול יותר תמיד בטוח יותר, והבטיחות הזו לא עולה כלום"
+   ],
+   "why": "רק thread אחד יכול להחזיק את ה-lock, והוא מחזיק אותו במהלך הקריאה האיטית, ולכן requests אחרים עומדים בתור גם כשהם נוגעים בנתונים אחרים. צריך לנעול רק את הקוד שנוגע ב-state משותף, ולבצע I/O איטי מחוץ ל-lock.",
+   "wrong": [
+    null,
+    "locks רגילים לא פגים: threads שמחכים נשארים חסומים עד שמי שמחזיק את ה-lock משחרר אותו.",
+    "lock נשאר מוחזק עד שהקוד משחרר אותו, עם קריאה ברשת או בלי.",
+    "lock רחב יותר לא פחות נכון, אבל הוא מבטל את המקביליות ויכול לגרום לשירות לזחול."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-lock-scope-too-narrow",
+  "topic": "concurrency",
+  "subtopic": "locks",
+  "concepts": [
+   "lock-scope",
+   "read-modify-write",
+   "lost-update"
+  ],
+  "level": "medium",
+  "q": "Two threads call increment() many times on the same Counter. Every line that touches count is inside synchronized. Can increments still be lost?",
+  "code": "class Counter {\n    private int count = 0;\n    private final Object lock = new Object();\n\n    void increment() {\n        int tmp;\n        synchronized (lock) { tmp = count; }\n        synchronized (lock) { count = tmp + 1; }\n    }\n}",
+  "lang": "java",
+  "options": [
+   "No: every access to count holds the lock",
+   "Yes: count can change between the read and the write",
+   "Only on a machine with more than one CPU core",
+   "Yes: synchronizing on a private field like lock has no effect at all"
+  ],
+  "answer": 1,
+  "why": "The lock is released after reading count and taken again to write. Another thread can read the same old value in that gap, so both write tmp + 1 and one increment is lost. The read and the write must sit in one locked block.",
+  "wrong": [
+   "Locking each access is not enough; the whole read-modify-write must be one locked step.",
+   null,
+   "One core is enough: the scheduler can switch threads in the gap between the two blocks.",
+   "Any object works as a lock as long as all threads use the same one, and here they do."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני threads קוראים ל-increment() הרבה פעמים על אותו Counter. כל שורה שנוגעת ב-count נמצאת בתוך synchronized. האם הגדלות עדיין יכולות ללכת לאיבוד?",
+   "options": [
+    "לא: כל גישה ל-count מחזיקה את ה-lock",
+    "כן: count יכול להשתנות בין הקריאה לכתיבה",
+    "רק על מכונה עם יותר מ-core אחד",
+    "כן: synchronized על private field כמו lock לא משפיע בכלל"
+   ],
+   "why": "ה-lock משתחרר אחרי קריאת count ונלקח שוב לכתיבה. thread אחר יכול לקרוא את אותו ערך ישן בפער הזה, ולכן שניהם כותבים tmp + 1 והגדלה אחת הולכת לאיבוד. הקריאה והכתיבה חייבות להיות בבלוק נעול אחד.",
+   "wrong": [
+    "לנעול כל גישה לא מספיק: כל ה-read-modify-write חייב להיות צעד נעול אחד.",
+    null,
+    "core אחד מספיק: ה-scheduler יכול להחליף threads בפער שבין שני הבלוקים.",
+    "כל object יכול לשמש כ-lock כל עוד כל ה-threads משתמשים באותו אחד, וכאן זה המצב."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-release-on-exception",
+  "topic": "concurrency",
+  "subtopic": "locks",
+  "concepts": [
+   "mutex",
+   "exception-safety",
+   "try-finally"
+  ],
+  "level": "medium",
+  "q": "A thread calls lock.acquire(), then code that raises an exception before it reaches lock.release(). What happens to other threads that need the lock?",
+  "options": [
+   "They get it at once: raising an exception frees the lock",
+   "They get the same exception, since it spreads to every thread",
+   "They skip the lock, since a failed thread's locks are ignored",
+   "They block indefinitely, since nothing releases the lock"
+  ],
+  "answer": 3,
+  "why": "acquire and release are two separate calls. If the code between them raises, release() is skipped and the lock stays held, so every thread that later needs it blocks. Use with lock: or try/finally so the release always runs.",
+  "wrong": [
+   "A lock knows nothing about exceptions; it stays held until release() is actually called.",
+   "An exception travels up the stack of the thread that raised it, not into other threads.",
+   "Other threads still have to acquire the lock, and they cannot while it is held.",
+   null
+  ],
+  "ref": "https://docs.python.org/3/library/threading.html#using-locks-conditions-and-semaphores-in-the-with-statement",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "thread קורא ל-lock.acquire(), ואז לקוד שזורק exception לפני שהוא מגיע ל-lock.release(). מה קורה ל-threads אחרים שצריכים את ה-lock?",
+   "options": [
+    "הם מקבלים אותו מיד: זריקת exception משחררת את ה-lock",
+    "הם מקבלים את אותו exception, כי הוא מתפשט לכל ה-threads",
+    "הם מדלגים על ה-lock, כי ה-locks של thread שנכשל לא נחשבים",
+    "הם נחסמים ללא הגבלת זמן, כי שום דבר לא משחרר את ה-lock"
+   ],
+   "why": "acquire ו-release הן שתי קריאות נפרדות. אם הקוד שביניהן זורק exception, release() לא נקראת וה-lock נשאר מוחזק, ולכן כל thread שיצטרך אותו אחר כך נחסם. צריך להשתמש ב-with lock: או ב-try/finally כדי שהשחרור תמיד ירוץ.",
+   "wrong": [
+    "lock לא יודע כלום על exceptions: הוא נשאר מוחזק עד ש-release() באמת נקראת.",
+    "exception עולה ב-stack של ה-thread שזרק אותו, הוא לא עובר ל-threads אחרים.",
+    "threads אחרים עדיין צריכים לעשות acquire ל-lock, והם לא יכולים כל עוד הוא מוחזק.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "concurrency-two-locks-opposite-order",
+  "topic": "concurrency",
+  "subtopic": "deadlock",
+  "concepts": [
+   "deadlock",
+   "lock-ordering",
+   "circular-wait"
+  ],
+  "level": "easy",
+  "q": "Thread t1 locks a, then b. Thread t2 locks b, then a. Each loop runs 100,000 times. What can happen when the program runs?",
+  "code": "public class Main {\n    static final Object a = new Object(), b = new Object();\n    static int n = 0;\n    public static void main(String[] args) throws Exception {\n        Thread t1 = new Thread(() -> { for (int i = 0; i < 100_000; i++)\n            synchronized (a) { synchronized (b) { n++; } } });\n        Thread t2 = new Thread(() -> { for (int i = 0; i < 100_000; i++)\n            synchronized (b) { synchronized (a) { n++; } } });\n        t1.start(); t2.start(); t1.join(); t2.join();\n        System.out.println(n);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "It prints a number below 200000, because n++ is a race",
+   "It always prints 200000, since every n++ holds both locks",
+   "It may print 200000, or hang forever with nothing printed",
+   "The JVM detects the cycle and throws an exception to break it"
+  ],
+  "answer": 2,
+  "why": "If t1 holds a while t2 holds b, each waits for the lock the other holds, and neither can ever go on. Whether that happens depends on timing, so some runs finish and others hang. A run that finishes prints the right total, since both locks guard every n++.",
+  "wrong": [
+   "n++ always runs while holding both locks, so no increment can be lost.",
+   "Holding both locks protects n, but the opposite lock order can leave both threads stuck before they finish.",
+   null,
+   "The JVM does not break deadlocks on its own; the stuck threads just stay blocked."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/concurrency/deadlock.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "thread t1 נועל את a ואז את b. thread t2 נועל את b ואז את a. כל לולאה רצה 100,000 פעמים. מה יכול לקרות כשהתוכנית רצה?",
+   "options": [
+    "היא מדפיסה מספר מתחת ל-200000, כי n++ הוא race",
+    "היא תמיד מדפיסה 200000, כי כל n++ מחזיק את שני ה-locks",
+    "היא עשויה להדפיס 200000, או להיתקע לנצח בלי להדפיס כלום",
+    "ה-JVM מזהה את המעגל וזורק exception כדי לשבור אותו"
+   ],
+   "why": "אם t1 מחזיק את a בזמן ש-t2 מחזיק את b, כל אחד מחכה ל-lock שהשני מחזיק, ואף אחד מהם לא יכול להמשיך לעולם. אם זה קורה או לא תלוי בתזמון, ולכן חלק מההרצות מסתיימות ואחרות נתקעות. הרצה שמסתיימת מדפיסה את הסכום הנכון, כי שני ה-locks שומרים על כל n++.",
+   "wrong": [
+    "n++ תמיד רץ כששני ה-locks מוחזקים, ולכן שום הגדלה לא יכולה ללכת לאיבוד.",
+    "החזקת שני ה-locks מגינה על n, אבל הסדר ההפוך של הנעילה יכול להשאיר את שני ה-threads תקועים לפני שהם מסיימים.",
+    null,
+    "ה-JVM לא שובר deadlocks בעצמו: ה-threads התקועים פשוט נשארים חסומים."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-four-conditions-together",
+  "topic": "concurrency",
+  "subtopic": "deadlock",
+  "concepts": [
+   "deadlock",
+   "coffman-conditions"
+  ],
+  "level": "medium",
+  "q": "Deadlock is described by four conditions: mutual exclusion, hold and wait, no preemption, and circular wait. Which statement is right?",
+  "options": [
+   "Any one of the four on its own is enough to cause deadlock",
+   "Removing mutual exclusion is the usual fix, since it is the easiest",
+   "Circular wait is a result of deadlock, not a condition for it",
+   "All four must hold at once, so breaking any one prevents deadlock"
+  ],
+  "answer": 3,
+  "why": "The four are needed together: if even one is missing, threads cannot end up stuck waiting on each other. That is why fixes target one of them, most often circular wait, by taking locks in a fixed order.",
+  "wrong": [
+   "Each condition alone is common and harmless; every lock has mutual exclusion, for example.",
+   "Many resources cannot be shared safely, so mutual exclusion is usually the one condition you cannot remove.",
+   "A cycle of waiting threads is what makes progress impossible; it is a condition, and breaking it prevents deadlock.",
+   null
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/threads-bugs.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "deadlock מתואר על ידי ארבעה תנאים: mutual exclusion, hold and wait, no preemption ו-circular wait. איזו טענה נכונה?",
+   "options": [
+    "כל אחד מהארבעה לבדו מספיק כדי לגרום ל-deadlock",
+    "הסרת mutual exclusion היא התיקון הרגיל, כי היא הכי קלה",
+    "circular wait הוא תוצאה של deadlock, לא תנאי שלו",
+    "כל הארבעה חייבים להתקיים בו זמנית, ולכן שבירת אחד מהם מונעת deadlock"
+   ],
+   "why": "צריך את הארבעה יחד: אם אפילו אחד חסר, threads לא יכולים להיתקע כשהם מחכים זה לזה. לכן תיקונים מכוונים לאחד מהם, לרוב ל-circular wait, באמצעות לקיחת locks בסדר קבוע.",
+   "wrong": [
+    "כל תנאי לבדו נפוץ ולא מזיק: לכל lock יש mutual exclusion, למשל.",
+    "הרבה משאבים אי אפשר לשתף בבטחה, ולכן mutual exclusion הוא בדרך כלל התנאי היחיד שאי אפשר להסיר.",
+    "מעגל של threads שמחכים הוא מה שהופך התקדמות לבלתי אפשרית. זה תנאי, ושבירה שלו מונעת deadlock.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "concurrency-spot-the-deadlock",
+  "topic": "concurrency",
+  "subtopic": "deadlock",
+  "concepts": [
+   "deadlock",
+   "diagnosis",
+   "starvation"
+  ],
+  "level": "easy",
+  "q": "A server stops answering. CPU use is near zero, and a thread dump shows thread A waiting for a lock held by B, while B waits for a lock held by A. What is this?",
+  "options": [
+   "A deadlock",
+   "An infinite loop in A or B",
+   "A race condition that lost an update",
+   "Starvation: the scheduler keeps passing over A and B"
+  ],
+  "answer": 0,
+  "why": "Two threads each hold a lock and wait for the other's, a cycle that can never resolve. The low CPU fits: blocked threads use no CPU, while an infinite loop would keep a core busy.",
+  "wrong": [
+   null,
+   "A looping thread is running, so CPU would be high, and the dump would not show it waiting for a lock.",
+   "A lost update gives wrong data but does not stop the threads; here they are blocked.",
+   "Starved threads could run if they were picked; here each waits for a lock that will never be freed."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שרת מפסיק לענות. השימוש ב-CPU קרוב לאפס, ו-thread dump מראה ש-thread A מחכה ל-lock ש-B מחזיק, בזמן ש-B מחכה ל-lock ש-A מחזיק. מה זה?",
+   "options": [
+    "deadlock",
+    "לולאה אינסופית ב-A או ב-B",
+    "race condition שגרם ל-lost update",
+    "starvation: ה-scheduler כל הזמן מדלג על A ועל B"
+   ],
+   "why": "כל אחד משני ה-threads מחזיק lock ומחכה ל-lock של השני, מעגל שלעולם לא ייפתר. ה-CPU הנמוך מתאים לזה: threads חסומים לא צורכים CPU, בעוד שלולאה אינסופית הייתה מעסיקה core כל הזמן.",
+   "wrong": [
+    null,
+    "thread שנמצא בלולאה רץ, ולכן ה-CPU היה גבוה, וה-dump לא היה מראה שהוא מחכה ל-lock.",
+    "lost update נותן נתונים שגויים אבל לא עוצר את ה-threads. כאן הם חסומים.",
+    "threads ב-starvation היו יכולים לרוץ אילו נבחרו. כאן כל אחד מחכה ל-lock שלעולם לא ישוחרר."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-why-lock-ordering-works",
+  "topic": "concurrency",
+  "subtopic": "deadlock",
+  "concepts": [
+   "lock-ordering",
+   "circular-wait",
+   "deadlock-prevention"
+  ],
+  "level": "medium",
+  "q": "A team rule says that a thread needing several locks takes them in alphabetical order of the lock names. Why does this prevent deadlock?",
+  "options": [
+   "Each thread can now hold only one lock at a time",
+   "No cycle of waits can form when everyone locks in the same order",
+   "The OS schedules threads that follow an order ahead of the others",
+   "A thread may now take a lock that another thread is holding"
+  ],
+  "answer": 1,
+  "why": "A thread waiting for lock Y holds only locks that come before Y. A cycle would need some thread to hold a later lock while waiting for an earlier one, which the rule forbids. So circular wait cannot happen.",
+  "wrong": [
+   "Threads can still hold several locks at once; they just take them in a fixed order.",
+   null,
+   "The OS scheduler knows nothing about the team's lock order.",
+   "Ordering does not take locks away from anyone; a held lock stays held until its owner releases it."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כלל בצוות קובע ש-thread שצריך כמה locks לוקח אותם לפי סדר אלפביתי של שמות ה-locks. למה זה מונע deadlock?",
+   "options": [
+    "כל thread יכול עכשיו להחזיק רק lock אחד בכל פעם",
+    "לא יכול להיווצר מעגל המתנה כשכולם נועלים באותו סדר",
+    "מערכת ההפעלה מתזמנת threads שפועלים לפי סדר לפני האחרים",
+    "thread יכול עכשיו לקחת lock ש-thread אחר מחזיק"
+   ],
+   "why": "thread שמחכה ל-lock Y מחזיק רק locks שבאים לפני Y. מעגל היה דורש ש-thread כלשהו יחזיק lock מאוחר יותר בזמן שהוא מחכה ל-lock מוקדם יותר, וזה מה שהכלל אוסר. לכן circular wait לא יכול לקרות.",
+   "wrong": [
+    "threads עדיין יכולים להחזיק כמה locks בבת אחת. הם רק לוקחים אותם בסדר קבוע.",
+    null,
+    "ה-scheduler של מערכת ההפעלה לא יודע כלום על סדר ה-locks של הצוות.",
+    "הסדר לא לוקח locks מאף אחד: lock מוחזק נשאר מוחזק עד שהבעלים שלו משחרר אותו."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-transfer-deadlock-fix",
+  "topic": "concurrency",
+  "subtopic": "deadlock",
+  "concepts": [
+   "lock-ordering",
+   "deadlock-prevention"
+  ],
+  "level": "medium",
+  "q": "transfer(from, to) locks from, then to. One thread runs transfer(A, B) while another runs transfer(B, A), and they deadlock. What is the simplest fix?",
+  "options": [
+   "Lock the two accounts in a fixed order, such as lower id first",
+   "Add a short sleep between taking the first and the second lock",
+   "Give each thread its own copy of both accounts",
+   "Lock only the from account, since that is the one losing money"
+  ],
+  "answer": 0,
+  "why": "The deadlock comes from two threads taking the same two locks in opposite orders. If every transfer locks the account with the lower id first, both threads go for the same lock first, and one simply waits for the other to finish.",
+  "wrong": [
+   null,
+   "A sleep only changes timing and can make the bad overlap more likely; it never removes the cycle.",
+   "Private copies avoid the locks but break the transfer, since the real balances are never updated together.",
+   "Then the to account is updated without a lock, which brings back lost updates."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "transfer(from, to) נועלת את from ואז את to. thread אחד מריץ transfer(A, B) בזמן ש-thread אחר מריץ transfer(B, A), והם נכנסים ל-deadlock. מה התיקון הפשוט ביותר?",
+   "options": [
+    "לנעול את שני החשבונות בסדר קבוע, למשל קודם את זה עם ה-id הנמוך",
+    "להוסיף sleep קצר בין לקיחת ה-lock הראשון לשני",
+    "לתת לכל thread עותק משלו של שני החשבונות",
+    "לנעול רק את חשבון ה-from, כי ממנו יורד הכסף"
+   ],
+   "why": "ה-deadlock נובע משני threads שלוקחים את אותם שני locks בסדר הפוך. אם כל העברה נועלת קודם את החשבון עם ה-id הנמוך, שני ה-threads הולכים קודם על אותו lock, ואחד מהם פשוט מחכה שהשני יסיים.",
+   "wrong": [
+    null,
+    "sleep רק משנה את התזמון ויכול אפילו להגדיל את הסיכוי לחפיפה הבעייתית. הוא אף פעם לא מסיר את המעגל.",
+    "עותקים פרטיים חוסכים את ה-locks אבל שוברים את ההעברה, כי היתרות האמיתיות אף פעם לא מתעדכנות יחד.",
+    "אז חשבון ה-to מתעדכן בלי lock, וזה מחזיר את ה-lost updates."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-dining-philosophers",
+  "topic": "concurrency",
+  "subtopic": "deadlock",
+  "concepts": [
+   "deadlock",
+   "circular-wait",
+   "lock-ordering"
+  ],
+  "level": "medium",
+  "q": "Five diners sit at a round table with one fork between each pair. Each picks up the left fork, then the right fork. What can go wrong, and what is a standard fix?",
+  "options": [
+   "Nothing: everyone follows the same rule, so the setup is fair and safe",
+   "All five can hold a left fork and wait forever; one diner takes the right fork first",
+   "All five can hold a left fork and wait forever; each one should wait a fixed time first",
+   "Two diners may use one fork at once; each fork needs its own lock"
+  ],
+  "answer": 1,
+  "why": "If all five pick up their left fork at once, each waits for a right fork a neighbor holds: a full circle of waiting. If one diner takes the right fork first, that diner competes with a neighbor for the same first fork, so the circle cannot close and someone gets both forks.",
+  "wrong": [
+   "Following the same rule is exactly what lets all five end up holding one fork each.",
+   null,
+   "A fixed pause only shifts timing; all five can still take a left fork at the same moment.",
+   "A fork can be held by only one diner; the problem is waiting in a circle, not sharing."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/threads-sema.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חמישה סועדים יושבים סביב שולחן עגול, עם מזלג אחד בין כל שני סועדים. כל אחד מרים את המזלג השמאלי ואז את הימני. מה יכול להשתבש, ומה תיקון מקובל?",
+   "options": [
+    "שום דבר: כולם פועלים לפי אותו כלל, ולכן הסידור הוגן ובטוח",
+    "כל החמישה יכולים להחזיק מזלג שמאלי ולחכות לנצח; סועד אחד לוקח קודם את המזלג הימני",
+    "כל החמישה יכולים להחזיק מזלג שמאלי ולחכות לנצח; כל אחד צריך לחכות קודם זמן קבוע",
+    "שני סועדים עלולים להשתמש במזלג אחד בו זמנית; כל מזלג צריך lock משלו"
+   ],
+   "why": "אם כל החמישה מרימים את המזלג השמאלי בבת אחת, כל אחד מחכה למזלג ימני שהשכן שלו מחזיק: מעגל המתנה שלם. אם סועד אחד לוקח קודם את המזלג הימני, הוא מתחרה עם שכן על אותו מזלג ראשון, ולכן המעגל לא יכול להיסגר ומישהו מקבל את שני המזלגות.",
+   "wrong": [
+    "דווקא העובדה שכולם פועלים לפי אותו כלל מאפשרת לכל החמישה להיתקע כשכל אחד מחזיק מזלג אחד.",
+    null,
+    "השהיה קבועה רק מזיזה את התזמון: כל החמישה עדיין יכולים לקחת מזלג שמאלי באותו רגע.",
+    "מזלג יכול להיות מוחזק רק על ידי סועד אחד. הבעיה היא המתנה במעגל, לא שיתוף."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-retry-without-backoff",
+  "topic": "concurrency",
+  "subtopic": "deadlock",
+  "concepts": [
+   "livelock",
+   "deadlock-prevention",
+   "timeout"
+  ],
+  "level": "hard",
+  "q": "To avoid deadlock, each thread tries its second lock with a short timeout; on failure it releases the first lock and retries at once. Two threads keep failing this way. What is happening?",
+  "options": [
+   "A deadlock: both threads are blocked waiting",
+   "A race condition: the two threads corrupt the locks",
+   "A livelock: both keep retrying, and neither gets both locks",
+   "Normal behavior: the timeout guarantees one of them succeeds soon"
+  ],
+  "answer": 2,
+  "why": "The threads are not blocked: they keep taking, timing out, releasing and retrying, often in step with each other, so neither makes progress. A random wait before each retry breaks the rhythm so one thread can get both locks.",
+  "wrong": [
+   "In a deadlock threads wait and do nothing; here they keep running and giving locks back.",
+   "The locks are not corrupted; the threads simply never hold both at the same time.",
+   null,
+   "A timeout ends one wait but does not decide who wins; identical retries can repeat for a long time."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/concurrency/starvelive.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כדי להימנע מ-deadlock, כל thread מנסה לקחת את ה-lock השני שלו עם timeout קצר. אם זה נכשל, הוא משחרר את ה-lock הראשון ומנסה שוב מיד. שני threads ממשיכים להיכשל כך. מה קורה?",
+   "options": [
+    "deadlock: שני ה-threads חסומים בהמתנה",
+    "race condition: שני ה-threads משבשים את ה-locks",
+    "livelock: שניהם ממשיכים לנסות שוב, ואף אחד לא מקבל את שני ה-locks",
+    "התנהגות רגילה: ה-timeout מבטיח שאחד מהם יצליח בקרוב"
+   ],
+   "why": "ה-threads לא חסומים: הם ממשיכים לקחת, לחכות ל-timeout, לשחרר ולנסות שוב, לעתים קרובות באותו קצב בדיוק, כך שאף אחד לא מתקדם. המתנה אקראית לפני כל ניסיון שוברת את הקצב, כך ש-thread אחד יכול לקבל את שני ה-locks.",
+   "wrong": [
+    "ב-deadlock ה-threads מחכים ולא עושים כלום. כאן הם ממשיכים לרוץ ולהחזיר locks.",
+    "ה-locks לא משתבשים. ה-threads פשוט אף פעם לא מחזיקים את שניהם באותו זמן.",
+    null,
+    "timeout מסיים המתנה אחת אבל לא קובע מי מנצח. ניסיונות זהים יכולים לחזור על עצמם הרבה זמן."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-immutable-objects",
+  "topic": "concurrency",
+  "subtopic": "thread-safety",
+  "concepts": [
+   "immutability",
+   "shared-state"
+  ],
+  "level": "easy",
+  "q": "Why can an immutable object, such as a Java String, be shared by many threads without any lock?",
+  "options": [
+   "Nothing can change it after it is built, so no write can race",
+   "The JVM gives each reading thread its own private copy of it",
+   "Immutable objects are kept on the stack, which each thread owns",
+   "Every method call on an immutable object takes a hidden lock"
+  ],
+  "answer": 0,
+  "why": "Races need a write to shared state. Once an immutable object is built, nothing can change it, so every thread sees the same values. Code that wants different text makes a new object instead.",
+  "wrong": [
+   null,
+   "All threads share one object; immutability is what makes sharing it safe.",
+   "Objects live on the heap, which threads share; immutability, not location, is what helps.",
+   "No lock is taken; none is needed, because nothing ever changes."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/concurrency/immutable.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למה object שהוא immutable, כמו String ב-Java, יכול להיות משותף להרבה threads בלי שום lock?",
+   "options": [
+    "שום דבר לא יכול לשנות אותו אחרי שהוא נבנה, ולכן אין כתיבה שיכולה ליצור race",
+    "ה-JVM נותן לכל thread שקורא אותו עותק פרטי משלו",
+    "objects שהם immutable נשמרים על ה-stack, שכל thread הוא הבעלים שלו",
+    "כל קריאה ל-method של object שהוא immutable לוקחת lock נסתר"
+   ],
+   "why": "races דורשים כתיבה ל-state משותף. ברגע ש-object שהוא immutable נבנה, שום דבר לא יכול לשנות אותו, ולכן כל thread רואה את אותם ערכים. קוד שרוצה טקסט אחר יוצר object חדש במקום.",
+   "wrong": [
+    null,
+    "כל ה-threads חולקים object אחד. ה-immutability היא מה שהופך את השיתוף לבטוח.",
+    "objects חיים על ה-heap, שה-threads חולקים. מה שעוזר הוא ה-immutability, לא המיקום.",
+    "שום lock לא נלקח, ואין בו צורך, כי שום דבר אף פעם לא משתנה."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-locals-vs-fields",
+  "topic": "concurrency",
+  "subtopic": "thread-safety",
+  "concepts": [
+   "thread-confinement",
+   "stack-vs-heap",
+   "shared-state"
+  ],
+  "level": "easy",
+  "q": "A method uses a local variable sum and also updates a field total of an object shared by two threads. Both threads call the method at once. What needs protection?",
+  "options": [
+   "Both, since both are used by two threads",
+   "Only sum, since local variables live on the shared heap",
+   "Only total; each call gets its own copy of sum",
+   "Neither: a method body runs in only one thread at a time"
+  ],
+  "answer": 2,
+  "why": "Each thread has its own stack, so every call gets a separate copy of the local sum. The field total belongs to an object both threads share, so updates to it can race.",
+  "wrong": [
+   "Two calls of the same method do not share locals; each call has its own copy.",
+   "Local variables live on each thread's own stack, not on the shared heap.",
+   null,
+   "Two threads can run the same method at the same time unless something makes them take turns."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "method משתמשת במשתנה מקומי sum וגם מעדכנת field בשם total של object ששני threads חולקים. שני ה-threads קוראים ל-method באותו זמן. מה צריך הגנה?",
+   "options": [
+    "שניהם, כי שני threads משתמשים בשניהם",
+    "רק sum, כי משתנים מקומיים חיים על ה-heap המשותף",
+    "רק total: כל קריאה מקבלת עותק משלה של sum",
+    "אף אחד: גוף של method רץ רק ב-thread אחד בכל פעם"
+   ],
+   "why": "לכל thread יש stack משלו, ולכן כל קריאה מקבלת עותק נפרד של המשתנה המקומי sum. ה-field בשם total שייך ל-object ששני ה-threads חולקים, ולכן עדכונים שלו יכולים ליצור race.",
+   "wrong": [
+    "שתי קריאות לאותה method לא חולקות משתנים מקומיים: לכל קריאה יש עותק משלה.",
+    "משתנים מקומיים חיים על ה-stack של כל thread, לא על ה-heap המשותף.",
+    null,
+    "שני threads יכולים להריץ את אותה method באותו זמן, אלא אם משהו גורם להם לחכות לתורם."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-thread-local-instance",
+  "topic": "concurrency",
+  "subtopic": "thread-safety",
+  "concepts": [
+   "thread-local",
+   "thread-confinement"
+  ],
+  "level": "medium",
+  "q": "A date formatter class is not thread-safe and is costly to create. Many request threads need one. Which approach is safe and needs no lock?",
+  "options": [
+   "Share one formatter and accept that requests rarely overlap",
+   "Give each thread its own formatter with thread-local storage",
+   "Store a new formatter in a static field each time one is needed",
+   "Mark the formatter field final, so its state cannot change"
+  ],
+  "answer": 1,
+  "why": "Thread-local storage gives every thread its own instance, created once and reused by that thread. No instance is shared, so no lock is needed, and creation costs once per thread instead of once per call.",
+  "wrong": [
+   "Rare overlap still means corrupted output some of the time; a race is not fine just because it is rare.",
+   null,
+   "A static field is shared by all threads, so they still use and replace the same object.",
+   "final only stops the field from pointing to another object; the formatter's own state can still change."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/ThreadLocal.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "class של date formatter אינו thread-safe ויקר ליצירה. הרבה threads של requests צריכים אחד כזה. איזו גישה בטוחה ולא דורשת lock?",
+   "options": [
+    "לשתף formatter אחד ולהשלים עם זה ש-requests חופפים רק לעתים רחוקות",
+    "לתת לכל thread formatter משלו באמצעות thread-local storage",
+    "לשמור formatter חדש ב-static field בכל פעם שצריך אחד",
+    "לסמן את ה-field של ה-formatter כ-final, כך שה-state שלו לא יוכל להשתנות"
+   ],
+   "why": "thread-local storage נותן לכל thread instance משלו, שנוצר פעם אחת ומשמש את אותו thread שוב ושוב. שום instance לא משותף, ולכן לא צריך lock, ועלות היצירה משולמת פעם אחת לכל thread ולא בכל קריאה.",
+   "wrong": [
+    "חפיפה נדירה עדיין אומרת פלט משובש בחלק מהפעמים. race לא הופך לתקין רק כי הוא נדיר.",
+    null,
+    "static field משותף לכל ה-threads, ולכן הם עדיין משתמשים באותו object ומחליפים אותו.",
+    "final רק מונע מה-field להצביע ל-object אחר. ה-state של ה-formatter עצמו עדיין יכול להשתנות."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-synchronized-map-compound",
+  "topic": "concurrency",
+  "subtopic": "thread-safety",
+  "concepts": [
+   "synchronized-collection",
+   "check-then-act",
+   "atomicity"
+  ],
+  "level": "medium",
+  "q": "booked is a synchronized map, so each single call on it is thread-safe. Two users call book(\"12A\", ...) at the same moment. What can happen?",
+  "code": "import java.util.*;\nclass Seats {\n    private final Map<String, String> booked =\n        Collections.synchronizedMap(new HashMap<>());\n\n    boolean book(String seat, String user) {\n        if (booked.containsKey(seat)) return false;\n        booked.put(seat, user);\n        return true;\n    }\n}",
+  "lang": "java",
+  "options": [
+   "Exactly one call returns true, since the map is synchronized",
+   "The second put on the same key throws an exception",
+   "The map's internal structure gets corrupted and other seats are lost",
+   "Both calls return true; the later put replaces the first user"
+  ],
+  "answer": 3,
+  "why": "Each call is locked on its own, but containsKey and put are two calls. Both threads can see the seat as free before either puts, so both return true. The check and the put must be one step: one lock around both, or a single put-if-absent call.",
+  "wrong": [
+   "Locking single calls does not join two calls into one step; the gap between them is the race.",
+   "put on an existing key silently replaces the value; it does not fail.",
+   "The map's own lock protects its internal structure; only the check-then-put logic is broken.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/concurrency/collections.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "booked הוא synchronized map, ולכן כל קריאה בודדת עליו היא thread-safe. שני משתמשים קוראים ל-book(\"12A\", ...) באותו רגע. מה יכול לקרות?",
+   "options": [
+    "בדיוק קריאה אחת מחזירה true, כי ה-map הוא synchronized",
+    "ה-put השני על אותו key זורק exception",
+    "המבנה הפנימי של ה-map משתבש ומושבים אחרים הולכים לאיבוד",
+    "שתי הקריאות מחזירות true, וה-put המאוחר מחליף את המשתמש הראשון"
+   ],
+   "why": "כל קריאה ננעלת בנפרד, אבל containsKey ו-put הן שתי קריאות. שני ה-threads יכולים לראות שהמושב פנוי לפני שאחד מהם עושה put, ולכן שניהם מחזירים true. הבדיקה וה-put חייבים להיות צעד אחד: lock אחד סביב שניהם, או קריאה אחת של put-if-absent.",
+   "wrong": [
+    "נעילה של קריאות בודדות לא מאחדת שתי קריאות לצעד אחד. הפער ביניהן הוא ה-race.",
+    "put על key קיים מחליף את הערך בשקט. הוא לא נכשל.",
+    "ה-lock של ה-map עצמו מגן על המבנה הפנימי שלו. רק הלוגיקה של check-then-put שבורה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "concurrency-plain-list-two-writers",
+  "topic": "concurrency",
+  "subtopic": "thread-safety",
+  "concepts": [
+   "unsafe-collection",
+   "nondeterminism",
+   "shared-state"
+  ],
+  "level": "medium",
+  "q": "Two threads each add 10,000 items to one plain ArrayList with no locking, then main prints the size. Which outcomes are possible?",
+  "code": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        List<Integer> list = new ArrayList<>();\n        Runnable job = () -> { for (int i = 0; i < 10_000; i++) list.add(i); };\n        Thread a = new Thread(job), b = new Thread(job);\n        a.start(); b.start(); a.join(); b.join();\n        System.out.println(list.size());\n    }\n}",
+  "lang": "java",
+  "options": [
+   "Always 20000, since add() is a single method call",
+   "20000, a smaller size, or an exception in one of the threads",
+   "Always 10000, since both threads write into the same slots",
+   "A compile error, since an ArrayList cannot be shared between threads"
+  ],
+  "answer": 1,
+  "why": "add() reads the size, may grow the internal array, stores the item and updates the size. Two threads mixing these steps can overwrite each other's slot, or write past the end of an array the other thread just replaced. The outcome changes from run to run.",
+  "wrong": [
+   "One method call is still many steps inside, and nothing stops two threads from mixing them.",
+   null,
+   "Overwrites happen only when steps overlap, not on every add, so the size is usually well above 10000.",
+   "Java does not check thread use at compile time; the code compiles and fails while running."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני threads מוסיפים כל אחד 10,000 פריטים ל-ArrayList רגיל אחד בלי locking, ואז main מדפיס את הגודל. אילו תוצאות אפשריות?",
+   "options": [
+    "תמיד 20000, כי add() היא קריאה אחת ל-method",
+    "20000, גודל קטן יותר, או exception באחד ה-threads",
+    "תמיד 10000, כי שני ה-threads כותבים לאותם תאים",
+    "שגיאת compile, כי אי אפשר לשתף ArrayList בין threads"
+   ],
+   "why": "add() קוראת את הגודל, אולי מגדילה את ה-array הפנימי, שומרת את הפריט ומעדכנת את הגודל. שני threads שמערבבים את הצעדים האלה יכולים לדרוס זה את התא של זה, או לכתוב מעבר לסוף של array שה-thread השני בדיוק החליף. התוצאה משתנה מהרצה להרצה.",
+   "wrong": [
+    "קריאה אחת ל-method היא עדיין הרבה צעדים בפנים, ושום דבר לא מונע משני threads לערבב אותם.",
+    null,
+    "דריסות קורות רק כשצעדים חופפים, לא בכל add, ולכן הגודל בדרך כלל הרבה מעל 10000.",
+    "Java לא בודקת שימוש ב-threads בזמן compile: הקוד עובר compile ונכשל ב-runtime."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-why-a-work-queue",
+  "topic": "concurrency",
+  "subtopic": "producer-consumer",
+  "concepts": [
+   "producer-consumer",
+   "queue",
+   "decoupling"
+  ],
+  "level": "easy",
+  "q": "Requests arrive in bursts, and a fixed set of worker threads handles them. Why put a queue between the code that receives requests and the workers?",
+  "options": [
+   "A queue makes each single request run faster",
+   "A queue removes the need for any locking in the program",
+   "The sides can run at different speeds; bursts wait in the queue",
+   "A queue lets all workers process each incoming request at the same time"
+  ],
+  "answer": 2,
+  "why": "The queue decouples the two sides. Receivers add work as fast as it arrives, and each worker takes the next item when it is free. A burst is absorbed by the queue instead of making the receiver wait or drop requests.",
+  "wrong": [
+   "Queuing adds waiting time; it smooths bursts and keeps workers busy, it does not speed up one request.",
+   "The queue itself must be thread-safe, and workers may still need locks for any other data they share.",
+   null,
+   "Each item is taken by one worker; a work queue hands out tasks, it does not broadcast them."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/threads-cv.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "requests מגיעים ב-bursts, וקבוצה קבועה של worker threads מטפלת בהם. למה לשים queue בין הקוד שמקבל את ה-requests לבין ה-workers?",
+   "options": [
+    "queue גורם לכל request בודד לרוץ מהר יותר",
+    "queue מבטל את הצורך בכל locking בתוכנית",
+    "שני הצדדים יכולים לרוץ במהירויות שונות, וה-bursts מחכים ב-queue",
+    "queue מאפשר לכל ה-workers לעבד כל request נכנס בו זמנית"
+   ],
+   "why": "ה-queue מפריד בין שני הצדדים. המקבלים מוסיפים עבודה מהר ככל שהיא מגיעה, וכל worker לוקח את הפריט הבא כשהוא פנוי. burst נספג ב-queue במקום לגרום למקבל לחכות או לזרוק requests.",
+   "wrong": [
+    "queue מוסיף זמן המתנה. הוא מחליק bursts ומשאיר את ה-workers עסוקים, הוא לא מאיץ request בודד.",
+    "ה-queue עצמו חייב להיות thread-safe, ו-workers עדיין עשויים להזדקק ל-locks עבור כל נתון אחר שהם חולקים.",
+    null,
+    "כל פריט נלקח על ידי worker אחד. work queue מחלק משימות, הוא לא משדר אותן לכולם."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-bounded-buffer-full",
+  "topic": "concurrency",
+  "subtopic": "producer-consumer",
+  "concepts": [
+   "bounded-buffer",
+   "backpressure",
+   "blocking"
+  ],
+  "level": "easy",
+  "q": "A bounded buffer holds 10 items, and no item may be lost. The producer is faster than the consumer, and the buffer is now full. What should the producer do?",
+  "options": [
+   "Block until the consumer frees a slot",
+   "Overwrite the oldest item so it never has to wait",
+   "Grow the buffer, since being full means it was sized too small",
+   "Keep checking in a tight loop until a slot is free"
+  ],
+  "answer": 0,
+  "why": "Blocking when full is the point of a bounded buffer: it slows the fast side to the pace of the slow side (backpressure) and keeps memory use fixed. The producer wakes up as soon as a slot is free.",
+  "wrong": [
+   null,
+   "Overwriting silently loses work the consumer has not handled yet.",
+   "Growing it whenever it fills removes the bound, so a fast producer can use up all memory.",
+   "Spinning gets the same result, but it keeps a CPU core busy doing nothing while it waits."
+  ],
+  "ref": "https://docs.python.org/3/library/queue.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "bounded buffer מחזיק 10 פריטים, ואסור שפריט כלשהו ילך לאיבוד. ה-producer מהיר יותר מה-consumer, וה-buffer מלא עכשיו. מה ה-producer צריך לעשות?",
+   "options": [
+    "להיחסם עד שה-consumer מפנה מקום",
+    "לדרוס את הפריט הוותיק ביותר כדי שלא יצטרך לחכות אף פעם",
+    "להגדיל את ה-buffer, כי אם הוא מלא סימן שהגודל שלו קטן מדי",
+    "להמשיך לבדוק בלולאה צפופה עד שמתפנה מקום"
+   ],
+   "why": "חסימה כשה-buffer מלא היא כל המטרה של bounded buffer: היא מאטה את הצד המהיר לקצב של הצד האיטי (backpressure) ושומרת על שימוש קבוע בזיכרון. ה-producer מתעורר ברגע שמתפנה מקום.",
+   "wrong": [
+    null,
+    "דריסה מאבדת בשקט עבודה שה-consumer עוד לא טיפל בה.",
+    "הגדלה בכל פעם שהוא מתמלא מבטלת את הגבול, ואז producer מהיר יכול לנצל את כל הזיכרון.",
+    "spinning משיג את אותה תוצאה, אבל הוא מעסיק core של CPU בלי לעשות כלום בזמן ההמתנה."
+   ]
+  }
+ },
+ {
+  "id": "concurrency-two-consumers-output",
+  "topic": "concurrency",
+  "subtopic": "producer-consumer",
+  "concepts": [
+   "producer-consumer",
+   "queue",
+   "nondeterminism"
+  ],
+  "level": "hard",
+  "q": "One queue feeds two consumer threads. Main puts 1, 2, 3, 4 and then one None per consumer as a stop signal. Which statement about the output is right?",
+  "code": "import sys, threading, queue\nq = queue.Queue()\ndef consume():\n    while (item := q.get()) is not None:\n        sys.stdout.write(f\"{item}\\n\")\nworkers = [threading.Thread(target=consume) for _ in range(2)]\nfor w in workers: w.start()\nfor item in [1, 2, 3, 4, None, None]:\n    q.put(item)\nfor w in workers: w.join()",
+  "lang": "python",
+  "options": [
+   "Each consumer prints all four numbers, so each number appears twice",
+   "Always 1 2 3 4 in this order, since the queue is first in, first out",
+   "A number may print twice, since both consumers can get the same item",
+   "Each number prints exactly once, but not always in the order 1 2 3 4"
+  ],
+  "answer": 3,
+  "why": "queue.Queue is thread-safe, and get() removes the item, so each number goes to exactly one consumer. Items leave the queue in order, but the two consumers print on their own schedule, so one may print 2 before the other prints 1. It is rare in a short run, which is exactly why such bugs slip through testing.",
+  "wrong": [
+   "get() removes the item; a queue hands each item to one consumer, it does not broadcast.",
+   "The queue is FIFO, but after taking their items the two threads race to print, so lines can swap.",
+   "Queue.get() is guarded by a lock inside the queue, so two threads never receive the same item.",
+   null
+  ],
+  "ref": "https://docs.python.org/3/library/queue.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "queue אחד מזין שני consumer threads. main מכניס 1, 2, 3, 4 ואז None אחד לכל consumer בתור אות עצירה. איזו טענה על הפלט נכונה?",
+   "options": [
+    "כל consumer מדפיס את כל ארבעת המספרים, ולכן כל מספר מופיע פעמיים",
+    "תמיד 1 2 3 4 בסדר הזה, כי ה-queue הוא first in, first out",
+    "מספר עלול להיות מודפס פעמיים, כי שני ה-consumers יכולים לקבל את אותו פריט",
+    "כל מספר מודפס בדיוק פעם אחת, אבל לא תמיד בסדר 1 2 3 4"
+   ],
+   "why": "queue.Queue הוא thread-safe, ו-get() מסיר את הפריט, ולכן כל מספר מגיע ל-consumer אחד בדיוק. הפריטים יוצאים מה-queue לפי הסדר, אבל כל אחד משני ה-consumers מדפיס בקצב שלו, ולכן אחד עשוי להדפיס 2 לפני שהשני מדפיס 1. בהרצה קצרה זה נדיר, ובדיוק בגלל זה bugs כאלה חומקים מה-tests.",
+   "wrong": [
+    "get() מסיר את הפריט: queue מעביר כל פריט ל-consumer אחד, הוא לא משדר אותו לכולם.",
+    "ה-queue הוא FIFO, אבל אחרי שלקחו את הפריטים שני ה-threads מתחרים מי ידפיס ראשון, ולכן שורות יכולות להתחלף.",
+    "Queue.get() מוגן על ידי lock בתוך ה-queue, ולכן שני threads אף פעם לא מקבלים את אותו פריט.",
+    null
+   ]
+  }
+ }
+]
