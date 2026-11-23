@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added (docs)
+- Redesign brief (`docs/REDESIGN_BRIEF.md`, `docs/PLAN.md`): the prompt for stage F6, a research-led redesign of the whole site with an interactive Problem Map. Not started.
+
 ### Added (wave F2-4, Nvidia, group A)
 - Five problems Nvidia asks, each with 8 verified solutions, 15 cases, hints and a walkthrough: View Cone (Hard, polar angles and a wrapping window, LeetCode 1610), Cover Area (union of two rectangles, 223), Digit Sum Pair (largest pair per digit-sum group, 2342), Closest Gaps (all closest pairs after sorting, 1200), Two Power Check (one set bit, 231). 205 -> 210 problems; Nvidia's top 60 on the site goes from 52 to 57.
 - View Cone compares angles with a 1e-9 tolerance in the reference and every solution, so a point exactly on the edge of the view does not depend on how a language's atan2 rounds.

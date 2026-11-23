@@ -91,6 +91,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Step 8, sessions: shared session banner with tabular timer and single 5-minute warning announcement, interview problem switcher with per-problem status, colour-banded interview report with difficulty and Review links, battle lockdown with Leave race exit and two distinct thicker race bars
   - [x] Step 9, learning path: thicker green overall bar with the count, a one-line description per tier, topic disclosure buttons with `aria-expanded` and a mini bar on every topic header, full-row links with the shared status and difficulty, a visible Next up tag, two-line rows on phones
   - [x] Step 10, polish: Modes hub redesigned to two cards (Interview, Battle) with user-facing copy, last session results, one primary button, and an AI Mentor note; privacy page on shared page-head and tokens; dead CSS removed and carried Step 4/5/9 nits swept
+- [ ] **F6. Full redesign, research-led:** an interactive Problem Map, a redesign of every screen and state in one consistent style, no style decided in advance. The agent researches real sites (screenshots and video), prototypes three directions, decides, and implements with a screen inventory and coverage matrix. Brief: `docs/REDESIGN_BRIEF.md`. Not started; starts when the owner says
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)

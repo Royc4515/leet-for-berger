@@ -63,7 +63,7 @@ src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler 
 src/js/ui/views/           dashboard, workspace, path, companies, modes (hub, interview, battle)
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test
-docs/                      ARCHITECTURE, DESIGN, PROBLEM_FORMAT, ROADMAP, PLAN, DEPLOY_RUNNER, DEPLOY_AUTH, DEPLOY_GITHUB_SYNC, adr/
+docs/                      ARCHITECTURE, DESIGN, PROBLEM_FORMAT, ROADMAP, PLAN, REDESIGN_BRIEF, DEPLOY_RUNNER, DEPLOY_AUTH, DEPLOY_GITHUB_SYNC, adr/
 ```
 
 Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR). Deeper: `docs/ARCHITECTURE.md` and `docs/DESIGN.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
