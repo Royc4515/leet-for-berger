@@ -2,6 +2,7 @@
  * Minimal DOM helpers. No framework on purpose: zero build step keeps the repo
  * deployable to GitHub Pages as-is and keeps Claude Code edits easy to review.
  */
+import { glide } from './motion.js';
 
 /**
  * Hyperscript-style element factory. Children that are strings become text nodes,
@@ -185,6 +186,7 @@ export function segmented({ label, options, value, onChange }) {
         'aria-pressed': String(o.value === value),
         onClick: () => {
           buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(options[i].value === o.value)));
+          glide(group, '[aria-pressed="true"]');
           onChange(o.value);
         },
       },
@@ -192,6 +194,8 @@ export function segmented({ label, options, value, onChange }) {
     ),
   );
   group.append(...buttons);
+  // The selected background slides between options (ui/motion.js); placed once the group is on screen.
+  glide(group, '[aria-pressed="true"]');
   return group;
 }
 
@@ -237,7 +241,7 @@ export function loadingState({ label = 'Loading...', rows = 6 } = {}) {
 }
 
 /**
- * Shared footer for browse pages: the main destinations, a replay of the site tour, and the
+ * Shared footer for browse pages: the main destinations, a replay of this page's guide, and the
  * privacy policy.
  * @param {{ note?: string }} [opts] note: one extra line (company pages carry the trademark note)
  * @returns {HTMLElement}
@@ -254,7 +258,7 @@ export function siteFooter({ note = '' } = {}) {
       h('a', { href: '#/daily' }, 'Daily'),
       h('a', { href: '#/path' }, 'Path'),
       // main.js owns tours (they outlive a view); the footer only asks for one.
-      h('button.site-links-tour', { type: 'button', onClick: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'site' })) }, 'Site tour'),
+      h('button.site-links-tour', { type: 'button', 'aria-haspopup': 'dialog', onClick: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) }, 'Guide for this page'),
       h('a', { href: 'privacy.html' }, 'Privacy Policy'),
     ),
     note ? h('p.site-links-note', {}, note) : null,

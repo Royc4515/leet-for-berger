@@ -41,3 +41,19 @@ The one long task is module evaluation and the first draw, before the user can i
 - No new dependency, no ADR 0001 exception.
 - Visual changes to the map are CSS changes; layout changes go through the pure module and its tests.
 - If a future design needs zoom (thousands of problems), the layout already returns coordinates a camera transform can use.
+
+## Amendment (2026-11-23): drill-down levels
+
+The owner asked for a map that opens up step by step down to one problem. The research decision against pan and zoom stands (it fights page scroll on a phone and is hard to drive from a keyboard); what was added is **semantic zoom by level**, each level a hash:
+
+| Level | Hash | Canvas | Panel |
+|---|---|---|---|
+| All topics | `#/map` | the districts above | the topic under the pointer or focus (your next topic by default) |
+| One topic | `#/map/<topic>` | its subtopics (taxonomy `concepts`) as blocks on a winding road in learning order, one hex per problem (`layoutTopic`) | topic state, lock reason, links, the subtopic list |
+| One subtopic | `#/map/<topic>/<subtopic>` | its problems as named hex tiles (HTML, so titles wrap) | the path's pick and the next problem |
+| One problem | `#/map/<topic>/<subtopic>/<problem>` | the same tiles, the picked one lit | difficulty, status, where it is asked (`problem-meta.json`), Open |
+
+- **Routing**: the router hands a new map hash to the mounted view (`update` on the view's cleanup, `main.js`) instead of rebuilding it, so levels animate and Back and Forward still work. `parseMapLevel` turns any hash into the deepest valid level, so old `#/map/<topic>` links land on the topic.
+- **Motion**: going in, the new level grows out of the element you picked (`transform: scale` from its centre, 360 ms); going out, the level above settles back around the one you left. Reduced motion skips it.
+- **Keyboard**: arrows move between districts and between subtopic blocks (the same `neighbours`), Enter zooms in, Esc goes up one level. Esc reads the level from the address, not the view's state: the hash changes at once but `hashchange` lands a task later, and a quick second Esc must still climb.
+- **Cost**: a topic level draws at most a few dozen elements; the subtopic level is a short HTML list. Nothing in the measurements above changes.

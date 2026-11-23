@@ -21,8 +21,8 @@ const PAGES = [
   { kind: 'page', id: 'interview', label: 'Interview simulator', href: '#/interview', keywords: 'mock oa timed exam' },
   { kind: 'page', id: 'battle', label: 'Battle a bot', href: '#/battle', keywords: 'race versus' },
   { kind: 'page', id: 'modes', label: 'Modes', href: '#/modes', keywords: 'practice' },
-  // An action, not a page: main.js starts the tour where you are.
-  { kind: 'action', id: 'site-tour', label: 'Site tour', keywords: 'guide help walkthrough onboarding how', run: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'site' })) },
+  // An action, not a page: main.js replays the guide of the page you are on.
+  { kind: 'action', id: 'page-guide', label: 'Guide for this page', keywords: 'tour help walkthrough onboarding how explain', run: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) },
 ];
 
 const KIND_LABEL = { page: 'Page', action: 'Guide', problem: 'Problem', topic: 'Topic', company: 'Company' };
