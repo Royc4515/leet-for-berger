@@ -2,11 +2,15 @@
  * Dashboard: progress stats + filterable problem bank. Reads only the catalog: no problem module
  * loads here (docs/adr/0008-lazy-problem-modules.md).
  */
-import { h, mount, difficulty, chipGroup, stateBlock, siteFooter } from '../dom.js';
-import { catalog, catalogEntry, TOPICS, DIFFICULTIES } from '../../problems/index.js';
-import { stats, dayKey } from '../../state/progress.js';
-import { dailyProblem, dailyCandidates, weakSpots } from '../../data/recommend.js';
+import { h, mount, difficulty, chipGroup, stateBlock, siteFooter, hexMark } from '../dom.js';
+import { catalog, TOPICS, DIFFICULTIES } from '../../problems/index.js';
+import { stats } from '../../state/progress.js';
+import { weakSpots } from '../../data/recommend.js';
 import { loadPath } from '../../data/path-loader.js';
+import { dailyCard } from '../daily-card.js';
+import { countUp } from '../motion.js';
+
+const HEAD_DATE = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
 const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
 const topicLabel = (id) => TOPICS.find((t) => t.id === id)?.label ?? id;
@@ -36,10 +40,10 @@ export function renderDashboard(root, { store }) {
         h(
           'tr',
           {},
+          h('th.cell-status', { scope: 'col' }, h('span.sr-only', {}, 'Status')),
           h('th', { scope: 'col' }, 'Title'),
-          h('th', { scope: 'col' }, 'Status'),
           h('th', { scope: 'col' }, 'Difficulty'),
-          h('th', { scope: 'col' }, 'Topics'),
+          h('th', { scope: 'col' }, 'Topic'),
         ),
       ),
       tableBody,
@@ -56,9 +60,6 @@ export function renderDashboard(root, { store }) {
   function renderToday() {
     if (!path) return;
     const state = store.get();
-    const dailyId = dailyProblem(dailyCandidates(path), dayKey());
-    const daily = dailyId ? catalogEntry(dailyId) : null;
-    const dailyDone = daily && state.problems[daily.id]?.status === 'solved';
     const spots = weakSpots(path, state.problems);
     const reason = (s) =>
       [s.unsolved ? `${s.unsolved} attempted, not solved` : null, s.assisted ? `${s.assisted} solved with the solution revealed` : null, s.failedSubmits ? `${s.failedSubmits} rejected ${s.failedSubmits === 1 ? 'submit' : 'submits'}` : null]
@@ -66,20 +67,7 @@ export function renderDashboard(root, { store }) {
         .join(', ');
     mount(
       today,
-      daily
-        ? h(
-            'section.today-card.today-daily',
-            { 'aria-labelledby': 'daily-title' },
-            h(
-              'div.today-daily-copy',
-              {},
-              h('div.today-kicker', { id: 'daily-title' }, 'Problem of the day'),
-              h('div.today-main', {}, h('a.problem-link', { href: `#/problem/${daily.id}` }, daily.title), difficulty(daily.difficulty), dailyDone ? h('span.tag.tag-live', {}, 'Solved') : null),
-              h('div.hint-text', {}, 'The same problem for everyone today. A new one at midnight.'),
-            ),
-            h('a.btn.btn-primary.today-cta', { href: `#/problem/${daily.id}` }, dailyDone ? 'Review' : 'Solve'),
-          )
-        : null,
+      dailyCard({ path, state, now: new Date(), compact: true }),
       h(
         `section.today-card.today-weak${spots.length ? '' : '.is-empty'}`,
         { 'aria-labelledby': 'weak-title' },
@@ -92,18 +80,23 @@ export function renderDashboard(root, { store }) {
                 h(
                   'li',
                   {},
-                  h('div', {}, h('strong', {}, s.title), h('div.hint-text', {}, reason(s))),
+                  h('div.weak-copy', {}, h('strong', {}, s.title), h('div.hint-text', {}, reason(s))),
                   s.next ? h('a.btn.btn-secondary.btn-sm', { href: `#/problem/${s.next}` }, 'Practice') : h('span.hint-text', {}, 'Every problem here is solved'),
                 ),
               ),
             )
           : h('p.hint-text', {}, 'None yet. Topics show up here when you miss submits, leave a problem unsolved or reveal a solution.'),
+        h('a.weak-map-link', { href: '#/map' }, 'See every topic on the map'),
       ),
     );
   }
 
   const statCell = (label, value, sub) =>
-    h('div.stat-cell', {}, h('div.stat-value', {}, value), h('div.stat-label', {}, label), sub ? h('div.stat-sub', {}, sub) : null);
+    h('div.stat-cell', {}, h('div.stat-value', {}, value), h('div.stat-label', {}, label, sub ? h('span.stat-sub', {}, ` ${sub}`) : null));
+  // The solved count ticks up from the number this tab last showed (one moving number, once), so
+  // coming back after a solve shows the step you just made. Never from zero: the text is always true.
+  const SEEN_KEY = 'lfb:seen-solved';
+  let stopCount = () => {};
 
   function renderStats() {
     const state = store.get();
@@ -113,33 +106,42 @@ export function renderDashboard(root, { store }) {
     if (!hasActivity) {
       mount(
         statsRow,
+        h('span.start-hex', { 'aria-hidden': 'true' }),
         h(
           'div.start-copy',
           {},
           h('strong', {}, 'Start with the learning path or today\'s problem.'),
-          h('span.start-sub', {}, `${available} problems ready to practice, ordered easy to hard.`),
+          h('span.start-sub', {}, `${available} problems ready to practice, ordered easy to hard. Every solve lights a hex on the map.`),
         ),
-        h('a.btn.btn-secondary.btn-sm', { href: '#/path' }, 'Learning path'),
+        h('div.start-actions', {}, h('a.btn.btn-secondary.btn-sm', { href: '#/path' }, 'Learning path'), h('a.btn.btn-ghost.btn-sm', { href: '#/map' }, 'Open the map')),
       );
       return;
     }
+    const solvedCell = statCell('Solved', `${st.solved}`, `of ${available}`);
     mount(
       statsRow,
-      statCell('Solved', `${st.solved}`, `of ${available}`),
+      solvedCell,
       statCell('Streak', `${st.streak} ${st.streak === 1 ? 'day' : 'days'}`),
       statCell('Accuracy', st.accuracy === null ? '-' : `${st.accuracy}%`),
       statCell('Submits', `${st.submissions}`),
     );
+    let seen = null;
+    try {
+      seen = sessionStorage.getItem(SEEN_KEY);
+      sessionStorage.setItem(SEEN_KEY, String(st.solved));
+    } catch {
+      /* storage blocked: no tick, the number is already right */
+    }
+    const from = seen === null ? NaN : Number(seen);
+    if (Number.isFinite(from) && from < st.solved) {
+      stopCount();
+      stopCount = countUp(solvedCell.querySelector('.stat-value'), st.solved, { from });
+    }
   }
 
   const statusCell = (status) => {
     const label = STATUS_LABEL[status];
-    return h(
-      `span.status-pill.s-${status}`,
-      {},
-      h('span.status-dot', { 'aria-hidden': 'true' }),
-      label ? label : h('span.sr-only', {}, 'Not started'),
-    );
+    return h(`span.status-pill.s-${status}`, { title: label ?? 'Not started' }, hexMark(status), h('span.sr-only', {}, label ?? 'Not started'));
   };
 
   function hasActiveFilters() {
@@ -190,12 +192,12 @@ export function renderDashboard(root, { store }) {
         const prog = state.problems[p.id];
         const status = prog?.status === 'solved' ? (prog.revealed ? 'assisted' : 'solved') : prog ? 'attempted' : 'todo';
         const isAvailable = p.status === 'available';
-        const title = isAvailable ? h('a.problem-link', { href: `#/problem/${p.id}` }, p.title) : h('span.planned-title', {}, p.title);
+        const title = isAvailable ? h('a.problem-link.row-link-target', { href: `#/problem/${p.id}` }, p.title) : h('span.planned-title', {}, p.title);
         return h(
-          `tr${isAvailable ? '.row-link' : '.row-planned'}`,
+          `tr${isAvailable ? '.row-link' : '.row-planned'}.s-${status}`,
           {},
-          h('td.cell-title', {}, title, isAvailable ? null : h('span.tag.tag-muted', {}, 'Coming soon')),
           h('td.cell-status', {}, statusCell(status)),
+          h('td.cell-title', {}, title, isAvailable ? null : h('span.tag.tag-muted', {}, 'Coming soon')),
           h('td.cell-diff', {}, difficulty(p.difficulty)),
           h('td.cell-topics', {}, p.topics.map((t) => h('span.tag', {}, topicLabel(t)))),
         );
@@ -272,6 +274,14 @@ export function renderDashboard(root, { store }) {
     renderRows();
   });
 
+  /** Opens a random unsolved problem among those the filters show (AlgoExpert's "pick random"). */
+  const randomBtn = h('button.btn.btn-ghost.btn-sm.random-btn', { type: 'button', onClick: () => {
+    const state = store.get();
+    const q = filters.query.trim().toLowerCase();
+    const pool = catalog.filter((p) => p.status === 'available' && state.problems[p.id]?.status !== 'solved' && (filters.difficulty === 'All' || p.difficulty === filters.difficulty) && (filters.topic === 'all' || p.topics.includes(filters.topic)) && (!q || p.title.toLowerCase().includes(q)));
+    if (pool.length) location.hash = `#/problem/${pool[Math.floor(Math.random() * pool.length)].id}`;
+  }, 'aria-label': 'Open a random unsolved problem' }, h('span.hexmark', { 'aria-hidden': 'true' }), 'Random', h('span.random-extra', {}, ' unsolved'));
+
   function clearFilters() {
     filters.difficulty = 'All';
     filters.topic = 'all';
@@ -287,9 +297,14 @@ export function renderDashboard(root, { store }) {
   mount(
     root,
     h(
-      'div.page',
+      'div.page.dashboard-page',
       {},
-      h('header.page-head', {}, h('h1', {}, 'Problem Bank'), h('p.page-sub', {}, 'Practice by topic and difficulty. Every submission runs 15 tests: 5 detailed, 10 hidden.')),
+      h(
+        'header.page-head',
+        {},
+        h('div', {}, h('span.eyebrow', {}, HEAD_DATE.format(new Date())), h('h1', {}, 'Problems'), h('p.page-sub', {}, `${available} problems in 26 topics. Every submission runs 15 tests: 5 you can open, 10 hidden.`)),
+        h('nav.view-switch', { 'aria-label': 'Problems view' }, h('a.view-switch-item', { href: '#/', 'aria-current': 'page' }, 'List'), h('a.view-switch-item', { href: '#/map' }, 'Map')),
+      ),
       statsRow,
       today,
       h(
@@ -297,7 +312,7 @@ export function renderDashboard(root, { store }) {
         {},
         h('div.filters.dashboard-filters', {}, search, diffGroup, topicToggle),
         topicPanel,
-        h('div.filter-meta', {}, countLine, clearInline),
+        h('div.filter-meta', {}, countLine, clearInline, randomBtn),
       ),
       tableWrap,
       emptyHost,
@@ -319,6 +334,7 @@ export function renderDashboard(root, { store }) {
   });
   return () => {
     disposed = true;
+    stopCount();
     unsub();
   };
 }

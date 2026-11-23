@@ -2,8 +2,26 @@
 
 ## [Unreleased]
 
+### Changed (F6 redesign: Atlas)
+- **A new design for the whole site** (`docs/DESIGN.md`, decision in `docs/research/DESIGN_DIRECTIONS.md`): a warm graphite map with one amber lamp colour. Every problem is a hex: on the map, as the status mark in lists, as a day in the daily calendar, as a test case in the verdict. Chosen from three prototyped directions (Atlas, Transit, Orbit) after research on 63 captured sites (`docs/research/DESIGN_REFERENCES.md`).
+- New tokens (colour, type, spacing, radius, elevation, motion), a display face (Bricolage Grotesque, self-hosted, ADR 0009), a hex logo, favicon and social preview image (`src/brand/`), a warm editor theme, and one rule set for every component. `tests/design-tokens.test.js` now also fails on any literal colour or duration in a component rule.
+- **Problems**: a daily hero with this week as hexes and the streak, a stats strip that ticks up when you come back after a solve, status hexes in a fixed first column, difficulty as pips plus the word, "Random unsolved", two-line rows on a phone.
+- **Workspace**: a map breadcrumb and a limits line on the statement, grouped toolbar, and a verdict console that shows the 15 cases as hexes (5 that open, 10 hidden with a lock and pass or fail only), then the open case; an Accepted submit adds "First solve" and a "Next" link to the learning path's next problem.
+- **Learning path** is the route through the map: a route line with a hex per tier, checkpoint lines, hex progress strips per topic, "You are here", and a pinned Next up.
+- **Companies**: hex company marks (letters, not logos) filled by your progress, an IL dot for a major Israeli presence; a company briefing page with big numbers, the difficulty mix, the topics it asks most, Israel context and the problem list as the spine.
+- **Modes**: an exam room and a race, each with its own card; restyled setup screens, session banner, report and race lanes.
+- Header with a jump-to button, a five-item phone tab bar (Map added), a streak chip that lights once today is done, toasts with a hex marker, hex spinner and skeletons, two-action state blocks and a 404 that offers the map; the privacy page uses the new shell and says the site shows no company logos.
+
+### Added (F6)
+- **Problem Map** (`#/map`, `#/map/<topic>`): 26 topics as districts of hexes, one per problem, in six tiers with prerequisite roads; a topic is locked until each prerequisite has 2 solves, and the panel says why in one sentence (locked is advice, every problem still opens); pointing at a topic lights its prerequisite chain; Status, Difficulty and Company lenses; a List view with every problem as a link; arrow-key navigation and deep links. Pure model and layout in `src/js/data/map-layout.js` (16 unit tests), SVG view (ADR 0010, measured: no long tasks while interacting at 4x CPU throttling).
+- **Daily challenge page** (`#/daily`): Daily No. N, a countdown in minutes, current and best streak, a rolling 30-day count, a 16-week hex calendar that opens on this week, and the last 7 dailies. Date maths in `src/js/data/daily.js` (unit-tested).
+- **Command palette** (Ctrl or Cmd+K, or the header button): jump to any page, topic, problem or company; ranking in `src/js/data/palette-search.js` (unit-tested); off during sessions.
+- `src/js/data/problem-topics.json` (taxonomy topic and subtopic per problem, built by `scripts/content/build-meta.mjs`), `src/js/ui/motion.js` (durations, easing, reduced motion, count up, view transitions), `scripts/design/capture-screens.mjs`, `scripts/design/perf-map.mjs` and `scripts/design/social-preview.mjs`.
+- **Guided tours**: a four-step site tour on the first visit to a browse page (what a hex means, the map, the path, Ctrl+K), and a two or three step guide for each mode the first time it opens (Mock OA and interview, 1v1 Battle, AI Mentor), one short line per step. A spotlight on the element each step explains and a card beside it (a sheet on a phone); Next, Back, Skip, Esc and arrow keys; shown once per device (`lfb:tours:v1`, a device preference), replayable from the footer, the palette, "How it works" on the setup pages and the mentor's "?" button. Content in `src/js/data/tours.js`, placement in `src/js/data/tour-layout.js`, seen state in `src/js/state/tours.js` (11 unit tests), overlay in `src/js/ui/tour.js`.
+- e2e steps for the map (desktop and 390), the daily page, the palette, the guided tours (first visit, once only, replays, every mode, 390 sheet with 44 px buttons) and a reduced-motion sweep of every route.
+
 ### Added (docs)
-- Redesign brief (`docs/REDESIGN_BRIEF.md`, `docs/PLAN.md`): the prompt for stage F6, a research-led redesign of the whole site with an interactive Problem Map. Not started.
+- Redesign brief (`docs/REDESIGN_BRIEF.md`), screen inventory (`docs/research/SCREEN_INVENTORY.md`), research, directions and decision (`docs/research/`), plan and coverage matrix (`docs/F6_PLAN.md`), ADR 0009 and ADR 0010.
 
 ### Changed
 - Collinear Max's growth ladder is now 125 to 1000 points (was 250 to 2000): the 2000 size pushed a run to about 5.4 s, over the browser's 5 s budget; a run now takes about 1.2 s and still reads quadratic. The unused `gcd` helper in its problem file is removed (review nits on group C).

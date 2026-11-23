@@ -150,22 +150,42 @@ function defineTheme(monaco) {
   if (themeDefined) return;
   const css = getComputedStyle(document.documentElement);
   const tok = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
+  // Syntax in warm, low-chroma colours that sit on the graphite ground for hours without glare;
+  // the lamp amber is kept for the cursor only (docs/DESIGN.md, Atlas).
   monaco.editor.defineTheme(THEME, {
     base: 'vs-dark',
     inherit: true,
-    rules: [],
+    rules: [
+      { token: 'comment', foreground: '8a8174', fontStyle: 'italic' },
+      { token: 'keyword', foreground: 'e59a7f' },
+      { token: 'string', foreground: 'aac98e' },
+      { token: 'number', foreground: 'dcbc76' },
+      { token: 'regexp', foreground: 'dcbc76' },
+      { token: 'type', foreground: '93c1d4' },
+      { token: 'type.identifier', foreground: '93c1d4' },
+      { token: 'delimiter', foreground: 'b3aa9c' },
+      { token: 'identifier', foreground: 'ece5d9' },
+    ],
     colors: {
-      'editor.background': tok('--panel', '#15171a'),
-      'editorGutter.background': tok('--panel', '#15171a'),
-      'editor.lineHighlightBackground': tok('--panel-2', '#1b1e22'),
-      'editor.lineHighlightBorder': tok('--panel-2', '#1b1e22'),
-      'editorLineNumber.foreground': tok('--border-control', '#646d7a'),
-      'editorLineNumber.activeForeground': tok('--text-2', '#b4bac3'),
-      'editor.selectionBackground': tok('--border-strong', '#3a4049'),
-      'editorWidget.background': tok('--panel-2', '#1b1e22'),
-      'editorWidget.border': tok('--border-strong', '#3a4049'),
-      'editorIndentGuide.background1': tok('--border', '#2a2f36'),
-      'scrollbarSlider.background': `${tok('--border-strong', '#3a4049')}99`,
+      'editor.background': tok('--panel', '#171512'),
+      'editor.foreground': tok('--text', '#f2ece2'),
+      'editorGutter.background': tok('--panel', '#171512'),
+      'editor.lineHighlightBackground': tok('--panel-2', '#1e1c18'),
+      'editor.lineHighlightBorder': tok('--panel-2', '#1e1c18'),
+      'editorLineNumber.foreground': tok('--border-control', '#6f675b'),
+      'editorLineNumber.activeForeground': tok('--text-2', '#cbc2b5'),
+      'editorCursor.foreground': tok('--accent', '#f3a93c'),
+      'editor.selectionBackground': '#4a3b25',
+      'editor.inactiveSelectionBackground': '#3a3125',
+      'editorBracketMatch.background': '#3d3426',
+      'editorBracketMatch.border': '#6f675b',
+      'editorWidget.background': tok('--panel-2', '#1e1c18'),
+      'editorWidget.border': tok('--border-strong', '#3d3831'),
+      'editorSuggestWidget.background': tok('--panel-2', '#1e1c18'),
+      'editorSuggestWidget.selectedBackground': tok('--panel-3', '#27241f'),
+      'editorIndentGuide.background1': tok('--border', '#2c2823'),
+      'editorIndentGuide.activeBackground1': tok('--border-strong', '#3d3831'),
+      'scrollbarSlider.background': `${tok('--border-strong', '#3d3831')}99`,
     },
   });
   themeDefined = true;

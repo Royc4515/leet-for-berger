@@ -21,7 +21,7 @@ export function h(tag, attrs = {}, ...children) {
     if (v === false || v === null || v === undefined) continue;
     if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
     else if (k === 'class') el.className += ` ${v}`;
-    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k === 'style' && typeof v === 'object') for (const [prop, val] of Object.entries(v)) prop.startsWith('--') ? el.style.setProperty(prop, val) : (el.style[prop] = val);
     else if (k === 'dataset') Object.assign(el.dataset, v);
     else if (v === true) el.setAttribute(k, '');
     else el.setAttribute(k, String(v));
@@ -197,51 +197,104 @@ export function segmented({ label, options, value, onChange }) {
 
 /**
  * Shared empty, error, or informational state block with one optional recovery action.
- * @param {{ title?: string, body?: string, kind?: 'empty'|'error', headingTag?: 'h1'|'h2', action?: { label: string, href?: string, onClick?: () => void, variant?: string }|null }} opts
+ * @param {{ title?: string, body?: string, kind?: 'empty'|'error', headingTag?: 'h1'|'h2', action?: { label: string, href?: string, onClick?: () => void, variant?: string }|null, secondary?: { label: string, href?: string, onClick?: () => void, variant?: string }|null }} opts
  * @returns {HTMLElement}
  */
-export function stateBlock({ title, body, kind = 'empty', headingTag = 'h2', action = null } = {}) {
-  const actionEl = !action
-    ? null
-    : action.href
-      ? h(`a.btn.${action.variant ?? 'btn-primary'}`, { href: action.href }, action.label)
-      : h(`button.btn.${action.variant ?? 'btn-primary'}`, { type: 'button', onClick: action.onClick }, action.label);
+export function stateBlock({ title, body, kind = 'empty', headingTag = 'h2', action = null, secondary = null } = {}) {
+  const button = (a, variant) =>
+    !a
+      ? null
+      : a.href
+        ? h(`a.btn.${a.variant ?? variant}`, { href: a.href }, a.label)
+        : h(`button.btn.${a.variant ?? variant}`, { type: 'button', onClick: a.onClick }, a.label);
+  const actionEl = button(action, 'btn-primary');
+  const secondaryEl = button(secondary, 'btn-ghost');
   return h(
     `div.state.state-${kind}`,
     kind === 'error' ? { role: 'alert' } : { role: 'status' },
     title ? h(`${headingTag}.state-title`, {}, title) : null,
     body ? h('p.state-body', {}, body) : null,
-    actionEl ? h('div.state-action', {}, actionEl) : null,
+    actionEl || secondaryEl ? h('div.state-action', {}, actionEl, secondaryEl) : null,
   );
 }
 
 /**
- * Shared loading state with skeleton rows sized to match real list rows.
+ * Shared loading state: a title and summary placeholder, then skeleton rows the height of real
+ * list rows, so the page does not jump when content arrives.
  * @param {{ label?: string, rows?: number }} [opts]
  * @returns {HTMLElement}
  */
 export function loadingState({ label = 'Loading...', rows = 6 } = {}) {
-  const skeletonRows = Array.from({ length: rows }, () =>
-    h('div.skeleton-row', { 'aria-hidden': 'true' }, h('span.skeleton-bar.skeleton-title'), h('span.skeleton-bar.skeleton-meta')),
-  );
+  const skeletonRows = Array.from({ length: rows }, () => h('div.skeleton-row', { 'aria-hidden': 'true' }, h('span.skeleton-hex'), h('span.skeleton-bar.skeleton-line')));
   return h(
     'div.state.state-loading',
     { role: 'status', 'aria-busy': 'true' },
     h('p.sr-only', {}, label),
+    h('div.skeleton-title', { 'aria-hidden': 'true' }),
+    h('div.skeleton-meta', { 'aria-hidden': 'true' }),
     h('div.skeleton-list', {}, skeletonRows),
   );
 }
 
 /**
- * Shared footer for browse pages with a link to the privacy policy.
+ * Shared footer for browse pages: the main destinations, a replay of the site tour, and the
+ * privacy policy.
+ * @param {{ note?: string }} [opts] note: one extra line (company pages carry the trademark note)
  * @returns {HTMLElement}
  */
-export function siteFooter() {
+export function siteFooter({ note = '' } = {}) {
   return h(
     'footer.site-links',
     {},
-    h('span.site-links-copy', {}, 'Leet-For-Berger'),
-    h('span.site-links-sep', { 'aria-hidden': 'true' }, '·'),
-    h('a', { href: 'privacy.html' }, 'Privacy Policy'),
+    h('span.site-links-brand', {}, h('span.hexmark.solved', { 'aria-hidden': 'true' }), h('span.site-links-copy', {}, 'Leet-For-Berger')),
+    h(
+      'nav.site-links-nav',
+      { 'aria-label': 'Footer' },
+      h('a', { href: '#/map' }, 'Map'),
+      h('a', { href: '#/daily' }, 'Daily'),
+      h('a', { href: '#/path' }, 'Path'),
+      // main.js owns tours (they outlive a view); the footer only asks for one.
+      h('button.site-links-tour', { type: 'button', onClick: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'site' })) }, 'Site tour'),
+      h('a', { href: 'privacy.html' }, 'Privacy Policy'),
+    ),
+    note ? h('p.site-links-note', {}, note) : null,
+  );
+}
+
+/**
+ * A problem's status as the shared hex mark (docs/DESIGN.md). Decorative: callers put the status
+ * in words next to it or in the row's accessible name.
+ * @param {'new'|'todo'|'attempted'|'solved'|'assisted'} status
+ * @returns {HTMLElement}
+ */
+export function hexMark(status) {
+  return h(`span.hexmark.${status === 'todo' ? 'new' : status}`, { 'aria-hidden': 'true' });
+}
+
+/**
+ * Thin progress bar. Decorative: the text beside it says "x of y solved".
+ * @param {number} done
+ * @param {number} total
+ * @returns {HTMLElement}
+ */
+export function progressBar(done, total) {
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  return h('span.progress-bar', { 'aria-hidden': 'true' }, h('span.progress-fill', { style: { width: `${pct}%` } }));
+}
+
+/**
+ * Company mark: a hex tile with the company's monogram (letters, not logos:
+ * docs/research/DESIGN_DIRECTIONS.md). A dot marks a major Israeli engineering presence, a ring a
+ * tier-1 company, and `fill` (0 to 1) rises from the bottom as the company's set is solved.
+ * Decorative: the company name is always written next to it.
+ * @param {{ letters: string, israel?: string|null, tier?: number|null, fill?: number, size?: 'sm'|'md'|'lg' }} opts
+ * @returns {HTMLElement}
+ */
+export function companyMark({ letters, israel = null, tier = null, fill = 0, size = 'md' }) {
+  const cls = `span.company-mark.monogram.is-mono${size !== 'md' ? `.${size}` : ''}${israel === 'major' ? '.is-il' : ''}${tier === 1 ? '.is-t1' : ''}`;
+  return h(
+    cls,
+    { 'aria-hidden': 'true', style: { '--fill': `${Math.round(Math.min(1, Math.max(0, fill)) * 100)}%` } },
+    h('span.company-mark-letters', {}, letters),
   );
 }

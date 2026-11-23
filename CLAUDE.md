@@ -20,8 +20,9 @@ Local e2e on a machine with Chrome but no Playwright browsers: `PW_CHANNEL=chrom
 
 ```
 index.html                 shell: header, <main id="view">, loads src/js/main.js
-src/css/app.css            all styles; design tokens at the top
-src/fonts/                 self-hosted Inter + JetBrains Mono woff2 fonts
+src/css/app.css            all styles; Atlas design tokens at the top (docs/DESIGN.md)
+src/fonts/                 self-hosted Bricolage Grotesque (display), Inter, JetBrains Mono woff2 fonts (README.md, ADR 0009)
+src/brand/                 logo, favicon, social preview (scripts/design/social-preview.mjs)
 src/js/main.js             bootstrap + hash router (every view returns a cleanup fn)
 src/js/engine/             PURE judging logic + execution
   harness.js               buildSuite (15 cases), judge, deepEqual, preview
@@ -42,7 +43,7 @@ src/js/engine/             PURE judging logic + execution
   sql.js                   SQL problems: schema validation, starter, result-set judging (ADR 0003)
 src/js/config.js          public site config: remote runner URL (empty = editor-only), Turnstile site key
 src/js/problems/<id>/      problem.js + solutions/ (8 language files, or solution.sql); index.js = catalog + loadProblem (lazy, ADR 0008); catalog.js is generated (scripts/content/build-catalog.mjs); hydrate.js
-src/js/state/              progress (pure reducers + localStorage), drafts, sync.js (merge across devices)
+src/js/state/              progress (pure reducers + localStorage), drafts, sync.js (merge across devices), tours.js (which tours this device has seen)
 src/js/auth/               account.js (Supabase sign-in, inert unless configured), sync-controller.js (ADR 0006), github-sync.js (ADR 0007)
 src/js/modes/              interview.js, battle.js, mock-oa.js (pure session logic and OA problem picking)
 src/js/mentor/             mentor providers (scripted today, remote later)
@@ -52,6 +53,12 @@ src/js/data/problem-meta.js companies, best known complexity, family per shipped
 src/js/data/company-sets.js practice by company: per-company problem lists, one row per family (-> company-sets.json, same script, which also merges content/israel-hiring.json via scripts/content/israel-companies.mjs: aliases collapsed, Israel fields, display order)
 src/js/data/learning-path.js essential path: 131 problems by tier and topic, easy to hard (-> essential-path.json, same script)
 src/js/data/recommend.js   problem of the day, weak spots from progress
+src/js/data/daily.js       daily challenge maths: number, streaks, rolling count, 16-week calendar
+src/js/data/map-layout.js  Problem Map model: topic states, lock reasons, deterministic layout, keyboard neighbours (ADR 0010)
+src/js/data/problem-topics.js taxonomy topic per shipped problem (-> problem-topics.json, build-meta.mjs)
+src/js/data/palette-search.js command palette ranking
+src/js/data/tours.js       guided tour content (site tour + one per mode), validateTour; tour-layout.js = card and spotlight placement (pure)
+src/js/data/company-loader.js fetch loaders for company-sets.json and problem-topics.json
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md)
 scripts/content/           fetch sources, build index, audit
 scripts/verify/            verifier helpers (harnesses.mjs re-exports engine/programs; sql, growth)
@@ -59,14 +66,15 @@ deploy/cloudflare-worker/  Worker in front of the runner: CORS, rate limit, size
 deploy/supabase/functions/ Edge Functions: github-sync (core.js is unit-tested in Node, index.ts is the Deno entry)
 deploy/piston/             VM kit: Piston image, runtime packages, gate, compose, setup.sh, smoke.mjs, dev/
 db/schema.sql              PostgreSQL schema (ADR 0002); scripts/db/ = git -> database sync + checks
-src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler (Monaco's TS service), resizer, results console
-src/js/ui/views/           dashboard, workspace, path, companies, modes (hub, interview, battle)
+src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler (Monaco's TS service), resizer, results console, motion.js, palette.js (Ctrl+K), daily-card.js, tour.js (guided tour overlay)
+src/js/ui/views/           dashboard, map, daily, workspace, path, companies, modes (hub, interview, battle)
+scripts/design/            capture-screens.mjs (before/after shots), perf-map.mjs (ADR 0010), social-preview.mjs
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test
 docs/                      ARCHITECTURE, DESIGN, PROBLEM_FORMAT, ROADMAP, PLAN, REDESIGN_BRIEF, DEPLOY_RUNNER, DEPLOY_AUTH, DEPLOY_GITHUB_SYNC, adr/
 ```
 
-Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR). Deeper: `docs/ARCHITECTURE.md` and `docs/DESIGN.md`. Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
+Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR). Deeper: `docs/ARCHITECTURE.md` and `docs/DESIGN.md` (the Atlas design system: read it before any UI change). Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
 
 ## Invariants (breaking any of these is a bug, not a style choice)
 

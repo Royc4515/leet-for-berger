@@ -1,8 +1,12 @@
 /**
- * Execution console renderer: verdict header, 5 detailed visible cases, 10 hidden pass/fail pills.
+ * Execution console renderer (docs/DESIGN.md, Atlas): one verdict line, then the 15 cases as a row
+ * of hexes (5 that open, 10 hidden with a lock that show pass or fail only), then the open case.
+ * The hexes resolve left to right; failures get no extra motion. Renders only what judge()
+ * returns: hidden cases arrive here already stripped of inputs and outputs (invariant 3).
  */
 import { h, mount } from './dom.js';
 import { preview } from '../engine/harness.js';
+import { reducedMotion } from './motion.js';
 
 /** Makes tab and panel ids unique across renders (one console at a time, but re-renders overlap). */
 let resultSeq = 0;
@@ -17,24 +21,49 @@ const STATUS_LABEL = {
   unsupported: 'Unsupported',
 };
 
-export function renderIdle(el, message = 'Run your code to see results. Ctrl+\' runs, Ctrl+Enter submits.') {
-  mount(el, h('div.console-idle', {}, h('span.console-prompt', {}, '$'), ' ', message));
+/**
+ * The console before the first run: what will happen and the shortcuts.
+ * @param {HTMLElement} el
+ * @param {string} [message]
+ */
+export function renderIdle(el, message = 'Run tries your code on the 15 tests without recording it. Submit records the result.') {
+  mount(
+    el,
+    h(
+      'div.console-idle',
+      {},
+      h('div.idle-hexes', { 'aria-hidden': 'true' }, Array.from({ length: 15 }, (_, i) => h(`span.idle-hex${i < 5 ? '.is-open' : ''}`))),
+      h('p', {}, message),
+      h('p.console-keys', {}, h('kbd', {}, "Ctrl '"), ' run  ', h('kbd', {}, 'Ctrl Enter'), ' submit'),
+    ),
+  );
 }
 
+/**
+ * Work in progress (booting a runtime, running, submitting).
+ * @param {HTMLElement} el
+ * @param {string} message
+ */
 export function renderPending(el, message) {
-  mount(el, h('div.console-idle', {}, h('span.spinner', { 'aria-hidden': 'true' }), ' ', message));
+  mount(el, h('div.console-pending', {}, h('span.spinner', { 'aria-hidden': 'true' }), h('span', {}, message)));
 }
 
+/**
+ * No verdict to show (custom input invalid, runner unreachable): a plain message, first line first.
+ * @param {HTMLElement} el
+ * @param {string} message
+ */
 export function renderError(el, message) {
-  mount(el, h('div.console-error', {}, message));
+  mount(el, h('div.console-error', {}, h('strong.console-error-head', {}, 'Could not run'), h('pre.console-error-body', {}, message)));
 }
 
 /**
  * @param {HTMLElement} el
  * @param {ReturnType<import('../engine/harness.js').judge>} result
- * @param {{ kind: 'run'|'submit', argNames: string[], elapsedMs: number }} meta
+ * @param {{ kind: 'run'|'submit', argNames: string[], elapsedMs: number, next?: { href: string, title: string }|null, firstSolve?: boolean }} meta
+ *   next: where "Next problem" goes after an Accepted submit (practice only)
  */
-export function renderResult(el, result, { kind, argNames, elapsedMs }) {
+export function renderResult(el, result, { kind, argNames, elapsedMs, next = null, firstSolve = false }) {
   const visible = result.cases.filter((c) => c.visible);
   const hidden = result.cases.filter((c) => !c.visible);
   const verdictClass = result.accepted ? 'ok' : result.verdict === 'Language Not Supported Yet' ? 'muted' : 'bad';
@@ -65,9 +94,9 @@ export function renderResult(el, result, { kind, argNames, elapsedMs }) {
         title: STATUS_LABEL[c.status],
         onClick: () => select(i),
       },
-      h('span.dot', { 'aria-hidden': 'true' }),
-      c.custom ? 'Custom' : `Case ${c.id}`,
-      h('span.sr-only', {}, `, ${STATUS_LABEL[c.status]}`),
+      h('span.case-hex', { 'aria-hidden': 'true' }),
+      h('span.case-num', {}, c.custom ? 'Custom' : String(c.id)),
+      h('span.sr-only', {}, `${c.custom ? '' : ` (case ${c.id})`}, ${STATUS_LABEL[c.status]}`),
     ),
   );
   const tabList = h('div.case-tabs', { role: 'tablist', 'aria-label': 'Visible test cases' }, tabs);
@@ -83,8 +112,10 @@ export function renderResult(el, result, { kind, argNames, elapsedMs }) {
   const firstBad = visible.findIndex((c) => c.status !== 'pass');
   select(firstBad === -1 ? 0 : firstBad);
 
-  mount(
-    el,
+  const accepted = result.accepted && kind === 'submit';
+  const root = h(
+    `div.result.v-${verdictClass}${accepted ? '.is-accepted' : ''}${reducedMotion() ? '' : '.is-resolving'}`,
+    {},
     h(
       'div.result-head',
       {},
@@ -92,19 +123,38 @@ export function renderResult(el, result, { kind, argNames, elapsedMs }) {
       h('span.result-meta', {}, `${result.passed} / ${result.total} tests passed`),
       h('span.result-meta', {}, kind === 'submit' ? 'Submission' : 'Run'),
       h('span.result-meta', {}, `${Math.round(elapsedMs)} ms`),
+      accepted && firstSolve ? h('span.tag.tag-lamp.first-solve', {}, 'First solve') : null,
+      accepted && next ? h('a.btn.btn-primary.btn-sm.next-problem', { href: next.href }, `Next: ${next.title}`) : null,
     ),
-    h('div.section-label', {}, 'Detailed cases (1-5)'),
-    tabList,
-    detail,
-    h('div.section-label', {}, 'Hidden cases (6-15)'),
     h(
-      'div.hidden-grid',
+      'div.case-strip',
       {},
-      hidden.map((c) =>
-        h(`div.hidden-pill.st-${c.status}`, { title: `Hidden test ${c.id}: ${STATUS_LABEL[c.status]}` }, h('span.dot', { 'aria-hidden': 'true' }), `#${c.id}`, h('span.pill-status', {}, c.status === 'pass' ? 'Pass' : 'Fail')),
+      h('div.case-group', {}, h('div.section-label', {}, 'Open cases 1-5'), tabList),
+      h(
+        'div.case-group.case-group-hidden',
+        {},
+        h('div.section-label', {}, 'Hidden cases 6-15'),
+        h(
+          'div.hidden-grid',
+          { role: 'list' },
+          hidden.map((c) =>
+            h(
+              `div.hidden-pill.st-${c.status}`,
+              { role: 'listitem', title: `Hidden test ${c.id}: ${STATUS_LABEL[c.status]}` },
+              h('span.case-hex', { 'aria-hidden': 'true' }),
+              h('span.case-num', {}, `#${c.id}`),
+              h('span.pill-status', {}, c.status === 'pass' ? 'Pass' : 'Fail'),
+            ),
+          ),
+        ),
       ),
     ),
+    detail,
+    h('p.hidden-note', {}, 'Hidden cases show pass or fail only. Their inputs stay private, the way an interview judge works.'),
   );
+  // Stagger index for the resolve animation: open cases first, then hidden, left to right.
+  [...root.querySelectorAll('.case-tab, .hidden-pill')].forEach((c, i) => c.style.setProperty('--i', String(i)));
+  mount(el, root);
 }
 
 /**
@@ -139,7 +189,7 @@ function showCase(el, c, argNames) {
   if (c.stdout) rows.push(['Stdout', c.stdout.trimEnd()]);
   mount(
     el,
-    h(`div.case-status.st-${c.status}`, {}, STATUS_LABEL[c.status], c.timeMs != null ? ` · ${c.timeMs.toFixed(1)} ms` : ''),
+    h(`div.case-status.st-${c.status}`, {}, h('span.case-status-word', {}, `${c.custom ? 'Custom case' : `Case ${c.id}`}: ${STATUS_LABEL[c.status]}`), c.timeMs != null ? h('span.case-time', {}, ` · ${c.timeMs.toFixed(1)} ms`) : ''),
     rows.map(([label, value]) =>
       h('div.io-row', {}, h('div.io-label', {}, label), h(`pre.io-value${label === 'Error' ? '.io-error' : ''}`, {}, value)),
     ),

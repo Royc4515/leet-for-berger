@@ -14,6 +14,23 @@ import { israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/i
 import { usedTopics, pickRandom } from '../../modes/battle-picker.js';
 import { LAST_SESSIONS_KEY } from '../../state/user-data.js';
 import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
+import { startTour, startTourIfDue } from '../tour.js';
+
+/**
+ * A mode's guided tour (data/tours.js): it starts on the first visit to the setup page and the
+ * "How it works" button replays it. The returned close goes in the view's cleanup.
+ * @param {string} id
+ * @returns {{ replay: HTMLElement, close: () => void }}
+ */
+function modeTour(id) {
+  let close = startTourIfDue(id);
+  const replay = h('button.btn.btn-ghost.btn-sm.tour-replay', { type: 'button', 'aria-haspopup': 'dialog' }, 'How it works');
+  replay.addEventListener('click', () => {
+    close();
+    close = startTour(id);
+  });
+  return { replay, close: () => close() };
+}
 
 function loadLastResults() {
   try {
@@ -47,37 +64,61 @@ export function renderModesHub(root) {
   const lastBattle = formatLastBattle(last.battle);
   const firstProblem = availableEntries()[0];
 
-  const card = (title, status, body, lastEl, actions) =>
+  const card = (cls, eyebrow, title, status, body, visual, facts, lastEl, actions) =>
     h(
-      'article.mode-card',
+      `article.mode-card.${cls}`,
       {},
-      h('div.mode-top', {}, h('h2', {}, title), h(`span.tag${status === 'Live' ? '.tag-live' : '.tag-muted'}`, {}, status)),
-      h('p.mode-desc', {}, body),
-      lastEl,
-      h('div.mode-actions', {}, actions),
+      h('div.mode-visual', { 'aria-hidden': 'true' }, visual),
+      h(
+        'div.mode-copy',
+        {},
+        h('div.mode-top', {}, h('span.eyebrow', {}, eyebrow), h(`span.tag${status === 'Live' ? '.tag-live' : '.tag-muted'}`, {}, status)),
+        h('h2', {}, title),
+        h('p.mode-desc', {}, body),
+        h('ul.mode-facts', {}, facts.map((f) => h('li', {}, f))),
+        lastEl,
+        h('div.mode-actions', {}, actions),
+      ),
     );
+
+  // The exam room: a clock face of three format arcs. The race: two lanes.
+  const clockVisual = h('div.exam-clock', {}, h('span.exam-hand'), OA_FORMATS.map((f) => h('span.exam-mark', {}, `${f.minutes}`)));
+  const raceVisual = h(
+    'div.race-preview',
+    {},
+    h('div.race-preview-lane', {}, h('span.race-preview-name', {}, 'You'), h('span.race-preview-track', {}, h('span.race-preview-fill.is-you'))),
+    h('div.race-preview-lane', {}, h('span.race-preview-name', {}, 'Bot'), h('span.race-preview-track', {}, h('span.race-preview-fill.is-bot'))),
+  );
 
   mount(
     root,
     h(
       'div.page',
       {},
-      h('header.page-head', {}, h('h1', {}, 'Modes'), h('p.page-sub', {}, 'Timed practice and paced races on the same 15-case judge.')),
+      h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, 'Under pressure'), h('h1', {}, 'Modes'), h('p.page-sub', {}, 'Practice the way it feels on the day: a timed exam room, or a race against a bot. Both use the same 15-case judge.'))),
       h(
         'div.mode-grid',
         {},
         card(
-          'Mock OA and Interview',
+          'mode-exam',
+          'Exam room',
+          'Mock OA and interview',
           'Live',
-          'Timed phone screens, standard OAs, or hard OAs, optionally drawn from one company\'s problems. Navigation, solution reveal, and the mentor stay hidden; tab switches are logged; ends with a scored report. JavaScript, TypeScript, and Python run live; other languages stay editor-only in sessions.',
-          lastInterview ? h(`p.mode-last.band-${lastInterview.band}`, {}, lastInterview.text) : null,
+          'A timed session with the problems hidden until the clock starts, then a scored report.',
+          clockVisual,
+          [`${OA_FORMATS.map((f) => `${f.minutes}`).join(', ')} minute formats, optionally from one company`, 'Navigation, Reveal and Mentor stay off; tab switches are logged', 'JavaScript, TypeScript and Python run; other languages are editor-only here'],
+          lastInterview ? h(`p.mode-last.band-${lastInterview.band}`, {}, lastInterview.text) : h('p.mode-last.is-empty', {}, 'No session yet.'),
           h('a.btn.btn-primary', { href: '#/interview' }, 'Set up a session'),
         ),
         card(
+          'mode-race',
+          'Race',
           '1v1 Battle',
           'Bot only',
-          'Race a paced bot on the same problem with live progress bars while navigation stays hidden. Bot opponents only; live peer races are not available, and Java, C++, C, C#, and Go stay editor-only during a race.',
-          lastBattle ? h(`p.mode-last${lastBattle.won ? '.is-win' : ''}`, {}, lastBattle.text) : null,
+          'Race a paced bot on the same problem. The first accepted submission wins.',
+          raceVisual,
+          [`${BOT_LEVELS.length} opponents, from ${BOT_LEVELS[0].label.replace(' bot', '')} to ${BOT_LEVELS.at(-1).label.replace(' bot', '')}`, 'Two lanes show tests passed out of 15, live', 'Bots only: there are no live races against people'],
+          lastBattle ? h(`p.mode-last${lastBattle.won ? '.is-win' : ''}`, {}, lastBattle.text) : h('p.mode-last.is-empty', {}, 'No race yet.'),
           h('a.btn.btn-secondary', { href: '#/battle' }, 'Race a bot'),
         ),
       ),
@@ -88,7 +129,7 @@ export function renderModesHub(root) {
           'div.mentor-note-copy',
           {},
           h('div.mentor-note-head', {}, h('h2', {}, 'AI Mentor'), h('span.tag.tag-muted', {}, 'Scripted')),
-          h('p', {}, 'Available as a side panel inside every practice problem. Asks guiding questions without handing out the answer, using an offline scripted hint ladder (no live LLM yet).'),
+          h('p', {}, 'A side panel in every practice problem that asks guiding questions instead of handing out the answer. It runs an offline hint ladder for now.'),
         ),
         firstProblem ? h('a.btn.btn-secondary.btn-sm', { href: `#/problem/${firstProblem.id}` }, 'Try it in a problem') : null,
       ),
@@ -264,6 +305,7 @@ function renderInterviewSetup(root, { store }) {
   describe();
 
   let disposed = false;
+  const tour = modeTour('interview');
   const start = h('button.btn.btn-primary.btn-lg', { type: 'button' }, 'Start interview');
   start.addEventListener('click', async () => {
     const solvedIds = new Set(Object.entries(store.get().problems).filter(([, p]) => p.status === 'solved').map(([id]) => id));
@@ -304,7 +346,7 @@ function renderInterviewSetup(root, { store }) {
       'div.page.page-narrow.setup-page',
       {},
       h('a.back-link', { href: '#/modes' }, 'All modes'),
-      h('header.page-head', {}, h('h1', {}, 'Mock OA and Interview'), h('p.page-sub', {}, 'Treat it like the real thing. The problems stay hidden until the clock starts.')),
+      h('header.page-head', {}, h('h1', {}, 'Mock OA and Interview'), tour.replay, h('p.page-sub', {}, 'Treat it like the real thing. The problems stay hidden until the clock starts.')),
       h(
         'div.setup-card',
         {},
@@ -321,12 +363,15 @@ function renderInterviewSetup(root, { store }) {
           h('li', {}, 'Tab switches cost integrity points; your best run per problem counts when time ends.'),
         ),
       ),
-      h('div.setup-bar', {}, barSummary, start),
+      h('div.setup-bar', { 'data-tour': 'oa-start' }, barSummary, start),
       siteFooter(),
     ),
   );
+  formatGroup.el.dataset.tour = 'oa-format';
+  companyPicker.el.dataset.tour = 'oa-company';
   return () => {
     disposed = true;
+    tour.close();
     formatGroup.cleanup();
     companyPicker.cleanup();
   };
@@ -744,6 +789,7 @@ export function renderBattle(root, { store }) {
 
   describeStart();
   const start = h('button.btn.btn-primary.btn-lg', { type: 'button' }, 'Start race');
+  const tour = modeTour('battle');
 
   let cleanup = () => {};
   let disposed = false;
@@ -770,7 +816,7 @@ export function renderBattle(root, { store }) {
       'div.page.page-narrow.setup-page',
       {},
       h('a.back-link', { href: '#/modes' }, 'All modes'),
-      h('header.page-head', {}, h('h1', {}, '1v1 Battle'), h('p.page-sub', {}, 'First to an accepted submission wins.')),
+      h('header.page-head', {}, h('h1', {}, '1v1 Battle'), tour.replay, h('p.page-sub', {}, 'First to an accepted submission wins.')),
       h(
         'div.setup-card',
         {},
@@ -779,12 +825,15 @@ export function renderBattle(root, { store }) {
         h('h2.setup-heading', {}, 'Problem'),
         problemPicker.el,
       ),
-      h('div.setup-bar', {}, barSummary, start),
+      h('div.setup-bar', { 'data-tour': 'battle-start' }, barSummary, start),
       siteFooter(),
     ),
   );
+  opponentGroup.el.dataset.tour = 'battle-opponent';
+  problemPicker.el.dataset.tour = 'battle-problem';
   return () => {
     disposed = true;
+    tour.close();
     opponentGroup.cleanup();
     problemPicker.cleanup();
     topicToggle.removeEventListener('keydown', onTopicToggleKeydown);

@@ -2,7 +2,7 @@
  * Learning Path: the 131 essential problems by tier and topic, in prerequisite order, with
  * progress derived from solve data and a "Next up" pointer. Data: src/js/data/essential-path.json.
  */
-import { h, mount, difficulty, stateBlock, loadingState, siteFooter } from '../dom.js';
+import { h, mount, difficulty, stateBlock, loadingState, siteFooter, hexMark } from '../dom.js';
 import { catalogEntry } from '../../problems/index.js';
 import { pathProgress, conceptLabel, topicStartsOpen, TIER_SUMMARIES } from '../../data/learning-path.js';
 import { TOPICS } from '../../data/taxonomy.js';
@@ -12,7 +12,7 @@ const topicTitle = (id) => TOPICS.find((t) => t.id === id)?.title ?? id;
 const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
 const pct = (done, total) => (total ? Math.round((done / total) * 100) : 0);
 
-/** Labelled progress bar for the overall path; `mini` is the decorative bar in a topic header. */
+/** Labelled progress bar for the overall path. */
 function progressBar(done, total, label) {
   return h(
     'div.path-bar',
@@ -20,12 +20,12 @@ function progressBar(done, total, label) {
     h('div.path-bar-fill', { style: { width: `${pct(done, total)}%` } }),
   );
 }
-const miniBar = (done, total) =>
-  h('span.path-mini-bar', { 'aria-hidden': 'true' }, h('span.path-bar-fill', { style: { width: `${pct(done, total)}%` } }));
 
-/** Shared dot-plus-word status; "not started" is spoken, not shown, as on the dashboard. */
-const statusPill = (status) =>
-  h(`span.status-pill.s-${status}`, {}, h('span.status-dot', { 'aria-hidden': 'true' }), STATUS_LABEL[status] ?? h('span.sr-only', {}, 'Not started'));
+/** A topic's problems as a strip of hexes, lit when solved (decorative: the count is beside it). */
+const hexStrip = (statuses) => h('span.path-mini-bar.hex-strip', { 'aria-hidden': 'true' }, statuses.map((st) => h(`span.strip-hex.${st}`)));
+
+/** Shared hex-plus-word status; "not started" is spoken, not shown, as on the Problems page. */
+const statusPill = (status) => h(`span.status-pill.s-${status}`, {}, hexMark(status), STATUS_LABEL[status] ? h('span.status-word', {}, STATUS_LABEL[status]) : h('span.sr-only', {}, 'Not started'));
 
 /**
  * @param {HTMLElement} root
@@ -49,7 +49,7 @@ export function renderPath(root, { store }) {
     const body = h(
       'div.path-topic-body',
       { id: bodyId, hidden: !open },
-      tp.prereqs.length ? h('p.hint-text.path-prereqs', {}, `Builds on: ${tp.prereqs.map(topicTitle).join(', ')}`) : null,
+      tp.prereqs.length ? h('p.hint-text.path-prereqs', {}, 'Builds on ', tp.prereqs.map((id, i) => [i ? ', ' : '', h('a', { href: `#/map/${id}` }, topicTitle(id))])) : null,
       h(
         'ol.path-problems',
         {},
@@ -73,6 +73,10 @@ export function renderPath(root, { store }) {
         }),
       ),
     );
+    const statuses = tp.problems.map((p) => {
+      const st = state.problems[p.id];
+      return st?.status === 'solved' ? (st.revealed ? 'assisted' : 'solved') : st ? 'attempted' : 'new';
+    });
     const toggle = h(
       'button.path-topic-toggle',
       {
@@ -87,8 +91,8 @@ export function renderPath(root, { store }) {
         },
       },
       h('span.path-chevron', { 'aria-hidden': 'true' }),
-      h('span.path-topic-title', {}, tp.title, done === total ? h('span.sr-only', {}, ', complete') : null),
-      miniBar(done, total),
+      h('span.path-topic-title', {}, tp.title, done === total ? h('span.sr-only', {}, ', complete') : null, holdsNext ? h('span.tag.tag-lamp.path-here', {}, 'You are here') : null),
+      hexStrip(statuses),
       h('span.path-count', {}, `${done} / ${total}`),
     );
     return h(
@@ -106,35 +110,62 @@ export function renderPath(root, { store }) {
     const nextTitle = overall.next ? catalogEntry(overall.next.id)?.title ?? overall.next.id : null;
     const nextTopic = overall.next ? path.flatMap((t) => t.topics).find((tp) => tp.problems.includes(overall.next)) : null;
 
+    const tierState = (tier) => {
+      const ps = tier.topics.flatMap((tp) => tp.problems);
+      const done = ps.filter((p) => isSolved(p.id)).length;
+      const holds = Boolean(overall.next && ps.includes(overall.next));
+      return { done, total: ps.length, state: done === ps.length ? 'done' : holds ? 'current' : done ? 'started' : 'ahead' };
+    };
     mount(
       root,
       h(
-        'div.page',
+        'div.page.path-page',
         {},
-        h('header.page-head', {}, h('h1', {}, 'Learning Path'), h('p.page-sub', {}, `${overall.total} problems, one per subtopic, in prerequisite order. Finishing it means you have solved every core pattern once. Progress counts accepted submissions.`)),
+        h(
+          'header.page-head',
+          {},
+          h('div', {}, h('span.eyebrow', {}, `${overall.total} problems · ${path.length} tiers`), h('h1', {}, 'Learning path'), h('p.page-sub', {}, 'The route through the map: one problem per subtopic, in prerequisite order. Finishing it means you have solved every core pattern once.')),
+          h('a.btn.btn-ghost.btn-sm', { href: nextTopic ? `#/map/${nextTopic.id}` : '#/map' }, 'See it on the map'),
+        ),
         h(
           'div.path-summary',
           {},
           h(
-            'div.path-summary-top',
+            'div.path-summary-progress',
             {},
             h('div.path-summary-count', {}, h('strong', {}, `${overall.solved} / ${overall.total} solved`), h('span.path-count', {}, `${pct(overall.solved, overall.total)}%`)),
-            overall.next ? h('a.btn.btn-primary', { href: `#/problem/${overall.next.id}` }, `Next up: ${nextTitle}`) : h('span.tag.tag-live', {}, 'Path complete'),
+            progressBar(overall.solved, overall.total, 'Learning path progress'),
           ),
-          progressBar(overall.solved, overall.total, 'Learning path progress'),
-          nextTopic ? h('div.hint-text', {}, `${nextTopic.title}: ${conceptLabel(overall.next.concept)}`) : null,
+          overall.next
+            ? h(
+                'div.path-next',
+                {},
+                h('span.eyebrow', {}, 'Next up'),
+                h('div.path-next-title', {}, nextTitle, ' ', difficulty(overall.next.difficulty)),
+                nextTopic ? h('div.hint-text', {}, `${nextTopic.title} · ${conceptLabel(overall.next.concept)}`) : null,
+              )
+            : h('span.tag.tag-live', {}, 'Path complete'),
+          overall.next ? h('a.btn.btn-primary', { href: `#/problem/${overall.next.id}` }, `Next up: ${nextTitle}`) : null,
         ),
-        path.map((tier) => {
-          const tierProblems = tier.topics.flatMap((tp) => tp.problems);
-          const tierDone = tierProblems.filter((p) => isSolved(p.id)).length;
-          return h(
-            'section.path-tier',
-            { 'aria-labelledby': `tier-${tier.tier}` },
-            h('h2.path-tier-title', { id: `tier-${tier.tier}` }, `Tier ${tier.tier + 1}: ${tier.title}`, h('span.path-count', {}, `${tierDone} / ${tierProblems.length}`)),
-            TIER_SUMMARIES[tier.tier] ? h('p.path-tier-desc', {}, `When you finish it: ${TIER_SUMMARIES[tier.tier].charAt(0).toLowerCase()}${TIER_SUMMARIES[tier.tier].slice(1)}`) : null,
-            h('div.path-topics', {}, tier.topics.map((tp) => topicSection(tp, state, overall))),
-          );
-        }),
+        h(
+          'ol.path-route',
+          {},
+          path.map((tier) => {
+            const ts = tierState(tier);
+            return h(
+              `li.path-tier.is-${ts.state}`,
+              { 'aria-labelledby': `tier-${tier.tier}` },
+              h('span.route-node', { 'aria-hidden': 'true' }),
+              h(
+                'div.path-tier-body',
+                {},
+                h('h2.path-tier-title', { id: `tier-${tier.tier}` }, h('span.tier-num', {}, `Tier ${tier.tier + 1}`), tier.title, h('span.path-count', {}, `${ts.done} / ${ts.total}`)),
+                TIER_SUMMARIES[tier.tier] ? h('p.path-tier-desc', {}, h('span.checkpoint', {}, 'Checkpoint'), ` ${TIER_SUMMARIES[tier.tier]}`) : null,
+                h('div.path-topics', {}, tier.topics.map((tp) => topicSection(tp, state, overall))),
+              ),
+            );
+          }),
+        ),
         siteFooter(),
       ),
     );

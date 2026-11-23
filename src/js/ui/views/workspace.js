@@ -27,6 +27,10 @@ import { createProblemExtras } from '../problem-extras.js';
 import { services } from '../../auth/services.js';
 import { shouldAutoSync } from '../../auth/github-sync.js';
 import { createMentorPanel } from '../mentor-panel.js';
+import { startTour, startTourIfDue } from '../tour.js';
+import { loadPath } from '../../data/path-loader.js';
+import { pathProgress, conceptLabel } from '../../data/learning-path.js';
+import { TOPICS as TAXONOMY } from '../../data/taxonomy.js';
 
 const LANG_KEY = 'lfb:lang';
 /** Whether "About this problem" was left open, so following a family link keeps it open. */
@@ -79,6 +83,8 @@ export function renderWorkspace(root, { problem, store, session = null }) {
   let lastResult = null;
   let disposed = false;
   const allowAssist = session ? session.allowAssist : true;
+  // Practice only: after an Accepted submit the console offers the learning path's next problem.
+  const pathReady = session ? Promise.resolve(null) : loadPath();
   // Java, C++, C, C# and Go run on the remote runner when one is configured, in practice mode only.
   const onServer = (lang) => !session && isRemote(lang);
 
@@ -148,6 +154,20 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       });
   if (extras) cleanups.push(extras.dispose);
 
+  // Where the problem sits on the map: topic and subtopic, filled in once the placement loads.
+  const crumb = h('nav.problem-crumb', { 'aria-label': 'On the map' });
+  if (!session) {
+    import('../../data/company-loader.js')
+      .then((m) => m.loadProblemTopics())
+      .then((placed) => {
+        const p = placed?.[problem.id];
+        const topic = p ? TAXONOMY.find((t) => t.id === p.topic) : null;
+        if (disposed || !topic) return;
+        mount(crumb, h('a', { href: `#/map/${topic.id}` }, h('span.hexmark', { class: store.get().problems[problem.id]?.status === 'solved' ? 'solved' : 'new', 'aria-hidden': 'true' }), topic.title), p.concept ? h('span.crumb-sep', { 'aria-hidden': 'true' }, '/') : null, p.concept ? h('span', {}, conceptLabel(p.concept)) : null);
+      })
+      .catch(() => {});
+  }
+
   const left = h(
     'section.pane.pane-left#ws-description',
     { 'aria-label': 'Problem description' },
@@ -155,10 +175,12 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     h(
       'header.problem-head',
       {},
+      crumb,
       h('h1.problem-title', {}, problem.title),
       h('div.problem-tags', {}, difficulty(problem.difficulty), topicLabels.map((t) => h('span.tag', {}, t)), problem.patterns.map((p) => h('span.tag.tag-muted', {}, p))),
     ),
     aboutBlock,
+    h('p.problem-limits', {}, `15 tests: 5 you can open, 10 hidden · Time limit ${problem.timeLimitMs >= 1000 ? `${problem.timeLimitMs / 1000} s` : `${problem.timeLimitMs} ms`} per case`),
     trustedHtml('div.statement', problem.statementHtml),
     h('h2.block-title', {}, 'Examples'),
     problem.examples.map((ex, i) =>
@@ -281,9 +303,17 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     requestAnimationFrame(() => editor?.layout());
   }
 
+  // The mentor's guided tour: on the first open, and again from the panel's "?" button.
+  let closeMentorTour = () => {};
+  const mentorTour = (replay) => {
+    closeMentorTour();
+    closeMentorTour = replay ? startTour('mentor') : startTourIfDue('mentor', { delay: 260 });
+  };
+  cleanups.push(() => closeMentorTour());
   const mentor = createMentorPanel({
     getContext: () => ({ problem, language, code: editor?.getValue() ?? '', lastResult }),
     onClose: () => toggleMentor(false),
+    onHelp: () => mentorTour(true),
   });
 
   const colHandle = h('div.resizer.resizer-x', { 'aria-label': 'Resize description and editor' });
@@ -310,6 +340,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     split.classList.toggle('mentor-open', open);
     mentorBtn.setAttribute('aria-pressed', String(open));
     if (open) mentor.focus();
+    if (open) mentorTour(false);
     requestAnimationFrame(() => editor?.layout());
   }
   mentorBtn.addEventListener('click', () => toggleMentor());
@@ -458,6 +489,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     }
 
     running = true;
+    root.classList.remove('has-accepted');
     // On a phone the verdict is on the Results tab: go there so it shows without scrolling.
     if (phoneMq.matches) setTab('results');
     runBtn.disabled = submitBtn.disabled = true;
@@ -481,9 +513,22 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       // The problem decides how answers are compared: SQL result sets, judge modes, or exact JSON.
       const result = judge(suite, raw, comparatorFor(problem));
       lastResult = result;
-      renderResult(consoleBody, result, { kind, argNames: problem.argNames, elapsedMs: performance.now() - started });
-
       const executable = languages.find((l) => l.id === language).executable || onServer(language);
+      const recordsSolve = kind === 'submit' && executable && result.accepted && !session;
+      const firstSolve = recordsSolve && store.get().problems[problem.id]?.status !== 'solved';
+      let next = null;
+      if (recordsSolve) {
+        const path = await pathReady;
+        if (disposed) return;
+        const solved = (id) => id === problem.id || store.get().problems[id]?.status === 'solved';
+        const n = path ? pathProgress(path, solved).next : null;
+        const title = n ? catalogEntry(n.id)?.title : null;
+        if (title) next = { href: `#/problem/${n.id}`, title };
+      }
+      renderResult(consoleBody, result, { kind, argNames: problem.argNames, elapsedMs: performance.now() - started, next, firstSolve });
+      // After an Accepted submit the emphasis moves to "Next" (one primary on screen).
+      root.classList.toggle('has-accepted', Boolean(recordsSolve && next));
+
       if (kind === 'submit' && executable) {
         store.update((s) => recordSubmission(s, { problemId: problem.id, accepted: result.accepted, detail: { language, verdict: result.verdict, passed: result.passed, total: result.total, code } }));
         const github = services.github;
@@ -491,7 +536,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
         if (github && shouldAutoSync({ accepted: result.accepted, revealed, link: github.get(), practice: !session })) {
           pushToGitHub({ language, code, verdict: result.verdict, passed: result.passed, total: result.total, assisted: false });
         }
-        toast(result.accepted ? 'Accepted. Nice work.' : `${result.verdict}: ${result.passed}/15`, result.accepted ? 'success' : 'error');
+        toast(result.accepted ? (firstSolve ? 'Accepted. Its hex is lit on the map.' : 'Accepted.') : `${result.verdict}: ${result.passed}/15`, result.accepted ? 'success' : 'error');
       }
       session?.onResult({ kind, result, problemId: problem.id });
       // Practice only: in interview and battle the clock is running, and timing would compete for the CPU.

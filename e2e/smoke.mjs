@@ -38,6 +38,10 @@ await page.addInitScript(() => {
     // longtask is Chromium-only; the number is informational.
   }
 });
+// Guided tours (data/tours.js) open on a first visit. Every context except the fresh-visit step and
+// the tour steps starts with them seen, so a tour never covers what a step is testing.
+const SEEN_TOURS = () => localStorage.setItem('lfb:tours:v1', JSON.stringify({ site: '2026-01-01', interview: '2026-01-01', battle: '2026-01-01', mentor: '2026-01-01' }));
+await page.addInitScript(SEEN_TOURS);
 // Problem modules load one at a time, when a problem opens (ADR 0008); count what the page fetched.
 const PROBLEM_MODULE = /\/problems\/[^/]+\/problem\.js(\?|$)/;
 const problemModules = [];
@@ -366,6 +370,7 @@ try {
     remote.on('console', (m) => m.type() === 'error' && errors.push(`console (remote page, step ${step}): ${m.text()}`));
     remote.on('pageerror', (e) => errors.push(`pageerror (remote page, step ${step}): ${e.message}`));
     try {
+      await remote.addInitScript(SEEN_TOURS);
       await remote.addInitScript((url) => {
         window.LFB_REMOTE_RUNNER_URL = url;
         window.LFB_SUPABASE_URL = '';
@@ -809,6 +814,7 @@ try {
     const clockPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     clockPage.on('console', (m) => m.type() === 'error' && errors.push(`console (clock page): ${m.text()}`));
     clockPage.on('pageerror', (e) => errors.push(`pageerror (clock page): ${e.message}`));
+    await clockPage.addInitScript(SEEN_TOURS);
     await clockPage.addInitScript(() => {
       window.LFB_SUPABASE_URL = '';
       window.LFB_SUPABASE_ANON_KEY = '';
@@ -1101,12 +1107,13 @@ try {
     if (!headerState.navHidden || !headerState.brandNameHidden || !headerState.titleVisible) {
       throw new Error(`unexpected mobile header state: ${JSON.stringify(headerState)}`);
     }
-    if (headerState.streakAriaLabel !== null || !/^\d+-day streak$/.test(headerState.streakSr ?? '') || headerState.streakHiddenParts < 2) {
+    if (headerState.streakAriaLabel !== null || !/^(\d+-day streak(, solve one today to keep it)?|No streak yet)$/.test(headerState.streakSr ?? '') || headerState.streakHiddenParts < 2) {
       throw new Error(`streak chip not accessible: ${JSON.stringify(headerState)}`);
     }
 
     const tabs = [
       { key: 'problems', title: 'Problems' },
+      { key: 'map', title: 'Map' },
       { key: 'path', title: 'Learning Path' },
       { key: 'companies', title: 'Companies' },
       { key: 'modes', title: 'Modes' },
@@ -1126,7 +1133,7 @@ try {
           title: document.querySelector('#header-title')?.textContent,
         };
       });
-      if (navCheck.barLinks.length !== 4) throw new Error(`expected 4 tab-bar links, got ${navCheck.barLinks.length}`);
+      if (navCheck.barLinks.length !== 5) throw new Error(`expected 5 tab-bar links, got ${navCheck.barLinks.length}`);
       for (const l of navCheck.barLinks) {
         if (l.height < 44 || l.left < -0.5 || l.right > 390.5 || l.top < 0 || l.bottom > 844.5) {
           throw new Error(`tab-bar link ${l.nav} out of bounds or under 44px: ${JSON.stringify(l)}`);
@@ -1223,6 +1230,7 @@ try {
     await touch.route('**/@supabase/supabase-js@*/+esm', (r) =>
       r.fulfill({ contentType: 'text/javascript', body: 'export function createClient() { return { auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({}) } }; }' }),
     );
+    await touch.addInitScript(SEEN_TOURS);
     await touch.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = 'https://example.supabase.co';
@@ -1254,6 +1262,8 @@ try {
       { url: '#/interview', wait: '.company-option[data-slug="google"]', name: '390-touch-interview', startButton: 'Start interview' },
       { url: '#/battle', wait: '.pick-row', name: '390-touch-battle', startButton: 'Start race' },
       { url: 'privacy.html', wait: 'article.legal h1', name: '390-touch-privacy' },
+      { url: '#/map', wait: '.map-svg .district', name: '390-touch-map' },
+      { url: '#/daily', wait: '.cal-day', name: '390-touch-daily' },
     ];
     for (const sc of screens) {
       await touch.goto(`${BASE}${sc.url}`);
@@ -1318,13 +1328,15 @@ try {
     if (shapes.chipRadius < 15 || shapes.tagRadius > 4 || shapes.tagBorder !== '0px' || !/✓/.test(shapes.chipCheck)) {
       throw new Error(`chip and tag shapes are not distinct: ${JSON.stringify(shapes)}`);
     }
-    if (shapes.diffDot !== '8px' || !/^(Easy|Medium|Hard)$/.test(shapes.diffText)) throw new Error(`difficulty is not dot plus word: ${JSON.stringify(shapes)}`);
+    // Atlas (docs/DESIGN.md): difficulty is three pips (1, 2 or 3 filled) plus the word, so it reads without colour.
+    if (parseFloat(shapes.diffDot) < 15 || !/^(Easy|Medium|Hard)$/.test(shapes.diffText)) throw new Error(`difficulty is not pips plus word: ${JSON.stringify(shapes)}`);
     await ctx.close();
   });
 
   // Its own page: the blocked CDN request is logged as a failed resource, which is the point here.
   await check('without Monaco, TypeScript reports honestly that it needs the editor and nothing crashes', async () => {
     const offline = await browser.newPage();
+    await offline.addInitScript(SEEN_TOURS);
     await offline.addInitScript(() => {
       window.LFB_SUPABASE_URL = '';
       window.LFB_SUPABASE_ANON_KEY = '';
@@ -1387,6 +1399,7 @@ try {
       }
       return r.fulfill({ contentType: 'application/json', headers: cors, body: linked ? '{"linked":true,"repo":"ada/practice","autoSync":true}' : '{"linked":false,"githubUser":true}' });
     });
+    await acct.addInitScript(SEEN_TOURS);
     await acct.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = 'https://example.supabase.co';
@@ -1595,7 +1608,7 @@ try {
       linkColor: getComputedStyle(document.querySelector('article.legal a[href^="mailto:"]')).color,
       tabLinks: document.querySelectorAll('.tab-bar a').length,
     }));
-    if (!privacyShell.skipLink || privacyShell.headerNav !== 4 || !privacyShell.headerBack || !privacyShell.pageHead || !privacyShell.backLink || privacyShell.tabLinks !== 4) {
+    if (!privacyShell.skipLink || privacyShell.headerNav !== 5 || !privacyShell.headerBack || !privacyShell.pageHead || !privacyShell.backLink || privacyShell.tabLinks !== 5) {
       throw new Error(`privacy.html shell incomplete: ${JSON.stringify(privacyShell)}`);
     }
     if (privacyShell.btnColor === privacyShell.linkColor) {
@@ -1664,6 +1677,273 @@ try {
     await page.evaluate(() => history.back());
     await page.waitForSelector('.problem-table tbody tr a.problem-link');
     if (await page.locator('.monaco-editor').count()) throw new Error('editor left behind after leaving the workspace');
+  });
+
+  await check('Problem Map: 26 districts and every problem as a hex, arrows move between districts, Enter selects and deep-links, the panel explains locks, List view mirrors it', async () => {
+    await page.goto(`${BASE}#/map`);
+    await page.waitForSelector('.map-svg .district');
+    const shape = await page.evaluate(() => ({
+      districts: document.querySelectorAll('.map-svg .district').length,
+      hexes: document.querySelectorAll('.map-svg .hx').length,
+      tabbable: [...document.querySelectorAll('.map-svg .district')].filter((d) => d.getAttribute('tabindex') === '0').length,
+      named: [...document.querySelectorAll('.map-svg .district')].every((d) => d.getAttribute('role') === 'button' && /solved/.test(d.getAttribute('aria-label') ?? '')),
+      selected: document.querySelectorAll('.map-svg .district[aria-pressed="true"]').length,
+      panel: document.querySelector('.map-brief .brief-title')?.textContent,
+      lit: document.querySelectorAll('.map-svg .hx.solved, .map-svg .hx.assisted').length,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    }));
+    const published = await page.evaluate(async () => (await import('/src/js/problems/index.js')).availableEntries().length);
+    if (shape.districts !== 26 || shape.hexes !== published || shape.tabbable !== 1 || !shape.named || shape.selected !== 1 || !shape.panel || !shape.lit || shape.overflow > 0) {
+      throw new Error(`map shape: ${JSON.stringify({ ...shape, published })}`);
+    }
+    await shot('23-map');
+    // Keyboard: focus the selected district, move right, select with Enter: the hash and the panel follow.
+    await page.focus('.map-svg .district[tabindex="0"]');
+    const before = await page.evaluate(() => document.activeElement.dataset.id);
+    await page.keyboard.press('ArrowRight');
+    const moved = await page.evaluate(() => document.activeElement.dataset.id);
+    if (!moved || moved === before) throw new Error(`ArrowRight did not move between districts (${before} -> ${moved})`);
+    await page.keyboard.press('Enter');
+    await page.waitForFunction((id) => location.hash === `#/map/${id}`, moved);
+    const panelTitle = await page.locator('.map-brief .brief-title').textContent();
+    const movedTitle = await page.evaluate((id) => document.querySelector(`.district[data-id="${id}"]`).getAttribute('aria-label').split('.')[0], moved);
+    if (panelTitle !== movedTitle) throw new Error(`panel shows ${panelTitle}, selected ${movedTitle}`);
+    // Deep link: a locked topic opens selected, and the panel says why it is locked in one sentence.
+    await page.goto(`${BASE}#/map/union-find`);
+    await page.waitForSelector('.map-svg .district[data-id="union-find"][aria-pressed="true"]');
+    await expectText('.map-brief .brief-state', /Opens after Graphs \(\d of 2 solved\)/);
+    if (!(await page.locator('.map-brief a.brief-cta[href^="#/problem/"]').count())) throw new Error('locked topic has no way to start anyway');
+    // Hovering a district lights its prerequisite chain.
+    await page.hover('.map-svg .district[data-id="union-find"] .land');
+    const chain = await page.locator('.map-svg .road.is-hover').count();
+    if (chain < 3) throw new Error(`expected the prerequisite chain to light (got ${chain} roads)`);
+    // Company lens dims what the company does not ask.
+    await page.click('.map-lens .segmented-btn:has-text("Company")');
+    await page.waitForSelector('.map-company:not([hidden]) option[value="google"]', { state: 'attached', timeout: 15000 });
+    await page.selectOption('.map-company', 'google');
+    const inCompany = await page.locator('.map-svg .hx.in-company').count();
+    if (!inCompany || inCompany >= published) throw new Error(`company lens highlighted ${inCompany} of ${published}`);
+    // List view: the accessible alternative holds every problem as a link.
+    await page.click('.map-view-toggle .segmented-btn:has-text("List")');
+    await page.waitForSelector('.map-list');
+    const listLinks = await page.locator('.map-list .map-list-problems a[href^="#/problem/"]').count();
+    if (listLinks !== published) throw new Error(`list view has ${listLinks} problem links, expected ${published}`);
+    await page.click('.map-view-toggle .segmented-btn:has-text("Map")');
+    await page.waitForSelector('.map-svg');
+  });
+
+  await check('Problem Map at 390: bands of two districts, no sideways scroll, selecting scrolls to the panel', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    const phone = await ctx.newPage();
+    phone.on('console', (m) => m.type() === 'error' && errors.push(`console (390 map): ${m.text()}`));
+    await phone.addInitScript(SEEN_TOURS);
+    await phone.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+    });
+    await phone.goto(`${BASE}#/map`);
+    await phone.waitForSelector('.map-svg.is-narrow .district');
+    const m = await phone.evaluate(() => ({
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      districts: document.querySelectorAll('.map-svg .district').length,
+      width: document.querySelector('.map-svg').getBoundingClientRect().width,
+    }));
+    if (m.overflow > 0 || m.districts !== 26 || m.width > 390) throw new Error(`390 map: ${JSON.stringify(m)}`);
+    await phone.tap('.map-svg .district[data-id="stack"] .land');
+    await phone.waitForFunction(() => location.hash === '#/map/stack');
+    await phone.waitForFunction(() => document.querySelector('.map-brief').getBoundingClientRect().top < innerHeight);
+    if (shotsDir) await phone.screenshot({ path: `${shotsDir}/390-map.png` });
+    await ctx.close();
+  });
+
+  await check('Daily challenge page: number, countdown in minutes, streak facts, a 16-week calendar ending today, last 7 dailies', async () => {
+    await page.goto(`${BASE}#/daily`);
+    await page.waitForSelector('.daily-page .today-daily');
+    await expectText('.today-kicker', /Daily No\. \d+/);
+    await expectText('.today-countdown', /^Next in (\d+ h )?\d+ min$/);
+    const d = await page.evaluate(() => ({
+      facts: document.querySelectorAll('.daily-fact').length,
+      weeks: document.querySelectorAll('.cal-row')[0]?.querySelectorAll('.cal-day').length,
+      rows: document.querySelectorAll('.cal-row').length,
+      today: document.querySelectorAll('.cal-day.is-today').length,
+      labelled: [...document.querySelectorAll('.cal .cal-day')].every((c) => c.querySelector('.sr-only')?.textContent.length > 4),
+      past: document.querySelectorAll('.past-row').length,
+      cta: document.querySelector('.daily-page .today-cta')?.getAttribute('href'),
+    }));
+    if (d.facts !== 4 || d.weeks !== 16 || d.rows !== 7 || d.today !== 1 || !d.labelled || d.past !== 7 || !/^#\/problem\//.test(d.cta ?? '')) {
+      throw new Error(`daily page: ${JSON.stringify(d)}`);
+    }
+    await shot('24-daily');
+  });
+
+  await check('command palette: Ctrl+K opens it, typing ranks topics and problems, Enter navigates, Escape closes and restores focus', async () => {
+    await page.goto(`${BASE}#/`);
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
+    await page.focus('#palette-trigger');
+    await page.keyboard.press('Control+k');
+    await page.waitForSelector('dialog.palette[open] .palette-input');
+    if (!(await page.evaluate(() => document.activeElement?.matches('.palette-input')))) throw new Error('palette input not focused');
+    await page.keyboard.type('two poin');
+    await page.waitForFunction(() => document.querySelector('.palette-item[aria-selected="true"] .palette-label')?.textContent === 'Two Pointers');
+    const combo = await page.evaluate(() => {
+      const i = document.querySelector('.palette-input');
+      return { role: i.getAttribute('role'), active: i.getAttribute('aria-activedescendant'), listbox: document.getElementById(i.getAttribute('aria-controls'))?.getAttribute('role') };
+    });
+    if (combo.role !== 'combobox' || !combo.active || combo.listbox !== 'listbox') throw new Error(`palette ARIA: ${JSON.stringify(combo)}`);
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => location.hash === '#/map/two-pointers');
+    await page.waitForSelector('.map-svg .district[data-id="two-pointers"][aria-pressed="true"]');
+    await page.click('#palette-trigger');
+    await page.waitForSelector('dialog.palette[open]');
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('dialog.palette', { state: 'detached' });
+    if (!(await page.evaluate(() => document.activeElement?.id === 'palette-trigger'))) throw new Error('focus did not return to the palette trigger');
+  });
+
+  await check('guided tours: the site tour opens once on a first visit and replays; each mode explains itself the first time it opens', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const t = await ctx.newPage();
+    t.on('console', (m) => m.type() === 'error' && errors.push(`console (tours): ${m.text()}`));
+    t.on('pageerror', (e) => errors.push(`pageerror (tours): ${e.message}`));
+    await t.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+      window.LFB_SUPABASE_ANON_KEY = '';
+    });
+    const open = (id) => t.waitForSelector(`dialog.tour[open][data-tour-id="${id}"]`, { timeout: 8000 });
+    const gone = () => t.waitForSelector('dialog.tour', { state: 'detached', timeout: 5000 });
+    const eyebrow = () => t.textContent('.tour-eyebrow');
+    // The card is on screen and the spotlight sits on the step's target (when it has one).
+    const geometry = (sel) =>
+      t.evaluate((s) => {
+        const c = document.querySelector('.tour-card').getBoundingClientRect();
+        const spot = document.querySelector('.tour-spot').getBoundingClientRect();
+        const target = s ? document.querySelector(s)?.getBoundingClientRect() : null;
+        const covers = target ? spot.left <= target.left + 1 && spot.top <= target.top + 1 && spot.right >= target.right - 1 && spot.bottom >= target.bottom - 1 : true;
+        return { onScreen: c.left >= 0 && c.top >= 0 && c.right <= innerWidth && c.bottom <= innerHeight, covers, focus: document.activeElement?.textContent };
+      }, sel);
+
+    await t.goto(`${BASE}#/`);
+    await open('site');
+    if (!/Welcome · 1 of 4/.test(await eyebrow())) throw new Error(`site tour starts at: ${await eyebrow()}`);
+    const first = await geometry(null);
+    if (!first.onScreen || first.focus !== 'Next') throw new Error(`welcome step: ${JSON.stringify(first)}`);
+    await t.keyboard.press('ArrowRight');
+    await t.waitForFunction(() => /2 of 4/.test(document.querySelector('.tour-eyebrow')?.textContent ?? ''));
+    await t.waitForTimeout(350);
+    const mapStep = await geometry('.nav [data-nav="map"]');
+    if (!mapStep.onScreen || !mapStep.covers) throw new Error(`map step: ${JSON.stringify(mapStep)}`);
+    await t.keyboard.press('Escape');
+    await gone();
+    const seen = await t.evaluate(() => JSON.parse(localStorage.getItem('lfb:tours:v1') ?? '{}'));
+    if (!seen.site) throw new Error(`Escape did not mark the site tour seen: ${JSON.stringify(seen)}`);
+    await t.reload();
+    await t.waitForSelector('.problem-table tbody tr a.problem-link');
+    await t.waitForTimeout(900);
+    if (await t.locator('dialog.tour').count()) throw new Error('the site tour opened again after it was seen');
+    // Replays: the footer, then the palette, walking every step to Done.
+    await t.click('.site-links-tour');
+    await open('site');
+    for (let i = 0; i < 4; i++) await t.click('.tour-next');
+    await gone();
+    await t.keyboard.press('Control+k');
+    await t.waitForSelector('dialog.palette[open]');
+    await t.keyboard.type('site tour');
+    await t.keyboard.press('Enter');
+    await open('site');
+    await t.keyboard.press('Escape');
+    await gone();
+
+    // Interview: the guide opens on the first visit, every step lights its target, "How it works" replays it.
+    await t.goto(`${BASE}#/interview`);
+    await open('interview');
+    for (const sel of ['[data-tour="oa-format"]', '[data-tour="oa-company"]', '[data-tour="oa-start"]']) {
+      await t.waitForTimeout(350);
+      const g = await geometry(sel);
+      if (!g.onScreen || !g.covers) throw new Error(`interview step ${sel}: ${JSON.stringify(g)}`);
+      await t.click('.tour-next');
+    }
+    await gone();
+    await t.reload();
+    await t.waitForSelector('[data-tour="oa-format"]');
+    await t.waitForTimeout(900);
+    if (await t.locator('dialog.tour').count()) throw new Error('the interview guide opened again after it was seen');
+    await t.click('.tour-replay');
+    await open('interview');
+    await t.keyboard.press('Escape');
+    await gone();
+
+    await t.goto(`${BASE}#/battle`);
+    await open('battle');
+    if (!/Battle · 1 of 3/.test(await eyebrow())) throw new Error(`battle guide: ${await eyebrow()}`);
+    await t.keyboard.press('Escape');
+    await gone();
+
+    // Mentor: on the first open of the panel, not the second; the panel's ? replays it.
+    await t.goto(`${BASE}#/problem/pair-sum-target`);
+    await t.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await t.click('button[data-action="mentor"]');
+    await open('mentor');
+    if (!/Mentor · 1 of 2/.test(await eyebrow())) throw new Error(`mentor guide: ${await eyebrow()}`);
+    await t.keyboard.press('Escape');
+    await gone();
+    await t.click('button[data-action="mentor"]');
+    await t.click('button[data-action="mentor"]');
+    await t.waitForTimeout(700);
+    if (await t.locator('dialog.tour').count()) throw new Error('the mentor guide opened again after it was seen');
+    await t.click('button[aria-label="How the mentor works"]');
+    await open('mentor');
+    await t.keyboard.press('Escape');
+    await gone();
+    await ctx.close();
+  });
+
+  await check('guided tours at 390: the card is a sheet on screen, away from its target, with 44 px buttons', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    const t = await ctx.newPage();
+    t.on('console', (m) => m.type() === 'error' && errors.push(`console (tours 390): ${m.text()}`));
+    t.on('pageerror', (e) => errors.push(`pageerror (tours 390): ${e.message}`));
+    await t.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+    });
+    await t.goto(`${BASE}#/`);
+    await t.waitForSelector('dialog.tour[open][data-tour-id="site"]', { timeout: 8000 });
+    await t.tap('.tour-next');
+    await t.waitForFunction(() => /2 of 4/.test(document.querySelector('.tour-eyebrow')?.textContent ?? ''));
+    await t.waitForTimeout(350);
+    const m = await t.evaluate(() => {
+      const c = document.querySelector('.tour-card').getBoundingClientRect();
+      const target = document.querySelector('.tab-bar [data-nav="map"]').getBoundingClientRect();
+      const buttons = [...document.querySelectorAll('.tour-card button')].filter((b) => !b.hidden).map((b) => Math.round(b.getBoundingClientRect().height));
+      return { left: c.left, right: c.right, top: c.top, bottom: c.bottom, overlaps: c.bottom > target.top && c.top < target.bottom, buttons, sw: document.documentElement.scrollWidth };
+    });
+    if (m.left < 0 || m.right > 390 || m.top < 0 || m.bottom > 844 || m.overlaps || m.sw > 390) throw new Error(`390 tour card: ${JSON.stringify(m)}`);
+    if (m.buttons.some((hgt) => hgt < 44)) throw new Error(`tour buttons under 44 px: ${m.buttons}`);
+    await ctx.close();
+  });
+
+  await check('reduced motion: every route renders with animations effectively off and nothing left hidden', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+    const rm = await ctx.newPage();
+    rm.on('console', (m) => m.type() === 'error' && errors.push(`console (reduced motion): ${m.text()}`));
+    rm.on('pageerror', (e) => errors.push(`pageerror (reduced motion): ${e.message}`));
+    await rm.addInitScript(SEEN_TOURS);
+    await rm.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+    });
+    for (const [hash, sel] of [['#/', '.problem-table tbody tr'], ['#/map', '.map-svg .district'], ['#/daily', '.cal-day'], ['#/path', '.path-row'], ['#/companies', '.company-card'], ['#/modes', '.mode-card'], ['#/problem/pair-sum-target', '.monaco-editor']]) {
+      await rm.goto(`${BASE}${hash}`);
+      await rm.waitForSelector(sel, { timeout: 30000 });
+      const r = await rm.evaluate(() => {
+        const running = document.getAnimations().filter((a) => a.playState === 'running' && Number(a.effect?.getComputedTiming().duration) > 2);
+        // Monaco's own hover-only parts (fold markers, idle scrollbars) are transparent by design.
+        const faded = [...document.querySelectorAll('#view *')].filter((el) => el.getClientRects().length && Number(getComputedStyle(el).opacity) < 0.05 && !el.closest('[hidden], .monaco-editor')).length;
+        return { running: running.map((a) => a.animationName ?? a.constructor.name), faded };
+      });
+      if (r.running.length || r.faded) throw new Error(`${hash} under reduced motion: ${JSON.stringify(r)}`);
+    }
+    await ctx.close();
   });
 
   await check('zero console errors across the whole session', async () => {

@@ -4,13 +4,14 @@
  * Hash routing (not History API) so the app works on GitHub Pages with zero server
  * config: a refresh on any route still serves index.html.
  */
-import { createStore, stats } from './state/progress.js';
+import { createStore, stats, dayKey } from './state/progress.js';
 import { createAccount } from './auth/account.js';
 import { mountAccountMenu } from './ui/account-menu.js';
 import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
 import { services } from './auth/services.js';
 import { catalogEntry, loadProblem } from './problems/index.js';
 import { h, mount, toast, stateBlock, loadingState, siteFooter } from './ui/dom.js';
+import { loadSeen, hasSeen } from './state/tours.js';
 
 const store = createStore();
 const view = document.getElementById('view');
@@ -25,6 +26,8 @@ const headerTitle = document.getElementById('header-title');
 const routes = [
   [/^#?\/?$/, async () => { const m = await import('./ui/views/dashboard.js'); return (root) => m.renderDashboard(root, { store }); }, 'problems', 'Problems'],
   [/^#\/problem\/([\w-]+)$/, loadProblemRoute, 'problems', ([, id]) => catalogEntry(id)?.title ?? 'Problem'],
+  [/^#\/map(?:\/([\w-]+))?$/, async (_, [, topic]) => { const m = await import('./ui/views/map.js'); return (root) => m.renderMap(root, { store, topic: topic ?? null }); }, 'map', 'Map'],
+  [/^#\/daily$/, async () => { const m = await import('./ui/views/daily.js'); return (root) => m.renderDaily(root, { store }); }, 'problems', 'Daily challenge'],
   [/^#\/path$/, async () => { const m = await import('./ui/views/path.js'); return (root) => m.renderPath(root, { store }); }, 'path', 'Learning Path'],
   [/^#\/companies$/, async () => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompanies(root, { store }); }, 'companies', 'Companies'],
   [/^#\/companies\/([\w-]+)$/, async (_, [, slug]) => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompany(root, { store, slug }); }, 'companies', 'Companies'],
@@ -41,13 +44,14 @@ async function loadProblemRoute(_, [, id]) {
   return (root) => m.renderWorkspace(root, { problem, store });
 }
 
-function renderNotFound(root, message = 'Page not found.', title = 'Not found', kind = 'empty') {
+function renderNotFound(root, message = 'This page is not on the map. The link may be old, or the address has a typo.', title = 'Not found', kind = 'empty') {
+  const retry = kind === 'error' ? { label: 'Try again', onClick: () => location.reload() } : { label: 'Open the map', href: '#/map' };
   mount(
     root,
     h(
       'div.page.page-narrow',
       {},
-      stateBlock({ title, body: message, kind, headingTag: 'h1', action: { label: 'Back to problems', href: '#/' } }),
+      stateBlock({ title, body: message, kind, headingTag: 'h1', action: retry, secondary: { label: 'Back to problems', href: '#/' } }),
       siteFooter(),
     ),
   );
@@ -57,6 +61,32 @@ function renderNotFound(root, message = 'Page not found.', title = 'Not found', 
 let cleanup = () => {};
 // Bumped on every navigation: a view that finishes loading after the hash moved on must not render.
 let navToken = 0;
+
+/* ---------- Guided tours (data/tours.js) ---------- */
+// The site tour starts on the first visit to a browse page. Interview, battle and the workspace
+// start their own mode tours. The overlay module loads only when a tour is due or asked for.
+const SITE_TOUR_ROUTE = /^#?\/?$|^#\/(map|daily|path|companies|modes)\b/;
+let closeTour = () => {};
+const loadTour = () => import('./ui/tour.js');
+
+function maybeSiteTour(hash, token) {
+  if (!SITE_TOUR_ROUTE.test(hash) || hasSeen(loadSeen(), 'site')) return;
+  loadTour()
+    .then((m) => {
+      if (token === navToken) closeTour = m.startTourIfDue('site');
+    })
+    .catch(() => {}); // offline: no tour this time, it stays due
+}
+
+// Replays (the footer, the palette) ask for a tour by id with a 'tour:open' event.
+addEventListener('tour:open', (e) => {
+  loadTour()
+    .then((m) => {
+      closeTour();
+      closeTour = m.startTour(e.detail);
+    })
+    .catch(() => toast('The tour could not load. Check your connection and try again.', 'error'));
+});
 
 function setHeaderTitle(text) {
   if (headerTitle) headerTitle.textContent = text;
@@ -72,6 +102,8 @@ async function route() {
     console.error('View cleanup failed', err);
   }
   cleanup = () => {};
+  closeTour();
+  closeTour = () => {};
   const hash = location.hash || '#/';
   const match = routes.find(([re]) => re.test(hash));
   view.className = 'view';
@@ -97,6 +129,7 @@ async function route() {
   if (token !== navToken) return;
   cleanup = mounter(view) ?? (() => {});
   view.focus({ preventScroll: true });
+  maybeSiteTour(hash, token);
 }
 
 function setActiveNav(key) {
@@ -107,16 +140,38 @@ function setActiveNav(key) {
 }
 
 function renderStreak() {
-  const { streak } = stats(store.get());
-  const label = `${streak}-day streak`;
+  const state = store.get();
+  const { streak } = stats(state);
+  // Lit only once today has an accepted submission; a streak kept alive by yesterday stays dim.
+  const today = state.activeDays.includes(dayKey());
+  const label = streak ? `${streak}-day streak${today ? '' : ', solve one today to keep it'}` : 'No streak yet';
   streakChip.title = label;
+  streakChip.href = '#/daily';
+  streakChip.classList.toggle('is-active', streak > 0 && today);
   mount(
     streakChip,
-    h('span.streak-icon', { 'aria-hidden': 'true' }, '🔥'),
+    h('span.streak-icon', { 'aria-hidden': 'true' }),
     h('span.streak-count', { 'aria-hidden': 'true' }, String(streak)),
     h('span.sr-only', {}, label),
   );
 }
+
+/* ---------- Command palette (Ctrl/Cmd+K), loaded on first use ---------- */
+const openPalette = () =>
+  import('./ui/palette.js')
+    .then((m) => m.openPalette())
+    .catch(() => toast('Search could not load. Check your connection and try again.', 'error'));
+document.getElementById('palette-trigger')?.addEventListener('click', openPalette);
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+    // Sessions hide navigation on purpose; the palette would be a way out of the exam room.
+    if (document.body.classList.contains('lockdown')) return;
+    e.preventDefault();
+    // Not over a tour or a confirm: finish or close that first (an open palette ignores it too).
+    if (document.querySelector('dialog[open]')) return;
+    openPalette();
+  }
+});
 
 store.subscribe(renderStreak);
 renderStreak();

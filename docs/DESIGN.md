@@ -1,127 +1,147 @@
-# Design System
+# Design system: Atlas
 
-Direction: **a quiet instrument**. Keep the dark, IDE-adjacent palette, reserve amber strictly for primary action, active selection, and focus, give every control one shape per job, keep touch targets at least 44 px on touch devices, and never drop text below 12 px.
+Direction (stage F6, `docs/research/DESIGN_DIRECTIONS.md`): **a territory you light up.** The curriculum is a map of 26 topics in six tiers; every problem is a hex; solving one lights it. The hex is the unit everywhere: on the map, as the status mark in lists, as a day in the daily calendar, as a test case in the verdict, as the company mark and the logo. The ground is warm graphite; there is one lamp colour, amber, and it means **light**: what you have solved and the next thing to do.
 
-All tokens and component styles live in [`src/css/app.css`](../src/css/app.css) (`:root` tokens at the top, plain class selectors below, no preprocessor or bundler).
+Everything lives in [`src/css/app.css`](../src/css/app.css): tokens in `:root` at the top, component rules below, view rules last. Component rules never use a literal colour, font size, radius, shadow or duration; `tests/design-tokens.test.js` enforces contrast, the type floor and token use.
+
+Replaces the F5 "quiet instrument" system (`docs/DESIGN_PLAN.md`, kept for history). What F5 got right stays: one primary per screen, 44 px touch targets, a 12 px floor, state never shown by colour alone, filters as chips, scopes as segmented controls.
 
 ## Tokens
 
-### Surfaces
+### Surfaces and lines
 
-| Token | Value | Usage rule |
+| Token | Value | Use |
 |---|---|---|
-| `--bg` | `#0d0e10` | Page background and code inputs |
-| `--panel` | `#15171a` | Cards, split panes, header, modals |
-| `--panel-2` | `#1b1e22` | Inset blocks, hover states, menus, controls |
-| `--panel-3` | `#22262b` | Selected/pressed states, secondary buttons, inline code, static tags |
-| `--panel-hover` | `#2b3036` | Hover on secondary buttons (text stays >= 4.5:1) |
+| `--bg` | `#100f0d` | Page ground, code |
+| `--panel` | `#171512` | Cards, panels, header, dialogs |
+| `--panel-2` | `#1e1c18` | Inset blocks, hover, map districts |
+| `--panel-3` | `#27241f` | Selected, pressed, tags, company tiles |
+| `--panel-hover` | `#312d27` | Hover on secondary buttons |
+| `--scrim` | warm black, 72% | Behind dialogs and the palette |
+| `--border` | `#2c2823` | Decorative hairlines |
+| `--border-strong` | `#3d3831` | Card and dialog edges |
+| `--border-control` | `#6f675b` | Inputs, chips, segmented (at least 3:1 on every surface) |
 
-### Text and borders
+### Ink
 
-| Token | Value | Contrast bar |
+| Token | Value | Contrast |
 |---|---|---|
-| `--text` | `#e7e9ec` | Primary text (>= 12.5:1 across all surfaces) |
-| `--text-2` | `#b4bac3` | Secondary copy (>= 7.7:1 across all surfaces) |
-| `--muted` | `#8f97a3` | Captions and metadata (5.16:1 on `--panel-3`, passes AA everywhere) |
-| `--border` | `#2a2f36` | Decorative dividers and panel hairlines |
-| `--border-strong` | `#3a4049` | Elevated card/modal borders and hover borders |
-| `--border-control` | `#646d7a` | Interactive control borders (inputs, selects, chips, segmented; >= 3.19:1 on `--bg`, `--panel`, `--panel-2`) |
+| `--text` | `#f2ece2` | at least 12:1 on every surface |
+| `--text-2` | `#cbc2b5` | at least 8:1 |
+| `--muted` | `#a1988a` | at least 4.9:1 on `--panel-3` (AA everywhere) |
 
-### Accent, semantic, and difficulty
+### Lamp and semantics
 
-| Token | Value | Usage |
+| Token | Value | Meaning |
 |---|---|---|
-| `--accent` | `#f5a623` | Primary action, selected state, focus outline only |
-| `--accent-ink` | `#1a1203` | Text on `--accent` (9.15:1) |
-| `--accent-soft` | `rgba(245, 166, 35, 0.12)` | Selected chip/row fill |
-| `--accent-hover` | `#ffb93f` | Primary button hover (ink stays >= 4.5:1) |
-| `--ok` | `#2fbf71` | Passing status, solved indicator |
-| `--ok-soft` | `rgba(47, 191, 113, 0.12)` | Pass banner/background tint |
-| `--bad` | `#f05252` | Error text and icons |
-| `--bad-solid` | `#cf3636` | Danger button background |
-| `--bad-ink` | `#ffffff` | Text on `--bad-solid` (4.96:1) |
-| `--bad-soft` | `rgba(240, 82, 82, 0.12)` | Error/fail background tint |
-| `--warn` | `#e8b931` | Warning banner and unsupported/slow-growth state |
-| `--info` | `#5aa7ff` | Inline links and info toast border |
-| `--easy` | `#2fbf71` | Easy difficulty dot + label |
-| `--medium` | `#e3b341` | Medium difficulty dot + label (distinct from `--accent`) |
-| `--hard` | `#f05252` | Hard difficulty dot + label |
+| `--accent` | `#f3a93c` | Solved (lit hexes, progress fills), the primary action, the current position |
+| `--accent-hover`, `--accent-ink`, `--accent-soft`, `--accent-line`, `--accent-glow`, `--accent-dim` | | Hover, ink on amber, tints, the assisted (solved with help) hex |
+| `--focus` | `#ffc874` | Keyboard focus ring, everywhere |
+| `--ok`, `--bad`, `--warn`, `--info` (+ `-soft`) | green, red, yellow, blue | Test results, errors, warnings, informational marks (the IL mark). Never decoration. |
+| `--bad-solid` / `--bad-ink` | `#c63a2c` / white | Danger buttons (5.1:1) |
+| `--easy`, `--medium`, `--hard` | green, gold, red | Difficulty, always with pips and the word |
 
-### Type scale and fonts
+Selection is shown by an outline and a check mark, not by amber fill alone; amber fill means "lit".
 
-Inter and JetBrains Mono are self-hosted as Latin variable `.woff2` files in `src/fonts/` with `font-display: swap` (no external font CDN).
+### Type
 
-| Token | Desktop | Coarse pointer | Role |
-|---|---|---|---|
-| `--fs-xs` | `12px` | `12px` | Floor for all text (labels, tags, metadata, table headers) |
-| `--fs-sm` | `13px` | `13px` | Controls, table cells, secondary labels |
-| `--fs-md` | `14px` | `15px` | Body copy and code editor |
-| `--fs-lg` | `16px` | `16px` | Card and section headings |
-| `--fs-xl` | `20px` | `20px` | Problem title, verdict, session clock |
-| `--fs-2xl` | `26px` | `26px` | Page headings and primary stat numbers |
-| `--fs-display` | `38px` | `38px` | Session report score ring readout |
+| Token | Font | Role |
+|---|---|---|
+| `--display` | Bricolage Grotesque (ADR 0009) | Page titles, verdicts, district names, big numbers. 13 px and up. |
+| `--font` | Inter | Interface and reading text |
+| `--mono` | JetBrains Mono | Code, counts, eyebrow labels, key hints |
 
-### Spacing, radii, control heights, layout, and motion
+Scale (px): `--fs-xs` 12 (floor), `--fs-sm` 13, `--fs-md` 14 (15 on touch), `--fs-lg` 16, `--fs-xl` 20, `--fs-2xl` 26, `--fs-3xl` 34, `--fs-display` 48. Line heights: `--lh-tight` 1.1 (display), `--lh-snug` 1.3, `--lh-body` 1.6. Display tracking -1.5% to -3%, only at 20 px and up. Eyebrows: mono, 12 px, uppercase, `--track-label`.
 
-- **Spacing (4 px base):** `--s-1: 4px`, `--s-2: 8px`, `--s-3: 12px`, `--s-4: 16px`, `--s-5: 24px`, `--s-6: 32px`, `--s-7: 48px`. Inside a component use 8 or 12 px; between components 16 px; between sections 32 px.
-- **Radii:** `--r-tag: 4px` (static tags, inline code), `--r-sm: 6px` (controls), `--r-md: 10px` (cards, dialogs), `--r-pill: 999px` (filter chips, pills, progress bars).
-- **Control heights:** `--ctl-sm: 30px`, `--ctl-md: 36px`, `--ctl-lg: 44px`. Under `@media (pointer: coarse)`, `--ctl-sm` and `--ctl-md` both resolve to `44px`.
-- **Layout widths:** `--page: 1120px`, `--page-narrow: 720px`, `--header-h: 52px`, `--tab-bar-h: 56px`.
-- **Motion:** `--t-fast: 120ms`, `--t-med: 200ms`, `--ease: cubic-bezier(0.2, 0.8, 0.2, 1)`. All transitions and animations disable under `prefers-reduced-motion: reduce`.
+### Space, radius, elevation, size
+
+- Spacing on a 4 px base: `--s-1` 4 to `--s-8` 64. Inside a component 8 or 12; between components 16 or 24; between sections 32 or 48.
+- Radii: `--r-tag` 4 (tags, kbd), `--r-sm` 8 (controls), `--r-md` 12 (cards, rows), `--r-lg` 18 (panels, dialogs, the map), `--r-pill`.
+- Elevation: `--shadow-1` (popovers, tooltips), `--shadow-2` (dialogs, palette, toasts), `--shadow-lamp` (the one lit element on a screen, sparingly).
+- Controls: `--ctl-sm` 30, `--ctl-md` 38, `--ctl-lg` 46; under `pointer: coarse` sm and md become 44.
+- Layout: `--page` 1180, `--page-wide` 1560 (map), `--page-narrow` 720 (reading, states), `--header-h` 56, `--tab-bar-h` 60. `--hex` is the shared hexagon clip path.
+
+### Motion
+
+| Token | ms | For |
+|---|---|---|
+| `--t-instant` | 90 | Row hover, tab highlight |
+| `--t-fast` | 140 | Buttons, chips, borders |
+| `--t-base` | 220 | Panels, dialogs, toasts, page entrance |
+| `--t-slow` | 360 | District entrance, progress fills |
+| `--t-stage` | 600 | One signature moment (unlock, first solve) |
+
+Easing: `--ease` (out, default), `--ease-in-out` (things that move across the screen), `--ease-spring` (dialogs, toggles; a small overshoot). The same values are exported from `src/js/ui/motion.js` for script-driven animation.
 
 ## Components
 
-| Component | Job | Rule |
+| Component | Job | Rules |
 |---|---|---|
-| Button | Triggers an action | Variants: primary, secondary, ghost, danger. Three heights (`--ctl-sm`, `--ctl-md`, `--ctl-lg`). One primary per screen. Real `<button>`, or `<a>` if it navigates. |
-| Chip | Toggles a filter (many can be on) | Pill (`--r-pill`), `--border-control`, `aria-pressed`. Selected state combines accent border, `--accent-soft` fill, and a check mark (never colour alone). |
-| Segmented | Picks one view of the same data | Rectangular track (`--r-sm`). Used for scope (`Hiring in Israel` / `Top in Israel` / `All`) and phone workspace tabs. |
-| Tag | Static non-interactive label | `--r-tag` (4 px), no border, never clickable. Israeli companies use a compact `IL` mark instead of a repeating amber pill. |
-| Difficulty | Easy, Medium, Hard | Semantic dot + word, no tinted pill. Identical across tables, pickers, and problem headers. Each colour is >= 4.5:1 on `--bg`, `--panel` and `--panel-2`. |
-| Card | Groups content or acts as one link | When clickable, the entire card is one `<a>` or `<button>` with hover and focus states. Never nest a card inside a card. |
-| Option card | One choice in a picker | Monogram, name, one supporting fact, optional progress bar. Used for companies, interview formats, and battle opponents. |
-| Picker | Choose one item from many | Shared `src/js/ui/picker.js`: search + optional scope segmented + option grid/list + `aria-live` selection summary. Used by interview, battle, and companies. |
-| List row | Tables on narrow viewports | Below 640 px, table rows stack: title on line 1, difficulty and tags on line 2; whole row is a link, minimum 52 px tall. |
-| Dialog | Confirm destructive/irreversible actions | Native `<dialog>`. Title asks the question; confirm button repeats the verb. Full width near bottom on phones. |
-| Toast | Confirms an event that already happened | Top centre under header, solid panel with coloured left edge, `role="status"`. Never the only place a result appears. |
-| Nav | Four destinations | Header links at >= 821 px; bottom tab bar with icon and label at <= 820 px. `aria-current="page"` on active item. Hidden during active sessions. |
-| States | Empty, loading, error | Shared `.state` block with explanation and one recovery action. Loading uses skeleton rows matching real row height. |
+| Button | Does something | Primary (amber), secondary, ghost, danger; sm, md, lg, icon. One primary per screen. `<button>`, or `<a>` when it navigates. Press: 1 px down, 98.5% scale. |
+| Chip | Toggles a filter | Pill, control border, `aria-pressed`; selected = amber outline + soft fill + check mark. A disclosure chip (`aria-expanded`) shows a chevron. |
+| Segmented | One of several views | Rectangular track; Map / List, Status / Difficulty / Company, Hiring / Top / All. |
+| Tag | Static label | 4 px radius, no border; `tag-muted` outlined, `tag-live` green, `tag-lamp` amber. Never clickable. |
+| Difficulty | Easy / Medium / Hard | Three pips (1, 2 or 3 filled) + the word in the semantic colour. Reads without colour. |
+| Status hex | A problem's state | Hex mark: grey (not started), ring (tried), amber (solved), dim amber (solved with help). Always paired with a word or an accessible name. |
+| Company mark | Identifies a company | Hex tile with a two-letter monogram in the display face; a blue dot for major Israeli presence; an outline ring for tier-1 companies. No logos (DESIGN_DIRECTIONS.md). |
+| Card | Groups content or is one link | Whole card is one `<a>` or `<button>` when clickable. No card in a card. |
+| Table / list row | Lists of problems | Status first column, title link stretched over the row (`.row-link`), 48 px rows; stacked two-line rows under 640 px. |
+| Progress | How much is done | 6 px bar with an amber fill that grows once; the text beside it carries the number. |
+| Dialog | Confirms a destructive or irreversible step | Native `<dialog>`, title is the question, the confirm button repeats the verb. |
+| Toast | Confirms something that already happened | Top centre, hex marker in the semantic colour, `role="status"`. Never the only place a result appears. |
+| Command palette | Jump anywhere | Ctrl or Cmd+K, or the header button. Combobox + listbox, arrow keys, Enter, Esc. Pages, topics, problems, companies. Disabled in sessions. |
+| Guided tour | Explains a screen the first time | Spotlight on the element a step explains, a card beside it (a sheet under 640 px). See Tour rules. |
+| State block | Empty, error, loading | One block with a hex, a title, one line, one action. Loading uses skeleton rows the height of real rows. |
+| Spinner | Work in progress | A rotating hex. |
 
-## Shared helpers
+Helpers in `src/js/ui/dom.js` build these with `h()` and text nodes only (never `innerHTML` for user strings): `difficulty()`, `chip()`, `chipGroup()`, `segmented()`, `ilMark()`, `stateBlock()`, `loadingState()`, `siteFooter()`, `hexMark()`, `companyMark()`, `progressBar()`.
 
-Views build components through `src/js/ui/dom.js` instead of hand-writing markup, so the classes, ARIA state and touch sizing stay identical everywhere. All helpers build with `h()` and text nodes only (never `innerHTML`), and they live in `dom.js` so the ADR 0008 startup graph does not grow.
+## Map rules
 
-| Helper | Renders |
-|---|---|
-| `difficulty(d)` | `span.difficulty.diff-<level>`: dot + word |
-| `chip({ label, pressed, onClick, attrs })` | One filter chip (`button.chip`, `aria-pressed`) |
-| `chipGroup({ label, options, value, onChange })` | A labelled `role="group"` of chips with exactly one pressed |
-| `segmented({ label, options, value, onChange })` | A labelled segmented control (`button.segmented-btn`, `aria-pressed`) |
-| `ilMark()` | The `IL` tag with screen-reader text (no `aria-label` on a plain span) |
-| `stateBlock()`, `loadingState()`, `siteFooter()` | Empty/error/loading states and the browse-page footer (Step 2) |
+- Tiers read left to right (columns); on a phone, top to bottom (bands of two districts). Never a shrunk desktop map.
+- A district shows its name, "solved/total" and one hex per problem. Path problems carry a thin outline.
+- **Locked** = dashed fog, the word "locked", and a one-sentence reason in the panel ("Opens after Two Pointers (1 of 2 solved). You can still practice it now."). Locked is advice; everything still opens.
+- **You are here**: the district holding the learning path's next problem is selected on arrival, and that hex carries a single pulsing ring (static under reduced motion).
+- Pointing at or focusing a district lights its whole prerequisite chain in amber and its dependants in a dashed line. On a phone only the selected district's roads show.
+- The panel is the zoom: no pan, no zoom, no minimap.
+- Every district is a focusable control with a full accessible name; arrows move by geometry; Enter selects and updates the hash (`#/map/<topic>`) without re-routing.
+- Map / List show the same model; List is the screen-reader route.
 
-Touch sizing: buttons, chips, segmented buttons, inputs and selects take their height from `--ctl-*`, which become 44 px under `@media (pointer: coarse)`. Text-like controls (logo, `.btn-link`, `.back-link`, `.problem-link`, footer links, checkbox labels) get a 44 px `min-height` only under a coarse pointer, so desktop layout does not change. Inputs use 16 px text on touch devices so iOS does not zoom on focus.
+## Tour rules
 
-The account control is a disclosure (toggle with `aria-expanded` and `aria-controls`), not an ARIA menu: its panel holds hints, a wizard and radio buttons, which `role="menu"` does not allow. Arrow keys still move between its controls as a convenience.
+- One site tour (first visit to any browse page) and one guide per mode (Interview, Battle, Mentor), each shown once per device and replayable: the footer and the palette for the site tour, "How it works" on a setup page, the mentor's "?" button. Content lives in `src/js/data/tours.js`.
+- Short and simple: at most 4 steps, a title of 24 characters and one line of 80; the same voice as the rest of the site (`validateTour` enforces it).
+- A step points at one real element: the spotlight rings it in amber and the scrim dims the rest. The card goes below, above or beside it and never covers it; on a phone it is a sheet on the edge away from the target. Steps without a target are centred.
+- A native modal `<dialog>`: focus stays in the card and starts on Next; Esc and Skip close it; arrow keys move between steps; every close marks the tour seen. Clicking the scrim does nothing, so a stray tap cannot end an explanation.
+- Never during a session (lockdown), never over another dialog, never in place of content: the site works the same with every tour skipped.
 
-## Screen Consistency Rules
+## Motion rules
 
-1. Every browse page opens the same way: title, one line of context, then at most one row of controls.
-2. One primary button per screen. Competing actions drop to secondary.
-3. Amber means action ("do this"), selection ("this is selected"), or focus. Status uses green, red, and neutral tags.
-4. No text smaller than 12 px, and no text/surface pair below 4.5:1 contrast.
-5. Filters use chips, exclusive scopes use segmented controls, long option lists use the shared picker. Native `<select>` is reserved for dense toolbars (language selector).
-6. State is never communicated by colour alone: selected has a check mark, solved has a filled dot plus text, failed has a word.
-7. Every reachable touch control is at least 44 px tall on coarse-pointer devices.
-8. No nested scroll boxes on phones; the page scrolls cleanly and pickers expand or paginate.
-9. UI copy describes what the user gets, never internal roadmap phases or implementation details.
-10. All colours, type sizes, spacing, and radii reference `:root` tokens; literal values in component rules are treated as bugs.
+- One orchestrated moment per screen at most; everything else is a 90 to 220 ms state change.
+- Animate `transform` and `opacity` only. No animation loop runs while the user types.
+- The verdict: 15 case hexes resolve left to right (35 ms stagger, 260 ms each); the verdict word rises (180 ms). Failures get no extra motion.
+- Milestones (first solve, a topic opening) play once, never on every Accepted.
+- No marquees, rotators, looping shimmers, parallax or scroll-jacking.
+- `prefers-reduced-motion: reduce` makes every animation and transition effectively instant; nothing is skipped, only not moved. The e2e suite runs a reduced-motion pass.
 
-## Approved Redesign Decisions (Stage F5)
+## Accessibility rules
 
-- **Fonts:** Self-host Inter and JetBrains Mono as `.woff2` in `src/fonts/` with `font-display: swap`.
-- **Phone navigation:** Bottom tab bar at <= 820 px, replaced by pinned Run / Submit bar inside the workspace.
-- **Battle lockdown:** Hide the top navigation during an active battle race (with a visible "Leave race" exit), matching interview mode.
-- **Modes hub:** Keep two mode cards (Interview and Battle); move AI Mentor to a short note linking to the workspace until F4 ships.
-- **Light theme:** Out of scope for F5; tokens prepare the ground for later.
-- **Hebrew / RTL:** Out of scope for F5; new layout CSS uses logical properties (`margin-inline`, `inset-inline`) where applicable.
+1. Text at least 12 px and at least 4.5:1; control borders at least 3:1; the focus ring at least 3:1 on every surface.
+2. Every interactive element is a real `<button>` or `<a>` (or an SVG element with a role, tab stop and name), keyboard reachable, with a visible focus ring.
+3. State is never colour alone: hexes carry words or accessible names, selected chips carry a check, difficulty carries pips and a word.
+4. Touch targets at least 44 px under `pointer: coarse`.
+5. Live regions: the results console (`role="status"`), toasts, the map panel (`aria-live="polite"`), the session timer's five-minute warning (once).
+6. No nested scroll areas on a phone; the page scrolls.
+
+## Voice
+
+Short, direct, from the user's side ("Opens after Two Pointers", not "prerequisite unmet"). No em dashes. No exclamation marks except a genuine success. Numbers as digits. Say limits plainly (editor-only languages, a bot opponent, a runner that is down). Never invent activity or leaderboards.
+
+## Screen consistency rules
+
+1. Every browse page opens the same way: an eyebrow with a fact, the title, one line of context, at most one row of controls on the right.
+2. One primary button per screen.
+3. Amber means lit (solved, progress), the primary action, or the current position. Status uses green, red and neutral words.
+4. Filters are chips, exclusive scopes are segmented, long option lists use the shared picker; a native `<select>` only in dense toolbars (language, company lens).
+5. Every page ends with the shared footer, except the workspace and sessions.
+6. New colours, sizes, radii, shadows and durations come from tokens.

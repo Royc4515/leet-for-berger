@@ -3,24 +3,15 @@
  * (#/companies/<slug>), the problems it asks, most frequent first, one row per family.
  * Data: src/js/data/company-sets.json (built by scripts/content/build-meta.mjs), fetched on demand.
  */
-import { h, mount, difficulty, chip, chipGroup, segmented, ilMark, stateBlock, loadingState, siteFooter } from '../dom.js';
+import { h, mount, difficulty, chip, chipGroup, segmented, ilMark, stateBlock, loadingState, siteFooter, hexMark, companyMark } from '../dom.js';
+import { loadSets, loadProblemTopics } from '../../data/company-loader.js';
+import { TOPICS } from '../../data/taxonomy.js';
 import { expandRows, companyProgress, monogram, frequencyLevel } from '../../data/company-sets.js';
 import { filterRanked, findBySlug, israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
 
 const RECENCY_LABEL = { '30d': 'Last 30 days', '3m': 'Last 3 months', '6m': 'Last 6 months', older: 'Older' };
 
-let setsPromise = null;
-
-/**
- * Company data, fetched once and shared by the companies pages and the mock OA setup.
- * @returns {Promise<import('../../data/company-sets.js').CompanySets|null>}
- */
-export function loadSets() {
-  setsPromise ??= fetch(new URL('../../data/company-sets.json', import.meta.url))
-    .then((r) => (r.ok ? r.json() : null))
-    .catch(() => null);
-  return setsPromise;
-}
+export { loadSets };
 
 /**
  * Companies already merged and ordered by Israel relevance (baked into company-sets.json); shared
@@ -54,6 +45,15 @@ export function israelBadgeEl(level) {
 }
 
 const isSolvedIn = (state) => (id) => state.problems[id]?.status === 'solved';
+
+/** Names identify which companies asked a problem; no logos ship (docs/research/DESIGN_DIRECTIONS.md). */
+const TRADEMARK_NOTE = 'Company names are trademarks of their owners, used here only to say which companies asked a problem. No affiliation or endorsement.';
+const ISRAEL_LINE = {
+  major: 'Major engineering presence in Israel',
+  present: 'Hires engineers in Israel',
+  none: 'No Israeli engineering hiring found',
+};
+const topicTitle = (id) => TOPICS.find((t) => t.id === id)?.title ?? id;
 
 /** Solved share as a thin bar. Decorative: the text beside it already says "x of y solved". */
 const progressBar = (done, total) =>
@@ -114,11 +114,15 @@ export function renderCompanies(root, { store }) {
         return h(
           'a.company-card',
           { href: `#/companies/${c.slug}`, 'data-israel': c.israel },
-          h('span.monogram', { 'aria-hidden': 'true' }, monogram(c.name)),
-          h('span.company-card-name', {}, c.name, c.israeli ? ilMark() : null),
-          h('span.company-card-sub', {}, solvedText(prog)),
-          filters.filter === 'all' && israelBadge(c.israel) ? h('span.company-card-sub.company-card-level', {}, israelBadge(c.israel)) : null,
-          progressBar(prog.solved, prog.onSite),
+          companyMark({ letters: monogram(c.name), israel: c.israel, tier: c.tier, fill: prog.onSite ? prog.solved / prog.onSite : 0 }),
+          h(
+            'span.company-card-body',
+            {},
+            h('span.company-card-name', {}, c.name, c.israeli ? ilMark() : null),
+            h('span.company-card-sub', {}, solvedText(prog)),
+            filters.filter === 'all' && israelBadge(c.israel) ? h('span.company-card-sub.company-card-level', {}, israelBadge(c.israel)) : null,
+            progressBar(prog.solved, prog.onSite),
+          ),
         );
       }),
     );
@@ -138,7 +142,17 @@ export function renderCompanies(root, { store }) {
       h(
         'div.page',
         {},
-        h('header.page-head', {}, h('h1', {}, 'Practice by Company'), h('p.page-sub', {}, 'Pick a company to see the problems it asks most, and practice the version it asks.')),
+        h(
+          'header.page-head',
+          {},
+          h(
+            'div',
+            {},
+            h('span.eyebrow', {}, `${data.ranked.length} companies · ${data.ranked.filter((c) => c.israel === 'major' || c.israel === 'present').length} hire engineers in Israel`),
+            h('h1', {}, 'Companies'),
+            h('p.page-sub', {}, 'Pick a company to see the problems it asks most, and practice the version it asks.'),
+          ),
+        ),
         h(
           'div.filters',
           {},
@@ -150,8 +164,8 @@ export function renderCompanies(root, { store }) {
         ),
         count,
         grid,
-        h('p.hint-text', {}, 'Company tags are crowdsourced from public datasets (content/SOURCES.md). Treat them as a trend, not a promise. Israel hiring labels: content/israel-hiring.md.'),
-        siteFooter(),
+        h('p.hint-text.company-source', {}, 'Company tags are crowdsourced from public datasets (content/SOURCES.md). Treat them as a trend, not a promise. Israel hiring labels: content/israel-hiring.md.'),
+        siteFooter({ note: TRADEMARK_NOTE }),
       ),
     );
     renderGrid();
@@ -176,6 +190,13 @@ export function renderCompany(root, { store, slug }) {
   const body = h('tbody');
   const summary = h('p.page-sub');
   const headProgress = h('div.company-progress');
+  const facts = h('div.company-facts');
+  const asks = h('section.company-asks', { 'aria-labelledby': 'asks-title' });
+  let placed = null;
+  loadProblemTopics().then((p) => {
+    placed = p;
+    if (company && !disposed) renderBriefing();
+  });
   const emptyHost = h('div.empty-host', { hidden: true });
   let tableWrap = null;
   let clearFilters = null;
@@ -196,12 +217,51 @@ export function renderCompany(root, { store, slug }) {
     );
   };
 
+  /** Big numbers, difficulty mix and the topics this company asks most (ESPN / YC briefing anatomy). */
+  function renderBriefing() {
+    const state = store.get();
+    const all = expandRows(sets, company);
+    const prog = companyProgress(all, isSolvedIn(state));
+    const onSite = all.filter((r) => r.practice);
+    const high = all.filter((r) => frequencyLevel(r.frequency).steps === 3).length;
+    const mix = ['Easy', 'Medium', 'Hard'].map((d) => ({ d, n: all.filter((r) => r.problem.difficulty === d).length }));
+    const mixTotal = mix.reduce((n, m) => n + m.n, 0) || 1;
+    const big = (value, label) => h('div.company-fact', {}, h('div.company-fact-value', {}, value), h('div.company-fact-label', {}, label));
+    mount(
+      facts,
+      big(`${prog.solved} / ${prog.onSite}`, 'solved of what you can practice here'),
+      big(`${high}`, 'asked often (high frequency)'),
+      h(
+        'div.company-fact.company-mix',
+        {},
+        h('div.company-fact-label', {}, `Difficulty of its top ${all.length}`),
+        h('div.mix-bar', { 'aria-hidden': 'true' }, mix.map((m) => h(`span.mix-seg.mix-${m.d.toLowerCase()}`, { style: { flexGrow: String(m.n) } }))),
+        h('div.mix-legend', {}, mix.map((m) => h('span', {}, difficulty(m.d), ` ${Math.round((m.n / mixTotal) * 100)}%`))),
+      ),
+    );
+    if (!placed) return;
+    const counts = new Map();
+    for (const r of onSite) {
+      const t = placed[r.practice.contentId]?.topic;
+      if (t) counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    const top = [...counts].sort((a, b) => b[1] - a[1] || topicTitle(a[0]).localeCompare(topicTitle(b[0]))).slice(0, 6);
+    mount(
+      asks,
+      h('h2.section-title', { id: 'asks-title' }, 'What it asks most'),
+      top.length
+        ? h('ul.asks-list', {}, top.map(([t, n]) => h('li', {}, h('a.asks-topic', { href: `#/map/${t}` }, hexMark('new'), topicTitle(t)), h('span.asks-count', {}, `${n} ${n === 1 ? 'problem' : 'problems'}`))))
+        : h('p.hint-text', {}, 'None of its problems are on the site yet.'),
+    );
+  }
+
   function renderRows() {
     const state = store.get();
     const all = expandRows(sets, company);
     const prog = companyProgress(all, isSolvedIn(state));
     summary.textContent = `${company.total} tagged problems. ${prog.onSite} of the top ${all.length} can be practiced here, ${prog.solved} solved.`;
     mount(headProgress, h('span.company-progress-text', {}, solvedText(prog)), progressBar(prog.solved, prog.onSite));
+    renderBriefing();
     const rows = all.filter((r) => (!filters.onSiteOnly || r.practice) && (filters.difficulty === 'All' || r.problem.difficulty === filters.difficulty));
     if (!rows.length) {
       if (tableWrap) tableWrap.hidden = true;
@@ -241,7 +301,7 @@ export function renderCompany(root, { store, slug }) {
           h(
             'td.cell-status',
             {},
-            h(`span.status-pill.s-${status}`, {}, h('span.status-dot', { 'aria-hidden': 'true' }), statusLabel ?? h('span.sr-only', {}, 'Not solved')),
+            h(`span.status-pill.s-${status}`, {}, hexMark(status), h('span.sr-only', {}, statusLabel ?? 'Not solved')),
           ),
           h('td.cell-title', {}, h('span.company-problem', {}, name), r.versions > 1 ? h('span.tag.tag-muted', { title: 'This company asks several versions of this idea' }, `${r.versions} versions`) : null),
           h('td.cell-diff', {}, difficulty(r.problem.difficulty)),
@@ -308,7 +368,7 @@ export function renderCompany(root, { store, slug }) {
       h(
         'table.problem-table.company-table',
         {},
-        h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Status'), h('th', { scope: 'col' }, 'Problem'), h('th', { scope: 'col' }, 'Difficulty'), h('th', { scope: 'col' }, 'Frequency'), h('th', { scope: 'col' }, h('span.sr-only', {}, 'Practice')))),
+        h('thead', {}, h('tr', {}, h('th.cell-status', { scope: 'col' }, h('span.sr-only', {}, 'Status')), h('th', { scope: 'col' }, 'Problem'), h('th', { scope: 'col' }, 'Difficulty'), h('th', { scope: 'col' }, 'Frequency'), h('th', { scope: 'col' }, h('span.sr-only', {}, 'Practice')))),
         body,
       ),
     );
@@ -318,11 +378,27 @@ export function renderCompany(root, { store, slug }) {
         'div.page',
         {},
         h('a.back-link', { href: '#/companies' }, 'All companies'),
-        h('header.page-head', {}, h('h1', {}, company.name, company.israeli ? ilMark() : null), israelBadgeEl(company.israel), summary, headProgress),
+        h(
+          'header.page-head.company-head',
+          {},
+          companyMark({ letters: monogram(company.name), israel: company.israel, tier: company.tier, size: 'lg' }),
+          h(
+            'div.company-head-copy',
+            {},
+            h('span.eyebrow', {}, ISRAEL_LINE[company.israel] ?? 'Company'),
+            h('h1', {}, company.name, company.israeli ? ilMark() : null),
+            summary,
+            headProgress,
+          ),
+          israelBadgeEl(company.israel),
+        ),
+        facts,
+        asks,
+        h('h2.section-title.company-list-title', {}, 'The problems, most asked first'),
         h('div.filters.company-filters', {}, diff, onSite),
         tableWrap,
         emptyHost,
-        siteFooter(),
+        siteFooter({ note: TRADEMARK_NOTE }),
       ),
     );
     renderRows();

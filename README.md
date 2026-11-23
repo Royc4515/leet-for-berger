@@ -23,7 +23,9 @@ No install is needed to run the app; `npm install` only pulls Playwright for the
 | JavaScript and Python execution in the browser (Web Worker, Pyodide) | done |
 | Languages | 8: Python, JavaScript, TypeScript, Java, C++, C, C#, Go. Starter code generated from a typed signature; every solution verified in CI. JavaScript, TypeScript and Python run in the browser, the rest are editor-only until the server runner |
 | Problem bank, filters, progress (solved, streak, accuracy) | done |
-| Learning Path, 4 milestones | done |
+| Problem Map: 26 topics as districts of hexes, prerequisite roads, lock reasons, list view | done |
+| Learning Path (131 problems in 6 tiers) and Daily challenge with a 16-week calendar | done |
+| Design system "Atlas" (`docs/DESIGN.md`) | done |
 | Interview Simulator (45 min, lockdown, report) | done |
 | 1v1 Battle | bot opponent; live peers need a backend |
 | AI Mentor | scripted Socratic hints; LLM needs a backend proxy |
