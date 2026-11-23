@@ -32,7 +32,7 @@ Platform, practice modes and accounts are done. What limits the site now is how 
 |---|---|---|
 | Platform | Done: editor, 15 cases, 8 languages live, dashboard in 0.3 s (ADR 0008) | Small speed steps (F1) |
 | Practice | Done: paths, company practice by Israel hiring, mock OA, daily, weak spots, walkthroughs, battle vs bot | - |
-| Content | 210 problems (131 essential + 79 company problems) | Company waves (F2), growth for all (F3) |
+| Content | 215 problems (131 essential + 84 company problems) | Company waves (F2), growth for all (F3) |
 | Accounts | Done: Google and GitHub sign-in, synced progress, GitHub sync of solutions | Owner check of GitHub sync |
 | AI mentor | Scripted hint ladder | Real LLM mentor (F4, needs a budget decision) |
 | Design | Done: 10-step design system (F5, `docs/DESIGN.md`) | - |
@@ -69,7 +69,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [ ] Wave 4 (Nvidia, 20 problems, 4 groups of 5, Claude and Antigravity alternate as author and reviewer): Nvidia's most frequent problems not yet on the site, so its top 60 is fully covered. Left out as not fitting the harness: Read N Characters (read4 API), Find the Celebrity (interactive), Fizz Buzz Multithreaded (threads), Linked List Random Node (randomized)
     - [x] Group A (Claude): View Cone, Cover Area, Digit Sum Pair, Closest Gaps, Two Power Check; 205 -> 210. Nvidia top 60: 52 -> 57
     - [ ] Group B (Antigravity): Integer to English Words, First Unique Character, Contains Duplicate, Maximum Product of Three, Good Subsequences
-    - [ ] Group C (Claude): Max Points on a Line, Maximum Events Attended, Remove Stones, Sparse Dot Product, Counting Bits
+    - [x] Group C (Claude): Collinear Max, Most Events, Stone Halving, Sparse Dot, Bit Tally; Nvidia top 60: 57 -> 60 (all of it)
     - [ ] Group D (Antigravity): First Missing Positive, Remove Duplicates from Sorted List, Middle of the Linked List, Binary Subarrays With Sum, Maximal Square
   - [ ] Wave 5: candidates from the wave 3 reserve list: Number of Divisible Substrings (Amdocs), Advantage Shuffle, Food Buckets and Invert Binary Tree (Palo Alto to 30/30), Time Needed to Rearrange a Binary String (Salesforce), Implement Router (Cisco), Min Operations to Make All Equal (IBM), Diagonal Traverse
 - [x] **F3. Growth measurement for every problem:** complexity feedback is a core promise. Targets start from the statement and the best known complexity, inputs from shared generators; new wave problems ship with it
