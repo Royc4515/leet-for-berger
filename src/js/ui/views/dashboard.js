@@ -157,8 +157,12 @@ export function renderDashboard(root, { store }) {
     );
     const active = hasActiveFilters();
     clearInline.hidden = !active;
+    const matchingAvailable = rows.filter((p) => p.status === 'available').length;
+    const matchingPlanned = rows.length - matchingAvailable;
     countLine.textContent = active
-      ? `${rows.length} of ${catalog.length} ${catalog.length === 1 ? 'problem' : 'problems'}`
+      ? matchingPlanned > 0
+        ? `${matchingAvailable} of ${available} ${available === 1 ? 'problem' : 'problems'}, ${matchingPlanned} coming soon`
+        : `${matchingAvailable} of ${available} ${available === 1 ? 'problem' : 'problems'}`
       : planned > 0
         ? `${available} ${available === 1 ? 'problem' : 'problems'}, ${planned} coming soon`
         : `${rows.length} ${rows.length === 1 ? 'problem' : 'problems'}`;

@@ -687,10 +687,19 @@ try {
     await page.waitForSelector('.problem-title');
   });
 
-  await check('modes hub lists 3 modes', async () => {
+  await check('modes hub lists 2 mode cards with 1 primary button and an AI Mentor note', async () => {
     await page.click('a[data-nav="modes"]');
     await page.waitForSelector('.mode-card');
-    if ((await page.locator('.mode-card').count()) !== 3) throw new Error('expected 3 mode cards');
+    const hub = await page.evaluate(() => ({
+      cards: document.querySelectorAll('.mode-card').length,
+      primaries: document.querySelectorAll('#view .btn-primary').length,
+      mentorHref: document.querySelector('.mentor-note a[href^="#/problem/"]')?.getAttribute('href') ?? '',
+      text: document.querySelector('#view')?.textContent ?? '',
+    }));
+    if (hub.cards !== 2) throw new Error(`expected 2 mode cards, got ${hub.cards}`);
+    if (hub.primaries !== 1) throw new Error(`expected 1 primary button on modes hub, got ${hub.primaries}`);
+    if (!hub.mentorHref) throw new Error('expected AI Mentor note with a link to a problem');
+    if (/roadmap|phase \d/i.test(hub.text)) throw new Error('modes hub copy should not mention internal roadmap phases');
     await shot('06-modes');
   });
 
@@ -790,6 +799,10 @@ try {
     // Reset to setup so subsequent 390px route checks capture and measure the setup screen.
     await page.click('button:has-text("New interview")');
     await page.waitForSelector('.format-grid');
+    // The Modes hub now surfaces the last finished interview summary.
+    await page.goto(`${BASE}#/modes`);
+    await page.waitForSelector('.mode-card .mode-last');
+    await expectText('.mode-card .mode-last', /Last session:.*\/ 100/);
   });
 
   await check('interview timer: warning colour and single "5 minutes left" announcement in the last five minutes', async () => {
@@ -1234,10 +1247,13 @@ try {
       });
     const screens = [
       { url: '#/', wait: '.problem-table tbody tr a.problem-link', name: '390-touch-dashboard' },
+      { url: '#/path', wait: '.path-row', name: '390-touch-path' },
       { url: '#/companies', wait: '.company-card', name: '390-touch-companies' },
       { url: '#/companies/google', wait: '.problem-table tbody tr', name: '390-touch-company' },
+      { url: '#/modes', wait: '.mode-card', name: '390-touch-modes' },
       { url: '#/interview', wait: '.company-option[data-slug="google"]', name: '390-touch-interview', startButton: 'Start interview' },
       { url: '#/battle', wait: '.pick-row', name: '390-touch-battle', startButton: 'Start race' },
+      { url: 'privacy.html', wait: 'article.legal h1', name: '390-touch-privacy' },
     ];
     for (const sc of screens) {
       await touch.goto(`${BASE}${sc.url}`);
@@ -1573,12 +1589,13 @@ try {
       skipLink: Boolean(document.querySelector('a.skip-link[href="#view"]')),
       headerNav: document.querySelectorAll('.app-header .nav a').length,
       headerBack: Boolean(document.querySelector('.app-header a.btn')),
+      pageHead: Boolean(document.querySelector('article.legal header.page-head h1')),
       backLink: Boolean(document.querySelector('article.legal a.back-link')),
       btnColor: getComputedStyle(document.querySelector('article.legal a.btn')).color,
       linkColor: getComputedStyle(document.querySelector('article.legal a[href^="mailto:"]')).color,
       tabLinks: document.querySelectorAll('.tab-bar a').length,
     }));
-    if (!privacyShell.skipLink || privacyShell.headerNav !== 4 || !privacyShell.headerBack || !privacyShell.backLink || privacyShell.tabLinks !== 4) {
+    if (!privacyShell.skipLink || privacyShell.headerNav !== 4 || !privacyShell.headerBack || !privacyShell.pageHead || !privacyShell.backLink || privacyShell.tabLinks !== 4) {
       throw new Error(`privacy.html shell incomplete: ${JSON.stringify(privacyShell)}`);
     }
     if (privacyShell.btnColor === privacyShell.linkColor) {

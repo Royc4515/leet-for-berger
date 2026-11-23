@@ -176,8 +176,13 @@ export function renderCompany(root, { store, slug }) {
   const body = h('tbody');
   const summary = h('p.page-sub');
   const headProgress = h('div.company-progress');
+  const emptyHost = h('div.empty-host', { hidden: true });
+  let tableWrap = null;
+  let clearFilters = null;
   let sets = null;
   let company = null;
+
+  const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
 
   /** Frequency as a labelled 3-step meter; the word and recency are the text, the steps decorate. */
   const freqMeter = (r) => {
@@ -199,13 +204,27 @@ export function renderCompany(root, { store, slug }) {
     mount(headProgress, h('span.company-progress-text', {}, solvedText(prog)), progressBar(prog.solved, prog.onSite));
     const rows = all.filter((r) => (!filters.onSiteOnly || r.practice) && (filters.difficulty === 'All' || r.problem.difficulty === filters.difficulty));
     if (!rows.length) {
-      mount(body, h('tr', {}, h('td.empty', { colspan: 5 }, 'No problems match these filters.')));
+      if (tableWrap) tableWrap.hidden = true;
+      emptyHost.hidden = false;
+      mount(
+        emptyHost,
+        stateBlock({
+          title: 'No matching problems',
+          body: 'No problems match these filters. Try another difficulty or include problems not on the site yet.',
+          kind: 'empty',
+          action: clearFilters ? { label: 'Clear filters', variant: 'btn-secondary', onClick: clearFilters } : null,
+        }),
+      );
       return;
     }
+    if (tableWrap) tableWrap.hidden = false;
+    emptyHost.hidden = true;
     mount(
       body,
       rows.map((r) => {
-        const solved = r.practice && isSolvedIn(state)(r.practice.contentId);
+        const entry = r.practice ? state.problems[r.practice.contentId] : null;
+        const status = entry?.status === 'solved' ? (entry.revealed ? 'assisted' : 'solved') : entry ? 'attempted' : 'todo';
+        const statusLabel = STATUS_LABEL[status];
         const name = r.problem.number ? `${r.problem.number}. ${r.problem.title}` : r.problem.title;
         let practice;
         if (!r.practice) practice = h('span.tag.tag-muted', {}, 'Not on the site yet');
@@ -222,7 +241,7 @@ export function renderCompany(root, { store, slug }) {
           h(
             'td.cell-status',
             {},
-            h(`span.status-pill.s-${solved ? 'solved' : 'todo'}`, {}, h('span.status-dot', { 'aria-hidden': 'true' }), solved ? 'Solved' : h('span.sr-only', {}, 'Not solved')),
+            h(`span.status-pill.s-${status}`, {}, h('span.status-dot', { 'aria-hidden': 'true' }), statusLabel ?? h('span.sr-only', {}, 'Not solved')),
           ),
           h('td.cell-title', {}, h('span.company-problem', {}, name), r.versions > 1 ? h('span.tag.tag-muted', { title: 'This company asks several versions of this idea' }, `${r.versions} versions`) : null),
           h('td.cell-diff', {}, difficulty(r.problem.difficulty)),
@@ -258,7 +277,7 @@ export function renderCompany(root, { store, slug }) {
     }
     const diff = chipGroup({
       label: 'Difficulty',
-      options: ['All', 'Easy', 'Medium', 'Hard'].map((d) => ({ value: d, label: d === 'All' ? 'All difficulties' : d })),
+      options: ['All', 'Easy', 'Medium', 'Hard'].map((d) => ({ value: d, label: d === 'All' ? 'All difficulties' : d, attrs: { 'data-value': d } })),
       value: filters.difficulty,
       onChange: (d) => {
         filters.difficulty = d;
@@ -276,6 +295,23 @@ export function renderCompany(root, { store, slug }) {
         renderRows();
       },
     });
+    clearFilters = () => {
+      filters.difficulty = 'All';
+      filters.onSiteOnly = false;
+      diff.querySelectorAll('.chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === 'All')));
+      onSite.setAttribute('aria-pressed', 'false');
+      renderRows();
+    };
+    tableWrap = h(
+      'div.table-wrap',
+      {},
+      h(
+        'table.problem-table.company-table',
+        {},
+        h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Status'), h('th', { scope: 'col' }, 'Problem'), h('th', { scope: 'col' }, 'Difficulty'), h('th', { scope: 'col' }, 'Frequency'), h('th', { scope: 'col' }, h('span.sr-only', {}, 'Practice')))),
+        body,
+      ),
+    );
     mount(
       root,
       h(
@@ -284,16 +320,8 @@ export function renderCompany(root, { store, slug }) {
         h('a.back-link', { href: '#/companies' }, 'All companies'),
         h('header.page-head', {}, h('h1', {}, company.name, company.israeli ? ilMark() : null), israelBadgeEl(company.israel), summary, headProgress),
         h('div.filters.company-filters', {}, diff, onSite),
-        h(
-          'div.table-wrap',
-          {},
-          h(
-            'table.problem-table.company-table',
-            {},
-            h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Status'), h('th', { scope: 'col' }, 'Problem'), h('th', { scope: 'col' }, 'Difficulty'), h('th', { scope: 'col' }, 'Frequency'), h('th', { scope: 'col' }, h('span.sr-only', {}, 'Practice')))),
-            body,
-          ),
-        ),
+        tableWrap,
+        emptyHost,
         siteFooter(),
       ),
     );

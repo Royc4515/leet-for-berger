@@ -1,6 +1,6 @@
 # Work plan (living)
 
-Last updated: 2026-11-19. Owner: Roy.
+Last updated: 2026-11-22. Owner: Roy.
 
 A LeetCode-style practice platform for interviews and take-home tests, at $0. 145 problems are verified in all 8 languages, every language runs on the live site, accounts and GitHub sync are live, and the dashboard loads in under a second. The bottleneck now is content: most company lists show many more asked problems than we have. This file is open to change: every new decision goes into the decision log.
 
@@ -35,7 +35,7 @@ Platform, practice modes and accounts are done. What limits the site now is how 
 | Content | 205 problems (131 essential + 74 company problems) | Company waves (F2), growth for all (F3) |
 | Accounts | Done: Google and GitHub sign-in, synced progress, GitHub sync of solutions | Owner check of GitHub sync |
 | AI mentor | Scripted hint ladder | Real LLM mentor (F4, needs a budget decision) |
-| Design | Current look | Dedicated design session (F5) |
+| Design | Done: 10-step design system (F5, `docs/DESIGN.md`) | - |
 
 **Languages on the live site:** JavaScript, TypeScript, Python and SQL run in the browser; Java, C++, C, C# and Go run on the server. A real Java submission on the live site was Accepted 15/15 in 3.8 s.
 
@@ -74,7 +74,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - Progress: 128 of 149 measurable problems covered (185 in all: 36 excluded with a reason, 6 of them SQL; 21 pending)
   - [ ] The 21 pending, each tried and left out for a stated reason (allocation or cache bends, too fast to time on CI, recursion limits, retry-only passes): bucket-map, column-sweep, course-finish-time, dictionary-split, digit-list-sum, fizz-buzz-list, gap-in-range, hill-rearrange, jump-reach, justify-lines, list-loop, lone-number, prefix-tree, random-link-copy, ring-shift, rotate-grid, ticket-itinerary, trade-cooldown, two-color-check, unfold-brackets (solution fixed, spec still to write), word-order-flip. Fixing these needs measurement work, not more specs: e.g. timing several reps per size to average out bends, packed (non-holey) arrays in the generators, a larger browser budget for big linked lists. Worth doing only if users ask for feedback on these problems
 - [ ] **F4. Real AI mentor:** an LLM behind a Supabase Edge Function with a hard monthly cap, using the system prompt already in `src/js/mentor/mentor.js`. Starts only after the budget decision below
-- [ ] **F5. Design session:** after F1, F3 and the first three F2 waves. A dedicated session (Fable 5.2): a plan per screen, then execution per screen
+- [x] **F5. Design session:** after F1, F3 and the first three F2 waves. A dedicated session (Fable 5.2): a plan per screen, then execution per screen
   - Plan: `docs/DESIGN_PLAN.md`, rules: `docs/DESIGN.md`. Ten steps, one PR each
   - [x] Step 1, tokens and fonts (#33)
   - [x] Step 2, shell: phone tab bar, account panel, dialogs, toasts, page states (#34)
@@ -85,7 +85,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Step 7, workspace: statement first with a collapsed "About this problem", grouped toolbar that wraps instead of clipping Run / Submit, token-matched Monaco theme, mentor as a third column only above 1200 px (overlay below, sheet on phones), ARIA case tabs, phone Description / Code / Results tabs with a pinned Run / Submit bar
   - [x] Step 8, sessions: shared session banner with tabular timer and single 5-minute warning announcement, interview problem switcher with per-problem status, colour-banded interview report with difficulty and Review links, battle lockdown with Leave race exit and two distinct thicker race bars
   - [x] Step 9, learning path: thicker green overall bar with the count, a one-line description per tier, topic disclosure buttons with `aria-expanded` and a mini bar on every topic header, full-row links with the shared status and difficulty, a visible Next up tag, two-line rows on phones
-  - [ ] Step 10: polish
+  - [x] Step 10, polish: Modes hub redesigned to two cards (Interview, Battle) with user-facing copy, last session results, one primary button, and an AI Mentor note; privacy page on shared page-head and tokens; dead CSS removed and carried Step 4/5/9 nits swept
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)
@@ -138,7 +138,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
 - [x] Load views only when opened, and load supabase-js only with a session or on Sign in (done in F1)
 
 ### Stage E: new UI
-- [ ] Redesign (now F5): a dedicated design session (Fable 5.2) with a plan per screen, then execution per screen. Until then fixes keep the current look. Known asks: company buttons instead of a plain list, readable pickers in every mode
+- [x] Redesign (done in F5): 10-step design system rollout across every screen (`docs/DESIGN.md`, `docs/DESIGN_PLAN.md`), including company option cards, shared pickers, phone navigation, workspace and session polish
 
 ## Content sources
 

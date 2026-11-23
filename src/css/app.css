@@ -809,11 +809,6 @@ body.lockdown .tab-bar {
   font-family: var(--mono);
   color: var(--muted);
 }
-.problem-table .empty {
-  padding: 28px;
-  text-align: center;
-  color: var(--muted);
-}
 .problem-link {
   font-weight: 600;
   text-decoration: none;
@@ -1118,9 +1113,6 @@ body.resizing-y * {
 /* The longest option ("TypeScript (editor only)") would push the toolbar onto a second row. */
 .toolbar-setup .select {
   max-width: 140px;
-}
-.toolbar-spacer {
-  flex: 1;
 }
 /* Remote runner (ADR 0005): the selected language compiles on the code server. */
 .runner-note {
@@ -1504,13 +1496,13 @@ body.resizing-y * {
 /* ---------- Modes ---------- */
 .mode-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
 }
 .mode-card {
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: var(--s-5);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--panel);
@@ -1524,43 +1516,83 @@ body.resizing-y * {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 .mode-top h2 {
   margin: 0;
   font-size: var(--fs-lg);
 }
-.mode-card p {
+.mode-card .mode-desc {
+  margin: var(--s-3) 0 0;
   color: var(--text-2);
   flex: 1;
 }
+.mode-last {
+  margin: var(--s-3) 0 0;
+  padding: var(--s-2) var(--s-3);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+.mode-last.band-strong,
+.mode-last.is-win {
+  border-left-color: var(--ok);
+}
+.mode-last.band-low {
+  border-left-color: var(--bad);
+}
 .mode-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 14px;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+.mentor-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3) var(--s-4);
+  margin-top: var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--panel-2);
+}
+.mentor-note-copy {
+  flex: 1;
+  min-width: 240px;
+}
+.mentor-note-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-1);
+}
+.mentor-note-head h2 {
+  margin: 0;
+  font-size: var(--fs-md);
+}
+.mentor-note-copy p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
 }
 .setup-card {
-  padding: 20px 22px;
+  padding: var(--s-5) var(--s-6);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--panel);
 }
 .setup-card h3 {
-  margin: 18px 0 8px;
+  margin: var(--s-4) 0 var(--s-2);
   font-size: var(--fs-md);
 }
-.setup-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-}
-.setup-row span {
-  color: var(--text-2);
-}
 .rules {
-  padding-left: 18px;
+  padding-left: var(--s-5);
   color: var(--text-2);
 }
 
@@ -1908,15 +1940,6 @@ body.lockdown .toast-host {
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 960px) {
-  .mode-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .problem-table:not(.dashboard-table):not(.company-table) th:nth-child(4),
-  .problem-table:not(.dashboard-table):not(.company-table) td:nth-child(4) {
-    display: none;
-  }
-}
 @media (max-width: 820px) {
   /* Phone workspace (docs/DESIGN.md): one pane at a time behind Description / Code / Results tabs,
      and a pinned Run / Submit bar in place of the site's tab bar. */
@@ -2492,9 +2515,6 @@ body.lockdown .toast-host {
     position: absolute;
     inset: 0;
   }
-  .company-table td.empty {
-    grid-column: 1 / -1;
-  }
 }
 
 /* ---------- Learning path ---------- */
@@ -2622,6 +2642,7 @@ body.lockdown .toast-host {
 }
 .path-topic.complete .path-topic-title::after {
   content: ' \2713';
+  content: ' \2713' / '';
   color: var(--ok);
 }
 .path-topic-body {
@@ -2945,12 +2966,12 @@ body.lockdown .toast-host {
 }
 .legal h2 {
   font-size: var(--fs-lg);
-  margin: 24px 0 8px;
+  margin: var(--s-6) 0 var(--s-2);
 }
 .legal ul {
-  padding-left: 20px;
+  padding-left: var(--s-5);
 }
-.legal a:not(.btn) {
+.legal a:not(.btn):not(.back-link) {
   color: var(--info);
 }
 .site-links {

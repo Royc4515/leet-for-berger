@@ -19,9 +19,10 @@ function fakeStorage(initial = {}) {
   };
 }
 
-test('clearUserData removes progress and every draft, and nothing else', () => {
+test('clearUserData removes progress, last sessions and every draft, and nothing else', () => {
   const st = fakeStorage({
     'lfb:progress:v1': '{}',
+    'lfb:last-sessions:v1': '{"interview":null,"battle":null}',
     'lfb:draft:v1:two-sum:js': 'a',
     'lfb:draft:v1:two-sum:python': 'b',
     'lfb:draft:v1:other:go': 'c',
@@ -30,7 +31,7 @@ test('clearUserData removes progress and every draft, and nothing else', () => {
     unrelated: '1',
   });
   const removed = clearUserData(st);
-  assert.equal(removed.length, 4);
+  assert.equal(removed.length, 5);
   assert.deepEqual(st.keys().sort(), ['lfb:lang', 'lfb:split:x', 'unrelated']);
 });
 
