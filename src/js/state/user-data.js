@@ -3,8 +3,9 @@
  * all of it, so the next person on the device starts as a guest. A new per-user store must be
  * added here; tests/user-data.test.js fails if a source file persists a key this list misses.
  *
- * Not listed on purpose: layout and language preferences (lfb:split:*, lfb:lang) are about the
- * device, not the account. The GitHub link lives in memory only (auth/github-sync.js).
+ * Not listed on purpose: layout and language preferences (lfb:split:*, lfb:lang, lfb:about-open,
+ * lfb:map-view) are about the device, not the account; lfb:seen-solved is a per-tab sessionStorage
+ * number for the Problems page count-up. The GitHub link lives in memory only (auth/github-sync.js).
  */
 import { STORAGE_KEY as PROGRESS_KEY } from './progress.js';
 import { DRAFT_PREFIX } from './drafts.js';

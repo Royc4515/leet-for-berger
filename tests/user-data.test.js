@@ -59,7 +59,9 @@ test('store.reset returns to an empty guest state and notifies subscribers', () 
 // Guard against a forgotten store: every localStorage key literal in src/js must be either listed
 // as user data or named here as a device preference.
 test('every persisted lfb: key is user data or a known device preference', () => {
-  const DEVICE_PREFS = ['lfb:lang', 'lfb:split:x', 'lfb:split:y', 'lfb:about-open'];
+  // lfb:map-view (Map or List) is a layout choice; lfb:seen-solved is a sessionStorage number the
+  // Problems page ticks up from, gone when the tab closes and reset to the guest's 0 after sign-out.
+  const DEVICE_PREFS = ['lfb:lang', 'lfb:split:x', 'lfb:split:y', 'lfb:about-open', 'lfb:map-view', 'lfb:seen-solved'];
   const files = [];
   const walk = (dir) => {
     for (const f of readdirSync(dir)) {
