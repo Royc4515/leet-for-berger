@@ -1,5 +1,9 @@
-// Usage: node scripts/design/capture-screens.mjs <outDir> [nameFilterRegex]
-// Captures full-page screenshots of every route/state at 1440 and 390 for the inventory.
+#!/usr/bin/env node
+/**
+ * Full-page screenshots of every route and state in docs/research/SCREEN_INVENTORY.md, at 1440 and
+ * 390 px, with a first-visit and a returning-user progress seed. Used for the F6 before/after sheet.
+ * Usage: node scripts/design/capture-screens.mjs <outDir> [nameFilterRegex]
+ */
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { startServer } from '../serve.mjs';
@@ -35,7 +39,7 @@ const scenarios = [
   { name: 'dashboard-returning', hash: '#/', state: returning },
   { name: 'map', hash: '#/map', state: returning },
   { name: 'daily', hash: '#/daily', state: returning },
-  { name: 'map-list', hash: '#/map', state: returning, list: true },
+  { name: 'palette', hash: '#/', state: returning, full: false, palette: 'gra' },
   { name: 'path-returning', hash: '#/path', state: returning },
   { name: 'path-first-visit', hash: '#/path' },
   { name: 'companies', hash: '#/companies', state: returning },
@@ -67,6 +71,12 @@ for (const vp of [{ w: 1440, h: 900, tag: '1440' }, { w: 390, h: 844, tag: '390'
       await page.goto(s.url ? BASE + s.url : BASE + s.hash, { waitUntil: 'load' });
       await page.waitForTimeout(1200);
       if (s.wait) await page.waitForSelector(s.wait, { timeout: 20000 }).catch(() => {});
+      if (s.palette) {
+        await page.keyboard.press('Control+k');
+        await page.waitForSelector('dialog.palette[open]');
+        await page.keyboard.type(s.palette);
+        await page.waitForTimeout(400);
+      }
       if (s.run) {
         await page.click('button[data-action="run"]').catch(() => {});
         await page.waitForTimeout(2500);

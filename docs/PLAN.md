@@ -91,11 +91,11 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Step 8, sessions: shared session banner with tabular timer and single 5-minute warning announcement, interview problem switcher with per-problem status, colour-banded interview report with difficulty and Review links, battle lockdown with Leave race exit and two distinct thicker race bars
   - [x] Step 9, learning path: thicker green overall bar with the count, a one-line description per tier, topic disclosure buttons with `aria-expanded` and a mini bar on every topic header, full-row links with the shared status and difficulty, a visible Next up tag, two-line rows on phones
   - [x] Step 10, polish: Modes hub redesigned to two cards (Interview, Battle) with user-facing copy, last session results, one primary button, and an AI Mentor note; privacy page on shared page-head and tokens; dead CSS removed and carried Step 4/5/9 nits swept
-- [ ] **F6. Full redesign, research-led:** an interactive Problem Map, a redesign of every screen and state in one consistent style, no style decided in advance. Brief: `docs/REDESIGN_BRIEF.md`. Started 2026-11-23 on the owner's go
+- [x] **F6. Full redesign, research-led:** an interactive Problem Map, a redesign of every screen and state in one consistent style, no style decided in advance. Brief: `docs/REDESIGN_BRIEF.md`. Started 2026-11-23 on the owner's go
   - [x] Phase A: screen inventory (`docs/research/SCREEN_INVENTORY.md`) and research from 63 captured sites (`docs/research/DESIGN_REFERENCES.md`)
   - [x] Phase B: three directions prototyped and scored; **Atlas** chosen (`docs/research/DESIGN_DIRECTIONS.md`)
   - [x] Phase C: `docs/DESIGN.md` rewritten, ADR 0009 (display font), ADR 0010 (map rendering), plan and coverage matrix (`docs/F6_PLAN.md`)
-  - [ ] Phase D: steps 1 to 9 in `docs/F6_PLAN.md`
+  - [x] Phase D: steps 1 to 9 in `docs/F6_PLAN.md`: Map (`#/map`), Daily (`#/daily`), command palette, and every screen in the Atlas design; inventory fully ticked
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)

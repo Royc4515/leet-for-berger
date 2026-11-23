@@ -6,17 +6,17 @@ The work ships on one branch as a sequence of commits, one per step below, each 
 
 ## Steps
 
-| # | Step | Inventory items | e2e coverage |
-|---|---|---|---|
-| 1 | Foundation: tokens, fonts, base, components (buttons, chips, segmented, tags, difficulty pips, status hex, inputs, switch, cards, tables, tabs, progress, company mark, dialog, toast, palette), motion helpers, state blocks and skeletons, shell (header, nav, tab bar, streak chip), brand assets, 404 and could-not-load | C1-C5, C13-C25, C27, C29, B1-B4, R13-R15 | fonts loaded locally, 5 nav links with `aria-current`, tab bar 44 px targets, palette opens with Ctrl+K and navigates, 404 state, reduced-motion run |
-| 2 | Problem Map: pure layout and states (unit-tested), SVG view, brief panel, lenses, list view, keyboard, deep links | R2 | map renders 26 districts and 225 hexes, arrows move focus, Enter selects and updates the hash, list view toggles, no sideways scroll at 390, reduced motion |
-| 3 | Problems page and Daily challenge | R1, R17 | start block, filters, empty state, today card, daily page calendar and countdown |
-| 4 | Workspace: layout, toolbar, statement, verdict console, mentor, context and extras, editor theme | R3, C7-C12 | all existing workspace steps; verdict hexes (5 open, 10 locked), Next problem after Accepted |
-| 5 | Learning path as the route | R4 | tiers, 131 problems, Next up, checkpoints |
-| 6 | Companies and company briefing, hex company marks | R5, R6, C26 | Hiring / Top / All counts, briefing facts, practice links |
-| 7 | Modes: hub, interview setup, session, report, battle setup, race, result, shared picker, session banner | R7-R12, C6, C28 | existing lockdown, picker, report, race checks |
-| 8 | Account menu and privacy page | C5, R16 | existing account checks, privacy back link |
-| 9 | Final consistency pass: contact sheet of every item before and after, CSS audit (no literal values outside tokens, no dead selectors), motion and voice check | all | full suite, reduced-motion route sweep |
+| # | Step | Inventory items | e2e coverage | Done |
+|---|---|---|---|---|
+| 1 | Foundation: tokens, fonts, base, components (buttons, chips, segmented, tags, difficulty pips, status hex, inputs, switch, cards, tables, tabs, progress, company mark, dialog, toast, palette), motion helpers, state blocks and skeletons, shell (header, nav, tab bar, streak chip), brand assets, 404 and could-not-load | C1-C5, C13-C25, C27, C29, B1-B4, R13-R15 | fonts loaded locally, 5 nav links with `aria-current`, tab bar 44 px targets, palette opens with Ctrl+K and navigates, 404 state, reduced-motion run | [x] |
+| 2 | Problem Map: pure layout and states (unit-tested), SVG view, brief panel, lenses, list view, keyboard, deep links | R2 | map renders 26 districts and 225 hexes, arrows move focus, Enter selects and updates the hash, list view toggles, no sideways scroll at 390, reduced motion | [x] |
+| 3 | Problems page and Daily challenge | R1, R17 | start block, filters, empty state, today card, daily page calendar and countdown | [x] |
+| 4 | Workspace: layout, toolbar, statement, verdict console, mentor, context and extras, editor theme | R3, C7-C12 | all existing workspace steps; verdict hexes (5 open, 10 locked), Next problem after Accepted | [x] |
+| 5 | Learning path as the route | R4 | tiers, 131 problems, Next up, checkpoints | [x] |
+| 6 | Companies and company briefing, hex company marks | R5, R6, C26 | Hiring / Top / All counts, briefing facts, practice links | [x] |
+| 7 | Modes: hub, interview setup, session, report, battle setup, race, result, shared picker, session banner | R7-R12, C6, C28 | existing lockdown, picker, report, race checks | [x] |
+| 8 | Account menu and privacy page | C5, R16 | existing account checks, privacy back link | [x] |
+| 9 | Final consistency pass: contact sheet of every item before and after, CSS audit (no literal values outside tokens, no dead selectors), motion and voice check | all | full suite, reduced-motion route sweep | [x] |
 
 ## Coverage matrix
 

@@ -1,5 +1,6 @@
-// Design system invariants (docs/DESIGN.md): token completeness, WCAG AA contrast,
-// 12 px type floor and scale, radius tokens, and self-hosted woff2 font assets.
+// Design system invariants (docs/DESIGN.md, Atlas): token completeness, WCAG AA contrast, the 12 px
+// type floor and scale, radius tokens, no literal colours or durations in component rules, and the
+// self-hosted woff2 fonts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -106,24 +107,27 @@ const baseRoot = roots.find((r) => !r.nested)?.vars;
 const coarseRoot = roots.find((r) => r.nested)?.vars;
 const componentCss = stripRootsAndFontFaces(CSS);
 
-test('base :root defines all required tokens and separates medium from accent and solid danger', () => {
+test('base :root defines the Atlas tokens; medium differs from the lamp, solid danger from danger text', () => {
   assert.ok(baseRoot, 'top-level :root block not found');
   assert.ok(coarseRoot, 'coarse-pointer :root override block not found');
 
   const required = [
-    '--bg', '--panel', '--panel-2', '--panel-3', '--panel-hover',
+    '--bg', '--panel', '--panel-2', '--panel-3', '--panel-hover', '--scrim',
     '--border', '--border-strong', '--border-control',
     '--text', '--text-2', '--muted',
-    '--accent', '--accent-ink', '--accent-soft', '--accent-hover',
-    '--ok', '--ok-soft', '--bad', '--bad-solid', '--bad-ink', '--bad-soft', '--warn', '--info',
+    '--accent', '--accent-hover', '--accent-ink', '--accent-soft', '--accent-line', '--accent-glow', '--accent-dim', '--focus',
+    '--ok', '--ok-soft', '--bad', '--bad-solid', '--bad-ink', '--bad-soft', '--warn', '--warn-soft', '--info', '--info-soft',
     '--easy', '--medium', '--hard',
-    '--fs-xs', '--fs-sm', '--fs-md', '--fs-lg', '--fs-xl', '--fs-2xl', '--fs-display',
-    '--font', '--mono',
-    '--s-1', '--s-2', '--s-3', '--s-4', '--s-5', '--s-6', '--s-7',
-    '--r-tag', '--r-sm', '--r-md', '--r-pill',
+    '--hex-new', '--hex-locked', '--hex-solved', '--hex-assisted', '--road', '--road-lit',
+    '--display', '--font', '--mono',
+    '--fs-xs', '--fs-sm', '--fs-md', '--fs-lg', '--fs-xl', '--fs-2xl', '--fs-3xl', '--fs-display',
+    '--s-1', '--s-2', '--s-3', '--s-4', '--s-5', '--s-6', '--s-7', '--s-8',
+    '--r-tag', '--r-sm', '--r-md', '--r-lg', '--r-pill',
+    '--shadow-1', '--shadow-2', '--shadow-lamp',
     '--ctl-sm', '--ctl-md', '--ctl-lg',
-    '--page', '--page-narrow', '--header-h',
-    '--t-fast', '--t-med', '--ease',
+    '--page', '--page-wide', '--page-narrow', '--header-h', '--tab-bar-h', '--hex',
+    '--t-instant', '--t-fast', '--t-base', '--t-slow', '--t-stage', '--t-stagger', '--t-loop', '--t-pulse',
+    '--ease', '--ease-in-out', '--ease-spring',
   ];
   for (const name of required) {
     assert.ok(baseRoot.has(name), `missing token ${name} in :root`);
@@ -144,10 +148,14 @@ test('text tokens meet WCAG AA (>= 4.5:1) on every surface', () => {
   }
 });
 
-test('control border meets >= 3:1 on resting control surfaces', () => {
+test('control borders and the focus ring meet >= 3:1 on every surface they sit on', () => {
   for (const bg of ['--bg', '--panel', '--panel-2']) {
     const ratio = contrastRatio(baseRoot.get('--border-control'), baseRoot.get(bg));
     assert.ok(ratio >= 3.0, `--border-control on ${bg} contrast ${ratio.toFixed(2)}:1 is below 3.0:1`);
+  }
+  for (const bg of ['--bg', '--panel', '--panel-2', '--panel-3']) {
+    const ratio = contrastRatio(baseRoot.get('--focus'), baseRoot.get(bg));
+    assert.ok(ratio >= 3.0, `--focus on ${bg} contrast ${ratio.toFixed(2)}:1 is below 3.0:1`);
   }
 });
 
@@ -158,10 +166,6 @@ test('button ink and background pairs meet WCAG AA (>= 4.5:1)', () => {
     ['--text', '--panel-hover'],
     ['--bad-ink', '--bad-solid'],
     ['--text', '--panel-3'],
-    ['--text-2', '--bg'],
-    ['--text-2', '--panel'],
-    ['--text-2', '--panel-2'],
-    ['--text-2', '--panel-3'],
   ];
   for (const [fg, bg] of pairs) {
     const ratio = contrastRatio(baseRoot.get(fg), baseRoot.get(bg));
@@ -169,14 +173,10 @@ test('button ink and background pairs meet WCAG AA (>= 4.5:1)', () => {
   }
 });
 
-test('difficulty and selected-state text meet WCAG AA (>= 4.5:1) where they render', () => {
-  // Difficulty is a dot plus a 12 px word (no tinted pill), so the word itself must pass on the
-  // surfaces it sits on: page, cards, inset rows and hovered table rows. A selected segment shows
-  // accent text on --panel-3.
+test('semantic, difficulty and lamp text meet WCAG AA (>= 4.5:1) where they render', () => {
   const pairs = [
-    ...['--easy', '--medium', '--hard'].flatMap((fg) => ['--bg', '--panel', '--panel-2'].map((bg) => [fg, bg])),
+    ...['--easy', '--medium', '--hard', '--ok', '--bad', '--warn', '--info', '--accent'].flatMap((fg) => ['--bg', '--panel', '--panel-2'].map((bg) => [fg, bg])),
     ['--accent', '--panel-3'],
-    ['--accent', '--panel-2'],
   ];
   for (const [fg, bg] of pairs) {
     const ratio = contrastRatio(baseRoot.get(fg), baseRoot.get(bg));
@@ -185,7 +185,7 @@ test('difficulty and selected-state text meet WCAG AA (>= 4.5:1) where they rend
 });
 
 test('type scale tokens stay >= 12px on the defined scale and all CSS rules use --fs-* tokens', () => {
-  const allowedBaseSizes = new Set([12, 13, 14, 16, 20, 26, 38]);
+  const allowedBaseSizes = new Set([12, 13, 14, 16, 20, 26, 34, 48]);
   const fsTokens = new Set();
 
   for (const [name, val] of baseRoot) {
@@ -223,21 +223,44 @@ test('type scale tokens stay >= 12px on the defined scale and all CSS rules use 
   }
 });
 
-test('all border-radius declarations use radius tokens, 50%, inherit, or 0', () => {
+test('all border-radius declarations use radius tokens (or calc of one), 50%, inherit, or 0', () => {
   const radiusTokens = new Set([...baseRoot.keys()].filter((k) => k.startsWith('--r-')));
   for (const m of componentCss.matchAll(/(?:^|[;{\s])border-radius\s*:\s*([^;{}]+);/gi)) {
-    const parts = m[1].trim().split(/\s+/);
-    for (const part of parts) {
+    const val = m[1].trim();
+    if (/^calc\(var\(--r-[a-z0-9-]+\)\s*-\s*\d+px\)$/.test(val)) continue;
+    for (const part of val.split(/\s+/)) {
       if (part === '0' || part === '50%' || part === 'inherit') continue;
       const ref = part.match(/^var\((--r-[a-z0-9-]+)\)$/);
-      assert.ok(ref && radiusTokens.has(ref[1]), `border-radius must use a defined --r-* token, found "${m[1].trim()}"`);
+      assert.ok(ref && radiusTokens.has(ref[1]), `border-radius must use a defined --r-* token, found "${val}"`);
     }
   }
 });
 
-test('self-hosted Inter and JetBrains Mono woff2 fonts exist, use swap, and stay within budget', () => {
+test('component rules use no literal colours: every colour comes from a token', () => {
+  // Data URIs (icon SVGs) are self-contained images, not rules; the reduced-motion block has none.
+  const rules = componentCss.replace(/url\("data:[^"]*"\)/g, 'url()');
+  const literal = [...rules.matchAll(/#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(/gi)].map((m) => rules.slice(Math.max(0, m.index - 60), m.index + 20).replace(/\s+/g, ' '));
+  assert.deepEqual(literal, [], 'literal colours in component rules');
+});
+
+test('gaps between items come from the spacing tokens', () => {
+  const offenders = [...componentCss.matchAll(/(?:^|[;{\s])((?:row-|column-)?gap)\s*:\s*([^;{}]+);/gi)].map((m) => `${m[1]}: ${m[2].trim()}`).filter((d) => /\d+px/.test(d.replace(/var\([^)]*\)/g, '')));
+  assert.deepEqual(offenders, [], 'literal gaps');
+});
+
+test('animation and transition timings come from the motion tokens', () => {
+  const offenders = [];
+  for (const m of componentCss.matchAll(/(?:^|[;{\s])(transition|animation|animation-delay|animation-duration|transition-duration|transition-delay)\s*:\s*([^;{}]+);/gi)) {
+    const val = m[2].replace(/var\([^)]*\)/g, '');
+    // 1ms is the reduced-motion "instant", the only literal allowed.
+    if (/\b(?!1ms\b)\d+(?:\.\d+)?m?s\b/.test(val)) offenders.push(`${m[1]}: ${m[2].trim()}`);
+  }
+  assert.deepEqual(offenders, [], 'literal durations');
+});
+
+test('self-hosted Bricolage Grotesque, Inter and JetBrains Mono woff2 fonts exist, use swap, and stay within budget', () => {
   const faces = findFontFaces(CSS);
-  assert.ok(faces.length >= 2, `expected at least 2 @font-face rules, found ${faces.length}`);
+  assert.ok(faces.length >= 3, `expected at least 3 @font-face rules, found ${faces.length}`);
   const families = new Set();
   const seenFiles = new Set();
   let totalBytes = 0;
@@ -260,6 +283,7 @@ test('self-hosted Inter and JetBrains Mono woff2 fonts exist, use swap, and stay
     }
   }
 
+  assert.ok(families.has('Bricolage Grotesque'), 'Bricolage Grotesque @font-face missing');
   assert.ok(families.has('Inter'), 'Inter @font-face missing');
   assert.ok(families.has('JetBrains Mono'), 'JetBrains Mono @font-face missing');
   assert.ok(totalBytes < 250 * 1024, `self-hosted fonts total ${totalBytes} bytes exceeds 250 KB budget`);

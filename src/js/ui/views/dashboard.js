@@ -93,8 +93,9 @@ export function renderDashboard(root, { store }) {
 
   const statCell = (label, value, sub) =>
     h('div.stat-cell', {}, h('div.stat-value', {}, value), h('div.stat-label', {}, label, sub ? h('span.stat-sub', {}, ` ${sub}`) : null));
-  // The solved count rises once per visit (Stripe, Magic UI): one moving number, then it holds.
-  let countedUp = false;
+  // The solved count ticks up from the number this tab last showed (one moving number, once), so
+  // coming back after a solve shows the step you just made. Never from zero: the text is always true.
+  const SEEN_KEY = 'lfb:seen-solved';
   let stopCount = () => {};
 
   function renderStats() {
@@ -124,9 +125,17 @@ export function renderDashboard(root, { store }) {
       statCell('Accuracy', st.accuracy === null ? '-' : `${st.accuracy}%`),
       statCell('Submits', `${st.submissions}`),
     );
-    if (!countedUp) {
-      countedUp = true;
-      stopCount = countUp(solvedCell.querySelector('.stat-value'), st.solved);
+    let seen = null;
+    try {
+      seen = sessionStorage.getItem(SEEN_KEY);
+      sessionStorage.setItem(SEEN_KEY, String(st.solved));
+    } catch {
+      /* storage blocked: no tick, the number is already right */
+    }
+    const from = seen === null ? NaN : Number(seen);
+    if (Number.isFinite(from) && from < st.solved) {
+      stopCount();
+      stopCount = countUp(solvedCell.querySelector('.stat-value'), st.solved, { from });
     }
   }
 
@@ -271,7 +280,7 @@ export function renderDashboard(root, { store }) {
     const q = filters.query.trim().toLowerCase();
     const pool = catalog.filter((p) => p.status === 'available' && state.problems[p.id]?.status !== 'solved' && (filters.difficulty === 'All' || p.difficulty === filters.difficulty) && (filters.topic === 'all' || p.topics.includes(filters.topic)) && (!q || p.title.toLowerCase().includes(q)));
     if (pool.length) location.hash = `#/problem/${pool[Math.floor(Math.random() * pool.length)].id}`;
-  } }, h('span.hexmark', { 'aria-hidden': 'true' }), 'Random unsolved');
+  }, 'aria-label': 'Open a random unsolved problem' }, h('span.hexmark', { 'aria-hidden': 'true' }), 'Random', h('span.random-extra', {}, ' unsolved'));
 
   function clearFilters() {
     filters.difficulty = 'All';
@@ -288,7 +297,7 @@ export function renderDashboard(root, { store }) {
   mount(
     root,
     h(
-      'div.page',
+      'div.page.dashboard-page',
       {},
       h(
         'header.page-head',
