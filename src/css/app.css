@@ -4995,11 +4995,13 @@ body.resizing-y * {
     display: none;
   }
 
+  /* Two-line rows: the title gets the whole first line (titles run long), the difficulty and the
+     Practice button share the second. */
   .company-table tbody tr {
     display: grid;
     grid-template-columns: 24px minmax(0, 1fr) auto;
     grid-template-areas:
-      'st title practice'
+      'st title title'
       'st meta practice';
     align-items: center;
     gap: var(--s-1) var(--s-2);
@@ -5016,14 +5018,12 @@ body.resizing-y * {
 
   .company-table .cell-status {
     grid-area: st;
+    align-self: start;
+    padding-top: var(--s-half);
   }
 
   .company-table .cell-title {
     grid-area: title;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
 
   .company-table .cell-diff {
