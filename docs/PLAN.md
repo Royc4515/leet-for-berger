@@ -35,7 +35,7 @@ Platform, practice modes and accounts are done. What limits the site now is how 
 | Content | 225 problems (131 essential + 94 company problems) | Company waves (F2), growth for all (F3) |
 | Accounts | Done: Google and GitHub sign-in, synced progress, GitHub sync of solutions | Owner check of GitHub sync |
 | AI mentor | Scripted hint ladder | Real LLM mentor (F4, needs a budget decision) |
-| Design | Done: 10-step design system (F5, `docs/DESIGN.md`) | - |
+| Design | F6 Atlas redesign in progress (`docs/F6_PLAN.md`, `docs/DESIGN.md`) | F5 done |
 
 **Languages on the live site:** JavaScript, TypeScript, Python and SQL run in the browser; Java, C++, C, C# and Go run on the server. A real Java submission on the live site was Accepted 15/15 in 3.8 s.
 
@@ -91,7 +91,11 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Step 8, sessions: shared session banner with tabular timer and single 5-minute warning announcement, interview problem switcher with per-problem status, colour-banded interview report with difficulty and Review links, battle lockdown with Leave race exit and two distinct thicker race bars
   - [x] Step 9, learning path: thicker green overall bar with the count, a one-line description per tier, topic disclosure buttons with `aria-expanded` and a mini bar on every topic header, full-row links with the shared status and difficulty, a visible Next up tag, two-line rows on phones
   - [x] Step 10, polish: Modes hub redesigned to two cards (Interview, Battle) with user-facing copy, last session results, one primary button, and an AI Mentor note; privacy page on shared page-head and tokens; dead CSS removed and carried Step 4/5/9 nits swept
-- [ ] **F6. Full redesign, research-led:** an interactive Problem Map, a redesign of every screen and state in one consistent style, no style decided in advance. The agent researches real sites (screenshots and video), prototypes three directions, decides, and implements with a screen inventory and coverage matrix. Brief: `docs/REDESIGN_BRIEF.md`. Not started; starts when the owner says
+- [ ] **F6. Full redesign, research-led:** an interactive Problem Map, a redesign of every screen and state in one consistent style, no style decided in advance. Brief: `docs/REDESIGN_BRIEF.md`. Started 2026-11-23 on the owner's go
+  - [x] Phase A: screen inventory (`docs/research/SCREEN_INVENTORY.md`) and research from 63 captured sites (`docs/research/DESIGN_REFERENCES.md`)
+  - [x] Phase B: three directions prototyped and scored; **Atlas** chosen (`docs/research/DESIGN_DIRECTIONS.md`)
+  - [x] Phase C: `docs/DESIGN.md` rewritten, ADR 0009 (display font), ADR 0010 (map rendering), plan and coverage matrix (`docs/F6_PLAN.md`)
+  - [ ] Phase D: steps 1 to 9 in `docs/F6_PLAN.md`
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)
@@ -158,6 +162,7 @@ Every decision that changes direction goes here, newest first. Detailed technica
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-23 | Stage F6 direction: Atlas (a territory of hex districts, one hex per problem, warm graphite with one amber lamp colour), chosen over Transit (subway lines, light paper) and Orbit (radial sky chart) on a scored comparison; company marks stay letters, not logos; map rendered as plain SVG from a pure static layout (ADR 0010); Bricolage Grotesque added as the display face (ADR 0009) | Only Atlas shows every problem on the map and answers where am I, what is next and why locked without a legend; logo sources cover a quarter of the companies and the best-known brands asked to be removed (`docs/research/DESIGN_DIRECTIONS.md`) |
 | 2026-11-22 | Stage F5 design plan approved with all 6 owner recommendations: self-host Inter and JetBrains Mono (`src/fonts/`), phone bottom tab bar (replaced by Run/Submit bar in workspace), hide header during battle race, 2 mode cards on Modes hub (AI Mentor note only until F4), defer light theme and RTL (`docs/DESIGN.md`) | One shared token system and consistent component rules across desktop and 390 px phone views without adding external runtime CDN dependencies |
 | 2026-11-19 | New order (stage F): last speed steps, then company waves ranked by hiring in Israel, growth for every problem, real AI mentor after a budget decision, then the design session | Platform and practice modes are done; problem count and complexity feedback are what limit the site for an Israeli job seeker |
 | 2026-11-19 | Defer server-only hidden tests, the CI to Supabase content sync and peer battles | The judge runs in the page, so server-only data only hides answers from casual reading; it pays off only with scored peer play |
