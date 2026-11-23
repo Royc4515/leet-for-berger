@@ -27,7 +27,7 @@ export const TOURS = {
       { title: 'Every problem is a hex', body: 'Solve one and it lights up amber.' },
       { target: navLink('map'), title: 'The map', body: 'Every topic in one place. Lit hexes are the ones you solved.' },
       { target: navLink('path'), title: 'Not sure what is next?', body: 'The path picks your next problem for you.' },
-      { target: ['#palette-trigger'], title: 'Find anything', body: 'Press Ctrl K and type a few letters.' },
+      { target: ['#palette-trigger'], title: 'Find anything', body: 'Use search, or press Ctrl K, and type a few letters.' },
     ],
   },
   interview: {
