@@ -518,13 +518,13 @@ try {
     await page.waitForSelector('.company-card', { timeout: 15000 });
     await page.waitForSelector('.segmented[aria-label="Show companies"]');
     // Default is "Hiring in Israel": the first card is a major company. Cards are option cards:
-    // monogram, name, "x of y solved" and a progress bar.
+    // a logo tile (or the monogram on the same tile), name, "x of y solved" and a progress bar.
     await expectText('.segmented-btn[aria-pressed="true"]', /Hiring in Israel/);
     const firstCard = await page.evaluate(() => {
       const c = document.querySelector('.company-card');
-      return { israel: c.dataset.israel, monogram: c.querySelector('.monogram')?.textContent, fact: c.querySelector('.company-card-sub')?.textContent, bar: Boolean(c.querySelector('.progress-bar')) };
+      return { israel: c.dataset.israel, tile: Boolean(c.querySelector('.company-mark.is-tile')), logo: c.querySelector('.company-mark img')?.getAttribute('src') ?? '', letters: c.querySelector('.company-mark-letters')?.textContent ?? '', fact: c.querySelector('.company-card-sub')?.textContent, bar: Boolean(c.querySelector('.progress-bar')) };
     });
-    if (firstCard.israel !== 'major' || !/^\S{1,2}$/.test(firstCard.monogram ?? '') || !/of \d+ solved|Nothing to practice/.test(firstCard.fact ?? '') || !firstCard.bar) {
+    if (firstCard.israel !== 'major' || !firstCard.tile || !(/\/brand\/companies\/[\w-]+\.webp$/.test(firstCard.logo) || /^\S{1,2}$/.test(firstCard.letters)) || !/of \d+ solved|Nothing to practice/.test(firstCard.fact ?? '') || !firstCard.bar) {
       throw new Error(`unexpected first company card: ${JSON.stringify(firstCard)}`);
     }
     const hiringCount = await page.locator('.company-card').count();
@@ -537,11 +537,25 @@ try {
     if (!(allCount > hiringCount)) throw new Error(`"All" should show more cards than "Hiring in Israel" (${allCount} vs ${hiringCount})`);
     // Only under "All" does the Israel level tell cards apart, so only there is it a line on the card.
     await expectText('.company-card[data-israel="major"] .company-card-level', /Major in Israel/);
+    // Logos (owner's request): the first screenful decodes, decorative (alt ""), and a company
+    // without a logo keeps its monogram on the same light tile.
+    await page.waitForFunction(() => [...document.querySelectorAll('.company-card .company-mark img')].slice(0, 12).every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 });
+    const tiles = await page.evaluate(() => ({
+      cards: document.querySelectorAll('.company-card').length,
+      tiles: document.querySelectorAll('.company-card .company-mark.is-tile').length,
+      logos: document.querySelectorAll('.company-card .company-mark img').length,
+      lettered: document.querySelectorAll('.company-card .company-mark.is-tile .company-mark-letters').length,
+      decorative: [...document.querySelectorAll('.company-card .company-mark img')].every((i) => i.getAttribute('alt') === '' && i.closest('[aria-hidden="true"]')),
+      broken: [...document.querySelectorAll('.company-card .company-mark img')].filter((i) => i.complete && !i.naturalWidth).length,
+    }));
+    if (tiles.tiles !== tiles.cards || tiles.logos < tiles.cards * 0.9 || !tiles.lettered || !tiles.decorative || tiles.broken) throw new Error(`company logo tiles: ${JSON.stringify(tiles)}`);
     await page.fill('input[aria-label="Search companies"]', 'wix');
     await page.waitForFunction(() => document.querySelectorAll('.company-card').length === 1);
     await shot('15-companies');
     await page.click('.company-card');
     await expectText('.page-head h1', /Wix/);
+    // The company page: its logo, large, and a faint glow in the brand's colour when it has one.
+    if (!(await page.locator('.company-head .company-mark.is-tile.lg img').count())) throw new Error('the company page has no logo tile');
     await expectText('.page-head .page-sub', /can be practiced here/);
     // Filters are chips; "On the site only" is a toggle chip (off by default on a desktop).
     if ((await page.getAttribute('#on-site-only', 'aria-pressed')) !== 'false') throw new Error('on-site filter should start off at 1440px');

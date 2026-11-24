@@ -92,6 +92,7 @@ Content we write keeps the problem (same task, same constraints, same diversity)
 | Candidate reports (Glassdoor, prep sites) | Questions for Israeli companies with no tag data: Check Point, CyberArk, Wiz, monday.com, Taboola, JFrog, Payoneer | `content/reports.json` |
 | Original problems | Problems we write for reported tasks with no LeetCode equivalent (first: Notify Recipients, from monday.com reports) | `content/external/original.json` |
 | Company groups | Israeli companies and Israeli R&D hubs | `content/companies.json` |
+| Company logos | Each company's website (where its icons are published), overrides after review, and official logo files saved by hand when a site only inlines its logo | `content/company-domains.json`, `content/logo-sources/` |
 
 Not usable yet: CodeSignal and HackerRank publish no per-company question data (their OA formats feed Mock OA instead); the Grind 169 list is only available as a rendered page.
 

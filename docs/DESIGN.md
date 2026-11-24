@@ -94,7 +94,7 @@ Easing: `--ease` (out, default), `--ease-in-out` (things that move across the sc
 | Tag | Static label | 4 px radius, no border; `tag-muted` outlined, `tag-live` green, `tag-lamp` amber. Never clickable. |
 | Difficulty | Easy / Medium / Hard | Three pips (1, 2 or 3 filled) + the word in the semantic colour. Reads without colour. |
 | Status hex | A problem's state | Hex mark: grey (not started), coral (tried), green (solved), green ring (solved with help); an amber ring marks your next problem. Always paired with a word or an accessible name. |
-| Company mark | Identifies a company | Hex tile with a two-letter monogram in the display face; a blue dot for major Israeli presence; an outline ring for tier-1 companies. No logos (DESIGN_DIRECTIONS.md). |
+| Company mark | Identifies a company | The company's logo on a warm light tile (`--logo-plate`), so brand colours read on the dark ground; an app-icon logo fills the tile; a company with no good logo gets its two-letter monogram on the same tile. A blue corner dot for major Israeli presence, an outer ring for tier-1 companies. Large with a faint glow in the brand's colour on a company page, small in the interview picker and the command palette. Where logos are not loaded, the hex monogram (its fill is progress). Logos come from `scripts/content/fetch-logos.mjs` (owner's decision, DESIGN_DIRECTIONS.md). |
 | Card | Groups content or is one link | Whole card is one `<a>` or `<button>` when clickable. No card in a card. |
 | Table / list row | Lists of problems | Status first column, title link stretched over the row (`.row-link`), 48 px rows; stacked two-line rows under 640 px. |
 | Progress | How much is done | 6 px bar with an amber fill that grows once; the text beside it carries the number. |
