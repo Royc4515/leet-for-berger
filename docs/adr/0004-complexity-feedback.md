@@ -57,3 +57,12 @@ Until now the only complexity check was a time budget: max-size hidden tests mak
 - The estimate is an estimate. It can be inconclusive on a busy machine; it never upgrades n log n to n or the reverse.
 - TypeScript gets the JavaScript estimate: it is timed as its transpiled JavaScript in the same worker. Java, C++, C, C# and Go get no estimate in the browser; they will with the server runner (ROADMAP Phase 2), which can reuse the estimator unchanged.
 - Adding `growth` to a problem needs no engine change: see the checklist in docs/PROBLEM_FORMAT.md.
+
+## Amendment (2026-11): cache steps
+
+CI runners differ in cache size. On one runner, three honest solutions read "inconclusive" every time (slope 1.5 to 1.8 against a linear or n log n target) because their data outgrew a cache level between two sizes: every larger size ran a constant factor slower, which the least-squares slope reads as growth. Their per-step slopes show it: 1.2, 1.9, 1.2 (Smallest Positive Gap), 1.2, 1.3, 1.5, 2.4, 1.2 (Merge Many Lists), 1.1, 1.2, 2.0, 1.4, 1.2 (Signal Spread). On other runners the same code read 1.0 to 1.1, and the retry could not help: the step repeats on the same machine.
+
+The estimator now takes out a cache step before the fit (`cacheStep` in `src/js/engine/growth.js`): with at least 4 timeable sizes, one per-step slope at least 0.5 above the median of the others, the others within 0.4 of each other, and never on the last step. The jump's excess is divided out of every later size. What it cannot hide, by construction: code that is quadratic on every step stays quadratic (the correction only removes what sits above the steady rate), and growth that bends from some size on does not come back to the earlier rate, so it is no step. A jump on the last step may be growth setting in and is never taken out. The estimate reports the step it took out (`step: { n, factor }`). Unit tests use the three runs above, plus quadratic-with-a-step, late growth and a spoiled middle size.
+
+Smallest Positive Gap's sizes moved up one doubling (384000 to 3072000): at 192000 a fast runner timed it under the 1 ms floor, which left 3 sizes, too few to tell a step from growth.
+

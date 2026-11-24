@@ -12,6 +12,7 @@ import {
   median,
   shouldMeasureNext,
   shouldRetryGrowth,
+  cacheStep,
   describeGrowth,
   validateGrowth,
   growthSeed,
@@ -329,4 +330,60 @@ test('shouldRetryGrowth: one more pass only for transient inconclusive reasons t
   // A decided verdict is never re-measured.
   assert.equal(shouldRetryGrowth({ verdict: 'matches', reason: null }, 100, 5000), false);
   assert.equal(shouldRetryGrowth({ verdict: 'slower than target', reason: null }, 100, 5000), false);
+});
+
+/** One median per size, from a CI log line "[n:ms n:ms ...]" (3 equal calls each). */
+const fromLog = (line) => line.trim().split(/\s+/).flatMap((pair) => {
+  const [n, ms] = pair.split(':').map(Number);
+  return [0, 1, 2].map(() => ({ n, ms }));
+});
+
+test('a cache step: one jump with the same rate before and after it is taken out, on real CI timings', () => {
+  // Three honest solutions on one GitHub runner whose cache ran out between two sizes.
+  const cases = [
+    // smallest-positive-gap at its sizes since this fix: the measured 384000 to 1536000, and 3072000
+    // one doubling on at the rate measured after the jump (17.3 ms x 2.2).
+    { line: '384000:2.1 768000:7.8 1536000:17.3 3072000:38.1', target: 'n', at: 768000 },
+    { line: '4000:0.2 8000:0.5 16000:1.3 32000:2.9 64000:6.9 128000:19.2 256000:101.1 512000:237.8', target: 'n log n', at: 256000 }, // merge-many-lists
+    { line: '4000:1.1 8000:2.4 16000:5.5 32000:22.6 64000:58.7 128000:131.3', target: 'n log n', at: 32000 }, // signal-spread
+  ];
+  for (const c of cases) {
+    const est = estimateGrowth(fromLog(c.line), c.target);
+    assert.equal(est.verdict, 'matches', `${c.line}: ${JSON.stringify(est)}`);
+    assert.equal(est.step?.n, c.at, c.line);
+    assert.ok(est.step.factor > 1.4, c.line);
+  }
+  // At its old sizes the smallest took 0.9 ms, under the 1 ms floor: 3 sizes cannot tell a step from
+  // growth, so the problem's sizes moved up one doubling.
+  assert.equal(estimateGrowth(fromLog('192000:0.9 384000:2.1 768000:7.8 1536000:17.3'), 'n').verdict, 'inconclusive');
+  // The same runs measured where the cache held: no step to take out.
+  assert.equal(estimateGrowth(fromLog('192000:1.6 384000:4.0 768000:8.1 1536000:16.3'), 'n').step, null);
+});
+
+test('a cache step never hides real growth', () => {
+  const sizes = [4000, 8000, 16000, 32000, 64000, 128000];
+  const stepAt = (samples, n0, f) => samples.map((s) => (s.n >= n0 ? { ...s, ms: s.ms * f } : s));
+  // Quadratic on every step, with a cache step on top: still slower than a linear target.
+  const quad = estimateGrowth(stepAt(synth({ model: 'n^2', sizes, topMs: 2000 }), 32000, 3), 'n');
+  assert.equal(quad.verdict, 'slower than target');
+  // A jump on the LAST step may be growth setting in: never taken out as a cache step. (With 5 or
+  // more sizes a lone slow last size can still be dropped as an outlier, as before.)
+  assert.equal(estimateGrowth(stepAt(synth({ model: 'n', sizes, topMs: 50 }), 128000, 4), 'n').step, null);
+  // Linear that turns quadratic: the rate does not come back after the bend, so it is no step.
+  const bent = estimateGrowth(synth({ model: (n) => (n <= 16000 ? n * 16000 : n * n), sizes, topMs: 3000 }), 'n');
+  assert.equal(bent.step, null);
+  assert.notEqual(bent.verdict, 'matches');
+  // One spoiled middle size jumps up and back down: that is an outlier (dropped), not a step.
+  const spoiled = synth({ model: 'n', sizes, topMs: 50 }).map((s) => (s.n === 32000 ? { ...s, ms: s.ms * 6 } : s));
+  assert.equal(estimateGrowth(spoiled, 'n').step, null);
+});
+
+test('cacheStep needs enough sizes, a clear jump and steady steps around it', () => {
+  const pts = (pairs) => pairs.map(([n, ms]) => ({ n, ms }));
+  assert.equal(cacheStep(pts([[1, 1], [2, 2], [4, 8]])), null, 'three sizes are too few');
+  assert.equal(cacheStep(pts([[1, 1], [2, 2.6], [4, 5.2], [8, 10.4]])), null, 'a 30% bump is not a step');
+  assert.equal(cacheStep(pts([[1, 1], [2, 2], [4, 8], [8, 40], [16, 80]])), null, 'uneven steps around the jump');
+  const s = cacheStep(pts([[1, 1], [2, 2], [4, 8], [8, 16], [16, 32]]));
+  assert.equal(s.n, 4);
+  assert.ok(Math.abs(s.factor - 2) < 1e-9, String(s.factor));
 });

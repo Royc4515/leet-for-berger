@@ -61,6 +61,19 @@ export const GROWTH_DEFAULTS = {
   // (a linear term under a quadratic one), which bends the low end of the curve; growth is about
   // the large end. Measured: a splice-based quadratic read 1.54, 2.1, 2.05 per doubling.
   window: 4,
+  // A cache step: from some size on, the data outgrows a cache level of the machine it runs on, and
+  // every later size runs a constant factor slower. In the per-size slopes that is one jump, with
+  // the same rate before and after it (CI runners differ in cache size, so the jump moves between
+  // machines). With at least `stepMinSizes` sizes, a jump `stepExcess` above the median of the
+  // other steps, whose own spread is within `stepRestSpread`, and never on the last step (a slow
+  // last size can be growth setting in), the jump's excess is taken out of the later sizes before
+  // the fit. Real growth does not come back to the earlier rate after it bends, so it never
+  // qualifies, and code that is quadratic on every step stays quadratic.
+  // Measured need: three honest linear and n log n solutions read 1.5 to 1.8 on one runner, with
+  // per-step slopes like 1.2, 1.9, 1.2 (smallest-positive-gap) and 1.2, 1.3, 1.5, 2.4, 1.2.
+  stepMinSizes: 4,
+  stepExcess: 0.5,
+  stepRestSpread: 0.4,
   // Assumed log2 standard error of a size's median when it has fewer than 3 calls (unknown spread).
   unknownSpread: 0.5,
   // A size whose own calls disagree this much (log2 standard error of their median: 0.6 is about
@@ -121,6 +134,28 @@ export function fitLine(pts) {
 }
 
 /**
+ * A cache step in per-size medians (see GROWTH_DEFAULTS.stepExcess): the first size of the step
+ * and the factor every size from there on runs slower by, or null.
+ * @param {{ n: number, ms: number }[]} pts ascending n
+ * @param {typeof GROWTH_DEFAULTS} o
+ * @returns {{ n: number, factor: number }|null}
+ */
+export function cacheStep(pts, o = GROWTH_DEFAULTS) {
+  if (pts.length < o.stepMinSizes) return null;
+  const local = pts.slice(1).map((p, i) => Math.log2(p.ms / pts[i].ms) / Math.log2(p.n / pts[i].n));
+  let k = 0;
+  local.forEach((s, i) => {
+    if (s > local[k]) k = i;
+  });
+  // The last step may be real growth setting in: it is never explained away.
+  if (k === local.length - 1) return null;
+  const rest = local.filter((_, i) => i !== k);
+  const excess = local[k] - median(rest);
+  if (excess < o.stepExcess || Math.max(...rest) - Math.min(...rest) > o.stepRestSpread) return null;
+  return { n: pts[k + 1].n, factor: 2 ** (excess * Math.log2(pts[k + 1].n / pts[k].n)) };
+}
+
+/**
  * Standard error (log2 units) of a size's median from the spread of its calls: 1.4826 * MAD is the
  * normal-equivalent spread, 1.25 / sqrt(k) turns it into the error of a median of k calls.
  * Floored at 0.03, because a perfectly steady size still carries timer and scheduling error.
@@ -152,6 +187,7 @@ function medianSpread(times, unknown) {
  * @property {string|null} reason       why the verdict is inconclusive
  * @property {{n: number, ms: number}[]} points  per-size medians the slope was fitted on (the top window)
  * @property {{n: number, ms: number}|null} dropped  the one outlier size left out of the fit, if any
+ * @property {{n: number, factor: number}|null} step  a cache step taken out before the fit (from size n on, everything ran factor times slower), if any
  */
 
 /**
@@ -169,7 +205,8 @@ export function estimateGrowth(samples, target, opts = {}) {
   const o = { ...GROWTH_DEFAULTS, ...opts };
   const tb = targetBucket(target);
   let dropped = null;
-  const result = (fields) => ({ bucket: null, atLeast: false, target, targetBucket: tb, slope: null, margin: null, reason: null, points: [], dropped, ...fields });
+  let step = null;
+  const result = (fields) => ({ bucket: null, atLeast: false, target, targetBucket: tb, slope: null, margin: null, reason: null, points: [], dropped, step, ...fields });
 
   // One point per size: the median of its finished runs. A size with a timeout is a lower bound.
   const bySize = new Map();
@@ -197,6 +234,11 @@ export function estimateGrowth(samples, target, opts = {}) {
   }
 
   const toXY = (pts) => pts.map((p) => ({ x: Math.log2(p.n), y: Math.log2(p.ms) }));
+  step = cacheStep(measurable, o);
+  if (step) {
+    const at = measurable.findIndex((p) => p.n === step.n);
+    for (let i = at; i < measurable.length; i++) measurable[i] = { ...measurable[i], ms: measurable[i].ms / step.factor };
+  }
   let fit = null;
   const interiorOnly = measurable.length >= o.interiorOutlierSizes && measurable.length < o.outlierMinSizes;
   if (measurable.length >= o.outlierMinSizes || interiorOnly) {
