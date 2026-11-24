@@ -1,5 +1,5 @@
 {
- "_doc": "Company logos in src/brand/companies/<slug>.webp (scripts/content/fetch-logos.mjs). bleed: an app-icon square drawn edge to edge; color: the brand colour, for the company page. A company missing here keeps its monogram.",
+ "_doc": "Company logos in src/brand/companies/<slug>.webp (scripts/content/fetch-logos.mjs). bleed: an app-icon square drawn edge to edge; color: the brand colour, for the company page. aliases: another name a company goes by -> its slug. A company missing here keeps its monogram.",
  "logos": {
   "accenture": {
    "bleed": false,
@@ -64,6 +64,10 @@
   "arcesium": {
    "bleed": true,
    "color": "#39a2db"
+  },
+  "arista-networks": {
+   "bleed": false,
+   "color": "#16325b"
   },
   "atlassian": {
    "bleed": false,
@@ -368,6 +372,10 @@
   "media-net": {
    "bleed": false,
    "color": "#d51254"
+  },
+  "meesho": {
+   "bleed": true,
+   "color": "#580a46"
   },
   "meta": {
    "bleed": false,
@@ -749,5 +757,9 @@
    "bleed": false,
    "color": "#2368f5"
   }
+ },
+ "aliases": {
+  "snap": "snapchat",
+  "x": "twitter"
  }
 }

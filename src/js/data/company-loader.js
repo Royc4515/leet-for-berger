@@ -30,18 +30,75 @@ export function loadProblemTopics() {
   return topicsPromise;
 }
 
-let logosPromise = null;
+let manifestPromise = null;
 
 /**
- * Which companies have a logo (company-logos.json, scripts/content/fetch-logos.mjs), fetched once.
+ * The logo manifest (company-logos.json, scripts/content/fetch-logos.mjs), fetched once: which
+ * companies have a logo, and the other names companies go by.
+ * @returns {Promise<{ logos: Record<string, { bleed: boolean, color: string|null }>, aliases?: Record<string, string> }|null>} null when the fetch fails
+ */
+export function loadLogoManifest() {
+  manifestPromise ??= fetch(new URL('./company-logos.json', import.meta.url))
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null);
+  return manifestPromise;
+}
+
+/**
+ * Which companies have a logo, fetched once.
  * @returns {Promise<Record<string, { bleed: boolean, color: string|null }>|null>} null when the fetch fails (monograms then)
  */
 export function loadCompanyLogos() {
-  logosPromise ??= fetch(new URL('./company-logos.json', import.meta.url))
+  return loadLogoManifest().then((d) => d?.logos ?? null);
+}
+
+let pagesPromise = null;
+
+/**
+ * Which companies have a page (company-pages.json: slugs and alias slugs), fetched once.
+ * @returns {Promise<{ slugs: string[], aliases: Record<string, string> }|null>}
+ */
+export function loadCompanyPages() {
+  pagesPromise ??= fetch(new URL('./company-pages.json', import.meta.url))
     .then((r) => (r.ok ? r.json() : null))
-    .then((d) => d?.logos ?? null)
     .catch(() => null);
-  return logosPromise;
+  return pagesPromise;
+}
+
+/**
+ * The slug of a company's page (#/companies/<slug>) from its name, through an alias where the
+ * sets merged one (Snap is Snapchat); null when it has no page.
+ * @param {{ slugs: string[], aliases: Record<string, string> }|null} pages
+ * @param {string} name
+ * @returns {string|null}
+ */
+export function companyPageSlug(pages, name) {
+  if (!pages) return null;
+  const slug = slugifyCompany(name);
+  const target = pages.aliases?.[slug] ?? slug;
+  return pages.slugs.includes(target) ? target : null;
+}
+
+/**
+ * A company's slug from its name, the way company-sets.json makes them ("J.P. Morgan" ->
+ * "j-p-morgan", "monday.com" -> "monday-com").
+ * @param {string} name
+ * @returns {string}
+ */
+export function slugifyCompany(name) {
+  return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+/**
+ * A company's logo by its name, as problem data names it (which can be another name the company
+ * goes by: "Snap" for Snapchat, "X" for Twitter).
+ * @param {{ logos: Record<string, { bleed: boolean, color: string|null }>, aliases?: Record<string, string> }|null} manifest
+ * @param {string} name
+ * @returns {{ src: string, bleed: boolean, color: string|null }|null}
+ */
+export function companyLogoByName(manifest, name) {
+  const slug = slugifyCompany(name);
+  return companyLogo(manifest?.logos ?? null, manifest?.aliases?.[slug] ?? slug);
 }
 
 /**

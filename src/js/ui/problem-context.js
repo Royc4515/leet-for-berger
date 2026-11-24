@@ -3,8 +3,9 @@
  * and the other versions of the same idea. Data: src/js/data/problem-meta.json (built by
  * scripts/content/build-meta.mjs), fetched once and shared by every problem page.
  */
-import { h, ilMark } from './dom.js';
+import { h, ilMark, miniLogo } from './dom.js';
 import { complexityOpenByDefault } from '../data/problem-meta.js';
+import { loadLogoManifest, companyLogoByName, loadCompanyPages, companyPageSlug } from '../data/company-loader.js';
 
 const SHOWN_COMPANIES = 8;
 const RECENCY_LABEL = { '30d': 'last 30 days', '3m': 'last 3 months', '6m': 'last 6 months', older: 'over 6 months ago' };
@@ -20,22 +21,30 @@ export function loadProblemMeta() {
   return metaPromise;
 }
 
-function companyChip(c) {
+/**
+ * A company that asks the problem: its logo (when it has one), its name, the IL mark; a link to
+ * its company page when it has one (a company asked too rarely has none).
+ */
+function companyChip(c, logos, pages) {
+  const logo = companyLogoByName(logos, c.name);
+  const slug = companyPageSlug(pages, c.name);
   return h(
-    `span.tag.company-tag${c.israeli ? '.company-il' : ''}`,
-    { title: `${c.name}: frequency ${c.frequency}, asked ${RECENCY_LABEL[c.recency] ?? c.recency}${c.israeli ? ', Israeli company' : ''}` },
+    `${slug ? 'a' : 'span'}.tag.company-tag${c.israeli ? '.company-il' : ''}`,
+    { href: slug ? `#/companies/${slug}` : null, title: `${c.name}: frequency ${c.frequency}, asked ${RECENCY_LABEL[c.recency] ?? c.recency}${c.israeli ? ', Israeli company' : ''}` },
+    logo ? miniLogo(logo, 'sm') : null,
     c.name,
     c.israeli ? ilMark() : null,
   );
 }
 
-function companiesBlock(meta) {
+function companiesBlock(meta, logos, pages) {
   if (!meta.companies.length) return null;
   const israeli = meta.companies.filter((c) => c.israeli);
   const first = [...israeli, ...meta.companies.filter((c) => !c.israeli)].slice(0, SHOWN_COMPANIES);
   const rest = meta.companies.filter((c) => !first.includes(c));
   const unlisted = meta.companyCount - meta.companies.length;
-  const more = h('span.company-more', { hidden: true }, rest.map(companyChip), unlisted > 0 ? h('span.hint-text', {}, ` and ${unlisted} more with lower frequency`) : null);
+  const chip = (c) => companyChip(c, logos, pages);
+  const more = h('span.company-more', { hidden: true }, rest.map(chip), unlisted > 0 ? h('span.hint-text', {}, ` and ${unlisted} more with lower frequency`) : null);
   const toggle = rest.length
     ? h('button.btn-link', { type: 'button', 'aria-expanded': 'false' }, `Show ${rest.length} more`)
     : null;
@@ -49,7 +58,7 @@ function companiesBlock(meta) {
     'div.context-row',
     {},
     h('div.context-label', {}, `Asked at ${meta.companyCount} ${meta.companyCount === 1 ? 'company' : 'companies'}`),
-    h('div.company-list', {}, first.map(companyChip), more, toggle),
+    h('div.company-list', {}, first.map(chip), more, toggle),
   );
 }
 
@@ -115,12 +124,13 @@ function familyBlock(meta, titleOf) {
  */
 export function createProblemContext({ problem, progress, titleOf, showComplexity = true, showFamily = true }) {
   const el = h('section.problem-context', { 'aria-label': 'Companies and related versions' });
-  const ready = loadProblemMeta().then((all) => {
+  // Logos are a garnish: without the manifest the chips are names, as before.
+  const ready = Promise.all([loadProblemMeta(), loadLogoManifest(), loadCompanyPages()]).then(([all, logos, pages]) => {
     const meta = all[problem.id];
     if (!meta) return;
     el.replaceChildren(
       ...[
-        companiesBlock(meta),
+        companiesBlock(meta, logos, pages),
         showComplexity ? complexityBlock(meta, problem, complexityOpenByDefault(progress)) : null,
         showFamily ? familyBlock(meta, titleOf) : null,
       ].filter(Boolean),

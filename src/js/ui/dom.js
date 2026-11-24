@@ -287,6 +287,17 @@ export function progressBar(done, total) {
 }
 
 /**
+ * A company's logo at text size, on the same light plate as the company tiles: in front of a
+ * company's name in a chip or a list. Decorative: the name is always beside it.
+ * @param {{ src: string, bleed: boolean }} logo from companyLogo() / companyLogoByName()
+ * @param {'sm'|'md'} [size] sm 16 px (chips), md 20 px (the command palette)
+ * @returns {HTMLElement}
+ */
+export function miniLogo(logo, size = 'md') {
+  return h(`span.mini-logo${size === 'sm' ? '.is-sm' : ''}${logo.bleed ? '.is-bleed' : ''}`, { 'aria-hidden': 'true' }, h('img', { src: logo.src, alt: '', width: 128, height: 128, loading: 'lazy', decoding: 'async' }));
+}
+
+/**
  * A company's mark. With logos (the companies pages, the interview picker) it is a light tile:
  * the company's logo, or its monogram when it has none, so every tile in a grid reads alike. A
  * logo drawn as an app icon (`bleed`) fills the tile. Without logos it is the hex monogram whose

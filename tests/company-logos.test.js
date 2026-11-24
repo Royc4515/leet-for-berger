@@ -198,3 +198,26 @@ test('logos stay small: each file under 16 KB, all of them under 1.5 MB', () => 
 test('a company kept out of the logo set has no logo', () => {
   for (const [slug, domain] of Object.entries(domains)) if (domain === null) assert.ok(!manifest.logos[slug], slug);
 });
+
+/* ---------- Finding a logo by a company's name ("Asked at" lists names, not slugs) ---------- */
+
+test('a company name turns into its slug the way the sets name them', async () => {
+  const { slugifyCompany } = await import('../src/js/data/company-loader.js');
+  for (const c of sets.companies) assert.equal(slugifyCompany(c.name), c.slug, c.name);
+  assert.equal(slugifyCompany('Pony.ai'), 'pony-ai');
+  assert.equal(slugifyCompany('  AT&T '), 'at-t');
+});
+
+test('the manifest maps alias slugs to companies with a logo; a name finds its logo through them', async () => {
+  const { companyLogoByName } = await import('../src/js/data/company-loader.js');
+  const expected = {};
+  for (const c of sets.companies) for (const a of c.aliases) if (manifest.logos[c.slug]) expected[a.slug] = c.slug;
+  assert.deepEqual(manifest.aliases, expected);
+  for (const [alias, slug] of Object.entries(manifest.aliases)) {
+    const logo = companyLogoByName(manifest, sets.companies.find((c) => c.slug === slug).aliases.find((a) => a.slug === alias).name);
+    assert.ok(logo?.src.endsWith(`/brand/companies/${slug}.webp`), `${alias} -> ${slug}`);
+  }
+  assert.ok(companyLogoByName(manifest, 'Google')?.src.endsWith('/google.webp'));
+  assert.equal(companyLogoByName(manifest, 'No Such Company'), null);
+  assert.equal(companyLogoByName(null, 'Google'), null);
+});

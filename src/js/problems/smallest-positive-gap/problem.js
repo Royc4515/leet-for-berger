@@ -150,7 +150,9 @@ export const problem = {
   growth: {
     target: 'n',
     n: 'nums.length',
-    sizes: [192000, 384000, 768000, 1536000],
+    // From 384000: at 192000 a fast runner times it under the 1 ms floor, and with only 3 sizes
+    // left a cache step on a small-cache runner cannot be told from growth (GROWTH_DEFAULTS.stepExcess).
+    sizes: [384000, 768000, 1536000, 3072000],
     // Shuffling within 4096-element blocks (16 KB, L1-cache resident) forces full cyclic-placement
     // swaps and a 0.75*n scan (keeping O(n^2) genuinely quadratic) without random DRAM pointer
     // chasing bending linear cyclic sort toward slope 1.5.

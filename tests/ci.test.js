@@ -4,6 +4,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { LANGUAGES } from '../src/js/engine/codegen.js';
+import { selectTests } from '../scripts/ci/deps.mjs';
+import { repoFs } from '../scripts/ci/repo-fs.mjs';
 
 test('CI verify matrix covers every solution language plus SQL', () => {
   const yml = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
@@ -13,6 +15,8 @@ test('CI verify matrix covers every solution language plus SQL', () => {
   assert.deepEqual(matrix, [...LANGUAGES.map((l) => l.id), 'sql'].sort());
 });
 
+// It lists the top-level pages itself, so the affected-test selection (scripts/ci/deps.mjs) is
+// told: ci-deps: *.html
 test('Pages publishes every top-level HTML page', async () => {
   const { readFileSync, readdirSync } = await import('node:fs');
   const pages = readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8');
@@ -20,15 +24,13 @@ test('Pages publishes every top-level HTML page', async () => {
   for (const f of html) assert.match(pages, new RegExp(`cp [^\\n]*\\b${f.replace('.', '\\.')}\\b`), `${f} is not copied into the Pages site`);
 });
 
-test('CI skips the native program builder tests only when nothing they read changed', () => {
+test('CI runs the native program builder tests when the selection picks them, and it picks them for all they import', () => {
   const yml = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
-  const pattern = yml.match(/has '([^']+)' solutions/)?.[1];
-  assert.ok(pattern, 'solutions pattern not found in ci.yml');
-  const re = new RegExp(pattern);
-  // Every local module programs.test.js imports, and the test itself, must trigger it.
+  assert.match(yml, /if: contains\(needs\.changes\.outputs\.tests, 'tests\/programs\.test\.js'\)\n\s+run: node --test tests\/programs\.test\.js/);
+  // Every local module programs.test.js imports, and the test itself, must select it.
   const src = readFileSync(new URL('./programs.test.js', import.meta.url), 'utf8');
   const deps = [...src.matchAll(/from '\.\.\/([^']+)'/g)].map((m) => m[1]);
   assert.ok(deps.length > 3, 'expected programs.test.js imports');
-  for (const path of [...deps, 'tests/programs.test.js', 'tests/solutions.test.js']) assert.match(path, re, `${path} would not run programs.test.js`);
-  assert.match(yml, /if: needs\.changes\.outputs\.solutions == 'true'\n\s+run: node --test tests\/programs\.test\.js/);
+  const fs = repoFs();
+  for (const path of [...deps, 'tests/programs.test.js']) assert.deepEqual(selectTests({ tests: ['tests/programs.test.js'], changed: [path], fs }).tests, ['tests/programs.test.js'], `${path} would not run programs.test.js`);
 });
