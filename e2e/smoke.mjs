@@ -1422,9 +1422,10 @@ try {
           const br = btn.getBoundingClientRect();
           const tr = tab.getBoundingClientRect();
           const hit = document.elementFromPoint(br.left + br.width / 2, br.top + br.height / 2);
-          return { top: br.top, bottom: br.bottom, tabTop: tr.top, hitsBar: Boolean(hit?.closest('.setup-bar')) };
+          return { top: br.top, bottom: br.bottom, tabTop: tr.top, hitsBar: Boolean(hit?.closest('.setup-bar')), barHeight: document.querySelector('.setup-bar').getBoundingClientRect().height };
         }, sc.startButton);
-        if (startCheck.missing || startCheck.top < 0 || startCheck.bottom > 844 || startCheck.bottom > startCheck.tabTop + 1 || !startCheck.hitsBar) {
+        // One slim row on a phone: as a card it covered the pickers' filters on first load.
+        if (startCheck.missing || startCheck.top < 0 || startCheck.bottom > 844 || startCheck.bottom > startCheck.tabTop + 1 || !startCheck.hitsBar || startCheck.barHeight > 80) {
           throw new Error(`${sc.url} "${sc.startButton}" failed 390x844 touch Start-in-viewport check: ${JSON.stringify(startCheck)}`);
         }
       }
@@ -1455,6 +1456,21 @@ try {
     if (firstRow.rowHeight < 52) {
       throw new Error(`mobile dashboard list row under 52px: ${JSON.stringify(firstRow)}`);
     }
+    // The phone list comes a page at a time: 30 rows, then Show more adds 30 and focuses the
+    // first new problem; a new search starts again from the first page.
+    // The Sign in panel opened above is still open (same-hash goto does not reload): close it first.
+    await touch.keyboard.press('Escape');
+    await touch.waitForSelector('.account-menu', { state: 'hidden' });
+    const listState = () => touch.evaluate(() => ({ rows: document.querySelectorAll('.dashboard-table tbody tr').length, more: document.querySelector('.list-more:not([hidden]) .list-more-btn')?.textContent ?? null, focusRow: [...document.querySelectorAll('.dashboard-table tbody tr')].indexOf(document.activeElement?.closest('tr')) }));
+    const firstPage = await listState();
+    if (firstPage.rows !== 30 || firstPage.more !== 'Show 30 more') throw new Error(`phone list first page: ${JSON.stringify(firstPage)}`);
+    await touch.tap('.list-more-btn');
+    const secondPage = await listState();
+    if (secondPage.rows !== 60 || secondPage.focusRow !== 30) throw new Error(`phone list after Show more: ${JSON.stringify(secondPage)}`);
+    await touch.fill('.dashboard-search', 'a');
+    await touch.fill('.dashboard-search', '');
+    const reset = await listState();
+    if (reset.rows !== 30) throw new Error(`phone list after a new search: ${JSON.stringify(reset)}`);
     const shapes = await touch.evaluate(() => {
       const chip = document.querySelector('.chip-group[aria-label="Difficulty"] .chip[aria-pressed="true"]');
       const tag = document.querySelector('.problem-table .tag');

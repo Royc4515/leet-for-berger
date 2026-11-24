@@ -10,8 +10,14 @@ import { loadPath } from '../../data/path-loader.js';
 import { dailyCard } from '../daily-card.js';
 import { quizCard } from '../quiz-card.js';
 import { countUp } from '../motion.js';
+import { listPage } from '../../data/list-page.js';
 
 const HEAD_DATE = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+// Phone: the list shows this many rows, then "Show more" (owner's request: 225 rows were one
+// 21,000 px scroll). The breakpoint is the one where the table turns into list rows (app.css).
+const PHONE_PAGE = 30;
+const PHONE_QUERY = '(max-width: 640px)';
 
 const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
 const topicLabel = (id) => TOPICS.find((t) => t.id === id)?.label ?? id;
@@ -55,6 +61,9 @@ export function renderDashboard(root, { store }) {
   const today = h('section.today-row', { 'aria-label': 'Practice today' });
   const countLine = h('p.hint-text.filter-count', { role: 'status' });
   const clearInline = h('button.btn.btn-ghost.btn-sm.filter-clear', { type: 'button', hidden: true, onClick: () => clearFilters() }, 'Clear filters');
+  const moreHost = h('div.list-more', { hidden: true });
+  const phone = typeof matchMedia === 'function' ? matchMedia(PHONE_QUERY) : null;
+  let shown = PHONE_PAGE;
   let path = null;
   let topicOpen = false;
 
@@ -174,6 +183,16 @@ export function renderDashboard(root, { store }) {
         ? `${available} ${available === 1 ? 'problem' : 'problems'}, ${planned} coming soon`
         : `${rows.length} ${rows.length === 1 ? 'problem' : 'problems'}`;
 
+    const page = phone?.matches ? listPage({ total: rows.length, shown, size: PHONE_PAGE }) : { visible: rows.length, left: 0, next: 0 };
+    moreHost.hidden = page.left === 0;
+    if (page.left) {
+      mount(
+        moreHost,
+        h('button.btn.btn-secondary.list-more-btn', { type: 'button', onClick: () => showMore(page.visible) }, `Show ${page.next} more`),
+        h('p.hint-text', {}, `${page.visible} of ${rows.length} shown`),
+      );
+    }
+
     if (!rows.length) {
       tableWrap.hidden = true;
       emptyHost.hidden = false;
@@ -208,10 +227,12 @@ export function renderDashboard(root, { store }) {
     // The first screenful now, the rest in small chunks between frames: building all 225 rows at
     // once blocked the main thread through a page change. aria-busy says the list is still filling.
     const token = ++fillToken;
-    const FIRST = 40;
+    // A paged phone list is drawn whole: it is already short, and showMore focuses its new rows.
+    const FIRST = phone?.matches ? page.visible : 40;
     const CHUNK = 60;
-    mount(tableBody, rows.slice(0, FIRST).map(row));
-    if (rows.length <= FIRST) {
+    const list = rows.slice(0, page.visible);
+    mount(tableBody, list.slice(0, FIRST).map(row));
+    if (list.length <= FIRST) {
       tableBody.removeAttribute('aria-busy');
       return;
     }
@@ -219,12 +240,26 @@ export function renderDashboard(root, { store }) {
     let at = FIRST;
     const fill = () => {
       if (token !== fillToken) return;
-      tableBody.append(...rows.slice(at, at + CHUNK).map(row));
+      tableBody.append(...list.slice(at, at + CHUNK).map(row));
       at += CHUNK;
-      if (at < rows.length) setTimeout(fill, 0);
+      if (at < list.length) setTimeout(fill, 0);
       else tableBody.removeAttribute('aria-busy');
     };
     setTimeout(fill, 0);
+  }
+
+  /** Adds the next page; focus goes to its first problem, so keyboard and screen reader users carry on there. */
+  function showMore(from) {
+    shown = from + PHONE_PAGE;
+    renderRows();
+    const first = tableBody.rows[from]?.querySelector('a');
+    (first ?? moreHost.querySelector('button'))?.focus();
+  }
+
+  /** A new filter starts again from the first page. */
+  function refilter() {
+    shown = PHONE_PAGE;
+    renderRows();
   }
 
   const diffGroup = chipGroup({
@@ -233,7 +268,7 @@ export function renderDashboard(root, { store }) {
     value: filters.difficulty,
     onChange: (value) => {
       filters.difficulty = value;
-      renderRows();
+      refilter();
     },
   });
 
@@ -261,7 +296,7 @@ export function renderDashboard(root, { store }) {
     onChange: (value) => {
       filters.topic = value;
       syncTopicToggle();
-      renderRows();
+      refilter();
     },
   });
 
@@ -293,7 +328,7 @@ export function renderDashboard(root, { store }) {
   });
   search.addEventListener('input', () => {
     filters.query = search.value;
-    renderRows();
+    refilter();
   });
 
   /** Opens a random unsolved problem among those the filters show (AlgoExpert's "pick random"). */
@@ -312,7 +347,7 @@ export function renderDashboard(root, { store }) {
     diffGroup.querySelectorAll('.chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === 'All')));
     topicGroup.querySelectorAll('.chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === 'all')));
     syncTopicToggle();
-    renderRows();
+    refilter();
     search.focus({ preventScroll: true });
   }
 
@@ -337,12 +372,16 @@ export function renderDashboard(root, { store }) {
         h('div.filter-meta', {}, countLine, clearInline, randomBtn),
       ),
       tableWrap,
+      moreHost,
       emptyHost,
       siteFooter(),
     ),
   );
   renderStats();
   renderRows();
+  // Turning a tablet or resizing a window across the breakpoint redraws with or without paging.
+  const onWidth = () => renderRows();
+  phone?.addEventListener('change', onWidth);
   let disposed = false;
   loadPath().then((p) => {
     if (disposed || !p) return;
@@ -359,5 +398,6 @@ export function renderDashboard(root, { store }) {
     fillToken++;
     stopCount();
     unsub();
+    phone?.removeEventListener('change', onWidth);
   };
 }
