@@ -179,6 +179,13 @@ function finishAndRecordInterview() {
   });
 }
 
+/**
+ * Interview Simulator view: setup, the running session or the report, depending on the session
+ * state kept in this module.
+ * @param {HTMLElement} root
+ * @param {{ store: object }} deps the progress store
+ * @returns {() => void} cleanup (invariant 7)
+ */
 export function renderInterview(root, { store }) {
   if (!interview) return renderInterviewSetup(root, { store });
   if (!interview.endedAt && Interview.isOver(interview)) {
@@ -666,6 +673,12 @@ const BOT_META = {
   grandmaster: { mark: 'Gm', desc: 'Fast pace. Nearly twice as fast as Regular.' },
 };
 
+/**
+ * 1v1 Battle view against a bot opponent (modes/battle.js): setup, then the workspace with the bot's live progress.
+ * @param {HTMLElement} root
+ * @param {{ store: object }} deps the progress store
+ * @returns {() => void} cleanup (invariant 7)
+ */
 export function renderBattle(root, { store }) {
   const problems = availableEntries();
   let level = 'regular';

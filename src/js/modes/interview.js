@@ -24,11 +24,23 @@ export function createSession({ problemIds, durationMs = DEFAULT_DURATION_MS, no
   };
 }
 
+/**
+ * Time left in the session, frozen at `endedAt` once the session is finished.
+ * @param {ReturnType<typeof createSession>} session
+ * @param {number} [now]
+ * @returns {number} milliseconds, never negative
+ */
 export function remainingMs(session, now = Date.now()) {
   const end = session.endedAt ?? now;
   return Math.max(0, session.durationMs - (end - session.startedAt));
 }
 
+/**
+ * Whether the session was finished or its time ran out.
+ * @param {ReturnType<typeof createSession>} session
+ * @param {number} [now]
+ * @returns {boolean}
+ */
 export function isOver(session, now = Date.now()) {
   return session.endedAt !== null || remainingMs(session, now) === 0;
 }
@@ -90,10 +102,24 @@ export function recordAttempt(session, { problemId, passed, total, accepted, kin
   };
 }
 
+/**
+ * Counts one switch away from the tab (lockdown integrity signal). Ignored once the session is
+ * over, so leaving the tab to read the report never costs points.
+ * @param {ReturnType<typeof createSession>} session
+ * @param {number} [now]
+ * @returns {ReturnType<typeof createSession>} a new session object
+ */
 export function recordTabSwitch(session, now = Date.now()) {
   return isOver(session, now) ? session : { ...session, tabSwitches: session.tabSwitches + 1 };
 }
 
+/**
+ * Ends the session. Idempotent; `endedAt` is capped at the deadline so finishing late never
+ * reports more time used than the session allowed.
+ * @param {ReturnType<typeof createSession>} session
+ * @param {number} [now]
+ * @returns {ReturnType<typeof createSession>} a new session object
+ */
 export function finish(session, now = Date.now()) {
   return session.endedAt ? session : { ...session, endedAt: Math.min(now, session.startedAt + session.durationMs) };
 }

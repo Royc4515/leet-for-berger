@@ -1,14 +1,16 @@
 # Roadmap
 
+Phase checklist. The living plan, with stages and the decision log, is [`PLAN.md`](PLAN.md); this file was last checked against it on 2026-11-24.
+
 Status legend: [x] done, [~] partial / placeholder, [ ] not started.
 
-## Phase 0 - Core platform (v0.1.0, this release)
+## Phase 0 - Core platform (v0.1.0)
 
 - [x] Split workspace: description | Monaco (vs-dark) + console, both axes resizable (mouse + keyboard), persisted
 - [x] 15-case harness: 5 detailed + 10 hidden, per-case watchdog, compile / runtime / TLE verdicts
 - [x] Custom test input (Run only, validated, reference-computed expected)
 - [x] Run Code / Submit / Reveal Solution (confirm + "assisted" flag)
-- [x] JavaScript execution (Web Worker), Python execution (Pyodide), Java editor-only
+- [x] JavaScript execution (Web Worker), Python execution (Pyodide); Java, C++, C, C# and Go later ran on the remote runner (Phase 2)
 - [x] TypeScript execution: Monaco's TypeScript service type-checks and transpiles, the JavaScript worker runs it; type errors are a Compile Error, as on LeetCode
 - [x] Problem bank with difficulty / topic / search filters, planned problems visible
 - [x] Progress: solved, streak, accuracy, submissions (localStorage)
@@ -43,19 +45,20 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 - [~] Complexity feedback: after Accepted (JavaScript, TypeScript, Python), time the code on growing inputs and compare the growth to the target (ADR 0004); 10 pilot problems declare `growth`, CI checks their targets. Next: `growth` for the remaining algorithm problems (checklist in docs/PROBLEM_FORMAT.md), other languages with the server runner, LLM explanation with the backend
 - [x] SQL runner: sql.js (SQLite wasm) in a worker and in the CI verifier, ADR 0003; first 5 SQL problems
 - [ ] Author problems topic by topic, tier 0 first; 15 tests each, solutions in 3 languages
-- [x] Replace the 4 hand-picked milestones with paths derived from the taxonomy (essential path, PR #12)
-- [ ] Practice modes on top of the index: topic drill, mixed review, mock OA, company set, daily, weak spots
-- [ ] Problem editorial view (unlocked after solve)
-- [ ] Per-problem submission history in the workspace
+- [x] Replace the 4 hand-picked milestones with paths derived from the taxonomy (essential path, [PR #12](https://github.com/Royc4515/leet-for-berger/pull/12))
+- [~] Practice modes on top of the index: mock OA ([PR #13](https://github.com/Royc4515/leet-for-berger/pull/13)), daily and weak spots ([PR #14](https://github.com/Royc4515/leet-for-berger/pull/14)), company sets done; topic drill and mixed review not yet
+- [x] Problem editorial view: solution walkthrough unlocked after solving ([PR #15](https://github.com/Royc4515/leet-for-berger/pull/15))
+- [x] Per-problem submission history in the workspace ([PR #15](https://github.com/Royc4515/leet-for-berger/pull/15))
 - [ ] Interview mode picks 2 problems by difficulty mix once the bank allows it
 
 ## Phase 2 - Server runner (needs a backend, moved up: Java and C++ are required languages)
 
 - [x] ADR 0002: PostgreSQL on Supabase, schema (`db/schema.sql`), git -> database sync (`scripts/db/export-sql.mjs`), verified by `scripts/db/check-schema.sh` in CI
-- [ ] Create the Supabase project, apply the schema, run the sync from CI on merge to main
+- [x] Create the Supabase project and apply the schema (accounts are live)
+- [ ] Run the git -> database content sync from CI on merge to main (deferred, see `PLAN.md`)
 
 - [x] Execution service with the same `run()` contract: self-hosted Piston on an Oracle Always Free Arm VM behind a Cloudflare Worker, $0 (ADR 0005). Code, Worker, VM kit and deploy guide done (`docs/DEPLOY_RUNNER.md`)
-- [ ] Create the Oracle and Cloudflare accounts, run `deploy/piston/setup.sh`, deploy the Worker, set the URL in `src/js/config.js` (owner steps in `docs/DEPLOY_RUNNER.md`)
+- [x] Create the Oracle and Cloudflare accounts, run `deploy/piston/setup.sh`, deploy the Worker, set the URL in `src/js/config.js` (owner steps in `docs/DEPLOY_RUNNER.md`)
 - [x] Java, C++, C, C# and Go execution in practice mode via the remote runner (judged in the browser; versions match CI: Java 21, .NET 8, Go 1.23; GCC 12 for C11 and C++17)
 - [ ] Remote languages in interview and battle (needs server-side judging, Phase 3)
 - [ ] Growth estimates for the remote languages (server-side timing)
@@ -64,7 +67,7 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 
 ## Phase 3 - Accounts and live features
 
-- [ ] Auth + server-side progress (migrate `lfb:progress:v1`)
+- [x] Auth + server-side progress, migrating `lfb:progress:v1` on first sign-in ([PR #18](https://github.com/Royc4515/leet-for-berger/pull/18), ADR 0006); personal GitHub sync ([PR #20](https://github.com/Royc4515/leet-for-berger/pull/20), ADR 0007)
 - [ ] `RemoteMentor` behind `/api/mentor` (LLM key server-side, Socratic system prompt already in repo)
 - [ ] Real-time Battle: WebSocket rooms, `RemoteOpponent`, server-side judging
 - [ ] Interview analytics history and trends

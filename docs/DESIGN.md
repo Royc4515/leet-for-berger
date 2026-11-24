@@ -4,7 +4,7 @@ Direction (stage F6, `docs/research/DESIGN_DIRECTIONS.md`): **a territory you li
 
 Everything lives in [`src/css/app.css`](../src/css/app.css): tokens in `:root` at the top, component rules below, view rules last. Component rules never use a literal colour, font size, radius, shadow or duration; `tests/design-tokens.test.js` enforces contrast, the type floor and token use.
 
-Replaces the F5 "quiet instrument" system (`docs/DESIGN_PLAN.md`, kept for history). What F5 got right stays: one primary per screen, 44 px touch targets, a 12 px floor, state never shown by colour alone, filters as chips, scopes as segmented controls.
+Replaces the F5 "quiet instrument" system (`docs/archive/DESIGN_PLAN.md`, kept for history). What F5 got right stays: one primary per screen, 44 px touch targets, a 12 px floor, state never shown by colour alone, filters as chips, scopes as segmented controls.
 
 ## Tokens
 

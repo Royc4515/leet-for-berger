@@ -1,6 +1,6 @@
 # Screen inventory (stage F6)
 
-The checklist the redesign is measured against (`docs/REDESIGN_BRIEF.md`, Phase A1). Every route, every state and every shared component of the site has an id. Each id gets the PR (commit) that redesigns it, and is ticked when the new version ships. No item may stay in the old style.
+The checklist the redesign is measured against (`docs/archive/REDESIGN_BRIEF.md`, Phase A1). Every route, every state and every shared component of the site has an id. Each id gets the PR (commit) that redesigns it, and is ticked when the new version ships. No item may stay in the old style.
 
 Baseline screenshots were taken on 2026-11-23 from `main` (`164d1e0`), before any F6 change. They are reproducible and are not committed (third-party-free, but large):
 
@@ -25,7 +25,7 @@ What each screen must help them do:
 
 ## Status legend
 
-`[ ]` not started · `[~]` in progress · `[x]` redesigned and shipped. PR column: the `docs/F6_PLAN.md` step (one commit each on the F6 branch, merged as one pull request).
+`[ ]` not started · `[~]` in progress · `[x]` redesigned and shipped. PR column: the `docs/archive/F6_PLAN.md` step (one commit each on the F6 branch, merged as one pull request).
 
 ## Routes and screens
 

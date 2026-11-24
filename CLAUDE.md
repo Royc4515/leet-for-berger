@@ -79,7 +79,7 @@ src/js/ui/views/           dashboard, map, daily, workspace, path, companies, mo
 scripts/design/            capture-screens.mjs (before/after shots), perf-map.mjs (ADR 0010), social-preview.mjs
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test
-docs/                      ARCHITECTURE, DESIGN, PROBLEM_FORMAT, ROADMAP, PLAN, REDESIGN_BRIEF, DEPLOY_RUNNER, DEPLOY_AUTH, DEPLOY_GITHUB_SYNC, adr/
+docs/                      ARCHITECTURE, DESIGN, PROBLEM_FORMAT, ROADMAP, PLAN, DEPLOY_RUNNER, DEPLOY_AUTH, DEPLOY_GITHUB_SYNC, REPO_AUDIT, adr/, archive/ (finished plans), research/
 ```
 
 Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR). Deeper: `docs/ARCHITECTURE.md` and `docs/DESIGN.md` (the Atlas design system: read it before any UI change). Adding a problem: `docs/PROBLEM_FORMAT.md` or `/add-problem`.
@@ -116,6 +116,7 @@ Plan, stages and decision log: `docs/PLAN.md` (tick tasks there in the same PR).
 3. `npm run check` must pass. For UI changes, also look at the screenshots (`--shots`).
 4. Update `CHANGELOG.md` (Unreleased section) and, if the change shifts scope, `docs/ROADMAP.md`.
 5. Small commits with imperative subjects. PR description: what, why, how verified.
+6. When a one-off plan or brief is finished (every step shipped), `git mv` it to `docs/archive/`, add a line to `docs/archive/README.md`, and point every reference at the new path (`CHANGELOG.md` entries stay as written). `docs/` holds only living docs.
 
 ## Definition of done
 

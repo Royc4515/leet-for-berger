@@ -1,6 +1,6 @@
 # F6 plan: the Atlas redesign
 
-Stage F6 in `docs/PLAN.md`. Brief: `docs/REDESIGN_BRIEF.md`. Research: `docs/research/DESIGN_REFERENCES.md`. Decision: `docs/research/DESIGN_DIRECTIONS.md`. Rules: `docs/DESIGN.md`. Checklist: `docs/research/SCREEN_INVENTORY.md`.
+Stage F6 in `docs/PLAN.md`. Brief: `docs/archive/REDESIGN_BRIEF.md`. Research: `docs/research/DESIGN_REFERENCES.md`. Decision: `docs/research/DESIGN_DIRECTIONS.md`. Rules: `docs/DESIGN.md`. Checklist: `docs/research/SCREEN_INVENTORY.md`.
 
 The work ships on one branch as a sequence of commits, one per step below, each with `npm run check` green, screenshots at 1440 and 390 opened and compared against the prototype, and `CHANGELOG.md`, this file and the inventory updated.
 

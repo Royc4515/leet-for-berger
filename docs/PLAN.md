@@ -35,7 +35,7 @@ Platform, practice modes and accounts are done. What limits the site now is how 
 | Content | 225 problems (131 essential + 94 company problems) | Company waves (F2), growth for all (F3) |
 | Accounts | Done: Google and GitHub sign-in, synced progress, GitHub sync of solutions | Owner check of GitHub sync |
 | AI mentor | Scripted hint ladder | Real LLM mentor (F4, needs a budget decision) |
-| Design | F6 Atlas redesign in progress (`docs/F6_PLAN.md`, `docs/DESIGN.md`) | F5 done |
+| Design | F6 Atlas redesign in progress (`docs/archive/F6_PLAN.md`, `docs/DESIGN.md`) | F5 done |
 
 **Languages on the live site:** JavaScript, TypeScript, Python and SQL run in the browser; Java, C++, C, C# and Go run on the server. A real Java submission on the live site was Accepted 15/15 in 3.8 s.
 
@@ -80,7 +80,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [ ] The 21 pending, each tried and left out for a stated reason (allocation or cache bends, too fast to time on CI, recursion limits, retry-only passes): bucket-map, column-sweep, course-finish-time, dictionary-split, digit-list-sum, fizz-buzz-list, gap-in-range, hill-rearrange, jump-reach, justify-lines, list-loop, lone-number, prefix-tree, random-link-copy, ring-shift, rotate-grid, ticket-itinerary, trade-cooldown, two-color-check, unfold-brackets (solution fixed, spec still to write), word-order-flip. Fixing these needs measurement work, not more specs: e.g. timing several reps per size to average out bends, packed (non-holey) arrays in the generators, a larger browser budget for big linked lists. Worth doing only if users ask for feedback on these problems
 - [ ] **F4. Real AI mentor:** an LLM behind a Supabase Edge Function with a hard monthly cap, using the system prompt already in `src/js/mentor/mentor.js`. Starts only after the budget decision below
 - [x] **F5. Design session:** after F1, F3 and the first three F2 waves. A dedicated session (Fable 5.2): a plan per screen, then execution per screen
-  - Plan: `docs/DESIGN_PLAN.md`, rules: `docs/DESIGN.md`. Ten steps, one PR each
+  - Plan: `docs/archive/DESIGN_PLAN.md`, rules: `docs/DESIGN.md`. Ten steps, one PR each
   - [x] Step 1, tokens and fonts (#33)
   - [x] Step 2, shell: phone tab bar, account panel, dialogs, toasts, page states (#34)
   - [x] Step 3, core components: buttons, chips, segmented, tags, difficulty, inputs, cards, 44 px touch targets, shared helpers in `ui/dom.js` (#35)
@@ -91,11 +91,11 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Step 8, sessions: shared session banner with tabular timer and single 5-minute warning announcement, interview problem switcher with per-problem status, colour-banded interview report with difficulty and Review links, battle lockdown with Leave race exit and two distinct thicker race bars
   - [x] Step 9, learning path: thicker green overall bar with the count, a one-line description per tier, topic disclosure buttons with `aria-expanded` and a mini bar on every topic header, full-row links with the shared status and difficulty, a visible Next up tag, two-line rows on phones
   - [x] Step 10, polish: Modes hub redesigned to two cards (Interview, Battle) with user-facing copy, last session results, one primary button, and an AI Mentor note; privacy page on shared page-head and tokens; dead CSS removed and carried Step 4/5/9 nits swept
-- [x] **F6. Full redesign, research-led:** an interactive Problem Map, a redesign of every screen and state in one consistent style, no style decided in advance. Brief: `docs/REDESIGN_BRIEF.md`. Started 2026-11-23 on the owner's go
+- [x] **F6. Full redesign, research-led:** an interactive Problem Map, a redesign of every screen and state in one consistent style, no style decided in advance. Brief: `docs/archive/REDESIGN_BRIEF.md`. Started 2026-11-23 on the owner's go
   - [x] Phase A: screen inventory (`docs/research/SCREEN_INVENTORY.md`) and research from 63 captured sites (`docs/research/DESIGN_REFERENCES.md`)
   - [x] Phase B: three directions prototyped and scored; **Atlas** chosen (`docs/research/DESIGN_DIRECTIONS.md`)
-  - [x] Phase C: `docs/DESIGN.md` rewritten, ADR 0009 (display font), ADR 0010 (map rendering), plan and coverage matrix (`docs/F6_PLAN.md`)
-  - [x] Phase D: steps 1 to 9 in `docs/F6_PLAN.md`: Map (`#/map`), Daily (`#/daily`), command palette, and every screen in the Atlas design; inventory fully ticked
+  - [x] Phase C: `docs/DESIGN.md` rewritten, ADR 0009 (display font), ADR 0010 (map rendering), plan and coverage matrix (`docs/archive/F6_PLAN.md`)
+  - [x] Phase D: steps 1 to 9 in `docs/archive/F6_PLAN.md`: Map (`#/map`), Daily (`#/daily`), command palette, and every screen in the Atlas design; inventory fully ticked
   - [x] Guided tours (owner's request): a short guide on every page's first visit and the mentor's first open, with a one-step welcome; replayable
   - [x] Map drill-down (owner's request): all topics, then a topic's subtopics, then a subtopic's problems, then one problem; each level a link (ADR 0010 amendment)
   - [x] One continuous map (owner's request): the levels become camera stops on one zoomable world, names appearing by zoom (ADR 0010 amendment 2)
@@ -157,7 +157,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
 - [x] Load views only when opened, and load supabase-js only with a session or on Sign in (done in F1)
 
 ### Stage E: new UI
-- [x] Redesign (done in F5): 10-step design system rollout across every screen (`docs/DESIGN.md`, `docs/DESIGN_PLAN.md`), including company option cards, shared pickers, phone navigation, workspace and session polish
+- [x] Redesign (done in F5): 10-step design system rollout across every screen (`docs/DESIGN.md`, `docs/archive/DESIGN_PLAN.md`), including company option cards, shared pickers, phone navigation, workspace and session polish
 
 ## Content sources
 

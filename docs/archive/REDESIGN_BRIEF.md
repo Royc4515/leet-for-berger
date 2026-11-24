@@ -1,14 +1,14 @@
 # Redesign brief: research-led, with an interactive Problem Map
 
-Status: written 2026-11-23, not started. Stage F6 in `docs/PLAN.md`. To run it, start a fresh session and give the agent this file as its prompt ("Read docs/REDESIGN_BRIEF.md and execute it").
+Status: written 2026-11-23, not started. Stage F6 in `docs/PLAN.md`. To run it, start a fresh session and give the agent this file as its prompt ("Read docs/archive/REDESIGN_BRIEF.md and execute it").
 
-Context for the agent: a first design pass already shipped (stage F5, `docs/DESIGN_PLAN.md`, ten PRs, #33 to #42). It fixed consistency, phone layouts and touch targets inside the "quiet instrument" direction. This brief goes further: a research-led redesign of the whole site with no style decided in advance. Learn from what F5 decided and why, but you are not bound by it.
+Context for the agent: a first design pass already shipped (stage F5, `docs/archive/DESIGN_PLAN.md`, ten PRs, #33 to #42). It fixed consistency, phone layouts and touch targets inside the "quiet instrument" direction. This brief goes further: a research-led redesign of the whole site with no style decided in advance. Learn from what F5 decided and why, but you are not bound by it.
 
 ---
 
 You are redesigning Leet-For-Berger, a static vanilla-JS SPA for coding practice (LeetCode / HackerRank style, no framework, no bundler, GitHub Pages). The goal: a site so good to use that it feels unbelievable, with an **interactive Problem Map** instead of only a list, and design, effects and animation that are genuinely excellent.
 
-**You are not committed to any style.** No palette, font, layout, metaphor or motion language is decided in advance. The current look (`docs/DESIGN.md`, and the F5 plan in `docs/DESIGN_PLAN.md`) describes where the site is today. Treat it as input, not as a constraint. You decide the design, and you decide it from research, prototypes and explicit criteria, not from taste or habit.
+**You are not committed to any style.** No palette, font, layout, metaphor or motion language is decided in advance. The current look (`docs/DESIGN.md`, and the F5 plan in `docs/archive/DESIGN_PLAN.md`) describes where the site is today. Treat it as input, not as a constraint. You decide the design, and you decide it from research, prototypes and explicit criteria, not from taste or habit.
 
 What is fixed is quality and engineering (Section 1). Everything visual is open (Section 2).
 

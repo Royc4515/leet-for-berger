@@ -5,3 +5,7 @@ e2e-shots/
 .env
 .env.*
 content/.cache/
+# Outputs of the repo's own scripts
+_site/
+share-sample/
+.wrangler/
