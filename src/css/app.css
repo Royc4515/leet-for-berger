@@ -990,6 +990,37 @@ body.lockdown .app-header {
   width: 100%;
 }
 
+/* The share button (ui/share.js): an arrow leaving a tray, beside "Share" or alone next to a title. */
+.share-btn {
+  flex: none;
+  gap: var(--s-1-5);
+}
+
+.share-icon {
+  flex: none;
+}
+
+/* A title with its share button: the button sits at the title's end, the title wraps before it. */
+.problem-title-row,
+.brief-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.brief-title-row .brief-title {
+  min-width: 0;
+}
+
+/* A page header's actions on the right: a link and a share button side by side. */
+.page-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
 .btn-link {
   display: inline;
   padding: 0;

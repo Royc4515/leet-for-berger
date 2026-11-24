@@ -4,6 +4,7 @@
  * The hexes resolve left to right; failures get no extra motion. Renders only what judge()
  * returns: hidden cases arrive here already stripped of inputs and outputs (invariant 3).
  */
+import { shareButton } from './share.js';
 import { h, mount } from './dom.js';
 import { preview } from '../engine/harness.js';
 import { reducedMotion, burst, shake, DUR } from './motion.js';
@@ -60,10 +61,11 @@ export function renderError(el, message) {
 /**
  * @param {HTMLElement} el
  * @param {ReturnType<import('../engine/harness.js').judge>} result
- * @param {{ kind: 'run'|'submit', argNames: string[], elapsedMs: number, next?: { href: string, title: string }|null, firstSolve?: boolean }} meta
- *   next: where "Next problem" goes after an Accepted submit (practice only)
+ * @param {{ kind: 'run'|'submit', argNames: string[], elapsedMs: number, next?: { href: string, title: string }|null, firstSolve?: boolean, share?: (() => import('../data/share.js').SharePayload)|null }} meta
+ *   next: where "Next problem" goes after an Accepted submit (practice only); share: what the
+ *   "Share" button sends after an Accepted submit (practice only: the problem and the language)
  */
-export function renderResult(el, result, { kind, argNames, elapsedMs, next = null, firstSolve = false }) {
+export function renderResult(el, result, { kind, argNames, elapsedMs, next = null, firstSolve = false, share = null }) {
   const visible = result.cases.filter((c) => c.visible);
   const hidden = result.cases.filter((c) => !c.visible);
   const verdictClass = result.accepted ? 'ok' : result.verdict === 'Language Not Supported Yet' ? 'muted' : 'bad';
@@ -124,6 +126,7 @@ export function renderResult(el, result, { kind, argNames, elapsedMs, next = nul
       h('span.result-meta', {}, kind === 'submit' ? 'Submission' : 'Run'),
       h('span.result-meta', {}, `${Math.round(elapsedMs)} ms`),
       accepted && firstSolve ? h('span.tag.tag-lamp.first-solve', {}, 'First solve') : null,
+      accepted && share ? shareButton({ name: 'Share your solve', get: share }) : null,
       accepted && next ? h('a.btn.btn-primary.btn-sm.next-problem', { href: next.href }, `Next: ${next.title}`) : null,
     ),
     h(

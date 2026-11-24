@@ -103,6 +103,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Logos where companies are named (owner's request): a problem's company chips, and the map's problem card as logo buttons that light the company up on the map (spotlight); Arista Networks and Meesho logos from official files
   - [x] Company links (owner's request): company chips open the company's page; each company page links to its checked careers site
   - [x] Jobs in Israel (owner's request): 38 companies that hire engineers in Israel link to their own job search filtered to Israel
+  - [x] Share buttons (owner's request): problem, solve, company, map place, learning path, daily, interview report, race result; spoiler-free texts
   - [x] CI runs only the unit tests a change reaches (traced proof), the smoke test only when the site changed, on the runner's Chrome
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 

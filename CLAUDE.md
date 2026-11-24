@@ -61,6 +61,7 @@ src/js/data/map-layout.js  Problem Map model: topic and subtopic states, lock re
 src/js/data/map-world.js   the continuous map: one world layout, camera maths (fit, zoom at a point, clamp, smooth flight), zoom levels, label placement (ADR 0010 amendment 2)
 src/js/data/problem-topics.js taxonomy topic per shipped problem (-> problem-topics.json, build-meta.mjs)
 src/js/data/palette-search.js command palette ranking
+src/js/data/share.js       what each share button sends (spoiler-free texts and links); ui/share.js = the button (share sheet or copy)
 src/js/data/tours.js       guided tour content (one per page + welcome + mentor), validateTour; tour-routes.js = route to tour (startup); tour-layout.js = card and spotlight placement (pure)
 src/js/data/company-loader.js fetch loaders for company-sets.json, problem-topics.json, company-logos.json (which companies have a logo, bleed, brand colour) and company-pages.json (which companies have a page: chips link there); each company in the sets carries its careers link (content/company-careers.json, scripts/content/check-careers.mjs)
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md); quiz/<topic>.json = quiz source bank, English + Hebrew (scripts/content/build-quiz.mjs builds the site files)

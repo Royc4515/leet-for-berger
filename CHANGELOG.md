@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added (share buttons, owner's request)
+- **Share buttons wherever there is something to send**: a problem (the icon at the end of its title), an Accepted verdict ("Solved: Pair Sum Target (Easy) in Python 3, 15 of 15 tests passed. Your turn."), a company page (its practice set, with your progress on it), a place on the map (topic, subtopic or problem), the learning path (your progress), the daily challenge (today's number and problem, solved and streak), an interview or mock OA report (score and band) and a race result. On a phone the share sheet opens; elsewhere the text and link are copied and a toast says so. Spoiler-free by rule: names, levels and counts, never code, test cases or an answer. Not shown inside an interview or a battle in progress.
+- One button for all of them (`src/js/ui/share.js`) and one module for what each sends (`src/js/data/share.js`, unit-tested); e2e checks that each page copies its own text and link.
+
 ### Changed (daily quiz)
 - **Adding questions never changes a daily quiz already shown.** Each question has the day it joins the daily quiz (`content/quiz/daily-pool.json`): the 526 current ones from the first day, and a question added later from two days after the build that adds it, past tomorrow in every time zone. Browser and server pick from the questions whose day has come. Deleting a question that is in the pool is refused by the build, because it would change past days; edit it instead.
 

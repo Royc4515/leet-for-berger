@@ -104,6 +104,7 @@ Easing: `--ease` (out, default), `--ease-in-out` (things that move across the sc
 | Guided tour | Explains a screen the first time | Spotlight on the element a step explains, a card beside it (a sheet under 640 px). See Tour rules. |
 | State block | Empty, error, loading | One block with a hex, a title, one line, one action. Loading uses skeleton rows the height of real rows. |
 | Spinner | Work in progress | A rotating hex. |
+| Share button | Sends a page to someone | Secondary, small, an arrow leaving a tray: "Share" beside other actions, the icon alone at the end of a title (problem page, map panel). The phone's share sheet where there is one, else the text and link are copied and a toast says so. What each page sends is spoiler-free (`src/js/data/share.js`): names, levels and counts, never code or tests. On: a problem, an Accepted verdict (the problem and the language), a company page, a map place, the learning path, the daily challenge, an interview or mock OA report, a race result; the daily quiz has its own. Not inside an interview or a battle in progress. Its accessible name says what it shares. |
 
 Helpers in `src/js/ui/dom.js` build these with `h()` and text nodes only (never `innerHTML` for user strings): `difficulty()`, `chip()`, `chipGroup()`, `segmented()`, `ilMark()`, `stateBlock()`, `loadingState()`, `siteFooter()`, `hexMark()`, `companyMark()`, `miniLogo()`, `progressBar()`.
 

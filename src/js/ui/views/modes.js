@@ -1,6 +1,8 @@
 /**
  * Modes: hub, Interview Simulator, 1v1 Battle (bot).
  */
+import { shareButton } from '../share.js';
+import { interviewShare, battleShare } from '../../data/share.js';
 import { h, mount, toast, confirmDialog, difficulty, chipGroup, ilMark, siteFooter, companyMark } from '../dom.js';
 import { createPicker, createOptionGroup } from '../picker.js';
 import { renderWorkspace } from './workspace.js';
@@ -641,7 +643,13 @@ function renderInterviewReport(root) {
             );
           }),
         ),
-        h('div.mode-actions.report-actions', {}, again, h('a.btn.btn-secondary', { href: '#/' }, 'Back to problems')),
+        h(
+          'div.mode-actions.report-actions',
+          {},
+          again,
+          h('a.btn.btn-secondary', { href: '#/' }, 'Back to problems'),
+          shareButton({ name: 'Share your interview score', get: () => interviewShare({ score: a.score, band: a.band.label, solved: a.solved, total: a.problems.length }) }),
+        ),
       ),
       siteFooter(),
     ),
@@ -934,6 +942,7 @@ function startBattle(root, { store, problem, level }) {
       raceResult,
       difficulty(problem.difficulty),
       h(`span.race-outcome.${who === 'you' ? 'is-win' : 'is-loss'}`, {}, who === 'you' ? 'You won' : `${bot.name} finished first`),
+      shareButton({ name: 'Share the race result', get: () => battleShare({ won: who === 'you', bot: bot.name, title: problem.title }) }),
     );
     toast(who === 'you' ? 'You won the race.' : `${bot.name} finished first. Keep going, finish it anyway.`, who === 'you' ? 'success' : 'warn', 5000);
   };
