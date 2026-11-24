@@ -93,7 +93,7 @@ Content we write keeps the problem (same task, same constraints, same diversity)
 | Original problems | Problems we write for reported tasks with no LeetCode equivalent (first: Notify Recipients, from monday.com reports) | `content/external/original.json` |
 | Company groups | Israeli companies and Israeli R&D hubs | `content/companies.json` |
 | Company logos | Each company's website (where its icons are published), overrides after review, and official logo files saved by hand when a site only inlines its logo | `content/company-domains.json`, `content/logo-sources/` |
-| Careers pages | Each company's careers page, found on its own site and checked (a real careers page, not a 404 or its home page) by `scripts/content/check-careers.mjs`; sites that turn away scripts confirmed by a web search; none where no official page was found | `content/company-careers.json` |
+| Careers pages | Each company's careers page, found on its own site and checked (a real careers page, not a 404 or its home page) by `scripts/content/check-careers.mjs`; sites that turn away scripts confirmed by a web search; none where no official page was found. For companies that hire engineers in Israel, the same site's job search filtered to Israel, verified by its Israel results or by the company's own links to it | `content/company-careers.json` |
 
 Not usable yet: CodeSignal and HackerRank publish no per-company question data (their OA formats feed Mock OA instead); the Grind 169 list is only available as a rendered page.
 
