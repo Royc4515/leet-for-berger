@@ -1,7 +1,7 @@
 /**
  * Modes: hub, Interview Simulator, 1v1 Battle (bot).
  */
-import { h, mount, toast, confirmDialog, difficulty, chipGroup, ilMark, siteFooter } from '../dom.js';
+import { h, mount, toast, confirmDialog, difficulty, chipGroup, ilMark, siteFooter, companyMark } from '../dom.js';
 import { createPicker, createOptionGroup } from '../picker.js';
 import { renderWorkspace } from './workspace.js';
 import { availableEntries, catalogEntry, loadProblem, TOPICS, DIFFICULTIES } from '../../problems/index.js';
@@ -10,6 +10,7 @@ import { createBot, BOT_LEVELS } from '../../modes/battle.js';
 import { OA_FORMATS, pickOaProblems } from '../../modes/mock-oa.js';
 import { expandRows, monogram } from '../../data/company-sets.js';
 import { loadRankedCompanies } from './companies.js';
+import { companyLogo } from '../../data/company-loader.js';
 import { israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
 import { usedTopics, pickRandom } from '../../modes/battle-picker.js';
 import { LAST_SESSIONS_KEY } from '../../state/user-data.js';
@@ -203,6 +204,7 @@ function renderInterviewSetup(root, { store }) {
   let format = OA_FORMATS[1];
   let companyIds = null; // null = any company
   let companyName = '';
+  let logos = null; // company logos for the picker's tiles, once loaded
   const companyOf = new Map();
 
   const barSummary = h('div.setup-bar-summary', { 'aria-live': 'polite', 'aria-atomic': 'true' });
@@ -277,7 +279,7 @@ function renderInterviewSetup(root, { store }) {
       className: '.option-card.company-option',
       attrs: { 'data-slug': item.id, 'data-israel': item.israel },
       content: [
-        h('span.monogram', { 'aria-hidden': 'true' }, item.id ? monogram(item.name) : '*'),
+        companyMark({ letters: item.id ? monogram(item.name) : '*', logo: item.id ? companyLogo(logos, item.id) : null, tile: Boolean(logos), size: 'sm' }),
         h('span.company-card-name', {}, item.name, item.israeli ? ilMark() : null),
         h('span.company-card-sub', {}, `${item.count} ${item.count === 1 ? 'problem' : 'problems'}`),
         scopeVal === 'all' && israelBadge(item.israel) ? h('span.company-card-sub.company-card-level', {}, israelBadge(item.israel)) : null,
@@ -298,6 +300,7 @@ function renderInterviewSetup(root, { store }) {
       companyPicker.setStatus('Company data could not be loaded.');
       return;
     }
+    logos = d.logos;
     const items = [anyOption];
     for (const c of d.ranked) {
       const ids = eligibleIdsOf(c, d.sets);

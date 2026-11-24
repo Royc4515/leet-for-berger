@@ -1,0 +1,753 @@
+{
+ "_doc": "Company logos in src/brand/companies/<slug>.webp (scripts/content/fetch-logos.mjs). bleed: an app-icon square drawn edge to edge; color: the brand colour, for the company page. A company missing here keeps its monogram.",
+ "logos": {
+  "accenture": {
+   "bleed": false,
+   "color": "#a100ff"
+  },
+  "accolite": {
+   "bleed": false,
+   "color": "#370cc2"
+  },
+  "adobe": {
+   "bleed": true,
+   "color": "#eb1000"
+  },
+  "affirm": {
+   "bleed": false,
+   "color": "#4a4af4"
+  },
+  "agoda": {
+   "bleed": false,
+   "color": "#ed353f"
+  },
+  "airbnb": {
+   "bleed": true,
+   "color": "#ff5a5f"
+  },
+  "akamai": {
+   "bleed": false,
+   "color": "#0098d8"
+  },
+  "akuna-capital": {
+   "bleed": true,
+   "color": "#00414c"
+  },
+  "amazon": {
+   "bleed": true,
+   "color": "#ff6200"
+  },
+  "amd": {
+   "bleed": false,
+   "color": "#ed1c24"
+  },
+  "amdocs": {
+   "bleed": true,
+   "color": "#e7875c"
+  },
+  "american-express": {
+   "bleed": false,
+   "color": "#006fcf"
+  },
+  "anduril": {
+   "bleed": false,
+   "color": null
+  },
+  "apple": {
+   "bleed": false,
+   "color": null
+  },
+  "applied-intuition": {
+   "bleed": false,
+   "color": null
+  },
+  "arcesium": {
+   "bleed": true,
+   "color": "#39a2db"
+  },
+  "atlassian": {
+   "bleed": false,
+   "color": "#2684ff"
+  },
+  "aurora": {
+   "bleed": false,
+   "color": "#006aed"
+  },
+  "autodesk": {
+   "bleed": false,
+   "color": null
+  },
+  "baidu": {
+   "bleed": false,
+   "color": "#2932e1"
+  },
+  "barclays": {
+   "bleed": false,
+   "color": "#00afe9"
+  },
+  "bcg": {
+   "bleed": false,
+   "color": "#03522d"
+  },
+  "bitgo": {
+   "bleed": false,
+   "color": "#1647db"
+  },
+  "blackrock": {
+   "bleed": true,
+   "color": null
+  },
+  "bloomberg": {
+   "bleed": true,
+   "color": null
+  },
+  "bny-mellon": {
+   "bleed": false,
+   "color": "#2d9bad"
+  },
+  "booking-com": {
+   "bleed": true,
+   "color": "#243c69"
+  },
+  "bytedance": {
+   "bleed": false,
+   "color": "#78e6dc"
+  },
+  "c3-ai": {
+   "bleed": false,
+   "color": null
+  },
+  "capgemini": {
+   "bleed": false,
+   "color": "#0058ab"
+  },
+  "capital-one": {
+   "bleed": false,
+   "color": "#cc2427"
+  },
+  "check-point": {
+   "bleed": false,
+   "color": "#ee0c5d"
+  },
+  "cisco": {
+   "bleed": false,
+   "color": "#1ba0d7"
+  },
+  "citadel": {
+   "bleed": false,
+   "color": "#002e6d"
+  },
+  "cloudflare": {
+   "bleed": false,
+   "color": "#f38020"
+  },
+  "cognizant": {
+   "bleed": false,
+   "color": "#4898bb"
+  },
+  "coinbase": {
+   "bleed": false,
+   "color": "#2478bb"
+  },
+  "confluent": {
+   "bleed": false,
+   "color": "#00afba"
+  },
+  "coupang": {
+   "bleed": false,
+   "color": "#d61e03"
+  },
+  "criteo": {
+   "bleed": true,
+   "color": "#fe5000"
+  },
+  "crowdstrike": {
+   "bleed": false,
+   "color": "#fc0000"
+  },
+  "cyberark": {
+   "bleed": false,
+   "color": "#265bff"
+  },
+  "databricks": {
+   "bleed": false,
+   "color": "#ff351f"
+  },
+  "datadog": {
+   "bleed": false,
+   "color": "#632ca6"
+  },
+  "de-shaw": {
+   "bleed": false,
+   "color": null
+  },
+  "dell": {
+   "bleed": true,
+   "color": "#0672cb"
+  },
+  "deloitte": {
+   "bleed": false,
+   "color": null
+  },
+  "deutsche-bank": {
+   "bleed": false,
+   "color": "#0018a8"
+  },
+  "disney": {
+   "bleed": false,
+   "color": null
+  },
+  "docusign": {
+   "bleed": false,
+   "color": "#4c00ff"
+  },
+  "doordash": {
+   "bleed": false,
+   "color": "#ff3008"
+  },
+  "dream11": {
+   "bleed": true,
+   "color": "#380713"
+  },
+  "dropbox": {
+   "bleed": false,
+   "color": "#0061ff"
+  },
+  "ebay": {
+   "bleed": false,
+   "color": "#e53238"
+  },
+  "epam-systems": {
+   "bleed": false,
+   "color": "#1869b8"
+  },
+  "epic-systems": {
+   "bleed": false,
+   "color": "#d31e47"
+  },
+  "expedia": {
+   "bleed": false,
+   "color": null
+  },
+  "fiverr": {
+   "bleed": false,
+   "color": "#1dbf73"
+  },
+  "flexport": {
+   "bleed": false,
+   "color": "#566ae5"
+  },
+  "flipkart": {
+   "bleed": false,
+   "color": "#f9e330"
+  },
+  "fractal-analytics": {
+   "bleed": false,
+   "color": "#fdb81c"
+  },
+  "freshworks": {
+   "bleed": false,
+   "color": "#fe574a"
+  },
+  "geico": {
+   "bleed": true,
+   "color": "#1b56a3"
+  },
+  "general-motors": {
+   "bleed": true,
+   "color": null
+  },
+  "goldman-sachs": {
+   "bleed": false,
+   "color": null
+  },
+  "google": {
+   "bleed": false,
+   "color": "#4889f4"
+  },
+  "grab": {
+   "bleed": false,
+   "color": "#00b14f"
+  },
+  "grammarly": {
+   "bleed": false,
+   "color": "#027e6f"
+  },
+  "hashedin": {
+   "bleed": false,
+   "color": "#f47920"
+  },
+  "hcl": {
+   "bleed": false,
+   "color": "#5538c8"
+  },
+  "huawei": {
+   "bleed": false,
+   "color": "#b91a1d"
+  },
+  "hubspot": {
+   "bleed": true,
+   "color": "#ff4800"
+  },
+  "hudson-river-trading": {
+   "bleed": true,
+   "color": "#ff8200"
+  },
+  "ibm": {
+   "bleed": false,
+   "color": "#1f70c1"
+  },
+  "infosys": {
+   "bleed": false,
+   "color": "#007cc3"
+  },
+  "inmobi": {
+   "bleed": false,
+   "color": "#fb4b39"
+  },
+  "intel": {
+   "bleed": false,
+   "color": "#0071c5"
+  },
+  "intuit": {
+   "bleed": false,
+   "color": "#236cff"
+  },
+  "ixl": {
+   "bleed": false,
+   "color": "#b2e515"
+  },
+  "j-p-morgan": {
+   "bleed": true,
+   "color": null
+  },
+  "jane-street": {
+   "bleed": false,
+   "color": null
+  },
+  "jfrog": {
+   "bleed": false,
+   "color": "#40be46"
+  },
+  "josh-technology": {
+   "bleed": false,
+   "color": "#a9d164"
+  },
+  "juspay": {
+   "bleed": false,
+   "color": "#0561e2"
+  },
+  "karat": {
+   "bleed": false,
+   "color": "#00bcc2"
+  },
+  "linkedin": {
+   "bleed": false,
+   "color": "#0073b2"
+  },
+  "lti": {
+   "bleed": true,
+   "color": "#ff5e4f"
+  },
+  "lyft": {
+   "bleed": false,
+   "color": "#ff00bf"
+  },
+  "makemytrip": {
+   "bleed": false,
+   "color": "#eb2226"
+  },
+  "mastercard": {
+   "bleed": false,
+   "color": "#f79e1b"
+  },
+  "mathworks": {
+   "bleed": false,
+   "color": "#ed883d"
+  },
+  "media-net": {
+   "bleed": false,
+   "color": "#d51254"
+  },
+  "meta": {
+   "bleed": false,
+   "color": "#0584fa"
+  },
+  "microsoft": {
+   "bleed": false,
+   "color": "#f25022"
+  },
+  "microstrategy": {
+   "bleed": false,
+   "color": "#fa6610"
+  },
+  "millennium": {
+   "bleed": false,
+   "color": "#002cff"
+  },
+  "mitsogo": {
+   "bleed": true,
+   "color": null
+  },
+  "mobileye": {
+   "bleed": false,
+   "color": "#1e2eb8"
+  },
+  "moloco": {
+   "bleed": false,
+   "color": "#e8fc8b"
+  },
+  "monday-com": {
+   "bleed": false,
+   "color": "#fb275d"
+  },
+  "mongodb": {
+   "bleed": false,
+   "color": "#47a248"
+  },
+  "morgan-stanley": {
+   "bleed": true,
+   "color": "#002b51"
+  },
+  "motive": {
+   "bleed": false,
+   "color": null
+  },
+  "myntra": {
+   "bleed": false,
+   "color": "#f61bb4"
+  },
+  "navan": {
+   "bleed": false,
+   "color": null
+  },
+  "netapp": {
+   "bleed": false,
+   "color": "#0067c5"
+  },
+  "netflix": {
+   "bleed": false,
+   "color": "#e50914"
+  },
+  "nike": {
+   "bleed": false,
+   "color": null
+  },
+  "nokia": {
+   "bleed": true,
+   "color": "#005aff"
+  },
+  "nuro": {
+   "bleed": false,
+   "color": null
+  },
+  "nutanix": {
+   "bleed": false,
+   "color": null
+  },
+  "nvidia": {
+   "bleed": false,
+   "color": "#76b900"
+  },
+  "okta": {
+   "bleed": false,
+   "color": "#007dc1"
+  },
+  "openai": {
+   "bleed": false,
+   "color": null
+  },
+  "oracle": {
+   "bleed": true,
+   "color": "#ff0000"
+  },
+  "ozon": {
+   "bleed": false,
+   "color": "#f1117e"
+  },
+  "palantir": {
+   "bleed": false,
+   "color": null
+  },
+  "palo-alto-networks": {
+   "bleed": false,
+   "color": "#fa582d"
+  },
+  "paypal": {
+   "bleed": false,
+   "color": "#002991"
+  },
+  "paypay": {
+   "bleed": true,
+   "color": "#ff0033"
+  },
+  "paytm": {
+   "bleed": false,
+   "color": "#20336b"
+  },
+  "phonepe": {
+   "bleed": false,
+   "color": "#5f259f"
+  },
+  "pinterest": {
+   "bleed": false,
+   "color": "#be2026"
+  },
+  "pocket-gems": {
+   "bleed": false,
+   "color": "#1daadf"
+  },
+  "publicis-sapient": {
+   "bleed": false,
+   "color": null
+  },
+  "qualcomm": {
+   "bleed": false,
+   "color": "#3253dc"
+  },
+  "quora": {
+   "bleed": false,
+   "color": "#b92b27"
+  },
+  "razorpay": {
+   "bleed": false,
+   "color": "#3395ff"
+  },
+  "revolut": {
+   "bleed": false,
+   "color": null
+  },
+  "rippling": {
+   "bleed": true,
+   "color": "#7a005d"
+  },
+  "robinhood": {
+   "bleed": true,
+   "color": "#ccff00"
+  },
+  "roblox": {
+   "bleed": true,
+   "color": "#335fff"
+  },
+  "roku": {
+   "bleed": false,
+   "color": "#662d91"
+  },
+  "rubrik": {
+   "bleed": false,
+   "color": "#22c0de"
+  },
+  "salesforce": {
+   "bleed": false,
+   "color": "#00b3ff"
+  },
+  "samsung": {
+   "bleed": true,
+   "color": "#2189ff"
+  },
+  "sap": {
+   "bleed": false,
+   "color": "#0070f2"
+  },
+  "servicenow": {
+   "bleed": false,
+   "color": "#042e43"
+  },
+  "siemens": {
+   "bleed": true,
+   "color": "#009999"
+  },
+  "sig": {
+   "bleed": true,
+   "color": "#005db9"
+  },
+  "sigmoid": {
+   "bleed": false,
+   "color": "#e30b14"
+  },
+  "snapchat": {
+   "bleed": false,
+   "color": null
+  },
+  "snowflake": {
+   "bleed": false,
+   "color": "#29b5e8"
+  },
+  "sofi": {
+   "bleed": false,
+   "color": "#2ac4f4"
+  },
+  "splunk": {
+   "bleed": false,
+   "color": "#f16726"
+  },
+  "spotify": {
+   "bleed": false,
+   "color": "#1ed760"
+  },
+  "sprinklr": {
+   "bleed": false,
+   "color": "#00bae9"
+  },
+  "square": {
+   "bleed": false,
+   "color": null
+  },
+  "stripe": {
+   "bleed": true,
+   "color": "#533afd"
+  },
+  "swiggy": {
+   "bleed": true,
+   "color": "#ff5200"
+  },
+  "taboola": {
+   "bleed": false,
+   "color": "#0056f1"
+  },
+  "tcs": {
+   "bleed": false,
+   "color": null
+  },
+  "tekion": {
+   "bleed": true,
+   "color": "#00c3b4"
+  },
+  "tesla": {
+   "bleed": false,
+   "color": "#c90000"
+  },
+  "tiktok": {
+   "bleed": false,
+   "color": "#25f4ee"
+  },
+  "tinkoff": {
+   "bleed": true,
+   "color": "#fedc2c"
+  },
+  "turing": {
+   "bleed": true,
+   "color": null
+  },
+  "twilio": {
+   "bleed": true,
+   "color": "#f22f46"
+  },
+  "twitter": {
+   "bleed": true,
+   "color": null
+  },
+  "two-sigma": {
+   "bleed": false,
+   "color": "#00a5bd"
+  },
+  "uber": {
+   "bleed": true,
+   "color": null
+  },
+  "uipath": {
+   "bleed": false,
+   "color": "#fa4616"
+  },
+  "ukg": {
+   "bleed": true,
+   "color": "#e5ff1f"
+  },
+  "verily": {
+   "bleed": false,
+   "color": "#047a6b"
+  },
+  "verkada": {
+   "bleed": false,
+   "color": null
+  },
+  "visa": {
+   "bleed": false,
+   "color": "#1a1f71"
+  },
+  "vk": {
+   "bleed": true,
+   "color": "#0077ff"
+  },
+  "walmart-labs": {
+   "bleed": false,
+   "color": "#ffc220"
+  },
+  "wayfair": {
+   "bleed": true,
+   "color": "#7b189f"
+  },
+  "waymo": {
+   "bleed": false,
+   "color": "#00e89d"
+  },
+  "wells-fargo": {
+   "bleed": false,
+   "color": "#d71e28"
+  },
+  "weride": {
+   "bleed": false,
+   "color": "#00c8c8"
+  },
+  "whatnot": {
+   "bleed": true,
+   "color": "#ffe406"
+  },
+  "wipro": {
+   "bleed": false,
+   "color": "#341c53"
+  },
+  "wissen-technology": {
+   "bleed": false,
+   "color": "#1d305a"
+  },
+  "wix": {
+   "bleed": false,
+   "color": null
+  },
+  "wiz": {
+   "bleed": false,
+   "color": "#0254ec"
+  },
+  "yahoo": {
+   "bleed": true,
+   "color": "#7d2eff"
+  },
+  "yandex": {
+   "bleed": true,
+   "color": "#f8604a"
+  },
+  "yelp": {
+   "bleed": false,
+   "color": "#fe1827"
+  },
+  "zenefits": {
+   "bleed": false,
+   "color": "#0b0134"
+  },
+  "zepto": {
+   "bleed": true,
+   "color": "#3c016c"
+  },
+  "zeta": {
+   "bleed": false,
+   "color": "#573292"
+  },
+  "zoho": {
+   "bleed": false,
+   "color": "#e42527"
+  },
+  "zomato": {
+   "bleed": true,
+   "color": "#cc202e"
+  },
+  "zs-associates": {
+   "bleed": false,
+   "color": "#ec7700"
+  },
+  "zscaler": {
+   "bleed": false,
+   "color": "#2368f5"
+  }
+ }
+}

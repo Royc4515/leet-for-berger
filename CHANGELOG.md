@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed (company logos, owner's request)
+- **Company logos instead of monograms.** Every company card, the company page, the interview picker and the command palette show the company's own logo on a warm light tile; a company page also glows faintly in the brand's colour. 187 of 193 companies have one; the rest keep their monogram on the same tile. Logos are self-hosted WebP, 128 px, under 11 KB each (650 KB for all, loaded lazily as cards scroll in).
+- **Best available quality, by rule** (`scripts/content/fetch-logos.mjs`, run by hand): each company's own SVG favicon, Apple touch icon or manifest icon first, then Simple Icons (vectors in the brand's colour), then the favicon services; anything under 48 px keeps the monogram. A white backdrop is removed only when it surrounds the logo, a logo drawn in white for a dark page is recoloured in the tile's ink (its colours kept), app-icon squares fill the tile, margins are trimmed, and the brand colour is measured. A contact sheet of all 193 was reviewed by eye; wrong picks (a framework's default icon, a mascot, a cropped wordmark) and 32 px-only sites got official files as overrides (`content/company-domains.json`). Pure rules in `scripts/content/logo-pick.mjs`, unit-tested in `tests/company-logos.test.js` (12 tests, with the manifest, the files and the size budget).
+- The trademark note on company pages names logos too.
+
 ### Added (daily quiz: leaderboard, sharing, main screen)
 - **The daily quiz on the Problems page**: a card under today's problem with the quiz number, your quiz streak, and Play, or today's five squares and the leaderboard once done. One line on a phone, so the problem list still starts on the first screen.
 - **Share your result**: five green or red squares in the order you played, your streak and rank, and a link, through the phone's share sheet or copied to the clipboard; no question text, so it never spoils the quiz for friends. In English or Hebrew.
