@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed (daily quiz needs an account, owner's request)
+- **Signing in is needed to play the daily quiz.** Signed out, `#/quiz/daily` shows Sign in to play with Continue with Google and Continue with GitHub, a link to the leaderboard and one to the practice quizzes, which stay open to everyone. Signed in, the quiz starts at once; while a stored session is still being checked the page waits instead of flashing the gate. A day already played on this device still shows its result. A site without accounts (a fork, a local run) keeps the daily quiz open, since there is no way to sign in there (`dailyQuizAccess` in `modes/quiz.js`, unit-tested).
+
 ### Changed (mobile pass, owner's request: on a phone the daily quiz leads)
 - **The daily quiz leads on a phone.** On the Problems page it is the first card, with the main button ("Play today's quiz"); the coding daily becomes a one-line strip with its name and Solve. On Modes the quiz card comes first and takes the main button. On the quiz page the daily quiz card sits right under the title, with Play across the card and the leaderboard and share under it. The desktop layout is unchanged. The first problem on the Problems page now starts higher on a phone than before (744 px instead of 786 px down a 390 x 844 screen).
 - **Daily quiz results put Share first**: the squares sit with the score, Share result is the main button, Play it again and More quizzes follow. The buttons no longer sit at different heights. On a phone results buttons fill the card, two to a row, and long labels wrap instead of overflowing.
