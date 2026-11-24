@@ -558,6 +558,11 @@ kbd,
     scroll-padding-bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px) + var(--s-3));
   }
 
+  /* With a pinned Start bar (interview and battle setup), they stop above that too. */
+  html:has(.setup-bar) {
+    scroll-padding-bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px) + 80px);
+  }
+
   /* A quiz question gets the whole screen, as a problem does; its HUD has Leave / End. */
   body.has-workspace .tab-bar,
   body.lockdown .tab-bar,
@@ -3712,6 +3717,23 @@ body.lockdown .toast-host {
   font-variant-numeric: tabular-nums;
 }
 
+/* Phone list paging (dashboard.js): Show more under the last row, with how many are shown. */
+.list-more {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+.list-more .hint-text {
+  margin: 0;
+}
+
+.list-more-btn {
+  width: 100%;
+  height: var(--ctl-lg);
+}
+
 .random-btn {
   margin-left: auto;
 }
@@ -4105,6 +4127,7 @@ body.lockdown .toast-host {
   }
 
   .dashboard-page > .dashboard-table-wrap,
+  .dashboard-page > .list-more,
   .dashboard-page > .dashboard-empty {
     order: 4;
   }
@@ -7095,8 +7118,47 @@ body.resizing-y * {
 }
 
 @media (max-width: 640px) {
+  /* Phone: the pinned Start bar is one slim row. As a card it took 130 to 145 px and covered the
+     problem filters and the company scope on first load (owner's request). Title and summary keep
+     one line each; the whole choice is in the "Selected" line above the bar. */
+  .setup-bar {
+    flex-wrap: nowrap;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3);
+  }
+
+  .setup-bar-summary {
+    flex: 1 1 auto;
+    gap: 0;
+  }
+
+  .setup-bar-title {
+    flex-wrap: nowrap;
+    min-width: 0;
+    font-size: var(--fs-md);
+  }
+
+  .setup-bar-title strong,
+  .setup-bar-sub {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .setup-bar-sub {
+    font-size: var(--fs-xs);
+  }
+
+  .setup-bar-title .difficulty,
+  .setup-bar-meta {
+    flex: none;
+    white-space: nowrap;
+  }
+
   .setup-bar .btn-lg {
-    width: 100%;
+    flex: none;
+    padding: 0 var(--s-4);
   }
 
   .picker-grid .company-option {
