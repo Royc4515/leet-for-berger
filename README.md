@@ -153,7 +153,7 @@ sequenceDiagram
   <img src="https://img.shields.io/badge/Playwright-e2e-1e1c18?style=for-the-badge&labelColor=100f0d" alt="Playwright">
 </p>
 
-#### Languages you can solve in
+### Languages you can solve in
 
 <p>
   <img src="https://img.shields.io/badge/Python-in_browser-1e1c18?style=flat-square&labelColor=100f0d&logo=python&logoColor=white" alt="Python">
