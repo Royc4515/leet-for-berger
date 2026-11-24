@@ -145,6 +145,17 @@ const topicTitle = (id, lang) => QUIZ_TOPICS.find((t) => t.id === id)?.title[lan
  */
 const textDir = (lang) => (lang === 'he' ? { dir: 'rtl', lang: 'he' } : { dir: 'ltr', lang: 'en' });
 
+/**
+ * "How it works": replays the page guide (data/tours.js); the first visit's guide is started by
+ * the router, like every other page.
+ * @returns {HTMLElement}
+ */
+function guideBtn() {
+  const b = h('button.btn.btn-ghost.btn-sm.tour-replay', { type: 'button', 'aria-haspopup': 'dialog' }, 'How it works');
+  b.addEventListener('click', () => dispatchEvent(new CustomEvent('tour:open', { detail: 'quiz' })));
+  return b;
+}
+
 /** "1:05" for a sprint clock. */
 function clock(ms) {
   const s = Math.ceil(ms / 1000);
@@ -260,14 +271,14 @@ export function renderQuizHub(root) {
       h(
         'div.page.quiz-page',
         {},
-        h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, 'Five spare minutes'), h('h1', {}, 'Quiz'), h('p.page-sub', {}, 'Multiple-choice questions on the ideas student and first-job interviews test: OOP, data structures, databases, concurrency, networking and more. No editor needed, so it works on a phone. In English or Hebrew.'))),
+        h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, 'Five spare minutes'), h('h1', {}, 'Quiz'), guideBtn(), h('p.page-sub', {}, 'Multiple-choice questions on the ideas student and first-job interviews test: OOP, data structures, databases, concurrency, networking and more. No editor needed, so it works on a phone. In English or Hebrew.'))),
         h('div.quiz-field.quiz-lang', {}, h('span.quiz-label', {}, 'Language'), langPicker, h('p.hint-text', {}, 'Hebrew keeps technical terms in English, as interviewers say them.')),
         dailyCard,
         h(
           'section.quiz-setup',
           { 'aria-labelledby': 'quiz-setup-title' },
           h('h2.section-title#quiz-setup-title', {}, 'Free play'),
-          h('div.quiz-field', {}, h('span.quiz-label', { id: 'quiz-mode-label' }, 'How to play'), segmented({ label: 'How to play', options: QUIZ_MODES.map((m) => ({ value: m.id, label: m.label })), value: setup.mode, onChange: (v) => { setup.mode = v; sync(); } }), modeNote),
+          h('div.quiz-field', { 'data-tour': 'quiz-mode' }, h('span.quiz-label', { id: 'quiz-mode-label' }, 'How to play'), segmented({ label: 'How to play', options: QUIZ_MODES.map((m) => ({ value: m.id, label: m.label })), value: setup.mode, onChange: (v) => { setup.mode = v; sync(); } }), modeNote),
           h('div.quiz-field', {}, h('div.quiz-topics-head', {}, h('span.quiz-label', {}, 'Topics'), allBtn), h('div.quiz-topic-grid', { role: 'group', 'aria-label': 'Topics, pick one or more' }, topicBtns)),
           h('div.quiz-start', {}, scopeLine, h(`button.btn${todayResult ? '.btn-primary' : '.btn-secondary'}.quiz-start-btn`, { type: 'button', onClick: start }, 'Start quiz')),
         ),

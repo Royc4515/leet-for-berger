@@ -91,7 +91,18 @@ export const TOURS = {
     steps: [
       { target: ['.mode-card'], title: 'Mock OA', body: 'A timed exam, like the real thing.' },
       { target: ['.mode-card:nth-of-type(2)'], title: 'Battle', body: 'Race a bot on the same problem.' },
+      { target: ['.mode-quiz'], title: 'Quiz', body: 'Multiple choice on interview ideas, in English or Hebrew.' },
       { target: ['.mentor-note'], optional: true, title: 'AI Mentor', body: 'Hints inside every problem, never the answer.' },
+    ],
+  },
+  quiz: {
+    id: 'quiz',
+    label: 'Quiz',
+    steps: [
+      { target: ['.quiz-lang .segmented'], title: 'English or Hebrew', body: 'Hebrew keeps the technical terms in English, as interviewers say them.' },
+      { target: ['.quiz-daily'], title: 'Daily quiz', body: 'Five questions, the same for everyone today.' },
+      { target: ['[data-tour="quiz-mode"]'], title: 'How to play', body: 'Practice, a 2 minute sprint, or survival until three misses.' },
+      { target: ['.quiz-topic-grid'], title: 'Pick topics', body: 'One, a few, or none for all mixed. Then start.' },
     ],
   },
   workspace: {

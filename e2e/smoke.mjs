@@ -2122,7 +2122,7 @@ try {
     await gone();
 
     // Every other page opens its own guide on the first visit, and every step finds its target.
-    for (const [hash, id] of [['#/map', 'map'], ['#/path', 'path'], ['#/daily', 'daily'], ['#/companies', 'companies'], ['#/companies/wix', 'company'], ['#/modes', 'modes'], ['#/battle', 'battle']]) {
+    for (const [hash, id] of [['#/map', 'map'], ['#/path', 'path'], ['#/daily', 'daily'], ['#/companies', 'companies'], ['#/companies/wix', 'company'], ['#/modes', 'modes'], ['#/battle', 'battle'], ['#/quiz', 'quiz']]) {
       await t.goto(`${BASE}${hash}`);
       await open(id);
       for (;;) {
