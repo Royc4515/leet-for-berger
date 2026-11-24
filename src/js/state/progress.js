@@ -9,6 +9,10 @@
 /** localStorage key of the progress blob; listed in state/user-data.js so sign-out clears it. */
 export const STORAGE_KEY = 'lfb:progress:v1';
 
+/**
+ * The progress blob of a first visit (schema version 1, stored under STORAGE_KEY).
+ * @returns {{ version: 1, problems: object, activeDays: string[], totals: { submissions: number, accepted: number }, drafts: object }}
+ */
 export function emptyState() {
   return { version: 1, problems: {}, activeDays: [], totals: { submissions: 0, accepted: 0 }, drafts: {} };
 }
@@ -118,6 +122,11 @@ export function load(storage = globalThis.localStorage) {
   }
 }
 
+/**
+ * Writes the progress blob. Storage failures are swallowed on purpose (see below).
+ * @param {ReturnType<typeof emptyState>} state
+ * @param {Storage} [storage] injectable for unit tests
+ */
 export function save(state, storage = globalThis.localStorage) {
   try {
     storage?.setItem(STORAGE_KEY, JSON.stringify(state));

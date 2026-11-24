@@ -23,6 +23,12 @@ const TYPES = {
   '.md': 'text/markdown; charset=utf-8',
 };
 
+/**
+ * Static file server for local development and the Playwright tests. ES modules and Web Workers
+ * refuse file:// URLs, so the site must be served over HTTP even though it has no build step.
+ * @param {number} [port] defaults to argv[2], then $PORT, then 5173
+ * @returns {import('node:http').Server}
+ */
 export function startServer(port = PORT) {
   const server = createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
