@@ -167,4 +167,5 @@ Not planned, and why: no `.env.example`. Nothing in the repo reads a `.env` file
 | F5 | Moved to `docs/archive/` with an index; rule added to `CLAUDE.md` |
 | F6, F7 | Fixed |
 | F8 | `CONTRIBUTING.md` and issue templates added |
-| F9, F12 | Left for the owner |
+| F9 | Left for the owner |
+| F12 | Fixed in a follow-up PR (`analytics(session, now)`, unit-tested) |

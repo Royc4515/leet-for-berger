@@ -127,8 +127,11 @@ export function finish(session, now = Date.now()) {
 /**
  * Score: test coverage dominates, speed is a tiebreaker-sized bonus, and integrity
  * violations cost points. Weights are intentionally simple so a candidate can predict them.
+ * @param {ReturnType<typeof createSession>} session
+ * @param {number} [now] used only while the session is still running; a finished one uses endedAt
+ * @returns {{ score: number, band: ReturnType<typeof scoreBand>, usedMs: number, solved: number, problems: object[], runs: number, submissions: number, tabSwitches: number }}
  */
-export function analytics(session) {
+export function analytics(session, now = Date.now()) {
   const problems = Object.entries(session.perProblem).map(([id, p]) => ({
     id,
     coverage: p.total ? p.bestPassed / p.total : 0,
@@ -137,7 +140,7 @@ export function analytics(session) {
     solved: p.acceptedAtMs !== null,
     solveTimeMs: p.acceptedAtMs,
   }));
-  const usedMs = (session.endedAt ?? Date.now()) - session.startedAt;
+  const usedMs = (session.endedAt ?? now) - session.startedAt;
   const coverage = problems.reduce((a, p) => a + p.coverage, 0) / problems.length;
   const speedBonus = problems.filter((p) => p.solved).length ? Math.max(0, 1 - usedMs / session.durationMs) * 10 : 0;
   const integrityPenalty = Math.min(20, session.tabSwitches * 5);
