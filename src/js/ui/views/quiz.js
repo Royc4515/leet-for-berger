@@ -9,7 +9,7 @@ import { h, mount, segmented, progressBar, siteFooter, confirmDialog, loadingSta
 import { QUIZ_TOPICS } from '../../data/quiz-topics.js';
 import { QUIZ_INDEX } from '../../data/quiz-index.js';
 import { loadQuizTopics } from '../../data/quiz-loader.js';
-import { QUIZ_MODES, DAILY_QUIZ_SIZE, dailyQuizNumber, quizMode, pickIds, buildQuiz, startDailyQuiz, dailyQuizIds, topicsFor, currentQuestion, answerQuestion, showNext, endQuiz, isOver, timeLeft, quizSummary, authoredChoices } from '../../modes/quiz.js';
+import { QUIZ_MODES, DAILY_QUIZ_SIZE, dailyQuizNumber, quizMode, pickIds, buildQuiz, startDailyQuiz, dailyQuizIds, topicsFor, currentQuestion, answerQuestion, showNext, endQuiz, isOver, timeLeft, quizSummary, authoredChoices, dailyQuizAccess } from '../../modes/quiz.js';
 import { shareText } from '../../data/quiz-share.js';
 import { shareUrl, SHARE_PAGES, quizShare, quizResultShare, quizDailyShare, quizBoardShare } from '../../data/share.js';
 import { shareButton, shareIcon } from '../share.js';
@@ -85,6 +85,9 @@ const T = {
     boardLoading: 'Loading the leaderboard...',
     boardDown: 'The leaderboard is unavailable right now. Your result is saved on this device.',
     joinBoard: 'Sign in to join the leaderboard and keep your streak on every device.',
+    gateTitle: 'Sign in to play',
+    gateBody: 'The daily quiz counts on the leaderboard, so it is played signed in. Practice quizzes are open to everyone.',
+    gateChecking: 'Checking your sign-in...',
     google: 'Continue with Google',
     github: 'Continue with GitHub',
     yourRank: (r, n) => `You are #${r} of ${n} today`,
@@ -159,6 +162,9 @@ const T = {
     boardLoading: 'טוען את טבלת המובילים...',
     boardDown: 'טבלת המובילים לא זמינה כרגע. התוצאה נשמרה במכשיר.',
     joinBoard: 'אפשר להתחבר כדי להופיע בטבלה ולשמור על הרצף בכל מכשיר.',
+    gateTitle: 'צריך להתחבר כדי לשחק',
+    gateBody: 'החידון היומי נספר בטבלת המובילים, ולכן משחקים בו מחוברים. חידוני התרגול פתוחים לכולם.',
+    gateChecking: 'בודק את ההתחברות...',
     google: 'המשך עם Google',
     github: 'המשך עם GitHub',
     yourRank: (r, n) => `מקום ${r} מתוך ${n} היום`,
@@ -613,11 +619,50 @@ export function renderDailyQuiz(root) {
     });
   }
 
+  /**
+   * Today's first play needs an account where the site has them: plays at once when signed in,
+   * waits while a stored session is checked, otherwise asks to sign in and starts on sign-in.
+   */
+  let unsubscribe = () => {};
+  function gate() {
+    const account = services.account;
+    const state = account?.get?.();
+    const access = dailyQuizAccess({ accounts: Boolean(account?.config?.enabled), status: state?.status });
+    if (access === 'play') {
+      unsubscribe();
+      unsubscribe = () => {};
+      begin();
+      return;
+    }
+    const card =
+      access === 'wait'
+        ? loadingState({ label: t.gateChecking, rows: 2 })
+        : h(
+            'section.quiz-result-card.quiz-gate',
+            { 'aria-labelledby': 'quiz-gate-title', ...textDir(lang) },
+            h('span.eyebrow', {}, t.dailyTitle(number)),
+            h('h1#quiz-gate-title', {}, t.gateTitle),
+            h('p.hint-text', {}, t.gateBody),
+            state?.error ? h('p.hint-text', { role: 'alert' }, state.error) : null,
+            h(
+              'div.quiz-actions',
+              {},
+              h('button.btn.btn-primary', { type: 'button', onClick: () => account.signIn('google') }, t.google),
+              h('button.btn.btn-secondary', { type: 'button', onClick: () => account.signIn('github') }, t.github),
+              h('a.btn.btn-ghost', { href: '#/quiz/board' }, t.board),
+              h('a.btn.btn-ghost', { href: '#/quiz' }, t.moreQuizzes),
+            ),
+          );
+    mount(root, h('div.page.page-narrow.quiz-page', {}, card, siteFooter()));
+  }
+
   const done = loadQuizProgress().daily[today];
   let boardRank = null;
   let boardStreak = null;
   if (!done) {
-    begin();
+    // Re-checked on every account change: the session check finishing, a sign-in, an error.
+    if (services.account?.subscribe) unsubscribe = services.account.subscribe(() => !disposed && gate());
+    gate();
   } else {
     mount(
       root,
@@ -647,6 +692,7 @@ export function renderDailyQuiz(root) {
   }
   return () => {
     disposed = true;
+    unsubscribe();
     stop();
   };
 }
