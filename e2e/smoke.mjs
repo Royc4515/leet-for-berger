@@ -1406,6 +1406,7 @@ try {
       { url: '#/daily', wait: '.cal-day', name: '390-touch-daily' },
       { url: '#/quiz', wait: '.quiz-topic', name: '390-touch-quiz' },
       { url: '#/quiz/daily', wait: '.quiz-gate', name: '390-touch-quiz-gate' },
+      { url: '#/me', wait: '.profile-page', name: '390-touch-profile' },
     ];
     for (const sc of screens) {
       await touch.goto(`${BASE}${sc.url}`);
@@ -1595,7 +1596,8 @@ try {
     await acct.keyboard.press('ArrowUp');
     if ((await acct.evaluate(() => document.activeElement?.textContent?.trim())) !== 'Continue with Google') throw new Error('ArrowUp did not move back to first menuitem');
     await acct.keyboard.press('End');
-    if ((await acct.evaluate(() => document.activeElement?.textContent?.trim())) !== 'Continue with GitHub') throw new Error('End did not focus last menuitem');
+    // The last item is the link to the profile page, which a guest uses for preferences and data.
+    if ((await acct.evaluate(() => document.activeElement?.textContent?.trim())) !== 'Profile and settings') throw new Error('End did not focus last menuitem');
     await acct.keyboard.press('Home');
     if ((await acct.evaluate(() => document.activeElement?.textContent?.trim())) !== 'Continue with Google') throw new Error('Home did not focus first menuitem');
     // Escape closes the menu and returns focus to the Sign in toggle.
@@ -1791,6 +1793,25 @@ try {
     await acct.click('.quiz-name-form button:has-text("Use my account name")');
     await acct.waitForSelector('.quiz-board-me:has-text("On the board as Ada")');
     if (JSON.stringify(nameCalls) !== '["Ace",""]') throw new Error(`name calls: ${JSON.stringify(nameCalls)}`);
+    // The profile page (#/me), reached from the account panel: who is signed in, the leaderboard
+    // name (the same rule as the board, the same server call), the quiz-progress note, GitHub sync.
+    await acct.click('#account .account-name');
+    await acct.click('.account-menu a:has-text("Profile and settings")');
+    await acct.waitForFunction(() => location.hash === '#/me');
+    await acct.waitForSelector('.profile-name:has-text("Ada")');
+    await acct.waitForSelector('#profile-nickname:has-text("Shown as Ada")');
+    const prof = await acct.evaluate(() => ({ sections: [...document.querySelectorAll('.profile-section-title')].map((e) => e.textContent), note: /Quiz progress stays in this browser/.test(document.querySelector('#profile-progress').textContent), guide: Boolean(document.querySelector('.site-links-tour')), menuOpen: !document.querySelector('.account-menu')?.hidden }));
+    if (JSON.stringify(prof.sections) !== '["Your progress","Leaderboard name","Preferences","GitHub sync","Your data"]' || !prof.note || prof.guide || prof.menuOpen) throw new Error(`profile signed in: ${JSON.stringify(prof)}`);
+    await acct.click('#profile-nickname button:has-text("Change")');
+    await acct.waitForFunction(() => document.activeElement?.id === 'profile-nickname-input');
+    await acct.fill('#profile-nickname-input', 'x');
+    await acct.click('.profile-form button[type="submit"]');
+    await acct.waitForSelector('.toast:has-text("Use 2 to 24 characters")');
+    await acct.fill('#profile-nickname-input', '  Countess   Ada ');
+    await acct.click('.profile-form button[type="submit"]');
+    await acct.waitForSelector('#profile-nickname:has-text("Shown as Countess Ada")');
+    if (JSON.stringify(nameCalls) !== '["Ace","","Countess Ada"]') throw new Error(`profile name calls: ${JSON.stringify(nameCalls)}`);
+    if (shotsDir) await acct.screenshot({ path: `${shotsDir}/32-profile.png`, fullPage: true });
     await acct.goto(`${BASE}#/`);
     await acct.waitForSelector('#account .account-name:has-text("Ada")');
     const stored = () => acct.evaluate(() => ({ progress: JSON.parse(localStorage.getItem('lfb:progress:v1') ?? 'null'), drafts: Object.keys(localStorage).filter((k) => k.startsWith('lfb:draft:')) }));
@@ -1802,7 +1823,8 @@ try {
     if (!(await acct.evaluate(() => document.querySelector('.account-menu')?.hidden))) {
       throw new Error('account menu must close before opening Sign out dialog');
     }
-    await expectDialog(acct, /Sign out\?[\s\S]*stays in your account[\s\S]*removed from this device/);
+    // It names what stays in the account and what does not (quiz progress is per browser).
+    await expectDialog(acct, /Sign out\?[\s\S]*stay in your account[\s\S]*removed from this device, including quiz progress/);
     if (shotsDir) await acct.screenshot({ path: `${shotsDir}/22-sign-out-confirm.png` });
     await acct.click('dialog.modal button:has-text("Cancel")');
     await acct.waitForSelector('dialog.modal', { state: 'detached' });
@@ -2319,6 +2341,39 @@ try {
     await bp.waitForFunction(() => document.querySelectorAll('.quiz-board-row').length === 1 && /Noa Levi/.test(document.querySelector('.quiz-board-row').textContent));
     if (shotsDir) await bp.screenshot({ path: `${shotsDir}/30-quiz-board.png` });
     await bp.waitForFunction(() => /Leaderboard/.test(document.querySelector('h1')?.textContent ?? ''));
+    await ctx.close();
+  });
+
+  await check('profile signed out: this browser\'s numbers, preferences, no dead guide button, and deleting the progress on this device', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    const pp = await ctx.newPage();
+    pp.on('console', (m) => m.type() === 'error' && errors.push(`console (profile page): ${m.text()}`));
+    pp.on('pageerror', (e) => errors.push(`pageerror (profile page): ${e.message}`));
+    await pp.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await pp.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+      if (sessionStorage.getItem('seeded')) return;
+      sessionStorage.setItem('seeded', '1');
+      localStorage.setItem('lfb:progress:v1', JSON.stringify({ version: 1, problems: { 'pair-sum-target': { status: 'solved', submissions: 1, accepted: 1, revealed: false } }, activeDays: [], totals: { submissions: 2, accepted: 1 }, drafts: {} }));
+      localStorage.setItem('lfb:draft:v1:pair-sum-target:python', '# mine');
+    });
+    await pp.goto(`${BASE}#/me`);
+    await pp.waitForSelector('.profile-page');
+    const before = await pp.evaluate(() => ({ title: document.getElementById('header-title').textContent, solved: document.querySelector('.profile-stats .stat-value').textContent, accuracy: [...document.querySelectorAll('.profile-stats .stat-cell')].find((c) => /Accuracy/.test(c.textContent))?.querySelector('.stat-value').textContent, sections: [...document.querySelectorAll('.profile-section-title')].map((e) => e.textContent), guide: Boolean(document.querySelector('.site-links-tour')), overflow: document.documentElement.scrollWidth - innerWidth }));
+    if (before.title !== 'Profile' || before.solved !== '1' || before.accuracy !== '50%' || JSON.stringify(before.sections) !== '["Your progress","Preferences","Your data"]' || before.guide || before.overflow > 0) throw new Error(`profile signed out: ${JSON.stringify(before)}`);
+    // The quiz language set here is the one the quiz uses.
+    await pp.click('.profile-field .segmented-btn[data-value="he"]');
+    if ((await pp.evaluate(() => localStorage.getItem('lfb:quiz-lang'))) !== 'he') throw new Error('profile did not set the quiz language');
+    await pp.click('.profile-delete');
+    await pp.click('dialog[open] button:has-text("Delete")');
+    await pp.waitForSelector('.toast:has-text("Progress deleted from this device")');
+    const after = await pp.evaluate(() => ({ solved: document.querySelector('.profile-stats .stat-value').textContent, keys: Object.keys(localStorage).filter((k) => k.startsWith('lfb:progress') || k.startsWith('lfb:draft')), lang: localStorage.getItem('lfb:quiz-lang') }));
+    if (after.solved !== '0' || after.keys.length || after.lang !== 'he') throw new Error(`delete on this device: ${JSON.stringify(after)}`);
+    // A page with a guide still offers it in the footer.
+    await pp.goto(`${BASE}#/quiz`);
+    await pp.waitForSelector('.quiz-topic');
+    if (!(await pp.locator('.site-links-tour').count())) throw new Error('the quiz page lost its guide button');
     await ctx.close();
   });
 

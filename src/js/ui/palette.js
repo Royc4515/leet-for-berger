@@ -21,6 +21,7 @@ const PAGES = [
   { kind: 'page', id: 'interview', label: 'Interview simulator', href: '#/interview', keywords: 'mock oa timed exam' },
   { kind: 'page', id: 'battle', label: 'Battle a bot', href: '#/battle', keywords: 'race versus' },
   { kind: 'page', id: 'quiz', label: 'Quiz', href: '#/quiz', keywords: 'multiple choice questions oop design patterns trivia phone' },
+  { kind: 'page', id: 'profile', label: 'Profile', href: '#/me', keywords: 'account settings sign out nickname leaderboard github language data delete' },
   { kind: 'page', id: 'daily-quiz', label: 'Daily quiz', href: '#/quiz/daily', keywords: 'today multiple choice questions' },
   { kind: 'page', id: 'quiz-board', label: 'Quiz leaderboard', href: '#/quiz/board', keywords: 'scoreboard ranking daily weekly streak friends' },
   { kind: 'page', id: 'modes', label: 'Modes', href: '#/modes', keywords: 'practice' },
