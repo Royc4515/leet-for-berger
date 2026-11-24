@@ -1523,7 +1523,7 @@ try {
       const listeners = [];
       const user = ${signedIn ? "{ id: 'u1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } }" : 'null'};
       const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async () => ({ error: null }) };
-      return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: (cb) => { listeners.push(cb); return {}; }, signInWithOAuth: async () => ({}), signOut: async () => { localStorage.removeItem('sb-example-auth-token'); listeners.forEach((l) => l('SIGNED_OUT', null)); return {}; } }, from: () => chain };
+      return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: (cb) => { listeners.push(cb); return {}; }, signInWithOAuth: async (o) => { window.__oauth = o; return {}; }, signOut: async () => { localStorage.removeItem('sb-example-auth-token'); listeners.forEach((l) => l('SIGNED_OUT', null)); return {}; } }, from: () => chain };
     }`;
     const acctRequests = [];
     acct.on('request', (r) => acctRequests.push(r.url()));
@@ -1629,6 +1629,9 @@ try {
     await acct.goto(`${BASE}#/quiz/daily`);
     await acct.click('.quiz-gate button.btn-primary');
     await acct.waitForFunction(() => sessionStorage.getItem('lfb:return-to') === '#/quiz/daily');
+    // The route also rides in redirectTo, so a return in another tab lands there too.
+    const redirectTo = await acct.evaluate(() => window.__oauth?.options?.redirectTo);
+    if (redirectTo !== `${BASE}#/quiz/daily`) throw new Error(`sign-in redirectTo should carry the route: ${redirectTo}`);
     await acct.goto(`${BASE}?code=e2e`);
     await acct.waitForSelector('.quiz-gate');
     const back = await acct.evaluate(() => ({ hash: location.hash, saved: sessionStorage.getItem('lfb:return-to') }));

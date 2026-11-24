@@ -177,14 +177,18 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
     async signIn(provider) {
       await start();
       if (!client) return;
-      // Back to this page after the provider's consent screen: the path through redirectTo, the
-      // hash route through this tab's sessionStorage (restoreReturnRoute at startup).
+      // Back to this page after the provider's consent screen. The hash route rides in redirectTo:
+      // Supabase Auth adds ?code= and keeps the fragment, and checks the allowlist without it, so
+      // it works even when the return opens in another tab. On an error return Supabase replaces
+      // the fragment, so this tab's sessionStorage keeps the route too (restoreReturnRoute).
       try {
         sessionStorage.setItem(RETURN_KEY, location.hash || '#/');
       } catch {
-        // Storage blocked: the user lands on the home page instead, still signed in.
+        // Storage blocked: redirectTo still carries the route.
       }
-      const { error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo: location.href.split('#')[0] } });
+      // No query: a stale ?code= or ?installation_id= must not ride along.
+      const redirectTo = `${location.origin}${location.pathname}${location.hash}`;
+      const { error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo } });
       if (error) set({ error: error.message });
     },
     /** The signed-in user's access token, for calling Edge Functions; null when signed out. */
