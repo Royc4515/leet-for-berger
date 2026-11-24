@@ -66,20 +66,139 @@ export function returnRoute({ search, saved }) {
   return typeof saved === 'string' && saved.startsWith('#/') ? saved : null;
 }
 
+/** Google's OpenID Connect authorization endpoint (from accounts.google.com/.well-known/openid-configuration). */
+export const GOOGLE_AUTHORIZE_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+
+/** localStorage key: the state, nonce and route of a Google sign-in in progress. */
+const GOOGLE_KEY = 'lfb:google-sign-in';
+
+/** How long a started Google sign-in may take before its return is refused. */
+export const GOOGLE_MAX_AGE_MS = 15 * 60 * 1000;
+
+/**
+ * The address Google returns to for a direct sign-in: this page without its route, when it is one
+ * of the client's registered redirect URIs. Google refuses any other address outright
+ * (redirect_uri_mismatch), so an unlisted page (a preview, a fork, another port) gets '' and signs
+ * in through Supabase instead.
+ * @param {{ origin: string, pathname: string }} here
+ * @param {string[]} allowed
+ * @returns {string}
+ */
+export function googleRedirectUri(here, allowed) {
+  const page = `${here?.origin ?? ''}${String(here?.pathname ?? '').replace(/index\.html$/, '')}`;
+  return Array.isArray(allowed) && allowed.includes(page) ? page : '';
+}
+
+/**
+ * Google's sign-in address for an ID token returned straight to this site (OpenID Connect,
+ * response_type id_token). Google's account screen names the redirect host, so it shows this
+ * site's address, not the Supabase project's. Only the SHA-256 of the nonce goes to Google:
+ * Supabase compares it with the hash of the raw nonce it receives (signInWithIdToken).
+ * @param {{ clientId: string, redirectUri: string, state: string, nonceHash: string }} opts
+ * @returns {string}
+ */
+export function googleAuthorizeUrl({ clientId, redirectUri, state, nonceHash }) {
+  const q = new URLSearchParams({ client_id: clientId, redirect_uri: redirectUri, response_type: 'id_token', scope: 'openid email profile', state, nonce: nonceHash });
+  return `${GOOGLE_AUTHORIZE_URL}?${q}`;
+}
+
+/**
+ * A Google return in the URL fragment: `#id_token=...&state=...`, or `#error=...&state=...` when the
+ * user cancels or Google refuses. A `#/...` hash is a route, never a return.
+ * @param {string} hash
+ * @returns {{ state: string, idToken: string }|{ state: string, error: string }|null}
+ */
+export function parseGoogleReturn(hash) {
+  if (typeof hash !== 'string' || !hash.startsWith('#') || hash.startsWith('#/')) return null;
+  const q = new URLSearchParams(hash.slice(1));
+  const state = q.get('state');
+  if (!state) return null;
+  if (q.get('id_token')) return { state, idToken: q.get('id_token') };
+  if (q.get('error')) return { state, error: q.get('error') };
+  return null;
+}
+
+/**
+ * What to do with a Google return, given the sign-in this device started. The state must match
+ * (a return this device did not start is refused: login CSRF) and be recent; the nonce stays on the
+ * device and goes only to Supabase, so a token copied from the address bar cannot be replayed.
+ * @param {{ ret: NonNullable<ReturnType<typeof parseGoogleReturn>>, pending: { state?: string, nonce?: string, route?: string, at?: number }|null, now: number }} opts
+ * @returns {{ route: string, idToken?: string, nonce?: string, message?: string|null }}
+ */
+export function checkGoogleReturn({ ret, pending, now }) {
+  const route = typeof pending?.route === 'string' && pending.route.startsWith('#/') ? pending.route : '#/';
+  const age = now - Number(pending?.at);
+  if (!pending?.nonce || pending.state !== ret.state || !(age >= 0 && age <= GOOGLE_MAX_AGE_MS)) {
+    return { route, message: 'Google sign-in did not finish. Try again.' };
+  }
+  // Cancelling on Google's screen is a choice, not a failure.
+  if (ret.error) return { route, message: ret.error === 'access_denied' ? null : 'Google sign-in failed. Try again.' };
+  return { route, idToken: ret.idToken, nonce: pending.nonce };
+}
+
+/** 32 random bytes as hex: a nonce or a state value. */
+function randomToken() {
+  return [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * @param {string} text
+ * @returns {Promise<string>} SHA-256 of the text, lowercase hex (the form Supabase expects)
+ */
+export async function sha256Hex(text) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** localStorage, or null when it is blocked (private window, site data off). */
+function localStore() {
+  try {
+    return globalThis.localStorage ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Takes a Google return off the address bar: the token leaves the URL and its history entry before
+ * anything else runs, and the route the sign-in started from replaces it.
+ * @param {number} now
+ * @returns {ReturnType<typeof checkGoogleReturn>|null}
+ */
+function takeGoogleReturn(now) {
+  const ret = parseGoogleReturn(location.hash);
+  if (!ret) return null;
+  let pending = null;
+  try {
+    pending = JSON.parse(localStore()?.getItem(GOOGLE_KEY) ?? 'null');
+    localStore()?.removeItem(GOOGLE_KEY);
+  } catch {
+    pending = null;
+  }
+  const result = checkGoogleReturn({ ret, pending, now });
+  history.replaceState(history.state, '', location.pathname + location.search + result.route);
+  return result;
+}
+
 /**
  * Back to the page a sign-in started from. Called once at startup, before the first route, so the
  * right view renders directly instead of the dashboard first.
+ * @param {{ now?: number }} [opts]
+ * @returns {ReturnType<typeof checkGoogleReturn>|null} a direct Google return, for createAccount to finish
  */
-export function restoreReturnRoute() {
+export function restoreReturnRoute({ now = Date.now() } = {}) {
+  const google = takeGoogleReturn(now);
+  if (google) return google;
   let back = null;
   try {
     back = returnRoute({ search: location.search, saved: sessionStorage.getItem(RETURN_KEY) });
     if (back) sessionStorage.removeItem(RETURN_KEY);
   } catch {
-    return;
+    return null;
   }
   // Keeps ?code=: supabase-js still has to read it, then removes it itself.
   if (back && back !== location.hash) history.replaceState(history.state, '', location.pathname + location.search + back);
+  return null;
 }
 
 /** localStorage keys, or [] when storage is blocked (private window, site data off). */
@@ -110,11 +229,22 @@ export function userInitials(user) {
 }
 
 /**
- * @param {{ store: any, config?: ReturnType<typeof authConfig>, loadClient?: (url: string, key: string) => Promise<any> }} opts
+ * @typedef {{ location: { origin: string, pathname: string, hash: string }, storage: Storage|null, navigate: (url: string) => void, now: () => number }} AccountEnv
  */
-export function createAccount({ store, config = authConfig(), loadClient = defaultClient }) {
+
+/** The browser's side of a direct Google sign-in; tests pass their own. */
+function browserEnv() {
+  return { location: globalThis.location, storage: localStore(), navigate: (url) => globalThis.location.assign(url), now: () => Date.now() };
+}
+
+/**
+ * @param {{ store: any, config?: ReturnType<typeof authConfig>, loadClient?: (url: string, key: string) => Promise<any>, googleReturn?: ReturnType<typeof restoreReturnRoute>, env?: AccountEnv }} opts
+ */
+export function createAccount({ store, config = authConfig(), loadClient = defaultClient, googleReturn = null, env = browserEnv() }) {
   /** @type {AccountState} */
-  let state = { status: config.enabled ? 'loading' : 'off', user: null, sync: 'idle', error: null };
+  let state = { status: config.enabled ? 'loading' : 'off', user: null, sync: 'idle', error: config.enabled ? (googleReturn?.message ?? null) : null };
+  // The token from a direct Google return, finished once the client loads.
+  let pendingGoogle = config.enabled && googleReturn?.idToken ? googleReturn : null;
   const listeners = new Set();
   const set = (patch) => {
     state = { ...state, ...patch };
@@ -138,7 +268,7 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
   /** Eager at page start only when `shouldStartAuthEagerly`; otherwise signed out until the first click. */
   function startIfNeeded({ keys = storedKeys(), search = location.search } = {}) {
     if (!config.enabled) return Promise.resolve();
-    if (shouldStartAuthEagerly({ storageKeys: keys, search, projectRef: projectRefFromUrl(config.supabaseUrl) })) return start();
+    if (pendingGoogle || shouldStartAuthEagerly({ storageKeys: keys, search, projectRef: projectRefFromUrl(config.supabaseUrl) })) return start();
     set({ status: 'signed-out' });
     return Promise.resolve();
   }
@@ -186,12 +316,49 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
       clearUserData();
     };
     const { data } = await client.auth.getSession();
-    apply(data.session);
+    // Still 'loading' while a Google return is exchanged: no "Sign in" flash before the name.
+    if (!pendingGoogle || data.session) apply(data.session);
     // SIGNED_OUT also arrives when another tab signs out; this device must forget the user too.
     client.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' && state.user) clearLocal();
       apply(session);
     });
+    if (pendingGoogle) await finishGoogle(data.session);
+  }
+
+  /** Trades the ID token from a direct Google return for a Supabase session. */
+  async function finishGoogle(current) {
+    const { idToken, nonce } = pendingGoogle;
+    pendingGoogle = null;
+    let session = current;
+    try {
+      const { data, error } = await client.auth.signInWithIdToken({ provider: 'google', token: idToken, nonce });
+      if (error) throw error;
+      session = data?.session ?? current;
+    } catch {
+      set({ error: 'Google sign-in failed. Try again.' });
+    }
+    apply(session);
+  }
+
+  /**
+   * Starts a direct Google sign-in (ADR 0006, amendment 1): state and nonce stay on this device,
+   * the browser goes to Google, and Google returns the ID token to this page. '' when this page
+   * cannot (no client ID, an unregistered address, no storage or WebCrypto): Supabase's own flow then.
+   */
+  async function googleSignInUrl() {
+    const redirectUri = googleRedirectUri(env.location, config.googleRedirectUris);
+    if (!config.googleClientId || !redirectUri || !env.storage || !globalThis.crypto?.subtle) return '';
+    try {
+      const nonce = randomToken();
+      const stateValue = randomToken();
+      const nonceHash = await sha256Hex(nonce);
+      const route = String(env.location.hash || '').startsWith('#/') ? env.location.hash : '#/';
+      env.storage.setItem(GOOGLE_KEY, JSON.stringify({ state: stateValue, nonce, route, at: env.now() }));
+      return googleAuthorizeUrl({ clientId: config.googleClientId, redirectUri, state: stateValue, nonceHash });
+    } catch {
+      return '';
+    }
   }
 
   return {
@@ -204,6 +371,10 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
     startIfNeeded,
     /** @param {'google'|'github'} provider */
     async signIn(provider) {
+      if (provider === 'google' && config.enabled) {
+        const url = await googleSignInUrl();
+        if (url) return env.navigate(url);
+      }
       await start();
       if (!client) return;
       // Back to this page after the provider's consent screen. The hash route rides in redirectTo:

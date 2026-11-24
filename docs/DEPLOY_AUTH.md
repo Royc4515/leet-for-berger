@@ -37,8 +37,37 @@ The callback address for both providers is `https://<project-ref>.supabase.co/au
    **Privacy policy link** `https://royc4515.github.io/leet-for-berger/privacy.html`, which Google
    requires before publishing), audience **External**, then **Publish app** so anyone can sign in.
 3. https://console.cloud.google.com/auth/clients : **Create client**, type **Web application**,
-   **Authorized redirect URIs**: the callback address above. Copy the client ID and secret.
+   **Authorized redirect URIs**: the callback address above, and the site's own addresses
+   `https://royc4515.github.io/leet-for-berger/` and `http://localhost:5173/` (see "Google's
+   screen names the site" below). Copy the client ID and secret.
 4. Supabase: **Authentication > Sign In / Providers > Google**: enable, paste both, save.
+
+**Google's screen names the site, not the Supabase project**
+
+Through Supabase alone, Google's account screen says "Choose an account to continue to
+`<project-ref>.supabase.co`": Google names the address it returns to, and that is the Supabase
+callback. The site therefore asks Google itself (ADR 0006, amendment 1) and returns to its own
+address, so the screen says `royc4515.github.io`. Two settings, about two minutes:
+
+1. https://console.cloud.google.com/auth/branding : **Authorized domains**, add
+   `royc4515.github.io`, **Save** (Google refuses a redirect URI on a domain not listed here).
+2. https://console.cloud.google.com/auth/clients : open the web client, **Authorized redirect
+   URIs**, add `https://royc4515.github.io/leet-for-berger/` and `http://localhost:5173/` exactly
+   (with the final `/`), keep the Supabase callback, **Save**.
+3. `src/js/config.js` holds the client ID (public) in `AUTH.googleClientId` and those two addresses
+   in `AUTH.googleRedirectUris`. A page address not on that list (a preview, another port) signs in
+   through Supabase as before, so it never meets Google's `redirect_uri_mismatch` error.
+
+Check: on the live site, **Sign in > Continue with Google**; the address bar shows
+`accounts.google.com` and the screen says "to continue to royc4515.github.io".
+
+To show the app name and logo instead of the address, submit the brand for verification
+(**Branding** page, then **Verification Center**; a few business days). Google verifies only
+domains you own, so first verify `royc4515.github.io` in Search Console (an HTML file at the root of
+a `royc4515.github.io` repository). Expect Google to ask about `supabase.co` too, a domain only
+Supabase can verify; removing the Supabase callback from the client takes it off the list, at the
+cost of Google sign-in on addresses not listed in `config.js` (previews, other ports). GitHub
+sign-in is not affected; it uses its own OAuth app.
 
 **GitHub**
 

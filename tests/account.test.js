@@ -1,7 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { authConfig } from '../src/js/config.js';
-import { createAccount, returnRoute, userInitials } from '../src/js/auth/account.js';
+import {
+  createAccount,
+  returnRoute,
+  userInitials,
+  googleRedirectUri,
+  googleAuthorizeUrl,
+  parseGoogleReturn,
+  checkGoogleReturn,
+  sha256Hex,
+  GOOGLE_MAX_AGE_MS,
+} from '../src/js/auth/account.js';
 import { emptyState } from '../src/js/state/progress.js';
 
 const store = () => {
@@ -193,4 +203,175 @@ test('the phone header badge: initials from the name, else the email, never empt
   assert.equal(userInitials({ name: null, email: 'roy@example.com' }), 'R');
   assert.equal(userInitials({ name: '  ', email: null }), '?');
   assert.equal(userInitials(null), '?');
+});
+
+test('authConfig: the Google client for direct sign-in, public values only, overridable', () => {
+  const shipped = authConfig({});
+  // An OAuth client ID is public (it is in every Google sign-in address); the secret never ships.
+  assert.match(shipped.googleClientId, /^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$/);
+  assert.ok(shipped.googleRedirectUris.length > 0);
+  for (const uri of shipped.googleRedirectUris) {
+    assert.match(uri, /^(https:\/\/[^/]+|http:\/\/localhost:\d+)\/(.*\/)?$/, `${uri}: https (or localhost) and a page address ending in /`);
+  }
+  assert.ok(shipped.googleRedirectUris.includes('https://royc4515.github.io/leet-for-berger/'), 'the live site');
+  const off = authConfig({ LFB_GOOGLE_CLIENT_ID: '', LFB_GOOGLE_REDIRECT_URIS: 'not a list' });
+  assert.equal(off.googleClientId, '');
+  assert.deepEqual(off.googleRedirectUris, []);
+  assert.deepEqual(authConfig({ LFB_GOOGLE_REDIRECT_URIS: [' http://localhost:5199/ ', ''] }).googleRedirectUris, ['http://localhost:5199/']);
+});
+
+test('googleRedirectUri: this page without its route, only when registered', () => {
+  const allowed = ['https://site.test/app/', 'http://localhost:5173/'];
+  assert.equal(googleRedirectUri({ origin: 'https://site.test', pathname: '/app/' }, allowed), 'https://site.test/app/');
+  assert.equal(googleRedirectUri({ origin: 'https://site.test', pathname: '/app/index.html' }, allowed), 'https://site.test/app/', 'index.html is the same page');
+  assert.equal(googleRedirectUri({ origin: 'http://localhost:5173', pathname: '/' }, allowed), 'http://localhost:5173/');
+  assert.equal(googleRedirectUri({ origin: 'http://localhost:5199', pathname: '/' }, allowed), '', 'another port: Google would refuse it');
+  assert.equal(googleRedirectUri({ origin: 'https://site.test', pathname: '/app' }, allowed), '', 'exact match, as Google does');
+  assert.equal(googleRedirectUri(undefined, allowed), '');
+  assert.equal(googleRedirectUri({ origin: 'https://site.test', pathname: '/app/' }, undefined), '');
+});
+
+test('googleAuthorizeUrl: an OpenID Connect ID-token request back to this page', () => {
+  const url = new URL(googleAuthorizeUrl({ clientId: 'cid', redirectUri: 'https://site.test/app/', state: 's1', nonceHash: 'h1' }));
+  assert.equal(url.origin + url.pathname, 'https://accounts.google.com/o/oauth2/v2/auth');
+  assert.equal(url.searchParams.get('client_id'), 'cid');
+  assert.equal(url.searchParams.get('redirect_uri'), 'https://site.test/app/');
+  assert.equal(url.searchParams.get('response_type'), 'id_token', 'a token for Supabase, never an access token');
+  assert.equal(url.searchParams.get('scope'), 'openid email profile');
+  assert.equal(url.searchParams.get('state'), 's1');
+  assert.equal(url.searchParams.get('nonce'), 'h1', 'only the hash of the nonce leaves the device');
+});
+
+test('parseGoogleReturn: a token or an error with a state, never a route', () => {
+  assert.deepEqual(parseGoogleReturn('#state=s1&id_token=a.b.c&authuser=0&prompt=none'), { state: 's1', idToken: 'a.b.c' });
+  assert.deepEqual(parseGoogleReturn('#error=access_denied&state=s1'), { state: 's1', error: 'access_denied' });
+  assert.equal(parseGoogleReturn('#/quiz/daily'), null);
+  assert.equal(parseGoogleReturn('#/p/two-sum?state=x&id_token=y'), null, 'a route that happens to carry the words');
+  assert.equal(parseGoogleReturn('#id_token=a.b.c'), null, 'no state, not ours');
+  assert.equal(parseGoogleReturn('#state=s1'), null);
+  assert.equal(parseGoogleReturn(''), null);
+  assert.equal(parseGoogleReturn(undefined), null);
+});
+
+test('checkGoogleReturn: the state this device started, recent, else refused', () => {
+  const pending = { state: 's1', nonce: 'n1', route: '#/quiz/daily', at: 1000 };
+  const token = { state: 's1', idToken: 't' };
+  assert.deepEqual(checkGoogleReturn({ ret: token, pending, now: 2000 }), { route: '#/quiz/daily', idToken: 't', nonce: 'n1' });
+  assert.deepEqual(checkGoogleReturn({ ret: token, pending, now: 1000 + GOOGLE_MAX_AGE_MS }), { route: '#/quiz/daily', idToken: 't', nonce: 'n1' }, 'the last allowed moment');
+  const refused = (r) => assert.ok(r.message && !r.idToken, JSON.stringify(r));
+  refused(checkGoogleReturn({ ret: { state: 'other', idToken: 't' }, pending, now: 2000 }));
+  refused(checkGoogleReturn({ ret: token, pending, now: 1001 + GOOGLE_MAX_AGE_MS }));
+  refused(checkGoogleReturn({ ret: token, pending, now: 999 }));
+  refused(checkGoogleReturn({ ret: token, pending: { ...pending, nonce: '' }, now: 2000 }));
+  const none = checkGoogleReturn({ ret: token, pending: null, now: 2000 });
+  refused(none);
+  assert.equal(none.route, '#/', 'no saved route: the home page');
+  assert.equal(checkGoogleReturn({ ret: token, pending: { ...pending, route: 'https://evil.example/' }, now: 2000 }).route, '#/', 'only a hash route');
+  // Cancelling on Google's screen comes back quietly; a refusal says so.
+  assert.deepEqual(checkGoogleReturn({ ret: { state: 's1', error: 'access_denied' }, pending, now: 2000 }), { route: '#/quiz/daily', message: null });
+  assert.match(checkGoogleReturn({ ret: { state: 's1', error: 'server_error' }, pending, now: 2000 }).message, /failed/);
+});
+
+test('sha256Hex: lowercase hex, the nonce form Supabase compares', async () => {
+  assert.equal(await sha256Hex('abc'), 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+});
+
+/** A browser stand-in for a direct Google sign-in: one page address, storage and a recorded navigation. */
+function googleEnv({ origin = 'https://site.test', pathname = '/app/', hash = '#/quiz/daily' } = {}) {
+  const items = new Map();
+  const env = {
+    location: { origin, pathname, hash },
+    storage: { getItem: (k) => items.get(k) ?? null, setItem: (k, v) => items.set(k, String(v)), removeItem: (k) => items.delete(k) },
+    navigate: (url) => (env.went = url),
+    now: () => 5000,
+    went: null,
+    items,
+  };
+  return env;
+}
+const googleConfig = (uris = ['https://site.test/app/']) =>
+  authConfig({ LFB_SUPABASE_URL: 'https://x.supabase.co', LFB_SUPABASE_ANON_KEY: 'k', LFB_GOOGLE_CLIENT_ID: 'cid', LFB_GOOGLE_REDIRECT_URIS: uris });
+
+test('signIn google: straight to Google from a registered page, nonce and state kept on the device', async () => {
+  let loads = 0;
+  const env = googleEnv();
+  const acc = createAccount({ store: store(), config: googleConfig(), env, loadClient: async () => (loads++, {}) });
+  await acc.signIn('google');
+  assert.equal(loads, 0, 'supabase-js is not needed to leave for Google');
+  const url = new URL(env.went);
+  assert.equal(url.hostname, 'accounts.google.com');
+  assert.equal(url.searchParams.get('redirect_uri'), 'https://site.test/app/');
+  const pending = JSON.parse(env.items.get('lfb:google-sign-in'));
+  assert.equal(pending.state, url.searchParams.get('state'));
+  assert.match(pending.nonce, /^[0-9a-f]{64}$/);
+  assert.equal(await sha256Hex(pending.nonce), url.searchParams.get('nonce'));
+  assert.notEqual(pending.nonce, url.searchParams.get('nonce'), 'the raw nonce never goes to Google');
+  assert.equal(pending.route, '#/quiz/daily');
+  assert.equal(pending.at, 5000);
+});
+
+test('signIn: Supabase flow for GitHub, an unregistered page, or blocked storage', async () => {
+  const run = async (provider, env, uris) => {
+    const calls = [];
+    const client = { auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({}), signInWithOAuth: async (o) => (calls.push(o.provider), { error: null }) }, from: () => ({}) };
+    const acc = createAccount({ store: store(), config: googleConfig(uris), env, loadClient: async () => client });
+    globalThis.location = { origin: 'https://other.test', pathname: '/', hash: '' };
+    try {
+      await acc.signIn(provider);
+    } finally {
+      delete globalThis.location;
+    }
+    return { calls, went: env.went };
+  };
+  assert.deepEqual(await run('github', googleEnv()), { calls: ['github'], went: null });
+  assert.deepEqual(await run('google', googleEnv({ origin: 'https://preview.test' })), { calls: ['google'], went: null }, 'a preview address is not registered with Google');
+  assert.deepEqual(await run('google', { ...googleEnv(), storage: null }), { calls: ['google'], went: null }, 'nowhere to keep the nonce');
+  assert.deepEqual(await run('google', googleEnv(), []), { calls: ['google'], went: null });
+});
+
+test('a direct Google return: the client starts at once and trades the token for a session', async () => {
+  const exchanged = [];
+  const listeners = [];
+  const user = { id: 'g1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } };
+  const client = {
+    auth: {
+      getSession: async () => ({ data: { session: null } }),
+      onAuthStateChange: (fn) => (listeners.push(fn), {}),
+      signInWithIdToken: async (o) => {
+        exchanged.push(o);
+        listeners.forEach((l) => l('SIGNED_IN', { user }));
+        return { data: { session: { user } }, error: null };
+      },
+    },
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }), upsert: async () => ({ error: null }) }),
+  };
+  const acc = createAccount({ store: store(), config: googleConfig(), env: googleEnv(), loadClient: async () => client, googleReturn: { route: '#/', idToken: 'a.b.c', nonce: 'n1' } });
+  const seen = [];
+  acc.subscribe((s) => seen.push(s.status));
+  await acc.startIfNeeded({ keys: [], search: '' });
+  assert.deepEqual(exchanged, [{ provider: 'google', token: 'a.b.c', nonce: 'n1' }]);
+  assert.equal(acc.get().status, 'signed-in');
+  assert.equal(acc.get().user.name, 'Ada');
+  assert.ok(!seen.includes('signed-out'), `no Sign in flash before the name: ${seen}`);
+});
+
+test('a direct Google return that fails or was cancelled says so (or nothing), signed out', async () => {
+  const client = {
+    auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({}), signInWithIdToken: async () => ({ data: null, error: { message: 'Invalid nonce' } }) },
+    from: () => ({}),
+  };
+  const failed = createAccount({ store: store(), config: googleConfig(), env: googleEnv(), loadClient: async () => client, googleReturn: { route: '#/', idToken: 't', nonce: 'n' } });
+  await failed.startIfNeeded({ keys: [], search: '' });
+  assert.equal(failed.get().status, 'signed-out');
+  assert.match(failed.get().error, /Google sign-in failed/);
+
+  let loads = 0;
+  const cancelled = createAccount({ store: store(), config: googleConfig(), env: googleEnv(), loadClient: async () => (loads++, client), googleReturn: { route: '#/', message: null } });
+  await cancelled.startIfNeeded({ keys: [], search: '' });
+  assert.equal(cancelled.get().status, 'signed-out');
+  assert.equal(cancelled.get().error, null);
+  assert.equal(loads, 0, 'nothing to finish, nothing loaded');
+
+  const stale = createAccount({ store: store(), config: googleConfig(), env: googleEnv(), loadClient: async () => client, googleReturn: { route: '#/', message: 'Google sign-in did not finish. Try again.' } });
+  assert.match(stale.get().error, /did not finish/);
 });

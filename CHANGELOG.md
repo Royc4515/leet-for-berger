@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed (Google sign-in screen, owner's request)
+- **Google's sign-in screen names the site, not a random address.** It said "Choose an account to continue to jjfwrtsoyunlqtcfvpjn.supabase.co", the Supabase project's address, which looks like phishing. Continue with Google now asks Google directly and comes back to the site's own address, so the screen says royc4515.github.io; the page hands Google's ID token to Supabase, and the account is the same as before. The token leaves the address bar at once and the page you started from opens. A state check and a one-time nonce stop a forged or replayed return (ADR 0006 amendment 1; `googleAuthorizeUrl`, `parseGoogleReturn`, `checkGoogleReturn` in `auth/account.js`, unit-tested, and an e2e round trip with a fake Google). Addresses not registered with Google (previews, other ports) keep the old flow. GitHub sign-in is unchanged.
+- **Owner step:** add the two site addresses as redirect URIs of the Google client and `royc4515.github.io` as an authorized domain (`docs/DEPLOY_AUTH.md`, "Google's screen names the site"). Brand verification, for the app name and logo instead of the address, is described there as an optional next step.
+
 ### Changed (quiz progress in the account, owner's request)
 - **Quiz progress follows you across devices and survives signing out.** For a signed-in player, the questions answered, the best score in each mode and the daily quiz results (with the first play's choices) are saved in the account with the rest of the progress, and merged with what each device has: per question the larger counts, per mode the better best, and a day played on two devices keeps the one that reached the account first, as the leaderboard does. Before, they stayed in one browser and signing out deleted them. No database change: the progress record already holds any JSON.
 - The profile and the Sign out confirm say so again ("Your progress stays in your account"), instead of the note that the quiz stays in the browser. The Privacy Policy lists the quiz data stored with an account.

@@ -76,3 +76,37 @@ first, as the leaderboard counts it. Saving quiz progress sends a `quiz:saved` w
 local save schedules a sync (`touch()`), the sync's own write is marked `source: 'sync'` and does
 not. Top-level keys a client does not know are carried through on save, so an older open tab
 cannot wipe a part a newer version syncs. The Privacy Policy lists the quiz data.
+
+## Amendment 1: Google sign-in returns to the site (2026-11-24)
+
+Through Supabase's OAuth flow, Google's account screen said "continue to
+`jjfwrtsoyunlqtcfvpjn.supabase.co`": Google names the redirect host, and an unknown address on a
+sign-in screen looks like phishing (owner's report). Supabase's fixes are a custom domain (a paid
+plan plus a paid add-on, against the $0 rule) or Google brand verification, which asks the owner
+to verify every authorized domain, and the owner cannot verify `supabase.co`.
+
+Decision: Google sign-in goes to Google directly with OpenID Connect `response_type=id_token`
+and returns to the site's own address; the page hands the ID token to Supabase
+(`auth.signInWithIdToken`), which checks its signature, audience and nonce and issues the same
+session as before (same user, same `google` identity). Google's screen then names
+`royc4515.github.io`, and brand verification becomes possible later because every authorized
+domain is the owner's.
+
+- **Nonce:** 32 random bytes, kept in localStorage with the state and the route; only its SHA-256
+  goes to Google, the raw value only to Supabase, which compares the hashes. A token copied from
+  the address bar or history cannot be replayed without it.
+- **State:** checked on return (login CSRF) together with a 15 minute age limit; the entry is
+  removed on the first return, used or not.
+- **The token leaves the address bar** in `restoreReturnRoute`, before the first route renders:
+  `history.replaceState` puts back the route the sign-in started from.
+- **Fallback:** the direct flow runs only on page addresses listed in `AUTH.googleRedirectUris`
+  (registered with Google), with storage and WebCrypto available. Anywhere else Google sign-in
+  uses Supabase's PKCE flow as before, so Google's `redirect_uri_mismatch` never shows.
+- **Why not Google Identity Services (the "Sign in with Google" button and One Tap):** it also
+  names the site, but it loads an unversioned Google script (invariant 8 pins every external
+  script) and draws Google's own button in an iframe, which breaks the account panel's keyboard
+  model and the Atlas buttons. The redirect keeps our buttons and adds no script.
+- **Implicit flow:** OAuth guidance warns against the implicit flow for access tokens; here the
+  response is an ID token only, bound to a nonce, read once and removed from the URL, which is the
+  case OpenID Connect designs it for. GitHub sign-in is unchanged (Supabase PKCE).
+

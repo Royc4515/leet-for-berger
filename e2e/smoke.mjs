@@ -8,6 +8,7 @@
  */
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { startServer } from '../scripts/serve.mjs';
 import { startFakeRunner } from './fake-runner.mjs';
 import { loadProblem } from '../src/js/problems/index.js';
@@ -1657,6 +1658,66 @@ try {
     if (back.hash !== '#/quiz/daily' || back.saved !== null) throw new Error(`sign-in did not return to the daily quiz: ${JSON.stringify(back)}`);
     await acct.goto(`${BASE}#/`);
     await acct.waitForSelector('.today-quiz .quiz-signin-note');
+
+    // Google sign-in straight from the site (ADR 0006, amendment 1), so Google's account screen
+    // names this site and not the Supabase project. Google is faked; its ID token comes back in the
+    // fragment and the page hands it to Supabase (signInWithIdToken) with the raw nonce.
+    const gpage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    gpage.on('pageerror', (e) => errors.push(`google sign-in page: ${e.message}`));
+    gpage.on('console', (m) => m.type() === 'error' && errors.push(`console (google sign-in page): ${m.text()}`));
+    await gpage.route('**/@supabase/supabase-js@*/+esm', (r) =>
+      r.fulfill({
+        contentType: 'text/javascript',
+        body: `export function createClient() {
+          const listeners = [];
+          let session = null;
+          const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async () => ({ error: null }) };
+          return { auth: {
+            getSession: async () => ({ data: { session } }),
+            onAuthStateChange: (cb) => { listeners.push(cb); return {}; },
+            signInWithOAuth: async () => { throw new Error('Google sign-in went through Supabase'); },
+            signInWithIdToken: async (o) => {
+              window.__idToken = o;
+              session = { user: { id: 'g1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } }, access_token: 'jwt' };
+              listeners.forEach((l) => l('SIGNED_IN', session));
+              return { data: { session }, error: null };
+            },
+          }, from: () => chain };
+        }`,
+      }),
+    );
+    let googleUrl = null;
+    await gpage.route('https://accounts.google.com/**', (r) => {
+      googleUrl = new URL(r.request().url());
+      return r.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Google</title>' });
+    });
+    await gpage.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await gpage.addInitScript((base) => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = 'https://example.supabase.co';
+      window.LFB_SUPABASE_ANON_KEY = 'public-anon-key';
+      window.LFB_GITHUB_APP_SLUG = '';
+      window.LFB_GOOGLE_CLIENT_ID = 'e2e-client.apps.googleusercontent.com';
+      window.LFB_GOOGLE_REDIRECT_URIS = [base];
+    }, BASE);
+    await gpage.goto(`${BASE}#/path`);
+    await gpage.click('#account button:has-text("Sign in")');
+    await gpage.click('.account-menu button:has-text("Continue with Google")');
+    await gpage.waitForURL('https://accounts.google.com/**');
+    const gq = Object.fromEntries(googleUrl.searchParams);
+    if (gq.client_id !== 'e2e-client.apps.googleusercontent.com' || gq.redirect_uri !== BASE || gq.response_type !== 'id_token' || !/^[0-9a-f]{64}$/.test(gq.nonce ?? '') || !gq.state) {
+      throw new Error(`direct Google sign-in request: ${JSON.stringify(gq)}`);
+    }
+    await gpage.goto(`${BASE}#state=${gq.state}&id_token=e2e.id.token&authuser=0&prompt=none`);
+    await gpage.waitForSelector('#account .account-name:has-text("Ada")');
+    const gBack = await gpage.evaluate(() => ({ url: location.href, sent: window.__idToken, left: localStorage.getItem('lfb:google-sign-in') }));
+    // The token leaves the address bar, the route the sign-in started from comes back, and the nonce is used once.
+    if (gBack.url !== `${BASE}#/path` || gBack.left !== null) throw new Error(`Google return did not clean up: ${JSON.stringify(gBack)}`);
+    const sentHash = createHash('sha256').update(String(gBack.sent?.nonce ?? '')).digest('hex');
+    if (gBack.sent?.provider !== 'google' || gBack.sent.token !== 'e2e.id.token' || sentHash !== gq.nonce) {
+      throw new Error(`ID token not handed to Supabase with the raw nonce: ${JSON.stringify(gBack.sent)}`);
+    }
+    await gpage.close();
 
     signedIn = true;
     // supabase-js keeps a returning user's session here; its presence is what starts the client at page load.

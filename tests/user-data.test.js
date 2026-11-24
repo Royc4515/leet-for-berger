@@ -64,7 +64,8 @@ test('every persisted lfb: key is user data or a known device preference', () =>
   // lfb:map-view (Map or List) is a layout choice; lfb:seen-solved is a sessionStorage number the
   // Problems page ticks up from, gone when the tab closes and reset to the guest's 0 after sign-out.
   // lfb:return-to is the route a sign-in started from, read once when the provider sends the user back.
-  const DEVICE_PREFS = ['lfb:lang', 'lfb:split:x', 'lfb:split:y', 'lfb:about-open', 'lfb:map-view', 'lfb:seen-solved', 'lfb:tours:v1', 'lfb:quiz-lang', 'lfb:return-to'];
+  // lfb:google-sign-in is a Google sign-in in progress (state, nonce, route), removed on the return.
+  const DEVICE_PREFS = ['lfb:lang', 'lfb:split:x', 'lfb:split:y', 'lfb:about-open', 'lfb:map-view', 'lfb:seen-solved', 'lfb:tours:v1', 'lfb:quiz-lang', 'lfb:return-to', 'lfb:google-sign-in'];
   const files = [];
   const walk = (dir) => {
     for (const f of readdirSync(dir)) {

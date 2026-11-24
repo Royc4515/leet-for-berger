@@ -47,17 +47,26 @@ export const AUTH = {
   // The GitHub App users install to sync solutions (ADR 0007, docs/DEPLOY_GITHUB_SYNC.md).
   // Empty hides GitHub sync.
   githubAppSlug: 'leet-for-berger-sync',
+  // Google sign-in straight from this site (ADR 0006, amendment 1): Google's account screen then
+  // names this site instead of the Supabase project address. The OAuth client ID is public. Each
+  // address below must be an Authorized redirect URI of that client (docs/DEPLOY_AUTH.md, step 4);
+  // on any other address, or with no ID, Google sign-in goes through Supabase as before.
+  googleClientId: '273363501283-uph4v8c87gknlf982lo71468ruvg3gns.apps.googleusercontent.com',
+  googleRedirectUris: ['https://royc4515.github.io/leet-for-berger/', 'http://localhost:5173/'],
 };
 
 /**
- * Effective auth settings; `window.LFB_SUPABASE_URL` and `window.LFB_SUPABASE_ANON_KEY` override
- * this file (tests, forks).
+ * Effective auth settings; `window.LFB_SUPABASE_URL`, `window.LFB_SUPABASE_ANON_KEY`,
+ * `window.LFB_GOOGLE_CLIENT_ID` and `window.LFB_GOOGLE_REDIRECT_URIS` override this file (tests, forks).
  * @param {object} [scope]
- * @returns {{ supabaseUrl: string, supabaseAnonKey: string, githubAppSlug: string, enabled: boolean }}
+ * @returns {{ supabaseUrl: string, supabaseAnonKey: string, githubAppSlug: string, googleClientId: string, googleRedirectUris: string[], enabled: boolean }}
  */
 export function authConfig(scope = globalThis) {
   const supabaseUrl = String(scope.LFB_SUPABASE_URL ?? AUTH.supabaseUrl ?? '').trim().replace(/\/+$/, '');
   const supabaseAnonKey = String(scope.LFB_SUPABASE_ANON_KEY ?? AUTH.supabaseAnonKey ?? '').trim();
   const githubAppSlug = String(scope.LFB_GITHUB_APP_SLUG ?? AUTH.githubAppSlug ?? '').trim();
-  return { supabaseUrl, supabaseAnonKey, githubAppSlug, enabled: Boolean(supabaseUrl && supabaseAnonKey) };
+  const googleClientId = String(scope.LFB_GOOGLE_CLIENT_ID ?? AUTH.googleClientId ?? '').trim();
+  const uris = scope.LFB_GOOGLE_REDIRECT_URIS ?? AUTH.googleRedirectUris;
+  const googleRedirectUris = (Array.isArray(uris) ? uris : []).map((u) => String(u).trim()).filter(Boolean);
+  return { supabaseUrl, supabaseAnonKey, githubAppSlug, googleClientId, googleRedirectUris, enabled: Boolean(supabaseUrl && supabaseAnonKey) };
 }

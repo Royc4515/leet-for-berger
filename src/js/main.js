@@ -231,12 +231,13 @@ store.subscribe(renderStreak);
 renderStreak();
 installSpotlight();
 window.addEventListener('hashchange', route);
-// After a Google or GitHub sign-in, back to the page it started from (auth/account.js).
-restoreReturnRoute();
+// After a Google or GitHub sign-in, back to the page it started from (auth/account.js). A direct
+// Google return also takes its token off the address bar here, before the first route.
+const googleReturn = restoreReturnRoute();
 route();
 
 // Accounts are optional and inert without a Supabase project in config.js (ADR 0006).
-const account = createAccount({ store });
+const account = createAccount({ store, googleReturn });
 const github = createGitHubSync({ account });
 services.account = account;
 services.github = github.available ? github : null;
