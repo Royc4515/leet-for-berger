@@ -84,6 +84,16 @@ const T = {
     github: 'Continue with GitHub',
     yourRank: (r, n) => `You are #${r} of ${n} today`,
     alreadyCounted: 'Only your first play today counts on the board.',
+    shownAs: 'On the board as',
+    changeName: 'Change name',
+    nickname: 'Nickname',
+    nameHint: '2 to 24 characters. Everyone sees it.',
+    saveName: 'Save',
+    cancel: 'Cancel',
+    accountName: 'Use my account name',
+    nameSaved: 'Name saved',
+    nameInvalid: 'Use 2 to 24 characters.',
+    nameFailed: 'Could not save the name. Try again.',
     players: (n) => `${n} played today`,
     days: (n) => `${n} day${n === 1 ? '' : 's'}`,
     you: 'you',
@@ -148,6 +158,16 @@ const T = {
     github: 'המשך עם GitHub',
     yourRank: (r, n) => `מקום ${r} מתוך ${n} היום`,
     alreadyCounted: 'רק המשחק הראשון של היום נספר בטבלה.',
+    shownAs: 'מופיע בטבלה בתור',
+    changeName: 'שינוי כינוי',
+    nickname: 'כינוי',
+    nameHint: '2 עד 24 תווים. כולם רואים אותו.',
+    saveName: 'שמירה',
+    cancel: 'ביטול',
+    accountName: 'השם מהחשבון',
+    nameSaved: 'הכינוי נשמר',
+    nameInvalid: 'צריך 2 עד 24 תווים.',
+    nameFailed: 'לא הצלחנו לשמור את הכינוי. אפשר לנסות שוב.',
     players: (n) => `${n} שיחקו היום`,
     days: (n) => `${n} ימים`,
     you: 'אני',
@@ -274,6 +294,59 @@ function boardBlock({ day, lang, submit = null, onBoard = () => {} }) {
   const body = h('div.quiz-board-body', {}, h('p.hint-text', {}, t.boardLoading));
   const section = h('section.quiz-board', { 'aria-labelledby': 'quiz-board-title', ...textDir(lang) }, h('h2.section-title#quiz-board-title', {}, t.board), body);
   let view = 'daily';
+  let editing = false;
+  /** Saves a nickname (empty = back to the sign-in name), then reloads the board to show it. */
+  const saveName = async (name, board, mine) => {
+    try {
+      await client.setName(name);
+      toast(t.nameSaved, 'success');
+      editing = false;
+      draw(await client.board(day), mine);
+    } catch {
+      toast(t.nameFailed, 'error');
+      draw(board, mine);
+    }
+  };
+  /** "On the board as X", or the nickname form while editing. Signed-in players only. */
+  const nameRow = (board, mine) => {
+    if (!board.me) return null;
+    if (!editing) {
+      return h(
+        'div.quiz-board-me',
+        {},
+        h('span.hint-text', {}, `${t.shownAs} `, h('strong', { dir: 'auto' }, board.me.name)),
+        h('button.btn.btn-ghost.btn-sm.quiz-board-rename', { type: 'button', onClick: () => { editing = true; draw(board, mine); } }, t.changeName),
+      );
+    }
+    const input = h('input.quiz-name-input#quiz-name', { type: 'text', maxlength: '24', autocomplete: 'nickname', dir: 'auto', value: board.me.custom ? board.me.name : '', placeholder: board.me.name, 'aria-describedby': 'quiz-name-hint' });
+    const form = h(
+      'form.quiz-name-form',
+      {
+        onSubmit: (e) => {
+          e.preventDefault();
+          const name = input.value.trim().replace(/\s+/g, ' ');
+          if (name && ([...name].length < 2 || [...name].length > 24)) {
+            toast(t.nameInvalid, 'error');
+            input.focus();
+            return;
+          }
+          saveName(name, board, mine);
+        },
+      },
+      h('label.quiz-label', { for: 'quiz-name' }, t.nickname),
+      input,
+      h('p.hint-text#quiz-name-hint', {}, t.nameHint),
+      h(
+        'div.quiz-actions',
+        {},
+        h('button.btn.btn-primary.btn-sm', { type: 'submit' }, t.saveName),
+        h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => { editing = false; draw(board, mine); } }, t.cancel),
+        board.me.custom ? h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => saveName('', board, mine) }, t.accountName) : null,
+      ),
+    );
+    queueMicrotask(() => input.focus());
+    return form;
+  };
   const rows = (list, kind) =>
     list.length
       ? h(
@@ -303,6 +376,7 @@ function boardBlock({ day, lang, submit = null, onBoard = () => {} }) {
         h('span.hint-text', {}, me ? t.yourRank(me.rank, board.players) : t.players(board.players)),
         board.me?.streak ? h('span.quiz-streak-badge', {}, lang === 'he' ? `רצף של ${board.me.streak} ימים` : `${board.me.streak}-day streak`) : null,
       ),
+      signedIn() ? nameRow(board, mine) : null,
       mine && !mine.recorded ? h('p.hint-text', {}, t.alreadyCounted) : null,
       rows(view === 'daily' ? board.daily : board.weekly, view),
       signedIn()

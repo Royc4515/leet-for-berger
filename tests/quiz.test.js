@@ -365,6 +365,9 @@ test('board client: reads the board signed out, submits choices with the session
   assert.equal(calls[1].init.method, 'POST');
   assert.equal(calls[1].init.headers.Authorization, 'Bearer jwt');
   assert.deepEqual(JSON.parse(calls[1].init.body), { day: '2026-11-24', answers: [{ id: 'x', choice: 1 }], ms: 5 });
+  await board.setName('Roy');
+  assert.equal(calls[2].url, 'https://p.supabase.co/functions/v1/daily-quiz/name');
+  assert.deepEqual(JSON.parse(calls[2].init.body), { name: 'Roy' });
   assert.equal(createQuizBoard({ account: { ...account, config: { ...account.config, enabled: false } }, fetchImpl }).available, false);
   const failing = createQuizBoard({ account: { ...account, config: { ...account.config, supabaseUrl: 'https://p/fail' } }, fetchImpl });
   await assert.rejects(failing.board('2026-11-24'), /nope/);

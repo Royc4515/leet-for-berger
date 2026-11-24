@@ -5166,6 +5166,7 @@ body.resizing-y * {
   /* Under 16 px, mobile Safari zooms the page on focus and leaves it zoomed. */
   .custom-input,
   .mentor-input,
+  .quiz-name-input,
   .search,
   .palette-input {
     font-size: var(--fs-lg);
@@ -7697,6 +7698,32 @@ body.resizing-y * {
   align-items: center;
   gap: var(--s-3);
   margin-bottom: var(--s-3);
+}
+
+.quiz-board-me {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+}
+
+.quiz-name-form {
+  display: grid;
+  gap: var(--s-2);
+  max-width: 24rem;
+  margin-bottom: var(--s-4);
+}
+
+.quiz-name-input {
+  padding: var(--s-2) var(--s-3);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+.quiz-name-form .hint-text {
+  margin: 0;
 }
 
 .quiz-board-list {

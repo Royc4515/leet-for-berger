@@ -157,7 +157,7 @@ create table solutions (
 
 create table profiles (
   user_id             uuid primary key references auth.users on delete cascade,
-  display_name        text,
+  display_name        text check (display_name is null or char_length(display_name) between 2 and 24),  -- board nickname
   target_company      text references companies on delete set null,
   preferred_language  text references languages on delete set null,
   created_at          timestamptz not null default now()

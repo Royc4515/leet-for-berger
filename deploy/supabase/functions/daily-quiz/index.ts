@@ -50,6 +50,17 @@ const handle = createHandler({
       return (data ?? []).map((r: { day: string }) => r.day);
     },
   },
+  profiles: {
+    async nickname(id: string) {
+      const { data, error } = await admin.from('profiles').select('display_name').eq('user_id', id).maybeSingle();
+      if (error) throw new Error(error.message);
+      return data?.display_name ?? null;
+    },
+    async setNickname(id: string, name: string | null) {
+      const { error } = await admin.from('profiles').upsert({ user_id: id, display_name: name }, { onConflict: 'user_id' });
+      if (error) throw new Error(error.message);
+    },
+  },
   async names(ids: string[]) {
     const pairs = await Promise.all(ids.map(async (id) => [id, await displayName(id)] as [string, string]));
     return new Map(pairs);

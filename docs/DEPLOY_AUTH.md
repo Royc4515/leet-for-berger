@@ -92,6 +92,9 @@ minutes, after the steps above.
 3. Verify: open the site signed in, play today's daily quiz, and the board under the result shows
    your name. **Table Editor > quiz_daily_results** has your row. Play it again: the board says
    only the first play counts, and the table still has one row.
+4. **Nicknames**: run `deploy/supabase/migrations/20261124_profiles_display_name_len.sql` too. It
+   bounds `profiles.display_name` to 2 to 24 characters, the nickname a player can set under the
+   board (**Change name**). With no nickname the board shows the name from Google or GitHub.
 
 After any change to the question bank, `node scripts/content/build-quiz.mjs` rebuilds
 `deploy/supabase/functions/daily-quiz/bank.js`; deploy the function again so the server's

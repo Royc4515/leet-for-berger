@@ -1601,6 +1601,41 @@ try {
     if (pushes.length !== 1 || pushes[0].problemId !== 'pair-sum-target' || pushes[0].assisted !== false || !pushes[0].code.includes('function')) throw new Error(`unexpected pushes: ${JSON.stringify(pushes).slice(0, 200)}`);
 
     // Sign-out asks first, closes the menu before opening the dialog, keeps everything on Cancel, and clears this user's data on confirm.
+    // Board nickname: a signed-in player sees the name the board shows, changes it, and the board reloads with it.
+    let nick = null;
+    const nameCalls = [];
+    await acct.route('https://example.supabase.co/functions/v1/daily-quiz/**', async (r) => {
+      const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type' };
+      if (r.request().method() === 'OPTIONS') return r.fulfill({ status: 204, headers: cors });
+      const url = new URL(r.request().url());
+      if (url.pathname.endsWith('/name')) {
+        const name = JSON.parse(r.request().postData()).name.trim();
+        nameCalls.push(name);
+        nick = name || null;
+        return r.fulfill({ contentType: 'application/json', headers: cors, body: JSON.stringify({ name: nick ?? 'Ada', custom: Boolean(nick) }) });
+      }
+      const day = url.searchParams.get('day');
+      const shown = nick ?? 'Ada';
+      return r.fulfill({ contentType: 'application/json', headers: cors, body: JSON.stringify({ day, week: { start: day, end: day }, players: 1, daily: [{ rank: 1, name: shown, correct: 4, total: 5, ms: 60000, you: true }], weekly: [], me: { streak: 2, played: true, name: shown, custom: Boolean(nick) } }) });
+    });
+    await acct.evaluate(() => localStorage.setItem('lfb:quiz-lang', 'en'));
+    await acct.goto(`${BASE}#/quiz/board`);
+    await acct.waitForSelector('.quiz-board-me:has-text("On the board as Ada")');
+    await acct.click('.quiz-board-rename');
+    await acct.waitForFunction(() => document.activeElement?.id === 'quiz-name');
+    await acct.fill('#quiz-name', 'x');
+    await acct.click('.quiz-name-form button[type="submit"]');
+    await acct.waitForSelector('.toast:has-text("Use 2 to 24 characters")');
+    if (nameCalls.length) throw new Error('a too-short name reached the server');
+    await acct.fill('#quiz-name', '  Ace  ');
+    await acct.click('.quiz-name-form button[type="submit"]');
+    await acct.waitForSelector('.quiz-board-me:has-text("On the board as Ace")');
+    await acct.waitForSelector('.quiz-board-row.is-you:has-text("Ace")');
+    if (shotsDir) await acct.screenshot({ path: `${shotsDir}/31-quiz-nickname.png` });
+    await acct.click('.quiz-board-rename');
+    await acct.click('.quiz-name-form button:has-text("Use my account name")');
+    await acct.waitForSelector('.quiz-board-me:has-text("On the board as Ada")');
+    if (JSON.stringify(nameCalls) !== '["Ace",""]') throw new Error(`name calls: ${JSON.stringify(nameCalls)}`);
     await acct.goto(`${BASE}#/`);
     await acct.waitForSelector('#account .account-name:has-text("Ada")');
     const stored = () => acct.evaluate(() => ({ progress: JSON.parse(localStorage.getItem('lfb:progress:v1') ?? 'null'), drafts: Object.keys(localStorage).filter((k) => k.startsWith('lfb:draft:')) }));

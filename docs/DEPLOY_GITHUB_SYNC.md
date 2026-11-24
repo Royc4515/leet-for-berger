@@ -26,7 +26,7 @@ https://github.com/settings/apps/new
 
 ## 2. Store the secrets in Supabase
 
-https://supabase.com/dashboard/project/jezwwmnczliubfmqgutc/functions/secrets
+https://supabase.com/dashboard/project/jjfwrtsoyunlqtcfvpjn/functions/secrets
 
 | Name | Value |
 |---|---|
@@ -43,7 +43,7 @@ deploy `deploy/supabase/functions/github-sync` as `github-sync`), or by hand:
 
 ```bash
 npx supabase login
-npx supabase link --project-ref jezwwmnczliubfmqgutc
+npx supabase link --project-ref jjfwrtsoyunlqtcfvpjn
 npx supabase functions deploy github-sync --use-api   # from deploy/supabase
 ```
 

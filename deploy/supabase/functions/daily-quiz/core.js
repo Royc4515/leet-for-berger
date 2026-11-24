@@ -12,6 +12,8 @@
  *                                when a session is sent (signed-out callers see the board)
  *   POST /submit { day, answers: [{ id, choice }], ms }   needs a session; scores and records the
  *                                first play of `day`, returns the score, rank and streak
+ *   POST /name { name }          needs a session; sets the player's board nickname, or clears it
+ *                                (empty name) to fall back to the name from Google or GitHub
  *
  * `choice` is the index of the chosen option in the question's AUTHORED order (the browser
  * shuffles options for display and maps the choice back), so scoring needs no shuffle here.
@@ -20,6 +22,9 @@ import { QUIZ_ROWS, DAILY_QUIZ_EPOCH, DAILY_QUIZ_SIZE } from './bank.js';
 
 /** Rows shown per leaderboard; the caller's own row is added when it falls below. */
 export const BOARD_SIZE = 50;
+/** Nickname length in characters, the same bounds as the profiles_display_name_len constraint. */
+export const NAME_MIN = 2;
+export const NAME_MAX = 24;
 /** A play longer than this is clamped: the time only breaks ties. */
 export const MAX_MS = 2 * 60 * 60 * 1000;
 
@@ -128,6 +133,27 @@ export function scoreDaily({ day, answers }) {
 }
 
 /**
+ * Cleans a nickname for the board: control and bidi-override characters removed (a name must not
+ * reorder its neighbours' text), whitespace collapsed. Returns null for an empty name, which means
+ * "use the sign-in name". Throws when the cleaned name is too short or too long.
+ * @param {unknown} raw
+ * @returns {string|null}
+ */
+export function cleanName(raw) {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw !== 'string') throw new Error('Invalid name');
+  const name = raw
+    .normalize('NFC')
+    .replace(/[\p{Cc}\p{Cf}]/gu, '')
+    .replace(/\s+/gu, ' ')
+    .trim();
+  if (!name) return null;
+  const length = [...name].length;
+  if (length < NAME_MIN || length > NAME_MAX) throw new Error(`Use ${NAME_MIN} to ${NAME_MAX} characters`);
+  return name;
+}
+
+/**
  * Consecutive played days ending on `day`, or on the day before while `day` is not played yet.
  * @param {string[]} days played days, any order
  * @param {string} day
@@ -209,10 +235,14 @@ function publicRows(ranked, names, me) {
  *     daysOf: (userId: string, from: string) => Promise<string[]>,
  *   },
  *   names: (userIds: string[]) => Promise<Map<string, string>>,
+ *   profiles: {
+ *     nickname: (userId: string) => Promise<string|null>,
+ *     setNickname: (userId: string, name: string|null) => Promise<void>,
+ *   },
  * }} deps
  * @returns {(req: Request) => Promise<Response>}
  */
-export function createHandler({ getUser, now = () => Date.now(), results, names }) {
+export function createHandler({ getUser, now = () => Date.now(), results, names, profiles }) {
   const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
   async function userOf(req) {
@@ -233,7 +263,8 @@ export function createHandler({ getUser, now = () => Date.now(), results, names 
     const out = { day, week: { start, end }, players: today.length, daily: publicRows(dailyRanked, nameMap, me), weekly: publicRows(weeklyRanked, nameMap, me) };
     if (me) {
       const days = await results.daysOf(me, dayFromNumber(dayNumber(day) - 400));
-      out.me = { streak: streakOn(days, day), played: days.includes(day) };
+      const nickname = await profiles.nickname(me);
+      out.me = { streak: streakOn(days, day), played: days.includes(day), name: nameMap.get(me) ?? 'Player', custom: Boolean(nickname) };
     }
     return out;
   }
@@ -264,6 +295,20 @@ export function createHandler({ getUser, now = () => Date.now(), results, names 
         // Only the first play of a day counts; a replay gets its score but changes nothing.
         const recorded = await results.insert({ user_id: user.id, day, correct: score.correct, total: score.total, ms, answers: body.answers });
         return json(200, { ...score, recorded, board: await board(day, user.id) });
+      }
+      if (req.method === 'POST' && route === '/name') {
+        const user = await userOf(req);
+        if (!user) return json(401, { error: 'Sign in to choose a name' });
+        const body = await req.json().catch(() => null);
+        let name;
+        try {
+          name = cleanName(body?.name);
+        } catch (err) {
+          return json(400, { error: err.message });
+        }
+        await profiles.setNickname(user.id, name);
+        const shown = (await names([user.id])).get(user.id) ?? 'Player';
+        return json(200, { name: shown, custom: Boolean(name) });
       }
       return json(404, { error: 'Not found' });
     } catch (err) {

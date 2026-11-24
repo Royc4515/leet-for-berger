@@ -3,7 +3,7 @@
 // first play once, and rank fairly. Storage and auth are in-memory fakes.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createHandler, dailyIds, scoreDaily, isPlayableDay, weekStart, streakOn, rank, weeklyTotals } from '../deploy/supabase/functions/daily-quiz/core.js';
+import { createHandler, dailyIds, scoreDaily, isPlayableDay, weekStart, streakOn, rank, weeklyTotals, cleanName } from '../deploy/supabase/functions/daily-quiz/core.js';
 import { QUIZ_ROWS } from '../deploy/supabase/functions/daily-quiz/bank.js';
 import { dailyQuizIds } from '../src/js/modes/quiz.js';
 import { QUIZ_INDEX } from '../src/js/data/quiz-index.js';
@@ -81,6 +81,7 @@ test('ranking: score first, then time; equal score and time share a rank', () =>
 /** An in-memory function: users by token, a results table, names. */
 function fakeServer(now = NOW) {
   const rows = [];
+  const nicknames = new Map();
   const users = { 'tok-ana': { id: 'u-ana' }, 'tok-ben': { id: 'u-ben' } };
   const handle = createHandler({
     now: () => now,
@@ -94,7 +95,11 @@ function fakeServer(now = NOW) {
       between: async (from, to) => rows.filter((r) => r.day >= from && r.day <= to),
       daysOf: async (userId, from) => rows.filter((r) => r.user_id === userId && r.day >= from).map((r) => r.day),
     },
-    names: async (ids) => new Map(ids.map((id) => [id, id === 'u-ana' ? 'Ana Levi' : 'Ben Cohen'])),
+    names: async (ids) => new Map(ids.map((id) => [id, nicknames.get(id) ?? (id === 'u-ana' ? 'Ana Levi' : 'Ben Cohen')])),
+    profiles: {
+      nickname: async (id) => nicknames.get(id) ?? null,
+      setNickname: async (id, name) => (name ? nicknames.set(id, name) : nicknames.delete(id)),
+    },
   });
   const call = (method, path, { token, body } = {}) =>
     handle(new Request(`https://x.supabase.co/functions/v1/daily-quiz${path}`, { method, headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined })).then(async (r) => ({ status: r.status, body: await r.json() }));
@@ -122,7 +127,7 @@ test('submit: needs a session, scores on the server, counts the first play only,
   assert.equal(ben.body.board.daily[0].you, true);
   assert.equal(ben.body.board.daily[1].you, false);
   assert.equal(ben.body.board.players, 2);
-  assert.deepEqual(ben.body.board.me, { streak: 1, played: true });
+  assert.deepEqual(ben.body.board.me, { streak: 1, played: true, name: 'Ben Cohen', custom: false });
   assert.ok(!JSON.stringify(ben.body.board).includes('u-ana'), 'user ids never leave the server');
 });
 
@@ -140,6 +145,7 @@ test('board: public to read, weekly sums across days, streak for the caller', as
         daysOf: async (id) => rows.filter((r) => r.user_id === id).map((r) => r.day),
       },
       names: async (ids) => new Map(ids.map((id) => [id, 'Ana Levi'])),
+      profiles: { nickname: async () => null, setNickname: async () => {} },
     });
   const post = (now, day) => handleAt(now)(new Request('https://x/functions/v1/daily-quiz/submit', { method: 'POST', headers: { Authorization: 'Bearer tok-ana' }, body: JSON.stringify({ day, answers: perfect(day), ms: 60000 }) })).then((r) => r.json());
   await post(Date.parse('2026-11-24T10:00:00Z'), '2026-11-24');
@@ -152,4 +158,33 @@ test('board: public to read, weekly sums across days, streak for the caller', as
   assert.equal(open.me, undefined, 'signed-out readers get no personal block');
   assert.equal((await call('GET', '/board?day=2030-01-01')).status, 400);
   assert.equal((await call('GET', '/nope')).status, 404);
+});
+
+test('cleanName: trims, strips control and bidi characters, bounds the length, empty means none', () => {
+  assert.equal(cleanName('  Roy   C  '), 'Roy C');
+  assert.equal(cleanName('רועי'), 'רועי');
+  assert.equal(cleanName('Ro\u202Ey'), 'Roy', 'a right-to-left override cannot flip the board');
+  assert.equal(cleanName('a\u0000b'), 'ab');
+  assert.equal(cleanName(''), null);
+  assert.equal(cleanName('   '), null);
+  assert.equal(cleanName(null), null);
+  assert.equal(cleanName('x'.repeat(24)), 'x'.repeat(24));
+  assert.throws(() => cleanName('x'), /2 to 24/);
+  assert.throws(() => cleanName('x'.repeat(25)), /2 to 24/);
+  assert.throws(() => cleanName(42), /Invalid name/);
+});
+
+test('name: needs a session, shows on the board, and an empty name goes back to the sign-in name', async () => {
+  const { call } = fakeServer();
+  const day = '2026-11-24';
+  assert.equal((await call('POST', '/name', { body: { name: 'Roy' } })).status, 401);
+  assert.equal((await call('POST', '/name', { token: 'tok-ana', body: { name: 'A' } })).status, 400);
+  const set = await call('POST', '/name', { token: 'tok-ana', body: { name: ' Ace ' } });
+  assert.deepEqual(set.body, { name: 'Ace', custom: true });
+  const played = await call('POST', '/submit', { token: 'tok-ana', body: { day, answers: perfect(day), ms: 1000 } });
+  assert.equal(played.body.board.daily[0].name, 'Ace');
+  assert.deepEqual(played.body.board.me, { streak: 1, played: true, name: 'Ace', custom: true });
+  const reset = await call('POST', '/name', { token: 'tok-ana', body: { name: '' } });
+  assert.deepEqual(reset.body, { name: 'Ana Levi', custom: false });
+  assert.equal((await call('GET', `/board?day=${day}`)).body.daily[0].name, 'Ana Levi');
 });
