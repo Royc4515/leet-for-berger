@@ -8,12 +8,13 @@
  *
  *   node scripts/ci/check-selection.mjs [--trace=existing.tsv]
  */
-import { readFileSync, statSync, mkdtempSync } from 'node:fs';
-import { spawnSync, execFileSync } from 'node:child_process';
+import { readFileSync, mkdtempSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { reach, touches } from './deps.mjs';
+import { repoFs } from './repo-fs.mjs';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v = 'true'] = a.replace(/^--/, '').split('='); return [k, v]; }));
@@ -28,24 +29,7 @@ if (!trace) {
   if (run.status !== 0) console.log(`(the test run itself exited ${run.status}; tracing is still complete for what ran)`);
 }
 
-let all = null;
-const fs = {
-  files: () => (all ??= execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8' }).split('\0').filter(Boolean)),
-  read: (p) => {
-    try {
-      return readFileSync(join(ROOT, p), 'utf8');
-    } catch {
-      return null;
-    }
-  },
-  kind: (p) => {
-    try {
-      return statSync(join(ROOT, p)).isDirectory() ? 'dir' : 'file';
-    } catch {
-      return null;
-    }
-  },
-};
+const fs = repoFs(ROOT);
 
 const byTest = new Map();
 for (const line of readFileSync(trace, 'utf8').split('\n')) {

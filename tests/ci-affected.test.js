@@ -3,10 +3,10 @@
 // pin each way a test reaches a file, and the last tests check the real repository.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, statSync, readdirSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { extractRefs, resolveRef, reach, selectTests, normalise, touches } from '../scripts/ci/deps.mjs';
+import { repoFs } from '../scripts/ci/repo-fs.mjs';
 
 /** An in-memory repository: path -> source. Folders are implied by the paths. */
 function memoryFs(files) {
@@ -102,26 +102,7 @@ test('a change to the dependencies, the workflow or the selector itself runs eve
 /* ---------- The real repository ---------- */
 
 const ROOT = new URL('..', import.meta.url).pathname;
-const realFs = {
-  read: (p) => {
-    try {
-      return readFileSync(join(ROOT, p), 'utf8');
-    } catch {
-      return null;
-    }
-  },
-  kind: (p) => {
-    try {
-      return statSync(join(ROOT, p)).isDirectory() ? 'dir' : 'file';
-    } catch {
-      return null;
-    }
-  },
-  files: (() => {
-    let all = null;
-    return () => (all ??= execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8' }).split('\0').filter(Boolean));
-  })(),
-};
+const realFs = repoFs(ROOT);
 const realTests = readdirSync(join(ROOT, 'tests')).filter((f) => f.endsWith('.test.js')).map((f) => `tests/${f}`);
 const realPick = (f) => selectTests({ tests: realTests, changed: [f], fs: realFs }).tests;
 

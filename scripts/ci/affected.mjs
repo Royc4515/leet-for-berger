@@ -9,32 +9,14 @@
  *   e2e=true|false                            (anything the site loads, or the smoke test itself)
  * and to stderr, why each test was picked. The rules are in scripts/ci/deps.mjs.
  */
-import { readFileSync, statSync, readdirSync, appendFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { readFileSync, readdirSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { selectTests } from './deps.mjs';
+import { repoFs } from './repo-fs.mjs';
 
-const ROOT = new URL('../../', import.meta.url).pathname;
-let all = null;
-const fs = {
-  // Tracked files: what a checkout holds, without build output or dependencies.
-  files: () => (all ??= execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8' }).split('\0').filter(Boolean)),
-  read: (p) => {
-    try {
-      return readFileSync(join(ROOT, p), 'utf8');
-    } catch {
-      return null;
-    }
-  },
-  kind: (p) => {
-    try {
-      const s = statSync(join(ROOT, p));
-      return s.isDirectory() ? 'dir' : 'file';
-    } catch {
-      return null;
-    }
-  },
-};
+const ROOT = fileURLToPath(new URL('../../', import.meta.url));
+const fs = repoFs(ROOT);
 
 const changed = readFileSync(0, 'utf8').split('\n').map((l) => l.trim()).filter(Boolean);
 const tests = readdirSync(join(ROOT, 'tests')).filter((f) => f.endsWith('.test.js')).map((f) => `tests/${f}`).sort();
