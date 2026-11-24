@@ -11,6 +11,7 @@ file and license. Statements, tests, hints and references are written for this p
 | [kamyu104/LeetCode-Solutions](https://github.com/kamyu104/LeetCode-Solutions) | [MIT](https://github.com/kamyu104/LeetCode-Solutions/blob/master/LICENSE.md) | Best known complexity per problem (`content/index/complexity.json`) |
 | [Inter](https://github.com/rsms/inter) (`@fontsource-variable/inter` 5.3.0) | [SIL Open Font License 1.1](https://openfontlicense.org/) | Self-hosted variable UI font (`src/fonts/inter-latin.woff2`) |
 | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) (`@fontsource-variable/jetbrains-mono` 5.3.0) | [SIL Open Font License 1.1](https://openfontlicense.org/) | Self-hosted variable monospace font (`src/fonts/jetbrains-mono-latin.woff2`) |
+| [Bricolage Grotesque](https://github.com/ateliertriay/bricolage) (`@fontsource-variable/bricolage-grotesque` 5.3.0) | [SIL Open Font License 1.1](https://openfontlicense.org/) | Self-hosted variable display font (`src/fonts/bricolage-grotesque-latin.woff2`, license text in `src/fonts/OFL-bricolage-grotesque.txt`) |
 
 Adapted files carry the same license as their source: files marked `doocs/leetcode` are
 available under CC BY-SA 4.0 (changes: renamed to this project's signatures, adjusted to its
