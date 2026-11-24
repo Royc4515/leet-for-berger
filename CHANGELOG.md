@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed (CI speed)
+- **CI skips the native program builder tests when nothing they read changed.** `tests/programs.test.js` took about 7 of the unit tests' 7 minutes; it now runs in its own step only when the `solutions` paths change (problems, engine, verifier, package files, ci.yml), so a UI, content or docs PR saves those minutes. `tests/ci.test.js` checks that every module the test imports is in that pattern.
+
 ### Changed (company logos, owner's request)
 - **Company logos instead of monograms.** Every company card, the company page, the interview picker and the command palette show the company's own logo on a warm light tile; a company page also glows faintly in the brand's colour. 187 of 193 companies have one; the rest keep their monogram on the same tile. Logos are self-hosted WebP, 128 px, under 11 KB each (650 KB for all, loaded lazily as cards scroll in).
 - **Best available quality, by rule** (`scripts/content/fetch-logos.mjs`, run by hand): each company's own SVG favicon, Apple touch icon or manifest icon first, then Simple Icons (vectors in the brand's colour), then the favicon services; anything under 48 px keeps the monogram. A white backdrop is removed only when it surrounds the logo, a logo drawn in white for a dark page is recoloured in the tile's ink (its colours kept), app-icon squares fill the tile, margins are trimmed, and the brand colour is measured. A contact sheet of all 193 was reviewed by eye; wrong picks (a framework's default icon, a mascot, a cropped wordmark) and 32 px-only sites got official files as overrides (`content/company-domains.json`). Pure rules in `scripts/content/logo-pick.mjs`, unit-tested in `tests/company-logos.test.js` (12 tests, with the manifest, the files and the size budget).
