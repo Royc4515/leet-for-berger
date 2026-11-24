@@ -86,6 +86,20 @@ function storedKeys() {
  */
 
 /**
+ * The letters on a signed-in user's round badge in the phone header (owner's request: the full
+ * name and the sync note pushed the page title out of a phone's header). First letters of the
+ * first two words of the name, else the first letter of the email.
+ * @param {{ name?: string|null, email?: string|null }|null} user
+ * @returns {string}
+ */
+export function userInitials(user) {
+  const words = String(user?.name ?? '').trim().split(/\s+/).map((w) => w.match(/[\p{L}\p{N}]/u)?.[0]).filter(Boolean);
+  if (words.length) return words.slice(0, 2).join('').toUpperCase();
+  const first = String(user?.email ?? '').match(/[\p{L}\p{N}]/u)?.[0];
+  return first ? first.toUpperCase() : '?';
+}
+
+/**
  * @param {{ store: any, config?: ReturnType<typeof authConfig>, loadClient?: (url: string, key: string) => Promise<any> }} opts
  */
 export function createAccount({ store, config = authConfig(), loadClient = defaultClient }) {
