@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed (signed-in header on a phone, owner's report)
+- **Signed in, the page title in a phone's header shrank to one letter** ("P" for Problems at 390 px, nothing at 320 px): the full name and "Progress synced" took 163 px of the header. On a phone the account control is now a round badge with the initials and a dot for the sync status (green synced, amber syncing, red failed), 44 px wide; the title shows in full down to 320 px. The panel it opens starts with who is signed in, their email and the sync status. The name stays the button's accessible name. Wider screens are unchanged (`userInitials` in `auth/account.js`, unit-tested).
+
 ### Changed (phone list and setup bars, owner's request)
 - **The problem list on a phone comes 30 rows at a time**, with "Show 30 more" and how many are shown under the last row; the page was one 21,000 px scroll and is now about 4,000 px. Show more moves focus to the first new problem; a new search or filter starts from the first page again. Wider screens keep the whole table (`data/list-page.js`, unit-tested).
 - **The pinned Start bar on Battle and Interview setup is one slim row on a phone** (64 to 72 px instead of 130 to 145 px). As a card it covered the problem filters (Random, the difficulty chips, Topic) and the company scope on first load. The title and summary keep one line each; the whole choice is in the "Selected" line above it. Focus scrolling stops above the bar.

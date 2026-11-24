@@ -1659,6 +1659,16 @@ try {
     await acct.reload();
     await acct.waitForSelector('#account .account-name:has-text("Ada")');
     if (!acctRequests.some((u) => u.includes('supabase-js'))) throw new Error('a stored session must start supabase-js at page load');
+    // On a phone the signed-in control is an initials badge: the page title keeps its room (the
+    // full name and the sync note once squeezed it to one letter), and the name stays its label.
+    await acct.setViewportSize({ width: 360, height: 800 });
+    const phoneHead = await acct.evaluate(() => {
+      const title = document.querySelector('.header-title');
+      const toggle = document.querySelector('#account .account-name');
+      return { titleClipped: title.scrollWidth > title.clientWidth, titleWidth: title.getBoundingClientRect().width, account: document.querySelector('#account').getBoundingClientRect().width, badge: document.querySelector('.account-avatar')?.textContent, label: toggle.textContent.replace(document.querySelector('.account-avatar').textContent, '') };
+    });
+    if (phoneHead.titleClipped || phoneHead.titleWidth < 40 || phoneHead.account > 48 || phoneHead.badge !== 'A' || phoneHead.label !== 'Ada') throw new Error(`signed-in phone header: ${JSON.stringify(phoneHead)}`);
+    await acct.setViewportSize({ width: 1440, height: 900 });
     await acct.click('#account .account-name');
     // Not linked yet: the wizard offers GitHub's prefilled new-repository page, then the app install page.
     // Each step replaces the pressed button; keyboard focus must land on the new step, not <body>.

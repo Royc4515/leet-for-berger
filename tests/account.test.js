@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { authConfig } from '../src/js/config.js';
-import { createAccount, returnRoute } from '../src/js/auth/account.js';
+import { createAccount, returnRoute, userInitials } from '../src/js/auth/account.js';
 import { emptyState } from '../src/js/state/progress.js';
 
 const store = () => {
@@ -182,4 +182,15 @@ test('returnRoute: back to the saved page only when the provider returns, and on
   assert.equal(returnRoute({ search: '?installation_id=1&setup_action=install', saved: '#/quiz/daily' }), null, 'the GitHub App install return keeps its own route');
   assert.equal(returnRoute({ search: '?code=abc', saved: null }), null);
   assert.equal(returnRoute({ search: '?code=abc', saved: 'https://evil.example/' }), null, 'never a URL, only a route');
+});
+
+test('the phone header badge: initials from the name, else the email, never empty', () => {
+  assert.equal(userInitials({ name: 'Roy Carmelli', email: 'roy@example.com' }), 'RC');
+  assert.equal(userInitials({ name: 'Ada', email: 'ada@example.com' }), 'A');
+  assert.equal(userInitials({ name: 'jean-luc picard' }), 'JP');
+  assert.equal(userInitials({ name: 'רועי כרמלי' }), 'רכ');
+  assert.equal(userInitials({ name: 'Mary Ann Smith' }), 'MA');
+  assert.equal(userInitials({ name: null, email: 'roy@example.com' }), 'R');
+  assert.equal(userInitials({ name: '  ', email: null }), '?');
+  assert.equal(userInitials(null), '?');
 });

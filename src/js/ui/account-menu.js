@@ -4,6 +4,7 @@
  */
 import { h, mount, confirmDialog, toast } from './dom.js';
 import { newRepoUrl } from '../auth/github-sync.js';
+import { userInitials } from '../auth/account.js';
 
 const MENU_ID = 'account-panel';
 const SYNC_LABEL = { idle: '', syncing: 'Syncing...', synced: 'Progress synced', error: 'Sync failed' };
@@ -156,15 +157,33 @@ export function mountAccountMenu(host, account, github = null) {
       return;
     }
     const who = s.user.name ?? s.user.email ?? 'Signed in';
-    const panel = h('div.account-menu', { hidden: !open, id: MENU_ID }, ghSection(), s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null, h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: confirmSignOut }, 'Sign out'));
-    const toggle = h('button.btn.btn-ghost.btn-sm.account-toggle.account-name', { type: 'button', title: s.user.email ?? '', 'aria-controls': MENU_ID, 'aria-expanded': String(open) }, who);
+    const syncLabel = SYNC_LABEL[s.sync];
+    // On a phone the header shows only the initials and a status dot (app.css), so the panel
+    // says who is signed in and how the sync went.
+    const me = h(
+      'div.account-section.account-me',
+      {},
+      h('span.account-section-title', {}, 'Signed in as'),
+      h('strong.account-me-name', { dir: 'auto' }, who),
+      s.user.name && s.user.email ? h('span.hint-text', {}, s.user.email) : null,
+      syncLabel ? h(`span.account-me-sync${s.sync === 'error' ? '.bad' : ''}`, {}, syncLabel) : null,
+    );
+    const panel = h('div.account-menu', { hidden: !open, id: MENU_ID }, me, ghSection(), s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null, h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: confirmSignOut }, 'Sign out'));
+    // The name stays in the button for its accessible name; on a phone it is visually hidden
+    // behind the initials badge, which is decoration.
+    const toggle = h(
+      'button.btn.btn-ghost.btn-sm.account-toggle.account-name',
+      { type: 'button', title: s.user.email ?? '', 'aria-controls': MENU_ID, 'aria-expanded': String(open) },
+      h('span.account-avatar', { 'aria-hidden': 'true' }, userInitials(s.user)),
+      h('span.account-name-text', {}, who),
+    );
     bindToggle(toggle);
     mount(
       host,
       h(
         'div.account',
-        {},
-        SYNC_LABEL[s.sync] ? h(`span.account-note${s.sync === 'error' ? '.bad' : ''}`, { title: s.error ?? '' }, SYNC_LABEL[s.sync]) : null,
+        { 'data-sync': s.sync },
+        syncLabel ? h(`span.account-note${s.sync === 'error' ? '.bad' : ''}`, { title: s.error ?? '' }, syncLabel) : null,
         toggle,
         makeBackdrop(),
         panel,
