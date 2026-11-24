@@ -1,0 +1,1384 @@
+[
+ {
+  "id": "java-reassign-array-parameter",
+  "topic": "java",
+  "subtopic": "pass-by-value",
+  "concepts": [
+   "pass-by-value",
+   "reference",
+   "parameter-reassignment"
+  ],
+  "level": "easy",
+  "q": "reset() assigns a brand new array to its parameter. What does main print?",
+  "code": "public class Main {\n    static void reset(int[] arr) {\n        arr = new int[] {0, 0};\n    }\n    public static void main(String[] args) {\n        int[] a = {5, 7};\n        reset(a);\n        System.out.println(a[0] + \" \" + a[1]);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "0 0",
+   "5 7",
+   "0 7",
+   "Compile error: a parameter cannot be reassigned"
+  ],
+  "answer": 1,
+  "why": "Java passes a copy of the reference. Inside reset(), arr is a local copy; pointing it at a new array changes only that copy. The caller's a still refers to the original {5, 7}.",
+  "wrong": [
+   "That would need pass-by-reference. Reassigning the parameter never reaches the caller's variable.",
+   null,
+   "Nothing is written into the original array, so neither element changes.",
+   "Parameters are ordinary local variables and can be reassigned unless they are declared final."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/arguments.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "reset() מציבה array חדש לגמרי בפרמטר שלה. מה main תדפיס?",
+   "options": [
+    "0 0",
+    "5 7",
+    "0 7",
+    "שגיאת compile: אי אפשר להציב ערך חדש בפרמטר"
+   ],
+   "why": "Java מעבירה עותק של ה-reference. בתוך reset(), arr הוא עותק מקומי, והפניה שלו ל-array חדש משנה רק את העותק הזה. ה-a של הקוד הקורא עדיין מפנה ל-{5, 7} המקורי.",
+   "wrong": [
+    "זה היה דורש pass-by-reference. השמה חדשה לפרמטר אף פעם לא מגיעה למשתנה של הקוד הקורא.",
+    null,
+    "שום דבר לא נכתב לתוך ה-array המקורי, ולכן אף איבר לא משתנה.",
+    "פרמטרים הם משתנים מקומיים רגילים, ואפשר להציב בהם ערך חדש אלא אם הם מוגדרים final."
+   ]
+  }
+ },
+ {
+  "id": "java-mutate-object-through-parameter",
+  "topic": "java",
+  "subtopic": "pass-by-value",
+  "concepts": [
+   "pass-by-value",
+   "reference",
+   "mutation"
+  ],
+  "level": "easy",
+  "q": "addGuest() calls add() on the list it receives. What does main print?",
+  "code": "import java.util.*;\npublic class Main {\n    static void addGuest(List<String> guests) {\n        guests.add(\"bo\");\n    }\n    public static void main(String[] args) {\n        List<String> list = new ArrayList<>(List.of(\"ann\"));\n        addGuest(list);\n        System.out.println(list);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "[ann]",
+   "[bo]",
+   "Compile error: the list is not returned",
+   "[ann, bo]"
+  ],
+  "answer": 3,
+  "why": "The method gets a copy of the reference, and that copy points to the same list object as the caller's variable. Calling add() changes the shared object, so the caller sees the new item.",
+  "wrong": [
+   "The method does not need to return the list; it changed the very object the caller holds.",
+   "add() appends; it does not replace the existing item.",
+   "A void method can change an object it receives; nothing has to be returned for that.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/arguments.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "addGuest() קוראת ל-add() על ה-list שהיא מקבלת. מה main תדפיס?",
+   "options": [
+    "[ann]",
+    "[bo]",
+    "שגיאת compile: ה-list לא מוחזרת",
+    "[ann, bo]"
+   ],
+   "why": "ה-method מקבלת עותק של ה-reference, והעותק הזה מצביע על אותו object של list כמו המשתנה של הקוד הקורא. הקריאה ל-add() משנה את ה-object המשותף, ולכן הקוד הקורא רואה את הפריט החדש.",
+   "wrong": [
+    "ה-method לא צריכה להחזיר את ה-list: היא שינתה את אותו object בדיוק שהקוד הקורא מחזיק.",
+    "add() מוסיפה בסוף: היא לא מחליפה את הפריט הקיים.",
+    "method מסוג void יכולה לשנות object שהיא מקבלת, ולא צריך להחזיר שום דבר בשביל זה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "java-primitive-vs-object-argument",
+  "topic": "java",
+  "subtopic": "pass-by-value",
+  "concepts": [
+   "pass-by-value",
+   "primitive",
+   "reference",
+   "mutation"
+  ],
+  "level": "medium",
+  "q": "A method receives an int n and a Counter object c. It runs n++ and c.value++. After it returns, which change does the caller see?",
+  "options": [
+   "Only c.value; n was a copy of the number",
+   "Both changes, since both were passed in",
+   "Neither change, since Java copies every argument",
+   "Only n, since objects are copied into the method"
+  ],
+  "answer": 0,
+  "why": "Everything is passed by value. For n the value is the number itself, so the method works on its own copy. For c the value is a reference, so the copy still points to the caller's object, and c.value++ changes that object.",
+  "wrong": [
+   null,
+   "A primitive is copied, so n++ only changes the method's local copy.",
+   "The reference is copied, not the object, so changes made through it reach the shared object.",
+   "Objects are never copied when passed; only the reference to them is."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/arguments.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "method מקבלת int n ו-object מסוג Counter בשם c. היא מריצה n++ ו-c.value++. אחרי שהיא חוזרת, איזה שינוי הקוד הקורא רואה?",
+   "options": [
+    "רק את c.value: n היה עותק של המספר",
+    "את שני השינויים, כי שניהם הועברו פנימה",
+    "אף שינוי, כי Java מעתיקה כל ארגומנט",
+    "רק את n, כי objects מועתקים לתוך ה-method"
+   ],
+   "why": "הכול מועבר by value. עבור n הערך הוא המספר עצמו, ולכן ה-method עובדת על עותק משלה. עבור c הערך הוא reference, ולכן העותק עדיין מצביע על ה-object של הקוד הקורא, ו-c.value++ משנה את ה-object הזה.",
+   "wrong": [
+    null,
+    "primitive מועתק, ולכן n++ משנה רק את העותק המקומי של ה-method.",
+    "ה-reference מועתק, לא ה-object, ולכן שינויים שנעשים דרכו מגיעים ל-object המשותף.",
+    "objects אף פעם לא מועתקים כשמעבירים אותם: רק ה-reference אליהם מועתק."
+   ]
+  }
+ },
+ {
+  "id": "java-swap-strings-fails",
+  "topic": "java",
+  "subtopic": "pass-by-value",
+  "concepts": [
+   "pass-by-value",
+   "swap",
+   "reference"
+  ],
+  "level": "medium",
+  "q": "This swap() is meant to exchange the caller's two strings. What does main print?",
+  "code": "public class Main {\n    static void swap(String x, String y) {\n        String t = x;\n        x = y;\n        y = t;\n    }\n    public static void main(String[] args) {\n        String a = \"left\", b = \"right\";\n        swap(a, b);\n        System.out.println(a + \" \" + b);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "right left",
+   "left left",
+   "left right",
+   "Compile error: strings are immutable"
+  ],
+  "answer": 2,
+  "why": "x and y are copies of the caller's references. The method swaps its own copies and then returns, so a and b in main still point where they did. A swap method cannot reassign the caller's variables in Java.",
+  "wrong": [
+   "That would need pass-by-reference; swapping local copies does not touch a and b.",
+   "No assignment ever reaches a or b, so neither is overwritten.",
+   null,
+   "The code only reassigns variables; it never tries to change a String object, so it compiles."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/arguments.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-swap() הזו אמורה להחליף בין שתי המחרוזות של הקוד הקורא. מה main תדפיס?",
+   "options": [
+    "right left",
+    "left left",
+    "left right",
+    "שגיאת compile: מחרוזות הן immutable"
+   ],
+   "why": "x ו-y הם עותקים של ה-references של הקוד הקורא. ה-method מחליפה בין העותקים שלה ואז חוזרת, ולכן a ו-b ב-main עדיין מצביעים לאותו מקום. ב-Java, method של swap לא יכולה להציב ערכים חדשים במשתנים של הקוד הקורא.",
+   "wrong": [
+    "זה היה דורש pass-by-reference: החלפה בין עותקים מקומיים לא נוגעת ב-a וב-b.",
+    "אף השמה לא מגיעה ל-a או ל-b, ולכן אף אחד מהם לא נדרס.",
+    null,
+    "הקוד רק מציב ערכים חדשים במשתנים, והוא אף פעם לא מנסה לשנות object מסוג String, ולכן הוא עובר compile."
+   ]
+  }
+ },
+ {
+  "id": "java-mutate-then-reassign-parameter",
+  "topic": "java",
+  "subtopic": "pass-by-value",
+  "concepts": [
+   "pass-by-value",
+   "mutation",
+   "parameter-reassignment",
+   "stringbuilder"
+  ],
+  "level": "hard",
+  "q": "update() first appends to the builder it receives, then points its parameter at a new builder and appends again. What does main print?",
+  "code": "public class Main {\n    static void update(StringBuilder sb) {\n        sb.append(\"1\");\n        sb = new StringBuilder(\"x\");\n        sb.append(\"2\");\n    }\n    public static void main(String[] args) {\n        StringBuilder s = new StringBuilder(\"a\");\n        update(s);\n        System.out.println(s);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "a12",
+   "a1",
+   "x2",
+   "a"
+  ],
+  "answer": 1,
+  "why": "The first append runs on the caller's object, so it becomes a1. After sb = new StringBuilder(\"x\"), the parameter points to a different object, and the second append changes only that one, which is then dropped.",
+  "wrong": [
+   "After the reassignment, sb no longer refers to the caller's builder, so 2 goes elsewhere.",
+   null,
+   "The caller's variable is never redirected; only the method's copy of the reference is.",
+   "The first append happened through a shared reference, before the reassignment, so it is kept."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/arguments.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "update() קודם מוסיפה ל-builder שהיא מקבלת, אחר כך מפנה את הפרמטר שלה ל-builder חדש ומוסיפה שוב. מה main תדפיס?",
+   "options": [
+    "a12",
+    "a1",
+    "x2",
+    "a"
+   ],
+   "why": "ה-append הראשון רץ על ה-object של הקוד הקורא, ולכן הוא נהיה a1. אחרי sb = new StringBuilder(\"x\"), הפרמטר מצביע על object אחר, וה-append השני משנה רק אותו, והוא נזרק אחר כך.",
+   "wrong": [
+    "אחרי ההשמה החדשה, sb כבר לא מפנה ל-builder של הקוד הקורא, ולכן 2 הולך למקום אחר.",
+    null,
+    "המשתנה של הקוד הקורא אף פעם לא מופנה למקום אחר: רק העותק של ה-reference ב-method.",
+    "ה-append הראשון קרה דרך reference משותף, לפני ההשמה החדשה, ולכן הוא נשמר."
+   ]
+  }
+ },
+ {
+  "id": "java-ignored-string-result",
+  "topic": "java",
+  "subtopic": "strings",
+  "concepts": [
+   "string-immutability",
+   "return-value"
+  ],
+  "level": "easy",
+  "q": "Two String methods are called on s, but their results are not stored. What does this print?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        String s = \"java\";\n        s.toUpperCase();\n        s.concat(\"script\");\n        System.out.println(s);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "java",
+   "JAVA",
+   "javascript",
+   "JAVAscript"
+  ],
+  "answer": 0,
+  "why": "A String can never change after it is created. toUpperCase() and concat() build new strings and return them; since the results are thrown away, s still refers to the original java.",
+  "wrong": [
+   null,
+   "toUpperCase() returns a new string; it does not change s.",
+   "concat() also returns a new string and leaves s as it was.",
+   "Neither call changes s, and their results were never assigned to anything."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/data/strings.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "על s נקראות שתי methods של String, אבל התוצאות שלהן לא נשמרות. מה יודפס?",
+   "options": [
+    "java",
+    "JAVA",
+    "javascript",
+    "JAVAscript"
+   ],
+   "why": "String אף פעם לא יכול להשתנות אחרי שהוא נוצר. toUpperCase() ו-concat() בונות מחרוזות חדשות ומחזירות אותן, ומכיוון שהתוצאות נזרקות, s עדיין מפנה ל-java המקורי.",
+   "wrong": [
+    null,
+    "toUpperCase() מחזירה מחרוזת חדשה: היא לא משנה את s.",
+    "גם concat() מחזירה מחרוזת חדשה ומשאירה את s כמו שהיה.",
+    "אף אחת מהקריאות לא משנה את s, והתוצאות שלהן אף פעם לא הוצבו בשום משתנה."
+   ]
+  }
+ },
+ {
+  "id": "java-double-equals-on-strings",
+  "topic": "java",
+  "subtopic": "strings",
+  "concepts": [
+   "string-equality",
+   "reference-equality",
+   "equals"
+  ],
+  "level": "medium",
+  "q": "a is a string literal and b is built with new String. What does this print?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        String a = \"cat\";\n        String b = new String(\"cat\");\n        System.out.println((a == b) + \" \" + a.equals(b));\n    }\n}",
+  "lang": "java",
+  "options": [
+   "true true",
+   "true false",
+   "false true",
+   "false false"
+  ],
+  "answer": 2,
+  "why": "== checks whether two references point to the same object. new String always creates a separate object, so a == b is false. equals() compares the characters, which match, so it is true.",
+  "wrong": [
+   "== does not compare text; the two variables point to different objects.",
+   "This mixes up the two: == is the identity check and equals() is the text check.",
+   null,
+   "String overrides equals() to compare characters, so equal text gives true."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/data/comparestrings.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "a הוא string literal ו-b נבנה עם new String. מה יודפס?",
+   "options": [
+    "true true",
+    "true false",
+    "false true",
+    "false false"
+   ],
+   "why": "== בודק אם שני references מצביעים על אותו object. new String תמיד יוצר object נפרד, ולכן a == b הוא false. equals() משווה את התווים, שזהים, ולכן הוא true.",
+   "wrong": [
+    "== לא משווה טקסט: שני המשתנים מצביעים על objects שונים.",
+    "זה מבלבל בין השניים: == הוא בדיקת זהות ו-equals() הוא בדיקת טקסט.",
+    null,
+    "String עושה override ל-equals() כדי להשוות תווים, ולכן טקסט זהה נותן true."
+   ]
+  }
+ },
+ {
+  "id": "java-double-equals-passes-in-tests",
+  "topic": "java",
+  "subtopic": "strings",
+  "concepts": [
+   "string-equality",
+   "reference-equality",
+   "string-pool"
+  ],
+  "level": "medium",
+  "q": "role == \"admin\" passed every unit test, where role was a literal. In production, role is read from a file and holds exactly the text admin, yet the check fails. Why?",
+  "options": [
+   "Text read from a file ends with hidden spaces or a newline, and == cannot ignore them",
+   "== works only on strings shorter than a fixed length",
+   "The file was saved in another character encoding, so the characters really differ",
+   "== compares objects; equal literals share one, but file text is a new object"
+  ],
+  "answer": 3,
+  "why": "Identical string literals in a program are stored once and shared, so the test compared one object with itself. A string read at run time is a new object, so == is false even with the same text. Use equals() for text.",
+  "wrong": [
+   "Spaces would break equals() too. Here the text is the same and only the objects differ.",
+   "Length has nothing to do with it; == never compares characters at all.",
+   "The text matches. The failure comes from comparing objects instead of contents.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/data/comparestrings.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "role == \"admin\" עבר בכל ה-unit tests, שבהם role היה literal. ב-production, role נקרא מקובץ ומכיל בדיוק את הטקסט admin, ובכל זאת הבדיקה נכשלת. למה?",
+   "options": [
+    "טקסט שנקרא מקובץ מסתיים ברווחים מוסתרים או בשורה חדשה, ו-== לא יכול להתעלם מהם",
+    "== עובד רק על מחרוזות שקצרות מאורך קבוע",
+    "הקובץ נשמר בקידוד תווים אחר, ולכן התווים באמת שונים",
+    "== משווה objects: literals זהים חולקים object אחד, אבל טקסט מקובץ הוא object חדש"
+   ],
+   "why": "string literals זהים בתוכנית נשמרים פעם אחת ומשותפים, ולכן ה-test השווה object אחד לעצמו. מחרוזת שנקראת ב-runtime היא object חדש, ולכן == הוא false גם עם אותו טקסט. להשוואת טקסט משתמשים ב-equals().",
+   "wrong": [
+    "רווחים היו שוברים גם את equals(). כאן הטקסט זהה ורק ה-objects שונים.",
+    "לאורך אין שום קשר לזה: == אף פעם לא משווה תווים בכלל.",
+    "הטקסט תואם. הכישלון נובע מהשוואה של objects במקום של תוכן.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "java-stringbuilder-in-loop",
+  "topic": "java",
+  "subtopic": "strings",
+  "concepts": [
+   "string-immutability",
+   "stringbuilder",
+   "concatenation"
+  ],
+  "level": "medium",
+  "q": "A loop runs s += word for thousands of words. A reviewer asks for a StringBuilder instead. What does that change?",
+  "options": [
+   "Nothing: the compiler already turns the whole loop into one single concatenation",
+   "Each += copies all text so far into a new String; a builder appends to one buffer",
+   "+= changes s in place, but it locks the string on every pass, which is what makes it slow",
+   "StringBuilder skips Unicode checks, so each character is cheaper"
+  ],
+  "answer": 1,
+  "why": "Because strings are immutable, each += creates a new String holding a copy of everything built so far, and the old one becomes garbage. A StringBuilder keeps one growing buffer and appends to it, so earlier text is not copied again on every pass.",
+  "wrong": [
+   "The compiler can join one expression, but it does not merge the separate += steps of a loop into one result.",
+   null,
+   "Strings cannot change in place; the cost comes from building new ones, not from locking.",
+   "Both work with the same characters; the difference is copying, not Unicode handling."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/data/buffers.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "לולאה מריצה s += word על אלפי מילים. reviewer מבקש להשתמש ב-StringBuilder במקום. מה זה משנה?",
+   "options": [
+    "כלום: ה-compiler כבר הופך את כל הלולאה לשרשור אחד",
+    "כל += מעתיק את כל הטקסט עד כה ל-String חדש, ו-builder מוסיף ל-buffer אחד",
+    "+= משנה את s במקום, אבל נועל את המחרוזת בכל סיבוב, וזה מה שמאט אותו",
+    "StringBuilder מדלג על בדיקות Unicode, ולכן כל תו זול יותר"
+   ],
+   "why": "מכיוון שמחרוזות הן immutable, כל += יוצר String חדש שמחזיק עותק של כל מה שנבנה עד כה, והישן הופך ל-garbage. StringBuilder מחזיק buffer אחד שגדל ומוסיף אליו, ולכן הטקסט הקודם לא מועתק שוב בכל סיבוב.",
+   "wrong": [
+    "ה-compiler יכול לחבר ביטוי אחד, אבל הוא לא מאחד את צעדי ה-+= הנפרדים של לולאה לתוצאה אחת.",
+    null,
+    "מחרוזות לא יכולות להשתנות במקום: המחיר נובע מבניית מחרוזות חדשות, לא מנעילה.",
+    "שניהם עובדים עם אותם תווים: ההבדל הוא בהעתקה, לא בטיפול ב-Unicode."
+   ]
+  }
+ },
+ {
+  "id": "java-shared-reference-after-concat",
+  "topic": "java",
+  "subtopic": "strings",
+  "concepts": [
+   "string-immutability",
+   "reference",
+   "concatenation"
+  ],
+  "level": "easy",
+  "q": "String a = \"x\"; String b = a; a += \"y\"; runs. What does b hold now?",
+  "options": [
+   "xy, because a and b share one String object",
+   "y, because += moves the text from a",
+   "x, because a now points to a new String",
+   "null, because the old String was released"
+  ],
+  "answer": 2,
+  "why": "a += \"y\" builds a new String xy and points a at it. The original x is untouched, and b still refers to it. With an immutable type, no other variable can see a change made through a.",
+  "wrong": [
+   "They did share x, but += cannot change that object; it creates a new one for a only.",
+   "Nothing is moved; concatenation copies text into a new string.",
+   null,
+   "b still refers to the x object, so it is reachable and stays as it is."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/data/strings.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "הקוד String a = \"x\"; String b = a; a += \"y\"; רץ. מה b מחזיק עכשיו?",
+   "options": [
+    "xy, כי a ו-b חולקים object אחד של String",
+    "y, כי += מעביר את הטקסט מ-a",
+    "x, כי a מצביע עכשיו על String חדש",
+    "null, כי ה-String הישן שוחרר"
+   ],
+   "why": "a += \"y\" בונה String חדש xy ומפנה אליו את a. ה-x המקורי לא נפגע, ו-b עדיין מפנה אליו. עם טיפוס immutable, אף משתנה אחר לא יכול לראות שינוי שנעשה דרך a.",
+   "wrong": [
+    "הם אכן חלקו את x, אבל += לא יכול לשנות את ה-object הזה: הוא יוצר object חדש רק עבור a.",
+    "שום דבר לא מועבר: שרשור מעתיק טקסט למחרוזת חדשה.",
+    null,
+    "b עדיין מפנה ל-object של x, ולכן אפשר להגיע אליו והוא נשאר כמו שהוא."
+   ]
+  }
+ },
+ {
+  "id": "java-arraylist-for-index-reads",
+  "topic": "java",
+  "subtopic": "collections",
+  "concepts": [
+   "arraylist",
+   "linkedlist",
+   "random-access"
+  ],
+  "level": "easy",
+  "q": "A list is read by index inside loops, like list.get(i), and new items are only added at the end. Which implementation fits, and why?",
+  "options": [
+   "ArrayList: get(i) is a direct jump into an array",
+   "LinkedList: adding at the end is its strength",
+   "LinkedList: it uses less memory per item",
+   "Either one, since the List interface makes them cost the same"
+  ],
+  "answer": 0,
+  "why": "ArrayList stores items in an array, so get(i) goes straight to the slot, and adding at the end is cheap on average. A LinkedList must walk node by node to reach index i, which hurts inside a loop.",
+  "wrong": [
+   null,
+   "ArrayList also appends cheaply, and LinkedList pays O(i) for every get(i).",
+   "Each LinkedList node also stores links to its neighbours, so it usually uses more memory.",
+   "The interface is the same, but each class has its own cost for the same call."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/collections/implementations/list.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "קוראים list לפי index בתוך לולאות, למשל list.get(i), ופריטים חדשים נוספים רק בסוף. איזה מימוש מתאים, ולמה?",
+   "options": [
+    "ArrayList: get(i) הוא קפיצה ישירה לתוך array",
+    "LinkedList: הוספה בסוף היא החוזקה שלו",
+    "LinkedList: הוא משתמש בפחות זיכרון לכל פריט",
+    "כל אחד מהם, כי ה-interface List גורם להם לעלות אותו דבר"
+   ],
+   "why": "ArrayList שומר את הפריטים ב-array, ולכן get(i) הולך ישר לתא, והוספה בסוף זולה בממוצע. LinkedList חייב ללכת node אחרי node כדי להגיע ל-index i, וזה פוגע בתוך לולאה.",
+   "wrong": [
+    null,
+    "גם ArrayList מוסיף בסוף בזול, ו-LinkedList משלם O(i) על כל get(i).",
+    "כל node ב-LinkedList שומר גם קישורים לשכנים שלו, ולכן בדרך כלל הוא משתמש ביותר זיכרון.",
+    "ה-interface זהה, אבל לכל class יש עלות משלו לאותה קריאה."
+   ]
+  }
+ },
+ {
+  "id": "java-treemap-sorted-keys",
+  "topic": "java",
+  "subtopic": "collections",
+  "concepts": [
+   "treemap",
+   "hashmap",
+   "ordering"
+  ],
+  "level": "easy",
+  "q": "Three fruit names are put into a TreeMap in this order. What does this print?",
+  "code": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        Map<String, Integer> stock = new TreeMap<>();\n        stock.put(\"pear\", 3);\n        stock.put(\"apple\", 5);\n        stock.put(\"fig\", 1);\n        System.out.println(stock.keySet());\n    }\n}",
+  "lang": "java",
+  "options": [
+   "[pear, apple, fig]",
+   "[fig, pear, apple]",
+   "The keys in an unpredictable order",
+   "[apple, fig, pear]"
+  ],
+  "answer": 3,
+  "why": "A TreeMap keeps its keys sorted, here in alphabetical order for strings, whatever order they were inserted in. That is the main reason to choose it over a HashMap.",
+  "wrong": [
+   "Insertion order is what a LinkedHashMap keeps, not a TreeMap.",
+   "Keys are not sorted by length; strings sort alphabetically.",
+   "No guaranteed order is the HashMap behaviour; a TreeMap is always sorted.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/collections/implementations/map.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שלושה שמות של פירות מוכנסים ל-TreeMap בסדר הזה. מה יודפס?",
+   "options": [
+    "[pear, apple, fig]",
+    "[fig, pear, apple]",
+    "ה-keys בסדר בלתי צפוי",
+    "[apple, fig, pear]"
+   ],
+   "why": "TreeMap שומר את ה-keys שלו ממוינים, כאן בסדר אלפביתי כי אלה מחרוזות, לא משנה באיזה סדר הוכנסו. זו הסיבה העיקרית לבחור בו על פני HashMap.",
+   "wrong": [
+    "סדר ההכנסה הוא מה ש-LinkedHashMap שומר, לא TreeMap.",
+    "ה-keys לא ממוינים לפי אורך: מחרוזות ממוינות לפי סדר אלפביתי.",
+    "היעדר סדר מובטח הוא ההתנהגות של HashMap: TreeMap תמיד ממוין.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "java-hashmap-order-not-guaranteed",
+  "topic": "java",
+  "subtopic": "collections",
+  "concepts": [
+   "hashmap",
+   "linkedhashmap",
+   "ordering"
+  ],
+  "level": "medium",
+  "q": "In tests, a HashMap printed its entries in the order they were inserted, so a report now depends on that order. Is that safe?",
+  "options": [
+   "Yes: a HashMap keeps insertion order for small maps",
+   "No: HashMap promises no order; use LinkedHashMap to keep it",
+   "Yes, as long as no key is ever removed from the map",
+   "No: a HashMap shuffles its entries on purpose after each put"
+  ],
+  "answer": 1,
+  "why": "A HashMap orders entries by hash bucket, and that order can change as the map grows. Matching insertion order in a test was luck. LinkedHashMap keeps insertion order and TreeMap keeps sorted order by contract.",
+  "wrong": [
+   "No size gives an order guarantee; small maps can look ordered by chance.",
+   null,
+   "Order can change after inserts too, when the map resizes, not only after removals.",
+   "There is no deliberate shuffling; the order follows hashing and is simply not promised."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/collections/implementations/map.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-tests, HashMap הדפיס את ה-entries שלו בסדר שבו הוכנסו, ולכן דוח תלוי עכשיו בסדר הזה. האם זה בטוח?",
+   "options": [
+    "כן: HashMap שומר על סדר ההכנסה ב-maps קטנים",
+    "לא: HashMap לא מבטיח סדר, ולשמירה עליו יש LinkedHashMap",
+    "כן, כל עוד אף key לא נמחק אף פעם מה-map",
+    "לא: HashMap מערבב את ה-entries שלו בכוונה אחרי כל put"
+   ],
+   "why": "HashMap מסדר entries לפי hash bucket, והסדר הזה יכול להשתנות כשה-map גדל. ההתאמה לסדר ההכנסה ב-test הייתה מזל. LinkedHashMap שומר על סדר ההכנסה ו-TreeMap שומר על סדר ממוין, כחלק מהחוזה שלהם.",
+   "wrong": [
+    "אף גודל לא נותן הבטחה לסדר: maps קטנים יכולים להיראות מסודרים במקרה.",
+    null,
+    "הסדר יכול להשתנות גם אחרי הכנסות, כשה-map עושה resize, ולא רק אחרי מחיקות.",
+    "אין ערבוב מכוון: הסדר נובע מה-hashing ופשוט לא מובטח."
+   ]
+  }
+ },
+ {
+  "id": "java-set-removes-duplicates",
+  "topic": "java",
+  "subtopic": "collections",
+  "concepts": [
+   "hashset",
+   "duplicates",
+   "set"
+  ],
+  "level": "easy",
+  "q": "A list of emails has repeats, and you need each email once. Order does not matter. What is the simplest approach?",
+  "options": [
+   "Sort the list first, because sorting removes repeated values as it orders them",
+   "Call list.distinct(), which every List has",
+   "Copy the list into a HashSet, which keeps one copy of each value",
+   "Use a TreeMap with the email as the value"
+  ],
+  "answer": 2,
+  "why": "A Set holds each value at most once, so new HashSet<>(list) drops the repeats in one step. HashSet relies on the String class's equals() and hashCode(), which compare text.",
+  "wrong": [
+   "Sorting puts equal values next to each other but keeps all of them.",
+   "List has no such method; removing duplicates is what a Set is for.",
+   null,
+   "Map values may repeat; only keys are unique, and the emails would still need to be keys."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/collections/interfaces/set.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ברשימת מיילים יש כפילויות, וצריך כל מייל פעם אחת. הסדר לא משנה. מה הגישה הכי פשוטה?",
+   "options": [
+    "למיין קודם את ה-list, כי מיון מסיר ערכים חוזרים תוך כדי סידור",
+    "לקרוא ל-list.distinct(), שקיימת בכל List",
+    "להעתיק את ה-list ל-HashSet, ששומר עותק אחד של כל ערך",
+    "להשתמש ב-TreeMap עם המייל בתור ה-value"
+   ],
+   "why": "Set מחזיק כל ערך לכל היותר פעם אחת, ולכן new HashSet<>(list) מוריד את הכפילויות בצעד אחד. HashSet מסתמך על equals() ו-hashCode() של ה-class String, שמשווים טקסט.",
+   "wrong": [
+    "מיון שם ערכים שווים אחד ליד השני, אבל משאיר את כולם.",
+    "ל-List אין method כזו: הסרת כפילויות היא בדיוק התפקיד של Set.",
+    null,
+    "values ב-Map יכולים לחזור על עצמם: רק ה-keys ייחודיים, והמיילים עדיין היו צריכים להיות keys."
+   ]
+  }
+ },
+ {
+  "id": "java-remove-inside-for-each",
+  "topic": "java",
+  "subtopic": "collections",
+  "concepts": [
+   "iteration",
+   "concurrent-modification",
+   "iterator"
+  ],
+  "level": "medium",
+  "q": "The loop removes even numbers from the list it is iterating with for-each. What happens?",
+  "code": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        List<Integer> nums = new ArrayList<>(List.of(1, 2, 3, 4));\n        for (Integer n : nums) {\n            if (n % 2 == 0) nums.remove(n);\n        }\n        System.out.println(nums);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "ConcurrentModificationException at run time",
+   "[1, 3]",
+   "[1, 3, 4]",
+   "Compile error: a list cannot be changed inside for-each"
+  ],
+  "answer": 0,
+  "why": "A for-each loop uses an iterator, which notices that the list was changed behind its back and throws on its next step. To remove while iterating, call remove() on an explicit Iterator or use removeIf.",
+  "wrong": [
+   null,
+   "That is the intended result, but the iterator fails after the first removal.",
+   "The loop does not quietly skip ahead; the iterator throws as soon as it detects the change.",
+   "The compiler does not track this; the problem is only detected while the loop runs."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/collections/interfaces/collection.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "הלולאה מסירה מספרים זוגיים מה-list שעליה היא עוברת עם for-each. מה יקרה?",
+   "options": [
+    "ConcurrentModificationException ב-runtime",
+    "[1, 3]",
+    "[1, 3, 4]",
+    "שגיאת compile: אי אפשר לשנות list בתוך for-each"
+   ],
+   "why": "לולאת for-each משתמשת ב-iterator, שמזהה שה-list השתנתה מאחורי הגב שלו וזורק exception בצעד הבא. כדי להסיר תוך כדי מעבר, קוראים ל-remove() על Iterator מפורש או משתמשים ב-removeIf.",
+   "wrong": [
+    null,
+    "זו התוצאה המכוונת, אבל ה-iterator נכשל אחרי ההסרה הראשונה.",
+    "הלולאה לא מדלגת קדימה בשקט: ה-iterator זורק exception ברגע שהוא מזהה את השינוי.",
+    "ה-compiler לא עוקב אחרי זה: הבעיה מתגלה רק בזמן שהלולאה רצה."
+   ]
+  }
+ },
+ {
+  "id": "java-remove-by-index-skips",
+  "topic": "java",
+  "subtopic": "collections",
+  "concepts": [
+   "iteration",
+   "index-shift",
+   "arraylist"
+  ],
+  "level": "hard",
+  "q": "To avoid an exception, the loop now removes even numbers by index. What does this print?",
+  "code": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        List<Integer> nums = new ArrayList<>(List.of(2, 4, 5, 6));\n        for (int i = 0; i < nums.size(); i++) {\n            if (nums.get(i) % 2 == 0) nums.remove(i);\n        }\n        System.out.println(nums);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "[5]",
+   "IndexOutOfBoundsException at run time",
+   "[4, 5, 6]",
+   "[4, 5]"
+  ],
+  "answer": 3,
+  "why": "Removing at index i shifts every later item left by one. When 2 is removed, 4 moves into index 0, but i moves on to 1, so 4 is never checked. 6 is then found and removed, leaving [4, 5].",
+  "wrong": [
+   "That assumes every even number is checked, but the shift makes the loop skip the item after each removal.",
+   "The loop reads nums.size() on every pass, so i never goes past the end.",
+   "6 is still checked after the skip, and it is even, so it is removed.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/collections/interfaces/collection.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כדי להימנע מ-exception, הלולאה מסירה עכשיו מספרים זוגיים לפי index. מה יודפס?",
+   "options": [
+    "[5]",
+    "IndexOutOfBoundsException ב-runtime",
+    "[4, 5, 6]",
+    "[4, 5]"
+   ],
+   "why": "הסרה ב-index i מזיזה כל פריט שאחריו מקום אחד שמאלה. כש-2 מוסר, 4 עובר ל-index 0, אבל i ממשיך ל-1, ולכן 4 אף פעם לא נבדק. אחר כך 6 נמצא ומוסר, ונשאר [4, 5].",
+   "wrong": [
+    "זה מניח שכל מספר זוגי נבדק, אבל ההזזה גורמת ללולאה לדלג על הפריט שאחרי כל הסרה.",
+    "הלולאה קוראת את nums.size() בכל סיבוב, ולכן i אף פעם לא עובר את הסוף.",
+    "6 עדיין נבדק אחרי הדילוג, והוא זוגי, ולכן הוא מוסר.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "java-list-of-is-unmodifiable",
+  "topic": "java",
+  "subtopic": "collections",
+  "concepts": [
+   "immutable-collection",
+   "list-of",
+   "unsupported-operation"
+  ],
+  "level": "medium",
+  "q": "days is created with List.of, then add() is called on it. What happens?",
+  "code": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        List<String> days = List.of(\"mon\", \"tue\");\n        days.add(\"wed\");\n        System.out.println(days);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "[mon, tue, wed]",
+   "UnsupportedOperationException at run time",
+   "Compile error: List.of returns a read-only type",
+   "[mon, tue], because the add is ignored"
+  ],
+  "answer": 1,
+  "why": "List.of returns an unmodifiable list. Its type is still List, so add() compiles, but the call throws when it runs. Copy it into new ArrayList<>(...) when you need a list you can change.",
+  "wrong": [
+   "The list cannot grow; any change to it is rejected.",
+   null,
+   "The declared type is plain List, which has add(), so the compiler accepts the call.",
+   "Changes are not silently dropped; the list throws so the mistake is visible."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "days נוצרת עם List.of, ואז קוראים עליה ל-add(). מה יקרה?",
+   "options": [
+    "[mon, tue, wed]",
+    "UnsupportedOperationException ב-runtime",
+    "שגיאת compile: List.of מחזירה טיפוס לקריאה בלבד",
+    "[mon, tue], כי ה-add מתעלמים ממנו"
+   ],
+   "why": "List.of מחזירה list unmodifiable. הטיפוס שלה הוא עדיין List, ולכן add() עוברת compile, אבל הקריאה זורקת exception כשהיא רצה. כשצריך list שאפשר לשנות, מעתיקים אותה ל-new ArrayList<>(...).",
+   "wrong": [
+    "ה-list לא יכולה לגדול: כל שינוי בה נדחה.",
+    null,
+    "הטיפוס המוצהר הוא List רגיל, שיש בו add(), ולכן ה-compiler מקבל את הקריאה.",
+    "שינויים לא נזרקים בשקט: ה-list זורקת exception כדי שהטעות תהיה גלויה."
+   ]
+  }
+ },
+ {
+  "id": "java-checked-vs-unchecked",
+  "topic": "java",
+  "subtopic": "exceptions",
+  "concepts": [
+   "checked-exception",
+   "unchecked-exception",
+   "compiler"
+  ],
+  "level": "easy",
+  "q": "What is the practical difference between a checked exception, such as IOException, and an unchecked one, such as NullPointerException?",
+  "options": [
+   "Checked ones are checked by the JVM while the program runs; unchecked ones are never checked",
+   "Unchecked exceptions cannot be caught with try and catch",
+   "The compiler makes you catch or declare checked ones; unchecked ones usually mean a bug",
+   "Checked exceptions cannot stop the program, only unchecked ones can"
+  ],
+  "answer": 2,
+  "why": "Checked exceptions describe failures a correct program should expect, like a missing file, so the compiler forces callers to handle or declare them. Unchecked ones usually mean a coding error and need no declaration.",
+  "wrong": [
+   "The checking is done by the compiler, not at run time. That is where the name comes from.",
+   "Any exception can be caught, including NullPointerException.",
+   null,
+   "An uncaught checked exception ends a thread just as an unchecked one does."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/exceptions/runtime.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מה ההבדל המעשי בין checked exception, כמו IOException, לבין unchecked exception, כמו NullPointerException?",
+   "options": [
+    "ה-checked נבדקים על ידי ה-JVM בזמן שהתוכנית רצה, וה-unchecked אף פעם לא נבדקים",
+    "אי אפשר לתפוס unchecked exceptions עם try ו-catch",
+    "ה-compiler מחייב לתפוס או להצהיר על checked, ו-unchecked בדרך כלל מעידים על bug",
+    "checked exceptions לא יכולים לעצור את התוכנית, רק unchecked יכולים"
+   ],
+   "why": "checked exceptions מתארים כשלים שתוכנית תקינה צריכה לצפות להם, כמו קובץ חסר, ולכן ה-compiler מכריח את הקוד הקורא לטפל בהם או להצהיר עליהם. unchecked בדרך כלל מעידים על שגיאת קוד ולא דורשים הצהרה.",
+   "wrong": [
+    "הבדיקה נעשית על ידי ה-compiler, לא ב-runtime. משם מגיע השם.",
+    "אפשר לתפוס כל exception, כולל NullPointerException.",
+    null,
+    "checked exception שלא נתפס מסיים thread בדיוק כמו unchecked."
+   ]
+  }
+ },
+ {
+  "id": "java-finally-runs-after-return",
+  "topic": "java",
+  "subtopic": "exceptions",
+  "concepts": [
+   "finally",
+   "return"
+  ],
+  "level": "easy",
+  "q": "load() returns from inside try, and its finally block prints a line. What does this program print?",
+  "code": "public class Main {\n    static String load() {\n        try {\n            return \"data\";\n        } finally {\n            System.out.println(\"cleanup\");\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(load());\n    }\n}",
+  "lang": "java",
+  "options": [
+   "cleanup, then data",
+   "data only",
+   "data, then cleanup",
+   "Compile error: code after return is unreachable"
+  ],
+  "answer": 0,
+  "why": "A finally block runs whenever control leaves the try, including through return. The return value is ready, finally prints cleanup, and then the method returns, so main prints data next.",
+  "wrong": [
+   null,
+   "finally is not skipped by return; that guarantee is the whole point of finally.",
+   "finally runs before the method actually returns, so its output comes first.",
+   "A finally block is not code after the return; it is part of how the try exits."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/exceptions/finally.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "load() חוזרת מתוך ה-try, וה-finally block שלה מדפיס שורה. מה התוכנית תדפיס?",
+   "options": [
+    "cleanup, ואז data",
+    "רק data",
+    "data, ואז cleanup",
+    "שגיאת compile: קוד אחרי return הוא unreachable"
+   ],
+   "why": "finally block רץ בכל פעם שהשליטה יוצאת מה-try, כולל דרך return. ערך ההחזרה מוכן, finally מדפיס cleanup, ואז ה-method חוזרת, ולכן main מדפיסה data אחר כך.",
+   "wrong": [
+    null,
+    "return לא מדלג על finally: ההבטחה הזו היא כל הטעם של finally.",
+    "finally רץ לפני שה-method באמת חוזרת, ולכן הפלט שלו מגיע ראשון.",
+    "finally block הוא לא קוד אחרי ה-return: הוא חלק מהאופן שבו ה-try יוצא."
+   ]
+  }
+ },
+ {
+  "id": "java-finally-cannot-change-returned-value",
+  "topic": "java",
+  "subtopic": "exceptions",
+  "concepts": [
+   "finally",
+   "return",
+   "evaluation-order"
+  ],
+  "level": "hard",
+  "q": "f() returns x from try, and finally then sets x to 2. What does this print?",
+  "code": "public class Main {\n    static int f() {\n        int x = 1;\n        try {\n            return x;\n        } finally {\n            x = 2;\n        }\n    }\n    public static void main(String[] args) { System.out.println(f()); }\n}",
+  "lang": "java",
+  "options": [
+   "2",
+   "Compile error: x is changed after the return",
+   "Nothing: the return skips the finally block",
+   "1"
+  ],
+  "answer": 3,
+  "why": "return x evaluates x first and keeps the value 1 as the result. finally then runs and sets the local x to 2, but the value already chosen to return is not read again, so 1 is printed.",
+  "wrong": [
+   "finally does run, but it changes the variable, not the value already saved for the return.",
+   "A finally block may assign local variables; it compiles without problems.",
+   "finally always runs when the try exits, including through a return.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/exceptions/finally.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "f() מחזירה את x מתוך ה-try, ואז finally קובע את x ל-2. מה יודפס?",
+   "options": [
+    "2",
+    "שגיאת compile: x משתנה אחרי ה-return",
+    "כלום: ה-return מדלג על ה-finally block",
+    "1"
+   ],
+   "why": "return x מחשב קודם את x ושומר את הערך 1 כתוצאה. אחר כך finally רץ וקובע את ה-x המקומי ל-2, אבל הערך שכבר נבחר להחזרה לא נקרא שוב, ולכן מודפס 1.",
+   "wrong": [
+    "finally אכן רץ, אבל הוא משנה את המשתנה, לא את הערך שכבר נשמר להחזרה.",
+    "finally block רשאי להציב ערכים במשתנים מקומיים, והוא עובר compile בלי בעיה.",
+    "finally תמיד רץ כשה-try יוצא, כולל דרך return.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "java-catch-general-before-specific",
+  "topic": "java",
+  "subtopic": "exceptions",
+  "concepts": [
+   "catch-order",
+   "exception-hierarchy",
+   "compile-error"
+  ],
+  "level": "medium",
+  "q": "A FileNotFoundException is thrown. The catch for Exception comes before the catch for IOException. What happens?",
+  "code": "import java.io.*;\npublic class Main {\n    public static void main(String[] args) {\n        try {\n            throw new FileNotFoundException(\"x.txt\");\n        } catch (Exception e) {\n            System.out.println(\"general\");\n        } catch (IOException e) {\n            System.out.println(\"io\");\n        }\n    }\n}",
+  "lang": "java",
+  "options": [
+   "general",
+   "io, because the most specific matching catch is always chosen",
+   "general, then io, since both catch blocks match",
+   "Compile error: the IOException catch can never be reached"
+  ],
+  "answer": 3,
+  "why": "Catch blocks are tried in order, and Exception already matches every IOException. The second block could never run, so the compiler rejects it. Put the more specific catch first.",
+  "wrong": [
+   "That would be the run time result, but the code never compiles.",
+   "Order matters: the first matching catch wins, and Exception would match first.",
+   "At most one catch block runs for a thrown exception.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/exceptions/catch.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "נזרק FileNotFoundException. ה-catch של Exception מופיע לפני ה-catch של IOException. מה יקרה?",
+   "options": [
+    "general",
+    "io, כי תמיד נבחר ה-catch המתאים הכי ספציפי",
+    "general, ואז io, כי שני ה-catch blocks מתאימים",
+    "שגיאת compile: אי אפשר אף פעם להגיע ל-catch של IOException"
+   ],
+   "why": "catch blocks נבדקים לפי הסדר, ו-Exception כבר מתאים לכל IOException. ה-block השני אף פעם לא היה יכול לרוץ, ולכן ה-compiler דוחה אותו. צריך לשים את ה-catch הספציפי יותר ראשון.",
+   "wrong": [
+    "זו הייתה התוצאה ב-runtime, אבל הקוד אף פעם לא עובר compile.",
+    "הסדר משנה: ה-catch המתאים הראשון מנצח, ו-Exception היה מתאים ראשון.",
+    "לכל היותר catch block אחד רץ עבור exception שנזרק.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "java-try-with-resources-closes",
+  "topic": "java",
+  "subtopic": "exceptions",
+  "concepts": [
+   "try-with-resources",
+   "autocloseable",
+   "cleanup"
+  ],
+  "level": "medium",
+  "q": "The resource's close() prints a line, and the try body throws. In what order are lines printed?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try (Res r = new Res()) {\n            System.out.println(\"use\");\n            throw new IllegalStateException(\"fail\");\n        } catch (IllegalStateException e) {\n            System.out.println(\"caught\");\n        }\n    }\n}\nclass Res implements AutoCloseable { public void close() { System.out.println(\"close\"); } }",
+  "lang": "java",
+  "options": [
+   "use, caught, close",
+   "use, close, caught",
+   "use, caught; close() is skipped because of the exception",
+   "use, then a crash, since the catch is never reached"
+  ],
+  "answer": 1,
+  "why": "try-with-resources closes the resource as soon as the try block exits, normally or by an exception. The resource is closed first, then the matching catch runs. That is why it is safer than closing by hand.",
+  "wrong": [
+   "The catch belongs to the same statement, but the resource is closed before the catch runs.",
+   null,
+   "Closing on an exception is exactly what try-with-resources guarantees.",
+   "The catch matches IllegalStateException, so the exception is handled after close()."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-close() של ה-resource מדפיס שורה, והגוף של ה-try זורק exception. באיזה סדר מודפסות השורות?",
+   "options": [
+    "use, caught, close",
+    "use, close, caught",
+    "use, caught, ו-close() מדולגת בגלל ה-exception",
+    "use, ואז קריסה, כי אף פעם לא מגיעים ל-catch"
+   ],
+   "why": "try-with-resources סוגר את ה-resource ברגע שה-try block יוצא, בצורה רגילה או בגלל exception. קודם ה-resource נסגר, ואז ה-catch המתאים רץ. בגלל זה זה בטוח יותר מסגירה ידנית.",
+   "wrong": [
+    "ה-catch שייך לאותה הוראה, אבל ה-resource נסגר לפני שה-catch רץ.",
+    null,
+    "סגירה גם במקרה של exception היא בדיוק מה ש-try-with-resources מבטיח.",
+    "ה-catch מתאים ל-IllegalStateException, ולכן ה-exception מטופל אחרי close()."
+   ]
+  }
+ },
+ {
+  "id": "java-swallowed-exception",
+  "topic": "java",
+  "subtopic": "exceptions",
+  "concepts": [
+   "swallowing-exceptions",
+   "error-handling",
+   "debugging"
+  ],
+  "level": "easy",
+  "q": "A config parser wraps Integer.parseInt in try, has an empty catch, and returns 0 on failure. A timeout value is mistyped as 3O. What is the main problem?",
+  "options": [
+   "The program still crashes, because an empty catch block does not handle anything",
+   "parseInt fixes the typo and reads it as 30",
+   "The error disappears: timeout silently becomes 0 with no message",
+   "The compiler rejects an empty catch block"
+  ],
+  "answer": 2,
+  "why": "Catching an exception and doing nothing hides it. The bad value turns into 0, nothing is logged, and the bug appears later somewhere else, such as requests timing out at once. Log it, rethrow it, or fail fast.",
+  "wrong": [
+   "An empty catch handles the exception, so nothing crashes; that is the problem.",
+   "parseInt does not guess; the letter O makes it throw NumberFormatException.",
+   null,
+   "An empty catch compiles; it is legal and therefore easy to get wrong."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/exceptions/advantages.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "parser של config עוטף את Integer.parseInt ב-try, עם catch ריק, ומחזיר 0 בכישלון. ערך timeout מוקלד בטעות כ-3O. מה הבעיה המרכזית?",
+   "options": [
+    "התוכנית עדיין קורסת, כי catch block ריק לא מטפל בכלום",
+    "parseInt מתקנת את שגיאת ההקלדה וקוראת את זה כ-30",
+    "השגיאה נעלמת: timeout הופך בשקט ל-0 בלי שום הודעה",
+    "ה-compiler דוחה catch block ריק"
+   ],
+   "why": "לתפוס exception ולא לעשות כלום זה להסתיר אותו. הערך השגוי הופך ל-0, שום דבר לא נרשם ב-log, וה-bug מופיע אחר כך במקום אחר, למשל requests שנכשלים ב-timeout מיד. צריך לרשום אותו ב-log, לזרוק אותו מחדש, או להיכשל מהר.",
+   "wrong": [
+    "catch ריק כן מטפל ב-exception, ולכן שום דבר לא קורס, וזו בדיוק הבעיה.",
+    "parseInt לא מנחשת: האות O גורמת לה לזרוק NumberFormatException.",
+    null,
+    "catch ריק עובר compile: הוא חוקי, ולכן קל לטעות איתו."
+   ]
+  }
+ },
+ {
+  "id": "java-final-reference-mutable-object",
+  "topic": "java",
+  "subtopic": "keywords",
+  "concepts": [
+   "final",
+   "reference",
+   "mutation"
+  ],
+  "level": "easy",
+  "q": "A field is declared final List<String> names = new ArrayList<>(). Which statement does the compiler reject?",
+  "options": [
+   "names.add(\"x\")",
+   "names.clear()",
+   "names = new ArrayList<>()",
+   "names.removeIf(s -> s.isEmpty())"
+  ],
+  "answer": 2,
+  "why": "final on a variable means it cannot be assigned again, so it always refers to the same list. It says nothing about the object itself, so methods that change the list are allowed.",
+  "wrong": [
+   "add() changes the list, not the variable, so final does not stop it.",
+   "clear() changes the list's contents; the reference stays the same.",
+   null,
+   "removeIf() is another change to the object, which final allows."
+  ],
+  "ref": "https://docs.oracle.com/javase/specs/jls/se21/html/jls-4.html#jls-4.12.4",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "field מוגדר כ-final List<String> names = new ArrayList<>(). איזו הוראה ה-compiler ידחה?",
+   "options": [
+    "names.add(\"x\")",
+    "names.clear()",
+    "names = new ArrayList<>()",
+    "names.removeIf(s -> s.isEmpty())"
+   ],
+   "why": "final על משתנה אומר שאי אפשר להציב בו ערך שוב, ולכן הוא תמיד מפנה לאותה list. זה לא אומר כלום על ה-object עצמו, ולכן methods שמשנות את ה-list מותרות.",
+   "wrong": [
+    "add() משנה את ה-list, לא את המשתנה, ולכן final לא עוצר אותה.",
+    "clear() משנה את התוכן של ה-list, וה-reference נשאר אותו דבר.",
+    null,
+    "removeIf() היא עוד שינוי של ה-object, ו-final מתיר אותו."
+   ]
+  }
+ },
+ {
+  "id": "java-final-class-not-immutable",
+  "topic": "java",
+  "subtopic": "keywords",
+  "concepts": [
+   "final",
+   "immutability",
+   "inheritance"
+  ],
+  "level": "medium",
+  "q": "To make Point objects immutable, a teammate marks the class final. Point still has setX() and setY(). Is it immutable now?",
+  "options": [
+   "No: final on a class only stops subclassing; the setters still change it",
+   "Yes: marking a class final also makes every one of its fields final automatically",
+   "Yes, but only for objects created after the change",
+   "No, because a final class cannot have setter methods"
+  ],
+  "answer": 0,
+  "why": "A final class cannot be extended, nothing more. Its fields can still be changed by its own methods. An immutable class also needs private final fields and no methods that modify state.",
+  "wrong": [
+   null,
+   "final on a class does not reach its fields; each field must be declared final itself.",
+   "Being final is a property of the class and does not affect how fields behave in any object.",
+   "A final class may have any methods, including setters, so the code compiles as it is."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/final.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כדי להפוך objects מסוג Point ל-immutable, חבר צוות מסמן את ה-class כ-final. ל-Point עדיין יש setX() ו-setY(). האם הוא immutable עכשיו?",
+   "options": [
+    "לא: final על class רק מונע ירושה ממנו, וה-setters עדיין משנים אותו",
+    "כן: סימון class כ-final הופך גם את כל ה-fields שלו ל-final אוטומטית",
+    "כן, אבל רק עבור objects שנוצרו אחרי השינוי",
+    "לא, כי ל-final class לא יכולות להיות setter methods"
+   ],
+   "why": "אי אפשר לרשת מ-final class, וזה הכול. ה-methods שלו עדיין יכולות לשנות את ה-fields שלו. class שהוא immutable צריך גם private final fields ואף method שמשנה state.",
+   "wrong": [
+    null,
+    "final על class לא מגיע ל-fields שלו: צריך להגדיר כל field כ-final בעצמו.",
+    "final היא תכונה של ה-class, והיא לא משפיעה על ההתנהגות של fields באף object.",
+    "ל-final class יכולות להיות כל methods, כולל setters, ולכן הקוד עובר compile כמו שהוא."
+   ]
+  }
+ },
+ {
+  "id": "java-instance-field-from-static-main",
+  "topic": "java",
+  "subtopic": "keywords",
+  "concepts": [
+   "static",
+   "instance-field",
+   "compile-error"
+  ],
+  "level": "easy",
+  "q": "count is an instance field, and static main uses it directly. What happens?",
+  "code": "public class Main {\n    int count = 0;\n    public static void main(String[] args) {\n        count++;\n        System.out.println(count);\n    }\n}",
+  "lang": "java",
+  "options": [
+   "1, because count starts at 0 and main increments it once before printing",
+   "Compile error: count belongs to an object, and static main has none",
+   "0",
+   "NullPointerException at run time, since no Main object exists yet"
+  ],
+  "answer": 1,
+  "why": "A static method belongs to the class and runs without any object, so there is no count to read. The compiler rejects it. Create an object first, such as new Main().count, or make count static.",
+  "wrong": [
+   "main never gets an object, so there is no count field to increment.",
+   null,
+   "The default value 0 belongs to an object's field, and no object exists here.",
+   "This is caught at compile time, so the program never runs."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/classvars.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "count הוא instance field, ו-main שהיא static משתמשת בו ישירות. מה יקרה?",
+   "options": [
+    "1, כי count מתחיל ב-0 ו-main מגדילה אותו פעם אחת לפני ההדפסה",
+    "שגיאת compile: count שייך ל-object, ול-main שהיא static אין object",
+    "0",
+    "NullPointerException ב-runtime, כי עדיין לא קיים object מסוג Main"
+   ],
+   "why": "static method שייכת ל-class ורצה בלי שום object, ולכן אין count לקרוא. ה-compiler דוחה את זה. צריך ליצור object קודם, למשל new Main().count, או להפוך את count ל-static.",
+   "wrong": [
+    "main אף פעם לא מקבלת object, ולכן אין field בשם count להגדיל.",
+    null,
+    "ערך ברירת המחדל 0 שייך ל-field של object, ואין כאן אף object.",
+    "זה נתפס בזמן compile, ולכן התוכנית אף פעם לא רצה."
+   ]
+  }
+ },
+ {
+  "id": "java-constructor-param-shadows-field",
+  "topic": "java",
+  "subtopic": "keywords",
+  "concepts": [
+   "this",
+   "shadowing",
+   "constructor"
+  ],
+  "level": "medium",
+  "q": "The constructor's parameter has the same name as the field, and the body says balance = balance. What does this print?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        Account acc = new Account(50);\n        System.out.println(acc.balance);\n    }\n}\nclass Account {\n    int balance;\n    Account(int balance) { balance = balance; }\n}",
+  "lang": "java",
+  "options": [
+   "50",
+   "Compile error: balance is declared twice",
+   "Compile error: a variable cannot be assigned to itself",
+   "0"
+  ],
+  "answer": 3,
+  "why": "Inside the constructor, the name balance refers to the parameter, which hides the field. The line assigns the parameter to itself, so the field keeps its default 0. this.balance = balance fixes it.",
+  "wrong": [
+   "The field is never written; both sides of the assignment mean the parameter.",
+   "A parameter may share a field's name; it shadows the field instead of clashing.",
+   "Self-assignment is legal Java; the compiler accepts it, which is why the bug is easy to miss.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/thiskey.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "לפרמטר של ה-constructor יש אותו שם כמו ל-field, ובגוף כתוב balance = balance. מה יודפס?",
+   "options": [
+    "50",
+    "שגיאת compile: balance מוגדר פעמיים",
+    "שגיאת compile: אי אפשר להציב משתנה בעצמו",
+    "0"
+   ],
+   "why": "בתוך ה-constructor, השם balance מפנה לפרמטר, שמסתיר את ה-field. השורה מציבה את הפרמטר בעצמו, ולכן ה-field שומר על ברירת המחדל 0. this.balance = balance מתקן את זה.",
+   "wrong": [
+    "אף פעם לא כותבים ל-field: שני הצדדים של ההשמה הם הפרמטר.",
+    "פרמטר רשאי לחלוק שם עם field: הוא מסתיר (shadows) את ה-field במקום להתנגש בו.",
+    "השמה עצמית היא Java חוקית: ה-compiler מקבל אותה, ובגלל זה קל לפספס את ה-bug.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "java-stack-reference-heap-object",
+  "topic": "java",
+  "subtopic": "memory",
+  "concepts": [
+   "stack",
+   "heap",
+   "reference"
+  ],
+  "level": "easy",
+  "q": "Inside a method, Point p = new Point(1, 2) runs. Where do the variable p and the Point object live?",
+  "options": [
+   "p in the method's stack frame; the Point object on the heap",
+   "Both on the stack, since both are created inside the method's body",
+   "Both on the heap, since p refers to an object",
+   "p on the heap and the Point object on the stack"
+  ],
+  "answer": 0,
+  "why": "Local variables live in the method's stack frame and disappear when it returns. Objects created with new live on the heap, and p holds only a reference to one. The object can outlive the method if something else still refers to it.",
+  "wrong": [
+   null,
+   "Objects made with new go on the heap, wherever the code that creates them runs.",
+   "p is a local variable; only its value is a reference, and the variable itself is in the frame.",
+   "This is reversed: the local reference is in the frame and the object is on the heap."
+  ],
+  "ref": "https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-2.html#jvms-2.5",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "בתוך method רץ Point p = new Point(1, 2). איפה נמצאים המשתנה p וה-object מסוג Point?",
+   "options": [
+    "p ב-stack frame של ה-method, וה-object מסוג Point ב-heap",
+    "שניהם ב-stack, כי שניהם נוצרים בתוך הגוף של ה-method",
+    "שניהם ב-heap, כי p מפנה ל-object",
+    "p ב-heap וה-object מסוג Point ב-stack"
+   ],
+   "why": "משתנים מקומיים נמצאים ב-stack frame של ה-method ונעלמים כשהיא חוזרת. objects שנוצרים עם new נמצאים ב-heap, ו-p מחזיק רק reference לאחד מהם. ה-object יכול לחיות יותר מה-method אם משהו אחר עדיין מפנה אליו.",
+   "wrong": [
+    null,
+    "objects שנוצרים עם new הולכים ל-heap, לא משנה איפה רץ הקוד שיוצר אותם.",
+    "p הוא משתנה מקומי: רק הערך שלו הוא reference, והמשתנה עצמו נמצא ב-frame.",
+    "זה הפוך: ה-reference המקומי נמצא ב-frame וה-object נמצא ב-heap."
+   ]
+  }
+ },
+ {
+  "id": "java-gc-collects-unreachable-cycle",
+  "topic": "java",
+  "subtopic": "memory",
+  "concepts": [
+   "garbage-collection",
+   "reachability",
+   "cycles"
+  ],
+  "level": "medium",
+  "q": "Two Node objects point to each other through their next fields. Then the only variables that referred to them are set to null. Can they be garbage collected?",
+  "options": [
+   "No: each node still has a reference pointing at it, coming from the other node",
+   "Only after the code calls System.gc() for them",
+   "Yes: no live variable can reach them, so the cycle does not matter",
+   "No: Java objects stay until the program exits"
+  ],
+  "answer": 2,
+  "why": "The collector starts from live references, such as local variables and static fields, and keeps whatever it can reach. Nothing reachable leads to these two nodes, so both can be freed, even though they refer to each other.",
+  "wrong": [
+   "Counting incoming references is not how reachability works; a cycle with no way in is garbage.",
+   "Collection happens on its own; System.gc() is only a hint and is not required.",
+   null,
+   "Unreachable objects are reclaimed while the program runs; that is the point of a garbage collector."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/usingobject.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני objects מסוג Node מצביעים זה על זה דרך ה-fields בשם next. אחר כך המשתנים היחידים שהפנו אליהם מקבלים null. האם ה-garbage collector יכול לאסוף אותם?",
+   "options": [
+    "לא: לכל node עדיין יש reference שמצביע עליו, מה-node השני",
+    "רק אחרי שהקוד קורא עבורם ל-System.gc()",
+    "כן: אף משתנה חי לא יכול להגיע אליהם, ולכן המעגל לא משנה",
+    "לא: objects ב-Java נשארים עד שהתוכנית מסתיימת"
+   ],
+   "why": "ה-collector מתחיל מ-references חיים, כמו משתנים מקומיים ו-static fields, ושומר את כל מה שהוא יכול להגיע אליו. שום דבר שאפשר להגיע אליו לא מוביל לשני ה-nodes האלה, ולכן אפשר לשחרר את שניהם, למרות שהם מפנים זה לזה.",
+   "wrong": [
+    "ספירת references נכנסים היא לא הדרך שבה reachability עובד: מעגל שאין אליו דרך כניסה הוא garbage.",
+    "האיסוף קורה מעצמו: System.gc() הוא רק רמז ולא נדרש.",
+    null,
+    "objects שאי אפשר להגיע אליהם משוחררים בזמן שהתוכנית רצה: זה כל הטעם של garbage collector."
+   ]
+  }
+ },
+ {
+  "id": "java-static-list-memory-leak",
+  "topic": "java",
+  "subtopic": "memory",
+  "concepts": [
+   "memory-leak",
+   "static",
+   "reachability"
+  ],
+  "level": "medium",
+  "q": "For debugging, a service adds every request object to a static List and never removes any. After days, it runs out of memory. Why didn't garbage collection prevent this?",
+  "options": [
+   "The collector skips any object that belongs to a class with a static field",
+   "Everything in the list is still reachable, so none of it is garbage",
+   "Request objects are too large for the collector to move",
+   "Lists are stored outside the heap, where there is no collector"
+  ],
+  "answer": 1,
+  "why": "A static field lives as long as its class, so the list is always reachable, and so is every request in it. The collector only frees objects that nothing can reach. Holding references you no longer need is the usual Java memory leak.",
+  "wrong": [
+   "Having static fields does not exempt a class's objects; reachability is what counts.",
+   null,
+   "Size does not stop collection; reachable objects are kept and unreachable ones are freed.",
+   "Collections and their contents are ordinary heap objects."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/usingobject.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "לצורך debugging, service מוסיף כל object של request ל-static List ואף פעם לא מסיר אף אחד. אחרי כמה ימים נגמר לו הזיכרון. למה ה-garbage collection לא מנע את זה?",
+   "options": [
+    "ה-collector מדלג על כל object ששייך ל-class עם static field",
+    "כל מה שב-list עדיין reachable, ולכן שום דבר ממנו הוא לא garbage",
+    "objects של request גדולים מדי בשביל שה-collector יוכל להזיז אותם",
+    "lists נשמרות מחוץ ל-heap, שם אין collector"
+   ],
+   "why": "static field חי כל עוד ה-class שלו קיים, ולכן תמיד אפשר להגיע ל-list, וגם לכל request שבתוכה. ה-collector משחרר רק objects ששום דבר לא יכול להגיע אליהם. החזקת references שכבר לא צריך היא דליפת הזיכרון הרגילה ב-Java.",
+   "wrong": [
+    "static fields לא פוטרים את ה-objects של ה-class: מה שקובע הוא reachability.",
+    null,
+    "גודל לא מונע איסוף: objects שאפשר להגיע אליהם נשמרים, ואלה שאי אפשר משוחררים.",
+    "collections והתוכן שלהם הם objects רגילים ב-heap."
+   ]
+  }
+ }
+]

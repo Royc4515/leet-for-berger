@@ -8,7 +8,7 @@ import { placeCard, spotRect, sheetScroll, SHEET_WIDTH, TOUR_MARGIN, TOUR_GAP } 
 import { mulberry32 } from '../src/js/engine/rng.js';
 
 test('every part of the site has its own tour, plus a one-step welcome that only prefixes another', () => {
-  for (const id of ['problems', 'map', 'path', 'daily', 'companies', 'company', 'modes', 'workspace', 'interview', 'battle', 'mentor']) {
+  for (const id of ['problems', 'map', 'path', 'daily', 'companies', 'company', 'modes', 'workspace', 'interview', 'battle', 'mentor', 'quiz']) {
     assert.equal(TOURS[id]?.id, id, `${id} tour`);
     assert.ok(!TOURS[id].prefix, `${id} stands alone`);
   }
@@ -31,6 +31,8 @@ test('each route maps to the tour of its page; unknown routes have none', () => 
     '#/modes': 'modes',
     '#/interview': 'interview',
     '#/battle': 'battle',
+    '#/quiz': 'quiz',
+    '#/quiz/daily': null,
     '#/problem/pair-sum-target': 'workspace',
     '#/nope': null,
   };

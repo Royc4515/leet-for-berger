@@ -10,6 +10,8 @@ import { calendarWeeks, bestStreak, activeInWindow, shiftDay, dailyNumber, parse
 import { dayKey, computeStreak } from '../../state/progress.js';
 import { loadPath } from '../../data/path-loader.js';
 import { dailyCard, pathTopicOf } from '../daily-card.js';
+import { DAILY_QUIZ_SIZE, dailyQuizNumber } from '../../modes/quiz.js';
+import { loadQuizProgress, dailyQuizStreak } from '../../state/quiz-progress.js';
 
 const LONG = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 const SHORT = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -88,6 +90,7 @@ export function renderDaily(root, { store }) {
           fact(`${last30}`, 'of the last 30 days', 'Days with an accepted solve. A missed day does not reset this.'),
           fact(`${dailiesSolved} / 8`, 'dailies this week', 'Today and the 7 days before it.'),
         ),
+        quizCard(today, now),
         h(
           'section.daily-cal-card',
           { 'aria-labelledby': 'cal-title' },
@@ -124,6 +127,25 @@ export function renderDaily(root, { store }) {
       ),
     );
   }
+
+  // The daily quiz sits under the daily problem: same day, same countdown, its own streak.
+  const quizCard = (today, now) => {
+    const quiz = loadQuizProgress();
+    const done = quiz.daily[today];
+    const streak = dailyQuizStreak(quiz, now);
+    return h(
+      'section.daily-quiz-card',
+      { 'aria-labelledby': 'daily-quiz-title' },
+      h(
+        'div.daily-quiz-copy',
+        {},
+        h('span.eyebrow', {}, `Quiz No. ${dailyQuizNumber(today)}`),
+        h('h2.section-title#daily-quiz-title', {}, 'Daily quiz'),
+        h('p.hint-text', {}, done ? `Done: ${done.correct} / ${done.total} correct. ${streak}-day quiz streak.` : `${DAILY_QUIZ_SIZE} multiple-choice questions from ${DAILY_QUIZ_SIZE} topics, about two minutes.${streak ? ` ${streak}-day quiz streak, keep it going.` : ''}`),
+      ),
+      h(`a.btn.btn-sm${done ? '.btn-ghost' : '.btn-secondary'}`, { href: '#/quiz/daily' }, done ? 'See result' : 'Play the quiz'),
+    );
+  };
 
   const fact = (value, label, note) => h('div.daily-fact', {}, h('div.daily-fact-value', {}, value), h('div.daily-fact-label', {}, label), h('p.hint-text', {}, note));
 

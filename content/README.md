@@ -205,3 +205,11 @@ graph TD
 3. **Audit**: `node scripts/content/audit.mjs` writes `content/AUDIT.md` (ladder fill, concept coverage, Blind 75 / NeetCode 150 coverage, top-company coverage, high-priority problems left out, gaps).
 4. **Author**: write the problem module with `/add-problem`.
 5. **Verify**: solutions in every language pass all 15 cases, then flip `status` to `verified`.
+
+## Quiz bank (`quiz/`)
+
+Multiple-choice questions for the Quiz mode, one file per topic (`quiz/<topic>.json`, topic ids and order in `src/js/data/quiz-topics.js`). Each question has its English fields (`q`, `code`, `options`, `answer`, `why`, `wrong` with one line per wrong option and `null` at the answer, `subtopic`, `level`, optional `ref`) and a `he` block with the Hebrew `q`, `options`, `why` and `wrong` (technical terms stay in English; the Hebrew style guide is `quiz/STYLE-HE.md`).
+
+Rules: student and first-job level, understanding rather than recall, our own wording (ideas may come from anywhere, text only from openly licensed sources with attribution), every code snippet run before it ships, every question solved blind by a separate reviewer in both languages.
+
+After any edit run `node scripts/content/build-quiz.mjs`: it validates the bank (`validateBank` in `src/js/modes/quiz.js`) and rebuilds `src/js/data/quiz/<lang>/<topic>.json` and `src/js/data/quiz-index.js`. `tests/quiz.test.js` fails when they are stale.

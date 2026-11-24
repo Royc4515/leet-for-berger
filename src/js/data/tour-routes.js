@@ -15,6 +15,7 @@ const ROUTE_TOURS = [
   [/^#\/modes$/, 'modes'],
   [/^#\/interview$/, 'interview'],
   [/^#\/battle$/, 'battle'],
+  [/^#\/quiz$/, 'quiz'],
 ];
 
 /**

@@ -1,0 +1,680 @@
+[
+ {
+  "id": "git-commit-is-local",
+  "topic": "git",
+  "subtopic": "model",
+  "concepts": [
+   "commit",
+   "local-vs-remote",
+   "push"
+  ],
+  "level": "easy",
+  "q": "You commit a fix on your laptop and tell a teammate it is done. They pull from GitHub and do not see it. Why?",
+  "options": [
+   "Commits take a few minutes to sync to GitHub in the background",
+   "The commit is only in your local repository until you push it",
+   "Your teammate must clone the repository again to see new commits",
+   "You forgot git add, so the commit was saved empty"
+  ],
+  "answer": 1,
+  "why": "A commit records a snapshot in your local repository only. Nothing reaches the shared remote until you push, which sends your new commits there. After that, your teammate's pull can get them.",
+  "wrong": [
+   "Git does not sync on its own; commits reach the remote only when you push.",
+   null,
+   "Pull does bring new commits from the remote; this one was never sent there.",
+   "With nothing staged Git refuses to commit at all; the commit exists, it just never left your machine."
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אחרי commit לתיקון על הלפטופ, מודיעים לחבר צוות שזה מוכן. הוא עושה pull מ-GitHub ולא רואה אותו. למה?",
+   "options": [
+    "commits מסתנכרנים ל-GitHub ברקע תוך כמה דקות",
+    "ה-commit נמצא רק ב-repository המקומי עד שעושים push",
+    "חבר הצוות צריך לעשות clone מחדש ל-repository כדי לראות commits חדשים",
+    "git add נשכח, אז ה-commit נשמר ריק"
+   ],
+   "why": "commit שומר snapshot רק ב-repository המקומי. שום דבר לא מגיע ל-remote המשותף עד שעושים push, שמעביר לשם את ה-commits החדשים. רק אחרי זה ה-pull של חבר הצוות יכול להביא אותם.",
+   "wrong": [
+    "Git לא מסתנכרן לבד: commits מגיעים ל-remote רק כשעושים push.",
+    null,
+    "pull כן מביא commits חדשים מה-remote, אבל ה-commit הזה אף פעם לא נשלח לשם.",
+    "כשאין שום דבר ב-staging, Git מסרב לעשות commit בכלל. ה-commit קיים, הוא פשוט לא יצא מהמחשב."
+   ]
+  }
+ },
+ {
+  "id": "git-branch-is-a-pointer",
+  "topic": "git",
+  "subtopic": "model",
+  "concepts": [
+   "branch",
+   "pointer",
+   "commit"
+  ],
+  "level": "easy",
+  "q": "In a repository with 20,000 files, creating a new branch is instant and uses almost no disk space. Why?",
+  "options": [
+   "Git copies the files lazily, in the background, after the command returns",
+   "Git compresses the new copy of all the files extremely well",
+   "The new branch copies only the files that changed recently",
+   "A branch is a movable pointer to a commit; no files are copied"
+  ],
+  "answer": 3,
+  "why": "A branch is just a name that points at one commit, stored as a tiny file holding that commit's id. Committing on the branch moves the pointer forward. The files live in the commits, which branches share.",
+  "wrong": [
+   "Nothing is copied later either; the branch only records which commit it points to.",
+   "There is no copy to compress; both branches point into the same commits.",
+   "No files are copied at all; changes appear as new commits only when you commit on the branch.",
+   null
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-repository עם 20,000 קבצים, יצירת branch חדש היא מיידית ולא תופסת כמעט מקום בדיסק. למה?",
+   "options": [
+    "Git מעתיק את הקבצים בעצלות, ברקע, אחרי שהפקודה מסתיימת",
+    "Git דוחס מצוין את העותק החדש של כל הקבצים",
+    "ה-branch החדש מעתיק רק את הקבצים שהשתנו לאחרונה",
+    "branch הוא pointer נייד ל-commit, ולא מועתקים קבצים"
+   ],
+   "why": "branch הוא רק שם שמצביע על commit אחד, ונשמר כקובץ זעיר שמכיל את ה-id של ה-commit. commit על ה-branch מקדם את ה-pointer. הקבצים נמצאים ב-commits, שה-branches חולקים ביניהם.",
+   "wrong": [
+    "גם אחר כך לא מועתק כלום: ה-branch רק רושם על איזה commit הוא מצביע.",
+    "אין עותק לדחוס: שני ה-branches מצביעים לאותם commits.",
+    "לא מועתקים קבצים בכלל: שינויים מופיעים כ-commits חדשים רק כשעושים commit על ה-branch.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "git-detached-head-commit",
+  "topic": "git",
+  "subtopic": "model",
+  "concepts": [
+   "head",
+   "detached-head",
+   "branch"
+  ],
+  "level": "medium",
+  "q": "To look at old code you check out a commit by its hash, make a small commit there, then switch back to main. What happens to that new commit?",
+  "options": [
+   "It is added to main, since main is the branch you returned to",
+   "Git deletes it immediately when you move away from it",
+   "It exists, but no branch points to it; make one to keep it",
+   "It joins whichever branch first contained the old commit"
+  ],
+  "answer": 2,
+  "why": "Checking out a commit directly moves HEAD to it with no branch attached. A commit made there belongs to no branch, and once you leave, nothing points to it. Git warns you and suggests creating a branch to keep it.",
+  "wrong": [
+   "main never moved; only the branch you are on moves forward when you commit.",
+   "It is not deleted right away; Git only cleans up unreachable commits much later.",
+   null,
+   "Commits are not tied to branches that way; with no branch checked out, no branch moves."
+  ],
+  "ref": "https://git-scm.com/docs/git-checkout",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כדי להסתכל על קוד ישן עושים checkout ל-commit לפי ה-hash שלו, עושים שם commit קטן, ואז חוזרים ל-main. מה קורה ל-commit החדש?",
+   "options": [
+    "הוא מתווסף ל-main, כי זה ה-branch שחזרו אליו",
+    "Git מוחק אותו מיד כשעוברים ממנו",
+    "הוא קיים, אבל אף branch לא מצביע עליו. כדי לשמור אותו צריך ליצור branch",
+    "הוא מצטרף ל-branch הראשון שהכיל את ה-commit הישן"
+   ],
+   "why": "checkout ישיר ל-commit מזיז את HEAD אליו בלי branch מחובר. commit שנעשה שם לא שייך לשום branch, ואחרי שעוזבים, אף אחד לא מצביע עליו. Git מזהיר על זה ומציע ליצור branch כדי לשמור אותו.",
+   "wrong": [
+    "main לא זז: רק ה-branch הנוכחי מתקדם כשעושים commit.",
+    "הוא לא נמחק מיד: Git מנקה commits שאי אפשר להגיע אליהם רק הרבה יותר מאוחר.",
+    null,
+    "commits לא קשורים ל-branches בצורה הזו: כשאין branch ב-checkout, אף branch לא זז."
+   ]
+  }
+ },
+ {
+  "id": "git-fast-forward-merge",
+  "topic": "git",
+  "subtopic": "merge-rebase",
+  "concepts": [
+   "fast-forward",
+   "merge",
+   "branch"
+  ],
+  "level": "easy",
+  "q": "feature was created from main at commit C, and nobody has committed to main since. What does git merge feature do?",
+  "code": "$ git log --oneline --graph --all\n* e5 (feature) E\n* d4 D\n* c3 (HEAD -> main) C\n* b2 B\n* a1 A\n$ git merge feature",
+  "lang": "text",
+  "options": [
+   "Moves main forward to E, with no new commit",
+   "Creates a merge commit whose parents are C and E",
+   "Copies D and E onto main as new commits with new hashes",
+   "Stops with a conflict, since both branches contain C"
+  ],
+  "answer": 0,
+  "why": "main has no commits that feature lacks, so there is nothing to combine. Git simply moves the main pointer forward to E. This is called a fast-forward merge.",
+  "wrong": [
+   null,
+   "By default Git makes a merge commit only when both sides have new commits; main has none here.",
+   "Copying commits with new hashes is what rebase does; a merge reuses D and E as they are.",
+   "Shared history never conflicts; conflicts come from different changes to the same lines."
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "feature נוצר מ-main ב-commit C, ומאז אף אחד לא עשה commit ל-main. מה עושה git merge feature?",
+   "options": [
+    "מקדם את main ל-E, בלי commit חדש",
+    "יוצר merge commit שה-parents שלו הם C ו-E",
+    "מעתיק את D ו-E ל-main כ-commits חדשים עם hashes חדשים",
+    "עוצר עם conflict, כי שני ה-branches מכילים את C"
+   ],
+   "why": "ב-main אין commits שחסרים ב-feature, אז אין מה לשלב. Git פשוט מקדם את ה-pointer של main ל-E. זה נקרא fast-forward merge.",
+   "wrong": [
+    null,
+    "כברירת מחדל Git יוצר merge commit רק כשבשני הצדדים יש commits חדשים, וב-main אין כאן כאלה.",
+    "העתקת commits עם hashes חדשים היא מה ש-rebase עושה. merge משתמש ב-D וב-E כמו שהם.",
+    "היסטוריה משותפת אף פעם לא יוצרת conflict. conflicts נובעים משינויים שונים באותן שורות."
+   ]
+  }
+ },
+ {
+  "id": "git-merge-keeps-commits",
+  "topic": "git",
+  "subtopic": "merge-rebase",
+  "concepts": [
+   "merge",
+   "merge-commit",
+   "history"
+  ],
+  "level": "medium",
+  "q": "Both main and feature have new commits. A teammate worries that merging feature into main will lose its history. After a normal merge, what is true of feature's commits?",
+  "options": [
+   "They are squashed into a single combined commit on top of main",
+   "They stay unchanged, and a new merge commit has two parents",
+   "They are rewritten on top of main, so they get new hashes",
+   "They are deleted from history together with the feature branch"
+  ],
+  "answer": 1,
+  "why": "A merge leaves existing commits untouched, with the same hashes. It adds one merge commit whose two parents are the tips of main and feature, so the full history of both lines stays reachable from main.",
+  "wrong": [
+   "That is a squash merge, a separate option; a normal merge keeps every commit.",
+   null,
+   "That is what rebase does; a merge does not rewrite commits.",
+   "A merge does not delete the branch, and deleting a branch only removes a pointer; the merge still reaches the commits."
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "גם ב-main וגם ב-feature יש commits חדשים. חבר צוות חושש שעשיית merge של feature לתוך main תאבד את ההיסטוריה שלו. אחרי merge רגיל, מה נכון לגבי ה-commits של feature?",
+   "options": [
+    "הם נדחסים (squash) ל-commit משולב אחד מעל main",
+    "הם נשארים בלי שינוי, ו-merge commit חדש מקבל שני parents",
+    "הם נכתבים מחדש מעל main, ולכן מקבלים hashes חדשים",
+    "הם נמחקים מההיסטוריה יחד עם ה-branch של feature"
+   ],
+   "why": "merge לא נוגע ב-commits קיימים, וה-hashes שלהם נשארים אותו דבר. הוא מוסיף merge commit אחד ששני ה-parents שלו הם הקצוות של main ושל feature, כך שכל ההיסטוריה של שני הקווים נשארת נגישה מ-main.",
+   "wrong": [
+    "זה squash merge, אפשרות נפרדת. merge רגיל שומר כל commit.",
+    null,
+    "זה מה ש-rebase עושה. merge לא כותב commits מחדש.",
+    "merge לא מוחק את ה-branch, ומחיקת branch מסירה רק pointer. ה-merge עדיין מגיע ל-commits."
+   ]
+  }
+ },
+ {
+  "id": "git-rebase-new-hashes",
+  "topic": "git",
+  "subtopic": "merge-rebase",
+  "concepts": [
+   "rebase",
+   "commit-hash",
+   "history-rewrite"
+  ],
+  "level": "medium",
+  "q": "You rebase your feature branch onto the latest main. The changes in your commits look the same, but every commit hash is different. Why?",
+  "options": [
+   "Git adds a random salt to every hash so that commits always stay unique",
+   "Rebase renames the commits and keeps the old hashes as aliases",
+   "Rebase makes new commits on a new parent, which changes each hash",
+   "Rebase squashed all of your commits into a single new commit"
+  ],
+  "answer": 2,
+  "why": "A commit's id is computed from its content, including its parent. Rebase replays your changes on top of main, so each copy has a different parent and therefore a new id. The old commits are left behind, off the branch.",
+  "wrong": [
+   "Hashes come from the commit's content; the same content always gives the same hash.",
+   "There are no aliases; the rebased commits are new, and the branch now points to them.",
+   null,
+   "Rebase keeps each commit separate unless you ask it to combine them."
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Branching-Rebasing",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "עושים rebase ל-feature branch על ה-main העדכני. השינויים ב-commits נראים אותו דבר, אבל כל ה-hashes של ה-commits שונים. למה?",
+   "options": [
+    "Git מוסיף salt אקראי לכל hash כדי ש-commits יישארו תמיד ייחודיים",
+    "rebase משנה את שמות ה-commits ושומר את ה-hashes הישנים ככינויים",
+    "rebase יוצר commits חדשים על parent חדש, וזה משנה כל hash",
+    "rebase דחס את כל ה-commits ל-commit חדש אחד"
+   ],
+   "why": "ה-id של commit מחושב מהתוכן שלו, כולל ה-parent. rebase מריץ מחדש את השינויים מעל main, כך שלכל עותק יש parent אחר ולכן id חדש. ה-commits הישנים נשארים מאחור, מחוץ ל-branch.",
+   "wrong": [
+    "hashes נגזרים מהתוכן של ה-commit: אותו תוכן תמיד נותן אותו hash.",
+    "אין כינויים: ה-commits אחרי ה-rebase הם חדשים, וה-branch מצביע עכשיו עליהם.",
+    null,
+    "rebase שומר כל commit בנפרד, אלא אם מבקשים ממנו לשלב אותם."
+   ]
+  }
+ },
+ {
+  "id": "git-rebase-shared-branch",
+  "topic": "git",
+  "subtopic": "merge-rebase",
+  "concepts": [
+   "rebase",
+   "shared-branch",
+   "force-push",
+   "history-rewrite"
+  ],
+  "level": "hard",
+  "q": "A teammate pulled your pushed branch and added commits on top. You rebase the branch onto main and force-push. What happens when the teammate pulls with a merge?",
+  "options": [
+   "Nothing special: rebase keeps the hashes, so their copy already matches",
+   "Git rejects your force-push because another clone already pulled the branch",
+   "Git moves their extra commits onto your rebased branch automatically",
+   "Their branch still has the old commits, so a merge brings in duplicates"
+  ],
+  "answer": 3,
+  "why": "Rebase replaced the shared commits with new copies. The teammate's work still sits on the old ones, so their branch and the remote have diverged, and merging them keeps both copies of each commit. So rebase only commits nobody else has.",
+  "wrong": [
+   "Rebase creates new commits with new hashes; the remote no longer matches their copy.",
+   "The remote does not track who pulled; a force-push replaces the branch regardless.",
+   "Git cannot tell their work was built on the old commits; they have to untangle it by hand.",
+   null
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Branching-Rebasing",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חבר צוות עשה pull ל-branch שכבר עבר push, והוסיף מעליו commits. אחר כך עושים rebase ל-branch על main ו-force-push. מה קורה כשחבר הצוות עושה pull עם merge?",
+   "options": [
+    "שום דבר מיוחד: rebase שומר על ה-hashes, אז העותק שלו כבר תואם",
+    "Git דוחה את ה-force-push כי clone אחר כבר עשה pull ל-branch",
+    "Git מעביר אוטומטית את ה-commits הנוספים שלו ל-branch אחרי ה-rebase",
+    "ב-branch שלו עדיין יש את ה-commits הישנים, אז ה-merge מכניס כפילויות"
+   ],
+   "why": "rebase החליף את ה-commits המשותפים בעותקים חדשים. העבודה של חבר הצוות עדיין יושבת על הישנים, אז ה-branch שלו וה-remote התפצלו, ו-merge ביניהם שומר את שני העותקים של כל commit. לכן עושים rebase רק ל-commits שאף אחד אחר לא מחזיק.",
+   "wrong": [
+    "rebase יוצר commits חדשים עם hashes חדשים, וה-remote כבר לא תואם לעותק שלו.",
+    "ה-remote לא עוקב אחרי מי עשה pull: force-push מחליף את ה-branch בכל מקרה.",
+    "Git לא יכול לדעת שהעבודה שלו נבנתה על ה-commits הישנים, והוא יצטרך לפרק את זה ידנית.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "git-different-parts-same-file",
+  "topic": "git",
+  "subtopic": "conflicts",
+  "concepts": [
+   "merge-conflict",
+   "line-based-merge"
+  ],
+  "level": "easy",
+  "q": "On two branches, you edit a function at the top of utils.py and a teammate edits a different function near the bottom. What happens when the branches are merged?",
+  "options": [
+   "Git combines both edits automatically",
+   "A conflict, because both branches changed the same file",
+   "Git keeps the file from the branch with the newest commit",
+   "The merge is refused until one of you reverts your change"
+  ],
+  "answer": 0,
+  "why": "Git compares changes line by line, not file by file. Edits to separate parts of a file combine cleanly. A conflict appears only when both sides change the same lines, or lines right next to each other.",
+  "wrong": [
+   null,
+   "Touching the same file is fine; only overlapping or adjacent lines conflict.",
+   "Git never picks a side by date; it combines changes and stops to ask when it cannot.",
+   "Nothing needs reverting; the edits do not overlap, so Git combines them."
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "בשני branches נפרדים, עורכים function בראש utils.py וחבר צוות עורך function אחרת קרוב לסוף. מה קורה כשעושים merge ל-branches?",
+   "options": [
+    "Git משלב את שתי העריכות אוטומטית",
+    "conflict, כי שני ה-branches שינו את אותו קובץ",
+    "Git שומר את הקובץ מה-branch עם ה-commit החדש ביותר",
+    "ה-merge נדחה עד שאחד מהשניים עושה revert לשינוי שלו"
+   ],
+   "why": "Git משווה שינויים שורה אחרי שורה, לא קובץ אחרי קובץ. עריכות בחלקים נפרדים של קובץ משתלבות בלי בעיה. conflict מופיע רק כששני הצדדים משנים את אותן שורות, או שורות צמודות.",
+   "wrong": [
+    null,
+    "שינוי של אותו קובץ זה בסדר: רק שורות חופפות או צמודות יוצרות conflict.",
+    "Git אף פעם לא בוחר צד לפי תאריך: הוא משלב שינויים ועוצר לשאול כשהוא לא מצליח.",
+    "אין צורך ב-revert: העריכות לא חופפות, ולכן Git משלב אותן."
+   ]
+  }
+ },
+ {
+  "id": "git-identical-change-both-sides",
+  "topic": "git",
+  "subtopic": "conflicts",
+  "concepts": [
+   "merge-conflict",
+   "line-based-merge"
+  ],
+  "level": "medium",
+  "q": "Two branches changed the same line, and both changed it to exactly the same new text. What happens when they are merged?",
+  "options": [
+   "A conflict, since the same line was changed on both sides",
+   "A clean merge, because both sides agree on the result",
+   "The new line appears twice in the merged file",
+   "Git keeps the original line, since the two changes cancel out"
+  ],
+  "answer": 1,
+  "why": "A conflict means Git cannot choose between two different results. When both sides made the identical change there is only one possible result, so Git takes it. The same line matters only when the new contents differ.",
+  "wrong": [
+   "Git stops when the two results differ, not just because a line was touched twice.",
+   null,
+   "Git does not paste both copies; identical changes count once.",
+   "Neither side kept the original line, so restoring it would throw away both changes."
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני branches שינו את אותה שורה, ושניהם שינו אותה בדיוק לאותו טקסט חדש. מה קורה כשעושים להם merge?",
+   "options": [
+    "conflict, כי אותה שורה שונתה בשני הצדדים",
+    "merge נקי, כי שני הצדדים מסכימים על התוצאה",
+    "השורה החדשה מופיעה פעמיים בקובץ אחרי ה-merge",
+    "Git שומר את השורה המקורית, כי שני השינויים מבטלים זה את זה"
+   ],
+   "why": "conflict אומר ש-Git לא יכול לבחור בין שתי תוצאות שונות. כששני הצדדים עשו שינוי זהה יש רק תוצאה אפשרית אחת, ו-Git לוקח אותה. העובדה שזו אותה שורה משנה רק כשהתוכן החדש שונה.",
+   "wrong": [
+    "Git עוצר כששתי התוצאות שונות, לא רק כי שורה נערכה פעמיים.",
+    null,
+    "Git לא מדביק את שני העותקים: שינויים זהים נספרים פעם אחת.",
+    "אף צד לא השאיר את השורה המקורית, אז שחזור שלה היה זורק את שני השינויים."
+   ]
+  }
+ },
+ {
+  "id": "git-resolve-keep-both-intents",
+  "topic": "git",
+  "subtopic": "conflicts",
+  "concepts": [
+   "merge-conflict",
+   "conflict-resolution",
+   "conflict-markers"
+  ],
+  "level": "easy",
+  "q": "Merging feature stops with this conflict. main added rounding; feature added quantities. What is the right way to resolve it?",
+  "code": "def total(items):\n<<<<<<< HEAD\n    return round(sum(i.price for i in items), 2)\n=======\n    return sum(i.price * i.qty for i in items)\n>>>>>>> feature",
+  "lang": "text",
+  "options": [
+   "Combine both changes in one line, remove the markers, test, commit",
+   "Keep the HEAD side and drop the other, since main is the stable branch",
+   "Commit the file as it is; Git strips the markers out when you commit",
+   "Keep the feature side, since it holds the newer change"
+  ],
+  "answer": 0,
+  "why": "The markers show two intents Git cannot combine, so you decide the result: round(sum(i.price * i.qty for i in items), 2) keeps both. Then delete the markers, run the tests, stage the file and finish the merge.",
+  "wrong": [
+   null,
+   "Taking one side silently drops the quantity change; which branch is more stable does not matter.",
+   "Git commits the markers as plain text, which breaks the code.",
+   "Newer is not the same as right; this throws away the rounding."
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "merge של feature נעצר עם ה-conflict הזה. main הוסיף עיגול, ו-feature הוסיף כמויות. מה הדרך הנכונה לפתור אותו?",
+   "options": [
+    "לשלב את שני השינויים בשורה אחת, להסיר את הסימונים, לבדוק, לעשות commit",
+    "לשמור את הצד של HEAD ולוותר על השני, כי main הוא ה-branch היציב",
+    "לעשות commit לקובץ כמו שהוא, Git מסיר את הסימונים ב-commit",
+    "לשמור את הצד של feature, כי שם השינוי החדש יותר"
+   ],
+   "why": "הסימונים מראים שתי כוונות ש-Git לא יכול לשלב, אז ההחלטה על התוצאה היא של המפתח: round(sum(i.price * i.qty for i in items), 2) שומר את שתיהן. אחר כך מוחקים את הסימונים, מריצים את ה-tests, מוסיפים את הקובץ ל-staging ומסיימים את ה-merge.",
+   "wrong": [
+    null,
+    "בחירה בצד אחד מוותרת בשקט על שינוי הכמויות, ולא משנה איזה branch יציב יותר.",
+    "Git עושה commit לסימונים כטקסט רגיל, וזה שובר את הקוד.",
+    "חדש יותר זה לא בהכרח נכון: זה זורק את העיגול."
+   ]
+  }
+ },
+ {
+  "id": "git-revert-pushed-commit",
+  "topic": "git",
+  "subtopic": "undo",
+  "concepts": [
+   "revert",
+   "shared-branch",
+   "history-rewrite"
+  ],
+  "level": "easy",
+  "q": "A commit that broke the build is already on the shared main, and teammates have pulled it. What is the safest way to undo it?",
+  "options": [
+   "Reset main to the commit before it, then force-push",
+   "Amend the bad commit with the fix, then force-push it",
+   "Revert it: add a new commit that undoes its changes",
+   "Reset main locally; teammates' copies update on their next pull"
+  ],
+  "answer": 2,
+  "why": "Revert adds a new commit that applies the opposite of the bad one. History only moves forward, so a normal push works and teammates pull it like any other commit. The bad commit stays in the log, which records what happened.",
+  "wrong": [
+   "That rewrites history teammates already have; their next pull can bring the bad commit back or tangle history.",
+   "Amending also replaces a shared commit, so it needs a force-push with the same problems.",
+   null,
+   "A reset only moves your own pointer; the remote still has the commit, and a normal push is rejected."
+  ],
+  "ref": "https://git-scm.com/docs/git-revert",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "commit ששבר את ה-build כבר נמצא ב-main המשותף, וחברי צוות כבר עשו לו pull. מה הדרך הבטוחה ביותר לבטל אותו?",
+   "options": [
+    "לעשות reset ל-main ל-commit שלפניו, ואז force-push",
+    "לעשות amend לתיקון על ה-commit הבעייתי, ואז force-push",
+    "לעשות revert: להוסיף commit חדש שמבטל את השינויים שלו",
+    "לעשות reset ל-main מקומית, והעותקים של חברי הצוות יתעדכנו ב-pull הבא"
+   ],
+   "why": "revert מוסיף commit חדש שמחיל את ההפך של ה-commit הבעייתי. ההיסטוריה רק מתקדמת, כך ש-push רגיל עובד וחברי הצוות עושים לו pull כמו לכל commit אחר. ה-commit הבעייתי נשאר ב-log, שמתעד מה קרה.",
+   "wrong": [
+    "זה כותב מחדש היסטוריה שכבר אצל חברי הצוות. ה-pull הבא שלהם יכול להחזיר את ה-commit הבעייתי או לסבך את ההיסטוריה.",
+    "גם amend מחליף commit משותף, אז גם הוא דורש force-push עם אותן בעיות.",
+    null,
+    "reset מזיז רק את ה-pointer המקומי: ב-remote ה-commit עדיין קיים, ו-push רגיל נדחה."
+   ]
+  }
+ },
+ {
+  "id": "git-revert-vs-reset",
+  "topic": "git",
+  "subtopic": "undo",
+  "concepts": [
+   "revert",
+   "reset",
+   "branch"
+  ],
+  "level": "medium",
+  "q": "Both git revert and git reset can undo a commit. What is the key difference in what they do to the branch?",
+  "options": [
+   "Revert deletes the commit from history, and reset keeps it but hides it",
+   "Revert works only on unpushed commits, and reset only on pushed ones",
+   "They do the same thing; reset is the older name Git kept for revert",
+   "Revert adds an undo commit; reset moves the branch back"
+  ],
+  "answer": 3,
+  "why": "Revert keeps history and adds a commit with the opposite changes, so it is safe on shared branches. Reset moves the branch pointer back, so later commits drop off the branch: fine for local work, but it rewrites history others may have.",
+  "wrong": [
+   "Revert removes nothing; the original commit stays and a new one undoes it.",
+   "It is closer to the reverse: revert is the safe choice for pushed commits, reset suits local ones.",
+   "They work differently: one adds a commit, the other moves the branch pointer.",
+   null
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Tools-Reset-Demystified",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "גם git revert וגם git reset יכולים לבטל commit. מה ההבדל העיקרי במה שהם עושים ל-branch?",
+   "options": [
+    "revert מוחק את ה-commit מההיסטוריה, ו-reset שומר אותו אבל מסתיר אותו",
+    "revert עובד רק על commits שלא עברו push, ו-reset רק על כאלה שעברו",
+    "הם עושים אותו דבר: reset הוא השם הישן ש-Git השאיר ל-revert",
+    "revert מוסיף commit שמבטל, ו-reset מחזיר את ה-branch אחורה"
+   ],
+   "why": "revert שומר את ההיסטוריה ומוסיף commit עם השינויים ההפוכים, ולכן הוא בטוח ב-branches משותפים. reset מחזיר את ה-pointer של ה-branch אחורה, כך ש-commits מאוחרים יותר נופלים מה-branch: זה בסדר לעבודה מקומית, אבל זה כותב מחדש היסטוריה שאולי כבר אצל אחרים.",
+   "wrong": [
+    "revert לא מסיר כלום: ה-commit המקורי נשאר ו-commit חדש מבטל אותו.",
+    "זה קרוב יותר להפך: revert הוא הבחירה הבטוחה ל-commits שעברו push, ו-reset מתאים למקומיים.",
+    "הם עובדים אחרת: אחד מוסיף commit, השני מזיז את ה-pointer של ה-branch.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "git-amend-after-push",
+  "topic": "git",
+  "subtopic": "undo",
+  "concepts": [
+   "amend",
+   "history-rewrite",
+   "push-rejected"
+  ],
+  "level": "medium",
+  "q": "You pushed a commit, spotted a typo in its message, ran git commit --amend to fix it, and pushed again. The push is rejected. Why?",
+  "options": [
+   "Amend made a new commit, so your branch and the remote diverged",
+   "The remote was busy, and the push only needs to be retried",
+   "Git does not allow a commit message to change after the commit is made",
+   "Amend works only on staged files, so the message fix was lost"
+  ],
+  "answer": 0,
+  "why": "Amend does not edit the old commit; it replaces it with a new one that has a new id. The remote still has the old commit, which your branch lacks, so the push is not a fast-forward. Forcing it would rewrite history others may have.",
+  "wrong": [
+   null,
+   "Retrying gets the same rejection; the remote has a commit your branch does not.",
+   "Git did let you amend; the trouble is that the old version was already shared.",
+   "Amend can change just the message with nothing staged, and the change was kept locally."
+  ],
+  "ref": "https://git-scm.com/book/en/v2/Git-Basics-Undoing-Things",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אחרי push ל-commit מתגלה טעות הקלדה בהודעה שלו. מריצים git commit --amend כדי לתקן ועושים push שוב. ה-push נדחה. למה?",
+   "options": [
+    "amend יצר commit חדש, אז ה-branch המקומי וה-remote התפצלו",
+    "ה-remote היה עסוק, וצריך פשוט לנסות שוב את ה-push",
+    "Git לא מאפשר לשנות הודעת commit אחרי שה-commit נוצר",
+    "amend עובד רק על קבצים ב-staging, אז תיקון ההודעה אבד"
+   ],
+   "why": "amend לא עורך את ה-commit הישן: הוא מחליף אותו ב-commit חדש עם id חדש. ב-remote עדיין יש את ה-commit הישן, שחסר ב-branch המקומי, אז ה-push הוא לא fast-forward. לכפות אותו יכתוב מחדש היסטוריה שאולי כבר אצל אחרים.",
+   "wrong": [
+    null,
+    "ניסיון חוזר יקבל את אותה דחייה: ב-remote יש commit שאין ב-branch המקומי.",
+    "Git כן איפשר לעשות amend. הבעיה היא שהגרסה הישנה כבר שותפה.",
+    "amend יכול לשנות רק את ההודעה גם בלי כלום ב-staging, והשינוי נשמר מקומית."
+   ]
+  }
+ },
+ {
+  "id": "git-fetch-vs-pull",
+  "topic": "git",
+  "subtopic": "collaboration",
+  "concepts": [
+   "fetch",
+   "pull",
+   "remote-tracking-branch"
+  ],
+  "level": "medium",
+  "q": "A teammate pushed to main. You run git fetch, then find that your local main does not show their commit and your files are unchanged. What happened?",
+  "options": [
+   "The fetch failed, since fetch should update main and your files",
+   "Fetch moved only origin/main; merging into main is a separate step",
+   "Fetch downloads only commit messages; file changes come with pull",
+   "The teammate's push never finished, so there was nothing to download"
+  ],
+  "answer": 1,
+  "why": "Fetch downloads new commits and moves origin/main, your copy of where the remote is. It never touches your branches or files. Pull is a fetch followed by merging (or rebasing) into your current branch.",
+  "wrong": [
+   "Leaving your branch and files alone is fetch's normal behavior, not a failure.",
+   null,
+   "Fetch downloads whole commits, content included; it just does not merge them.",
+   "The commit did arrive: it shows up on origin/main after the fetch."
+  ],
+  "ref": "https://git-scm.com/docs/git-fetch",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חבר צוות עשה push ל-main. מריצים git fetch, ומגלים שה-main המקומי לא מראה את ה-commit שלו והקבצים לא השתנו. מה קרה?",
+   "options": [
+    "ה-fetch נכשל, כי fetch אמור לעדכן את main ואת הקבצים",
+    "fetch הזיז רק את origin/main, ו-merge לתוך main הוא שלב נפרד",
+    "fetch מוריד רק הודעות commit, ושינויים בקבצים מגיעים עם pull",
+    "ה-push של חבר הצוות לא הסתיים, אז לא היה מה להוריד"
+   ],
+   "why": "fetch מוריד commits חדשים ומזיז את origin/main, העותק המקומי של המיקום של ה-remote. הוא אף פעם לא נוגע ב-branches או בקבצים המקומיים. pull הוא fetch ואחריו merge (או rebase) לתוך ה-branch הנוכחי.",
+   "wrong": [
+    "השארת ה-branch והקבצים בלי שינוי היא ההתנהגות הרגילה של fetch, לא כישלון.",
+    null,
+    "fetch מוריד commits שלמים, כולל התוכן. הוא פשוט לא עושה להם merge.",
+    "ה-commit כן הגיע: הוא מופיע ב-origin/main אחרי ה-fetch."
+   ]
+  }
+ },
+ {
+  "id": "git-pull-request-purpose",
+  "topic": "git",
+  "subtopic": "collaboration",
+  "concepts": [
+   "pull-request",
+   "code-review",
+   "ci"
+  ],
+  "level": "easy",
+  "q": "Your team's main branch is protected, so you push a feature branch and open a pull request. What does the pull request add that a plain push does not?",
+  "options": [
+   "A backup copy of the branch in case your laptop fails",
+   "A Git command that merges branches faster than git merge",
+   "Review, discussion and automated checks before the merge",
+   "Nothing for experienced developers; reviews are meant for juniors"
+  ],
+  "answer": 2,
+  "why": "A pull request asks the team to merge your branch. Teammates read the diff, comment and approve, and CI runs the tests, all before anything reaches main. Bugs and unclear code get caught while they are still cheap to fix.",
+  "wrong": [
+   "The push already put the branch on the remote; the pull request adds the review around it.",
+   "Pull requests are a feature of hosting services such as GitHub, not Git, and they are not about speed.",
+   null,
+   "Senior code is reviewed too; review spreads knowledge and catches mistakes anyone can make."
+  ],
+  "ref": "https://git-scm.com/book/en/v2/GitHub-Contributing-to-a-Project",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-main branch של הצוות הוא protected, אז עושים push ל-feature branch ופותחים pull request. מה ה-pull request מוסיף ש-push רגיל לא נותן?",
+   "options": [
+    "עותק גיבוי של ה-branch למקרה שהלפטופ מתקלקל",
+    "פקודת Git שעושה merge ל-branches מהר יותר מ-git merge",
+    "review, דיון ובדיקות אוטומטיות לפני ה-merge",
+    "כלום למפתחים מנוסים: code review מיועד לג'וניורים"
+   ],
+   "why": "pull request מבקש מהצוות לעשות merge ל-branch. חברי הצוות קוראים את ה-diff, מגיבים ומאשרים, ו-CI מריץ את ה-tests, והכול לפני שמשהו מגיע ל-main. bugs וקוד לא ברור נתפסים כשעוד זול לתקן אותם.",
+   "wrong": [
+    "ה-push כבר שם את ה-branch ב-remote. ה-pull request מוסיף את ה-code review סביבו.",
+    "pull requests הם feature של שירותי אחסון כמו GitHub, לא של Git, והם לא קשורים למהירות.",
+    null,
+    "גם קוד של סניורים עובר code review: הוא מפיץ ידע ותופס טעויות שכל אחד יכול לעשות."
+   ]
+  }
+ }
+]

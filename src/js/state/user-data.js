@@ -4,17 +4,23 @@
  * added here; tests/user-data.test.js fails if a source file persists a key this list misses.
  *
  * Not listed on purpose: layout and language preferences (lfb:split:*, lfb:lang, lfb:about-open,
- * lfb:map-view, lfb:tours:v1) are about the device, not the account; lfb:seen-solved is a per-tab sessionStorage
+ * lfb:map-view, lfb:tours:v1, lfb:quiz-lang) are about the device, not the account; lfb:seen-solved is a per-tab sessionStorage
  * number for the Problems page count-up. The GitHub link lives in memory only (auth/github-sync.js).
  */
 import { STORAGE_KEY as PROGRESS_KEY } from './progress.js';
 import { DRAFT_PREFIX } from './drafts.js';
 
+/**
+ * localStorage key holding quiz progress (state/quiz-progress.js). Defined here, not there: this
+ * module loads on every page and must not pull the quiz code into the startup graph.
+ */
+export const QUIZ_STORAGE_KEY = 'lfb:quiz:v1';
+
 /** localStorage key holding the most recent Interview and Battle results shown on the Modes hub. */
 export const LAST_SESSIONS_KEY = 'lfb:last-sessions:v1';
 
 /** Exact localStorage keys holding a user's data. */
-export const USER_KEYS = [PROGRESS_KEY, LAST_SESSIONS_KEY];
+export const USER_KEYS = [PROGRESS_KEY, LAST_SESSIONS_KEY, QUIZ_STORAGE_KEY];
 /** localStorage key prefixes holding a user's data (one key per problem and language). */
 export const USER_KEY_PREFIXES = [DRAFT_PREFIX];
 

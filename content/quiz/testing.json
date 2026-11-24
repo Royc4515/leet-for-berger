@@ -1,0 +1,686 @@
+[
+ {
+  "id": "testing-unit-tests-locate-bugs",
+  "topic": "testing",
+  "subtopic": "levels",
+  "concepts": [
+   "unit-test",
+   "feedback-speed",
+   "test-levels"
+  ],
+  "level": "easy",
+  "q": "A team only has browser tests that click through checkout. The suite takes 40 minutes, and a failure just says the total is wrong. What would unit tests for the pricing code mainly add?",
+  "options": [
+   "Fast runs, and failures that point at the exact function that broke",
+   "More realism, since they run the whole app the way a user would",
+   "Checks that the checkout page layout renders correctly in each browser",
+   "A full replacement for the browser tests, which can then be deleted"
+  ],
+  "answer": 0,
+  "why": "A unit test runs a small piece of logic in isolation, in milliseconds. When it fails, its name and input point to the function that broke, so you find the bug without tracing through the whole app.",
+  "wrong": [
+   null,
+   "That describes end-to-end tests. Unit tests trade realism for speed and precise failures.",
+   "Unit tests of pricing logic never render a page; layout needs UI-level tests.",
+   "Unit tests cannot see how the pieces fit together, so a few end-to-end tests are still worth keeping."
+  ],
+  "ref": "https://martinfowler.com/articles/practical-test-pyramid.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "לצוות יש רק tests בדפדפן שעוברים בקליקים על ה-checkout. ה-suite לוקח 40 דקות, וכישלון רק אומר שהסכום שגוי. מה unit tests לקוד התמחור יוסיפו בעיקר?",
+   "options": [
+    "ריצות מהירות, וכישלונות שמצביעים על ה-function המדויקת שנשברה",
+    "יותר ריאליזם, כי הם מריצים את כל האפליקציה כמו שמשתמש היה עושה",
+    "בדיקה שה-layout של דף ה-checkout מוצג נכון בכל דפדפן",
+    "תחליף מלא ל-tests בדפדפן, שאז אפשר למחוק אותם"
+   ],
+   "why": "unit test מריץ חתיכת לוגיקה קטנה בבידוד, בתוך מילישניות. כשהוא נכשל, השם והקלט שלו מצביעים על ה-function שנשברה, וכך מוצאים את ה-bug בלי לעקוב אחרי כל האפליקציה.",
+   "wrong": [
+    null,
+    "זה מתאר end-to-end tests. unit tests מוותרים על ריאליזם בתמורה למהירות ולכישלונות מדויקים.",
+    "unit tests של לוגיקת תמחור אף פעם לא מציגים דף: layout דורש tests ברמת ה-UI.",
+    "unit tests לא רואים איך החלקים מתחברים יחד, ולכן עדיין שווה להשאיר כמה end-to-end tests."
+   ]
+  }
+ },
+ {
+  "id": "testing-integration-test-real-database",
+  "topic": "testing",
+  "subtopic": "levels",
+  "concepts": [
+   "integration-test",
+   "mocking-limits",
+   "database"
+  ],
+  "level": "easy",
+  "q": "Unit tests for a UserRepository pass with a mocked database, but in production its SQL query names a column that does not exist. Which test would have caught this?",
+  "options": [
+   "Another unit test, with a mock that returns a realistic sample user row",
+   "An integration test that runs the query on a real test database",
+   "Only a full end-to-end test that goes through the web UI",
+   "Raising the line coverage of UserRepository to 100%"
+  ],
+  "answer": 1,
+  "why": "The bug sits between the code and the database, and the mock never reads the SQL text. An integration test runs the real query against a real test database, so the missing column fails at once.",
+  "wrong": [
+   "The mock returns whatever it was told to, so the wrong column name is never checked.",
+   null,
+   "An end-to-end test could catch it too, but slower and with a vaguer failure; an integration test is enough.",
+   "The lines already ran, but against the mock, so running them proved nothing about the SQL."
+  ],
+  "ref": "https://martinfowler.com/bliki/IntegrationTest.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-unit tests של UserRepository עוברים עם מסד נתונים שעבר mock, אבל ב-production ה-query של SQL שלו מתייחס ל-column שלא קיימת. איזה test היה תופס את זה?",
+   "options": [
+    "עוד unit test, עם mock שמחזיר שורת משתמש לדוגמה ריאליסטית",
+    "integration test שמריץ את ה-query על מסד נתונים אמיתי של tests",
+    "רק end-to-end test מלא שעובר דרך ה-UI של האתר",
+    "העלאת ה-line coverage של UserRepository ל-100%"
+   ],
+   "why": "ה-bug יושב בין הקוד למסד הנתונים, וה-mock אף פעם לא קורא את טקסט ה-SQL. integration test מריץ את ה-query האמיתי מול מסד נתונים אמיתי של tests, ולכן ה-column החסרה נכשלת מיד.",
+   "wrong": [
+    "ה-mock מחזיר את מה שאמרו לו להחזיר, ולכן שם ה-column השגוי אף פעם לא נבדק.",
+    null,
+    "גם end-to-end test היה יכול לתפוס את זה, אבל לאט יותר ועם כישלון פחות ברור: integration test מספיק.",
+    "השורות כבר רצו, אבל מול ה-mock, ולכן הריצה שלהן לא הוכיחה כלום לגבי ה-SQL."
+   ]
+  }
+ },
+ {
+  "id": "testing-few-end-to-end-tests",
+  "topic": "testing",
+  "subtopic": "levels",
+  "concepts": [
+   "end-to-end-test",
+   "test-pyramid",
+   "flaky-tests",
+   "test-cost"
+  ],
+  "level": "medium",
+  "q": "Your team wants to write most tests as end-to-end tests, since they are the most realistic. Why do most teams keep end-to-end tests few and focused on key user flows?",
+  "options": [
+   "They are less realistic than unit tests, because they run against test servers",
+   "They cannot find real bugs, since real users never follow scripted paths",
+   "They are slow, flaky and hard to debug, so many cost more than they catch",
+   "They check exactly the same things as unit tests, so they add nothing new"
+  ],
+  "answer": 2,
+  "why": "An end-to-end test starts the whole system, so it is slow, depends on many moving parts and can fail for reasons unrelated to the change. Its failure also says little about where the bug is. A few cover key flows; faster tests cover the details.",
+  "wrong": [
+   "They are the most realistic kind; their cost is speed and stability, not realism.",
+   "They do catch real bugs, especially in how the parts are wired together; that is why a few are kept.",
+   null,
+   "They catch wiring and configuration bugs that unit tests cannot see."
+  ],
+  "ref": "https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "הצוות רוצה לכתוב את רוב ה-tests כ-end-to-end tests, כי הם הכי ריאליסטיים. למה רוב הצוותים שומרים על מעט end-to-end tests שמתמקדים ב-flows מרכזיים של משתמשים?",
+   "options": [
+    "הם פחות ריאליסטיים מ-unit tests, כי הם רצים מול שרתי בדיקה",
+    "הם לא יכולים למצוא bugs אמיתיים, כי משתמשים אמיתיים אף פעם לא הולכים לפי תסריט",
+    "הם איטיים, flaky וקשים ל-debug, ולכן הרבה מהם עולים יותר ממה שהם תופסים",
+    "הם בודקים בדיוק את אותם דברים כמו unit tests, ולכן לא מוסיפים כלום"
+   ],
+   "why": "end-to-end test מרים את כל המערכת, ולכן הוא איטי, תלוי בהרבה חלקים נעים ויכול להיכשל מסיבות שלא קשורות לשינוי. הכישלון שלו גם אומר מעט על המקום של ה-bug. כמה כאלה מכסים flows מרכזיים, ו-tests מהירים יותר מכסים את הפרטים.",
+   "wrong": [
+    "הם הסוג הכי ריאליסטי: המחיר שלהם הוא מהירות ויציבות, לא ריאליזם.",
+    "הם כן תופסים bugs אמיתיים, במיוחד באופן שבו החלקים מחוברים, ובגלל זה שומרים כמה מהם.",
+    null,
+    "הם תופסים bugs של חיבור והגדרות ש-unit tests לא יכולים לראות."
+   ]
+  }
+ },
+ {
+  "id": "testing-end-to-end-catches-wiring",
+  "topic": "testing",
+  "subtopic": "levels",
+  "concepts": [
+   "end-to-end-test",
+   "integration-bug",
+   "mocking-limits"
+  ],
+  "level": "medium",
+  "q": "All unit and integration tests pass, but users cannot log in: the frontend still calls an old API path that the backend removed. Which test would have caught this?",
+  "options": [
+   "A unit test of the login form that uses a mocked HTTP client",
+   "An integration test of the backend login handler with its database",
+   "A unit test that checks the backend's route table contains the new path",
+   "An end-to-end test that logs in through the real UI and backend"
+  ],
+  "answer": 3,
+  "why": "The bug is in how two deployed parts talk to each other. Only a test that runs the real frontend against the real backend sends the actual request to the actual path, so it fails when the two disagree.",
+  "wrong": [
+   "The mocked client answers any path, so the test passes with the old URL.",
+   "The backend works on its own; this test never involves the frontend that sends the wrong path.",
+   "The new route does exist; the problem is that the frontend does not use it.",
+   null
+  ],
+  "ref": "https://martinfowler.com/bliki/BroadStackTest.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כל ה-unit tests וה-integration tests עוברים, אבל משתמשים לא מצליחים להתחבר: ה-frontend עדיין קורא ל-path ישן של ה-API שה-backend הסיר. איזה test היה תופס את זה?",
+   "options": [
+    "unit test של טופס ההתחברות שמשתמש ב-HTTP client שעבר mock",
+    "integration test של ה-login handler ב-backend עם מסד הנתונים שלו",
+    "unit test שבודק שטבלת ה-routes של ה-backend מכילה את ה-path החדש",
+    "end-to-end test שמתחבר דרך ה-UI וה-backend האמיתיים"
+   ],
+   "why": "ה-bug נמצא באופן שבו שני חלקים שעלו ל-production מדברים זה עם זה. רק test שמריץ את ה-frontend האמיתי מול ה-backend האמיתי שולח את ה-request האמיתי ל-path האמיתי, ולכן הוא נכשל כשהשניים לא מסכימים.",
+   "wrong": [
+    "ה-client שעבר mock עונה לכל path, ולכן ה-test עובר עם ה-URL הישן.",
+    "ה-backend עובד בפני עצמו, וה-test הזה אף פעם לא מערב את ה-frontend ששולח את ה-path השגוי.",
+    "ה-route החדש אכן קיים: הבעיה היא שה-frontend לא משתמש בו.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "testing-stub-canned-answer",
+  "topic": "testing",
+  "subtopic": "doubles",
+  "concepts": [
+   "stub",
+   "test-double",
+   "determinism"
+  ],
+  "level": "easy",
+  "q": "A function suggests an umbrella when the weather API says rain. The test must not call the real API, and it does not care how the API is called. What should stand in for the API?",
+  "options": [
+   "A stub that always returns rain",
+   "A mock that fails unless it is called exactly once with the city name",
+   "The real API, so that the test stays realistic",
+   "A random weather generator, so that many cases get tested"
+  ],
+  "answer": 0,
+  "why": "The test only needs a fixed answer so the code under test can run. A stub gives that canned answer, and the test then checks the result: an umbrella is suggested.",
+  "wrong": [
+   null,
+   "Checking the exact call adds an expectation this test does not need, and it breaks when call details change.",
+   "A real network call is slow and its answer changes, so the test would not be repeatable.",
+   "Random answers change the outcome from run to run; the test can no longer state what it expects."
+  ],
+  "ref": "https://martinfowler.com/articles/mocksArentStubs.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "function ממליצה על מטרייה כשה-API של מזג האוויר אומר גשם. ה-test לא אמור לקרוא ל-API האמיתי, ולא משנה לו איך קוראים ל-API. מה צריך לעמוד במקום ה-API?",
+   "options": [
+    "stub שתמיד מחזיר rain",
+    "mock שנכשל אלא אם קוראים לו בדיוק פעם אחת עם שם העיר",
+    "ה-API האמיתי, כדי שה-test יישאר ריאליסטי",
+    "מחולל מזג אוויר אקראי, כדי לבדוק הרבה מקרים"
+   ],
+   "why": "ה-test צריך רק תשובה קבועה כדי שהקוד הנבדק יוכל לרוץ. stub נותן את התשובה המוכנה הזו, וה-test בודק אז את התוצאה: מומלצת מטרייה.",
+   "wrong": [
+    null,
+    "בדיקת הקריאה המדויקת מוסיפה ציפייה שה-test הזה לא צריך, והיא נשברת כשפרטי הקריאה משתנים.",
+    "קריאת רשת אמיתית איטית והתשובה שלה משתנה, ולכן ה-test לא יהיה ניתן לחזרה.",
+    "תשובות אקראיות משנות את התוצאה מריצה לריצה, וה-test כבר לא יכול לקבוע למה הוא מצפה."
+   ]
+  }
+ },
+ {
+  "id": "testing-mock-verifies-call",
+  "topic": "testing",
+  "subtopic": "doubles",
+  "concepts": [
+   "mock",
+   "behavior-verification",
+   "side-effects"
+  ],
+  "level": "medium",
+  "q": "After a successful signup, the code must send exactly one welcome email. The email sender returns nothing. How can a unit test check this?",
+  "options": [
+   "Stub the sender to return success, and assert that signup returns True",
+   "Use a mock sender and verify one call with the user's address",
+   "Send a real email and have the test read a test inbox",
+   "Skip it, since a call with no return value cannot be tested"
+  ],
+  "answer": 1,
+  "why": "The behavior to check is the call itself, and nothing comes back to assert on. A mock records the calls it receives, so the test can verify the email was sent once, to the right address.",
+  "wrong": [
+   "A stub only feeds answers in; signup could return True without ever sending the email.",
+   null,
+   "That makes a unit test depend on a mail server and the network: slow and flaky.",
+   "Side effects are tested by checking the interaction, which is exactly what a mock is for."
+  ],
+  "ref": "https://martinfowler.com/bliki/TestDouble.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אחרי הרשמה מוצלחת, הקוד חייב לשלוח בדיוק מייל ברוכים הבאים אחד. ה-sender של המיילים לא מחזיר כלום. איך unit test יכול לבדוק את זה?",
+   "options": [
+    "לעשות stub ל-sender כך שיחזיר הצלחה, ולעשות assert ש-signup מחזירה True",
+    "להשתמש ב-sender שהוא mock ולוודא קריאה אחת עם הכתובת של המשתמש",
+    "לשלוח מייל אמיתי ולתת ל-test לקרוא תיבת דואר של בדיקות",
+    "לוותר על זה, כי אי אפשר לבדוק קריאה בלי ערך החזרה"
+   ],
+   "why": "ההתנהגות שצריך לבדוק היא הקריאה עצמה, ושום דבר לא חוזר שאפשר לעשות עליו assert. mock מתעד את הקריאות שהוא מקבל, ולכן ה-test יכול לוודא שהמייל נשלח פעם אחת, לכתובת הנכונה.",
+   "wrong": [
+    "stub רק מזין תשובות פנימה: signup הייתה יכולה להחזיר True בלי לשלוח את המייל אף פעם.",
+    null,
+    "זה הופך unit test לתלוי בשרת מייל וברשת: איטי ו-flaky.",
+    "side effects נבדקים דרך בדיקת האינטראקציה, ובשביל זה בדיוק יש mock."
+   ]
+  }
+ },
+ {
+  "id": "testing-fake-repository",
+  "topic": "testing",
+  "subtopic": "doubles",
+  "concepts": [
+   "fake",
+   "over-mocking",
+   "brittle-tests"
+  ],
+  "level": "medium",
+  "q": "Many service tests save users and then look them up. Mocking every save and find call made the tests long, and they break on each refactor. Which double fits better?",
+  "options": [
+   "A stub whose find method always returns the same fixed user",
+   "The shared staging database that every test run writes to",
+   "A fake: an in-memory repository that really stores users",
+   "Stricter mocks that also check the order of every call"
+  ],
+  "answer": 2,
+  "why": "A fake is a small working implementation. Tests save a user, find it and check the result without scripting each call, so they survive refactors that keep the behavior the same.",
+  "wrong": [
+   "A fixed answer cannot show that the user you saved is the one you get back.",
+   "A shared database is slow, and runs that write to it at the same time interfere with each other.",
+   null,
+   "Checking more calls ties the tests even closer to the code's internals, so they break more often."
+  ],
+  "ref": "https://testing.googleblog.com/2013/06/testing-on-toilet-fake-your-way-to.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "הרבה tests של services שומרים משתמשים ואז מחפשים אותם. mock לכל קריאה של save ו-find הפך את ה-tests לארוכים, והם נשברים בכל refactor. איזה double מתאים יותר?",
+   "options": [
+    "stub שה-method בשם find שלו תמיד מחזירה את אותו משתמש קבוע",
+    "מסד הנתונים המשותף של staging שכל ריצת tests כותבת אליו",
+    "fake: repository בזיכרון ששומר משתמשים באמת",
+    "mocks מחמירים יותר שבודקים גם את הסדר של כל קריאה"
+   ],
+   "why": "fake הוא מימוש קטן שעובד. ה-tests שומרים משתמש, מוצאים אותו ובודקים את התוצאה בלי לכתוב תסריט לכל קריאה, ולכן הם שורדים refactors ששומרים על אותה התנהגות.",
+   "wrong": [
+    "תשובה קבועה לא יכולה להראות שהמשתמש שנשמר הוא זה שמקבלים בחזרה.",
+    "מסד נתונים משותף איטי, וריצות שכותבות אליו באותו זמן מפריעות זו לזו.",
+    null,
+    "בדיקה של יותר קריאות קושרת את ה-tests עוד יותר לפרטים הפנימיים של הקוד, ולכן הם נשברים לעיתים קרובות יותר."
+   ]
+  }
+ },
+ {
+  "id": "testing-mock-hides-wrong-assumption",
+  "topic": "testing",
+  "subtopic": "doubles",
+  "concepts": [
+   "mock",
+   "mocking-limits",
+   "integration-test"
+  ],
+  "level": "hard",
+  "q": "The real payment API returns {\"state\": \"paid\"}, so in production is_paid raises KeyError. Why did this test pass?",
+  "code": "from unittest.mock import Mock\n\ndef is_paid(client, order_id):\n    resp = client.get_payment(order_id)\n    return resp[\"status\"] == \"ok\"\n\ndef test_is_paid():\n    client = Mock()\n    client.get_payment.return_value = {\"status\": \"ok\"}\n    assert is_paid(client, 42)",
+  "lang": "python",
+  "options": [
+   "Any Mock object is truthy, so the assert passes whatever is_paid returns",
+   "The mocking library has a bug; another library would have failed the test",
+   "The test tries only one order id; trying more ids would expose the bug",
+   "The mock repeats a wrong belief about the API, and nothing checks it"
+  ],
+  "answer": 3,
+  "why": "A mock returns whatever its author believed the dependency returns. If that belief is wrong, the code and the test agree with each other and are both wrong. Only a test against the real API, or its sandbox, checks the belief.",
+  "wrong": [
+   "is_paid returns the result of ==, a real bool, so the assert does check the value.",
+   "The library did exactly what it was told; the wrong data came from the test author.",
+   "Every id gets the same mocked response, so more ids repeat the same wrong assumption.",
+   null
+  ],
+  "ref": "https://testing.googleblog.com/2013/05/testing-on-toilet-dont-overuse-mocks.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-API האמיתי של התשלומים מחזיר {\"state\": \"paid\"}, ולכן ב-production is_paid זורקת KeyError. למה ה-test הזה עבר?",
+   "options": [
+    "כל object מסוג Mock הוא truthy, ולכן ה-assert עובר לא משנה מה is_paid מחזירה",
+    "יש bug בספריית ה-mocking, וספרייה אחרת הייתה מכשילה את ה-test",
+    "ה-test בודק רק order id אחד, ובדיקה של עוד ids הייתה חושפת את ה-bug",
+    "ה-mock חוזר על הנחה שגויה לגבי ה-API, ושום דבר לא בודק אותה"
+   ],
+   "why": "mock מחזיר את מה שהכותב שלו האמין שה-dependency מחזיר. אם האמונה הזו שגויה, הקוד וה-test מסכימים זה עם זה ושניהם טועים. רק test מול ה-API האמיתי, או ה-sandbox שלו, בודק את ההנחה.",
+   "wrong": [
+    "is_paid מחזירה את התוצאה של ==, bool אמיתי, ולכן ה-assert כן בודק את הערך.",
+    "הספרייה עשתה בדיוק מה שאמרו לה: הנתונים השגויים הגיעו מכותב ה-test.",
+    "כל id מקבל את אותה תשובה מה-mock, ולכן עוד ids רק חוזרים על אותה הנחה שגויה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "testing-one-behavior-per-test",
+  "topic": "testing",
+  "subtopic": "good-tests",
+  "concepts": [
+   "one-behavior-per-test",
+   "test-naming",
+   "assertions"
+  ],
+  "level": "easy",
+  "q": "A test named test_cart adds items, removes one, applies a coupon and checks the tax, with 14 asserts. It fails at the third assert. What is the main problem with this design?",
+  "options": [
+   "The failure hides which behavior broke, and the later asserts never run",
+   "The 14 asserts should go into a loop so the test is shorter",
+   "Nothing: more asserts in one test means more thorough testing",
+   "It should print the cart after every step so the log is easier to follow"
+  ],
+  "answer": 0,
+  "why": "One test per behavior, with a clear name, tells you what broke from the name alone. In a combined test the first failing assert stops the test, so the later checks tell you nothing about the code.",
+  "wrong": [
+   null,
+   "Logic in tests makes them harder to read and makes failures even harder to trace.",
+   "Thoroughness comes from covering behaviors, not from piling asserts into one test.",
+   "Printing helps read the log, but the test still mixes four behaviors and stops at the first failure."
+  ],
+  "ref": "https://testing.googleblog.com/2018/06/testing-on-toilet-keep-tests-focused.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "test בשם test_cart מוסיף פריטים, מסיר אחד, מפעיל קופון ובודק את המס, עם 14 asserts. הוא נכשל ב-assert השלישי. מה הבעיה המרכזית בתכנון הזה?",
+   "options": [
+    "הכישלון מסתיר איזו התנהגות נשברה, וה-asserts שאחריו אף פעם לא רצים",
+    "צריך להכניס את 14 ה-asserts ללולאה כדי שה-test יהיה קצר יותר",
+    "אין בעיה: יותר asserts ב-test אחד זה בדיקה יסודית יותר",
+    "הוא צריך להדפיס את העגלה אחרי כל צעד כדי שיהיה קל יותר לעקוב אחרי ה-log"
+   ],
+   "why": "test אחד לכל התנהגות, עם שם ברור, מראה מה נשבר כבר מהשם. ב-test משולב, ה-assert הראשון שנכשל עוצר את ה-test, ולכן הבדיקות שאחריו לא אומרות כלום על הקוד.",
+   "wrong": [
+    null,
+    "לוגיקה בתוך tests מקשה לקרוא אותם ומקשה עוד יותר לעקוב אחרי כישלונות.",
+    "יסודיות באה מכיסוי של התנהגויות, לא מערימת asserts ב-test אחד.",
+    "הדפסה עוזרת לקרוא את ה-log, אבל ה-test עדיין מערבב ארבע התנהגויות ועוצר בכישלון הראשון."
+   ]
+  }
+ },
+ {
+  "id": "testing-boundary-values",
+  "topic": "testing",
+  "subtopic": "good-tests",
+  "concepts": [
+   "boundary-values",
+   "off-by-one",
+   "edge-cases"
+  ],
+  "level": "easy",
+  "q": "can_vote(age) should return True for 18 and older. If you could test only two inputs, which pair is most likely to catch a bug?",
+  "options": [
+   "5 and 30, one typical value on each side of the rule",
+   "17 and 18, the values on each side of the boundary",
+   "30 and 60, two clear adult cases",
+   "0 and 120, the smallest and largest possible ages"
+  ],
+  "answer": 1,
+  "why": "Bugs gather at boundaries: writing > instead of >= breaks only age 18. Testing the last value that should fail and the first that should pass catches that off-by-one, while values far from 18 pass either way.",
+  "wrong": [
+   "Values far from 18 give the same result with > and >=, so they miss the most common bug.",
+   null,
+   "Both are on the same side of the rule, so the False case is never tested.",
+   "Extremes are worth testing, but they are far from 18 and miss an off-by-one there."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "can_vote(age) צריכה להחזיר True עבור 18 ומעלה. אם אפשר לבדוק רק שני קלטים, איזה זוג הכי סביר שיתפוס bug?",
+   "options": [
+    "5 ו-30, ערך טיפוסי אחד מכל צד של הכלל",
+    "17 ו-18, הערכים משני צדי הגבול",
+    "30 ו-60, שני מקרים ברורים של מבוגרים",
+    "0 ו-120, הגילים הכי קטן והכי גדול האפשריים"
+   ],
+   "why": "bugs מתרכזים בגבולות: כתיבה של > במקום >= שוברת רק את גיל 18. בדיקה של הערך האחרון שאמור להיכשל ושל הראשון שאמור לעבור תופסת את ה-off-by-one הזה, וערכים רחוקים מ-18 עוברים בשני המקרים.",
+   "wrong": [
+    "ערכים רחוקים מ-18 נותנים אותה תוצאה עם > ועם >=, ולכן הם מפספסים את ה-bug הכי נפוץ.",
+    null,
+    "שניהם באותו צד של הכלל, ולכן המקרה של False אף פעם לא נבדק.",
+    "שווה לבדוק קצוות, אבל הם רחוקים מ-18 ומפספסים off-by-one שם."
+   ]
+  }
+ },
+ {
+  "id": "testing-test-behavior-not-implementation",
+  "topic": "testing",
+  "subtopic": "good-tests",
+  "concepts": [
+   "behavior-not-implementation",
+   "refactoring",
+   "brittle-tests"
+  ],
+  "level": "medium",
+  "q": "A teammate changed a class to store tags in a set instead of a list. Its public methods behave exactly as before, yet 12 tests fail because they read the private field. What does this show?",
+  "options": [
+   "The refactor broke the class and should be reverted",
+   "This is normal: every refactor should require rewriting the tests",
+   "The tests check internals, not behavior through the public methods",
+   "The private field should be made public so that the tests stay stable"
+  ],
+  "answer": 2,
+  "why": "Good tests use a class the way callers do. Then a refactor that keeps behavior keeps the tests green, and a failing test means behavior really changed. Tests tied to internals fail on harmless changes and teach the team to ignore failures.",
+  "wrong": [
+   "The public behavior is unchanged, so nothing a caller sees is broken.",
+   "Tests are the safety net for refactoring; if every refactor breaks them, they cannot play that role.",
+   null,
+   "Exposing internals for tests spreads the same coupling to production callers."
+  ],
+  "ref": "https://testing.googleblog.com/2013/08/testing-on-toilet-test-behavior-not.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חבר צוות שינה class כך שישמור tags ב-set במקום ב-list. ה-public methods שלו מתנהגות בדיוק כמו קודם, ובכל זאת 12 tests נכשלים כי הם קוראים את ה-field ה-private. מה זה מראה?",
+   "options": [
+    "ה-refactor שבר את ה-class, וצריך לבטל אותו",
+    "זה רגיל: כל refactor אמור לחייב שכתוב של ה-tests",
+    "ה-tests בודקים פרטים פנימיים, לא התנהגות דרך ה-public methods",
+    "צריך להפוך את ה-field ה-private ל-public כדי שה-tests יישארו יציבים"
+   ],
+   "why": "tests טובים משתמשים ב-class כמו שהקוד הקורא משתמש בו. אז refactor ששומר על ההתנהגות משאיר את ה-tests ירוקים, ו-test שנכשל אומר שההתנהגות באמת השתנתה. tests שקשורים לפרטים פנימיים נכשלים בשינויים לא מזיקים ומלמדים את הצוות להתעלם מכישלונות.",
+   "wrong": [
+    "ההתנהגות ה-public לא השתנתה, ולכן שום דבר שהקוד הקורא רואה לא נשבר.",
+    "tests הם רשת הביטחון ל-refactoring: אם כל refactor שובר אותם, הם לא יכולים למלא את התפקיד הזה.",
+    null,
+    "חשיפת פרטים פנימיים בשביל tests מפיצה את אותו coupling גם לקוד הקורא ב-production."
+   ]
+  }
+ },
+ {
+  "id": "testing-empty-input-edge-case",
+  "topic": "testing",
+  "subtopic": "good-tests",
+  "concepts": [
+   "edge-cases",
+   "empty-input",
+   "test-inputs"
+  ],
+  "level": "easy",
+  "q": "This test passes. Which extra input is most likely to expose a bug in average?",
+  "code": "def average(nums):\n    return sum(nums) / len(nums)\n\ndef test_average():\n    assert average([2, 4, 6]) == 4",
+  "lang": "python",
+  "options": [
+   "[3, 5]",
+   "[1000000, 2000000]",
+   "[7]",
+   "[]"
+  ],
+  "answer": 3,
+  "why": "An empty list makes len(nums) zero, so the function raises ZeroDivisionError. Empty input, a single element and boundary values are where code most often breaks, so each deserves its own test.",
+  "wrong": [
+   "Another typical list follows the same path as the passing test.",
+   "Python integers do not overflow, so large values work fine here.",
+   "One element divides by 1 and returns 7.0, which is correct.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-test הזה עובר. איזה קלט נוסף הכי סביר שיחשוף bug ב-average?",
+   "options": [
+    "[3, 5]",
+    "[1000000, 2000000]",
+    "[7]",
+    "[]"
+   ],
+   "why": "list ריקה הופכת את len(nums) לאפס, ולכן ה-function זורקת ZeroDivisionError. קלט ריק, איבר בודד וערכי גבול הם המקומות שבהם קוד נשבר הכי הרבה, ולכן כל אחד מהם ראוי ל-test משלו.",
+   "wrong": [
+    "עוד list טיפוסית עוברת באותו מסלול כמו ה-test שעובר.",
+    "מספרים שלמים ב-Python לא עושים overflow, ולכן ערכים גדולים עובדים כאן בלי בעיה.",
+    "איבר אחד מחולק ב-1 ומחזיר 7.0, וזה נכון.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "testing-sleep-based-wait",
+  "topic": "testing",
+  "subtopic": "flaky",
+  "concepts": [
+   "flaky-tests",
+   "sleep-wait",
+   "async"
+  ],
+  "level": "easy",
+  "q": "This test passes on laptops but fails now and then on the busy CI server. What is the best fix?",
+  "code": "import time\n\ndef test_report_is_generated():\n    start_report_job()  # runs in the background\n    time.sleep(2)\n    assert report_exists()",
+  "lang": "python",
+  "options": [
+   "Poll until the report exists, with a time limit",
+   "Raise the sleep to 10 seconds to leave more margin",
+   "Mark the test to rerun automatically until it passes",
+   "Remove the assert so the test only checks that nothing crashes"
+  ],
+  "answer": 0,
+  "why": "A fixed sleep guesses how long the job takes, and on a slow machine the guess is wrong. Waiting for the actual condition ends as soon as the report is ready, and fails clearly only if it never appears.",
+  "wrong": [
+   null,
+   "A longer sleep slows every run and can still be too short on a slower day.",
+   "Reruns hide the problem and teach the team to treat real failures as noise.",
+   "A test that cannot fail no longer checks that the report was made."
+  ],
+  "ref": "https://martinfowler.com/articles/nonDeterminism.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-test הזה עובר על מחשבים ניידים אבל נכשל מדי פעם על שרת ה-CI העמוס. מה התיקון הכי טוב?",
+   "options": [
+    "לבדוק שוב ושוב (polling) עד שהדוח קיים, עם מגבלת זמן",
+    "להעלות את ה-sleep ל-10 שניות כדי להשאיר יותר מרווח",
+    "לסמן את ה-test כך שירוץ שוב אוטומטית עד שיעבור",
+    "להסיר את ה-assert כך שה-test רק יבדוק ששום דבר לא קורס"
+   ],
+   "why": "sleep קבוע מנחש כמה זמן ה-job לוקח, ועל מכונה איטית הניחוש שגוי. המתנה לתנאי עצמו מסתיימת ברגע שהדוח מוכן, ונכשלת בצורה ברורה רק אם הוא אף פעם לא מופיע.",
+   "wrong": [
+    null,
+    "sleep ארוך יותר מאט כל ריצה ועדיין יכול להיות קצר מדי ביום איטי יותר.",
+    "ריצות חוזרות מסתירות את הבעיה ומלמדות את הצוות להתייחס לכישלונות אמיתיים כרעש.",
+    "test שלא יכול להיכשל כבר לא בודק שהדוח נוצר."
+   ]
+  }
+ },
+ {
+  "id": "testing-shared-state-between-tests",
+  "topic": "testing",
+  "subtopic": "flaky",
+  "concepts": [
+   "flaky-tests",
+   "shared-state",
+   "test-isolation",
+   "test-order"
+  ],
+  "level": "medium",
+  "q": "Each test passes when run alone. When both run, in this order, test_add_two_items fails. Why?",
+  "code": "cart = []\n\ndef test_add_item():\n    cart.append(\"apple\")\n    assert len(cart) == 1\n\ndef test_add_two_items():\n    cart.append(\"pear\")\n    cart.append(\"plum\")\n    assert len(cart) == 2",
+  "lang": "python",
+  "options": [
+   "The runner runs the tests in parallel threads, which corrupts the list",
+   "Both tests share the module-level cart, so state leaks between them",
+   "len() is unreliable on a list that another function appended to",
+   "The second test should assert len(cart) == 3, the correct total"
+  ],
+  "answer": 1,
+  "why": "cart is created once and shared. After the first test it already holds one item, so the second test sees 3. Each test should build its own fresh state, so the result does not depend on which tests ran before.",
+  "wrong": [
+   "These tests run one after the other; the leak comes from shared state, not threads.",
+   null,
+   "len() is always exact; the list really holds three items.",
+   "That makes the second test depend on the first, so it fails when run alone or in another order."
+  ],
+  "ref": "https://martinfowler.com/articles/nonDeterminism.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כל test עובר כשמריצים אותו לבד. כששניהם רצים, בסדר הזה, test_add_two_items נכשל. למה?",
+   "options": [
+    "ה-runner מריץ את ה-tests ב-threads מקבילים, וזה משבש את ה-list",
+    "שני ה-tests חולקים את ה-cart ברמת המודול, ולכן state דולף ביניהם",
+    "len() לא אמינה על list ש-function אחרת הוסיפה אליה",
+    "ה-test השני צריך לעשות assert ל-len(cart) == 3, הסכום הנכון"
+   ],
+   "why": "cart נוצר פעם אחת ומשותף. אחרי ה-test הראשון הוא כבר מחזיק פריט אחד, ולכן ה-test השני רואה 3. כל test צריך לבנות state חדש משלו, כדי שהתוצאה לא תהיה תלויה באילו tests רצו קודם.",
+   "wrong": [
+    "ה-tests האלה רצים אחד אחרי השני: הדליפה נובעת מ-state משותף, לא מ-threads.",
+    null,
+    "len() תמיד מדויקת: ב-list באמת יש שלושה פריטים.",
+    "זה הופך את ה-test השני לתלוי בראשון, ולכן הוא נכשל כשמריצים אותו לבד או בסדר אחר."
+   ]
+  }
+ },
+ {
+  "id": "testing-inject-the-clock",
+  "topic": "testing",
+  "subtopic": "flaky",
+  "concepts": [
+   "flaky-tests",
+   "time-dependency",
+   "determinism",
+   "dependency-injection"
+  ],
+  "level": "medium",
+  "q": "A test creates a token that expires in 1 second, then asserts is_expired(token) is False. is_expired reads the system clock. On slow CI runs the test sometimes fails. What makes it deterministic?",
+  "options": [
+   "Give the test token a longer lifetime, such as one hour",
+   "Run the test twice and count it as passed if either run passes",
+   "Pass the current time in as a parameter, so the test sets it",
+   "Read the clock twice inside is_expired and use the later value"
+  ],
+  "answer": 2,
+  "why": "When time comes in as a parameter or an injected clock, the test fixes it to known values. The result no longer depends on machine speed, and edge cases such as expiring exactly now become easy to test.",
+  "wrong": [
+   "A bigger margin makes failures rarer, but the result still depends on the real clock, and cases like expiring exactly now stay hard to test.",
+   "Passing on either run hides the flake instead of removing its cause.",
+   null,
+   "Reading the real clock again still ties the outcome to how fast the machine is."
+  ],
+  "ref": "https://testing.googleblog.com/2016/05/flaky-tests-at-google-and-how-we.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "test יוצר token שפג תוקפו בעוד שנייה אחת, ואז עושה assert ש-is_expired(token) הוא False. is_expired קוראת את שעון המערכת. בריצות CI איטיות ה-test נכשל לפעמים. מה הופך אותו לדטרמיניסטי?",
+   "options": [
+    "לתת ל-token של ה-test תוקף ארוך יותר, למשל שעה",
+    "להריץ את ה-test פעמיים ולהחשיב אותו כעובר אם אחת הריצות עוברת",
+    "להעביר את הזמן הנוכחי כפרמטר, כך שה-test קובע אותו",
+    "לקרוא את השעון פעמיים בתוך is_expired ולהשתמש בערך המאוחר"
+   ],
+   "why": "כשהזמן מגיע כפרמטר או כשעון שמוזרק, ה-test מקבע אותו לערכים ידועים. התוצאה כבר לא תלויה במהירות המכונה, ומקרי קצה כמו תוקף שפג בדיוק עכשיו נהיים קלים לבדיקה.",
+   "wrong": [
+    "מרווח גדול יותר הופך כישלונות לנדירים יותר, אבל התוצאה עדיין תלויה בשעון האמיתי, ומקרים כמו תוקף שפג בדיוק עכשיו נשארים קשים לבדיקה.",
+    "מעבר באחת הריצות מסתיר את ה-flake במקום להסיר את הסיבה שלו.",
+    null,
+    "קריאה נוספת של השעון האמיתי עדיין קושרת את התוצאה למהירות המכונה."
+   ]
+  }
+ }
+]

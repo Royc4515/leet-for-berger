@@ -1,0 +1,2060 @@
+[
+ {
+  "id": "oop-overridable-call-in-constructor",
+  "topic": "oop",
+  "subtopic": "dispatch",
+  "concepts": [
+   "dynamic-dispatch",
+   "constructor",
+   "initialization-order"
+  ],
+  "level": "hard",
+  "q": "Base's constructor calls show(), and Derived overrides show() to print its own field. What does new Derived() print?",
+  "code": "public class Main {\n    public static void main(String[] args) { new Derived(); }\n}\nclass Base {\n    Base() { show(); }\n    void show() { System.out.println(\"Base\"); }\n}\nclass Derived extends Base {\n    String name = \"derived\";\n    void show() { System.out.println(\"Derived \" + name); }\n}",
+  "lang": "java",
+  "options": [
+   "Base",
+   "Derived derived",
+   "Derived null",
+   "Compile error: a constructor may not call an overridable method"
+  ],
+  "answer": 2,
+  "why": "show() is dispatched on the object, which is already a Derived while Base's constructor runs. But Derived's field initializers run only after Base's constructor returns, so name is still null. That is why constructors should not call overridable methods.",
+  "wrong": [
+   "Dispatch follows the object's class even inside a constructor, so Derived's show() runs, not Base's.",
+   "Derived's field initializers run after the Base constructor finishes, so name has not been set yet.",
+   null,
+   "Java allows the call; it compiles and runs, which is what makes this bug easy to write."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/super.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-constructor של Base קורא ל-show(), ו-Derived עושה override ל-show() כדי להדפיס field משלו. מה new Derived() ידפיס?",
+   "options": [
+    "Base",
+    "Derived derived",
+    "Derived null",
+    "שגיאת compile: constructor לא יכול לקרוא ל-method שאפשר לעשות לה override"
+   ],
+   "why": "הקריאה ל-show() נבחרת לפי ה-object, שכבר בזמן שה-constructor של Base רץ הוא מסוג Derived. אבל ה-field initializers של Derived רצים רק אחרי שה-constructor של Base מסתיים, ולכן name עדיין null. בגלל זה constructors לא צריכים לקרוא ל-methods שאפשר לעשות להן override.",
+   "wrong": [
+    "גם בתוך constructor, ה-dispatch הולך לפי ה-class של ה-object, ולכן רצה ה-show() של Derived ולא זו של Base.",
+    "ה-field initializers של Derived רצים אחרי שה-constructor של Base מסתיים, ולכן name עוד לא קיבל ערך.",
+    null,
+    "Java מאפשרת את הקריאה: הקוד עובר compile ורץ, ובגלל זה קל כל כך לכתוב את ה-bug הזה."
+   ]
+  }
+ },
+ {
+  "id": "oop-python-super-init",
+  "topic": "oop",
+  "subtopic": "dispatch",
+  "concepts": [
+   "super",
+   "overriding",
+   "constructor",
+   "python"
+  ],
+  "level": "medium",
+  "q": "In Python, Dog defines its own __init__ and does not call super().__init__(). What does this print?",
+  "code": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\nclass Dog(Animal):\n    def __init__(self, name, breed):\n        self.breed = breed\n\nd = Dog(\"Rex\", \"lab\")\nprint(d.breed, d.name)",
+  "lang": "python",
+  "options": [
+   "lab Rex",
+   "lab None",
+   "AttributeError: the Dog object has no attribute name",
+   "TypeError: Animal.__init__ is missing its name argument"
+  ],
+  "answer": 2,
+  "why": "Dog's __init__ overrides Animal's, and Python does not call the parent version for you, unlike a Java constructor. So self.name is never set, and reading it fails. Calling super().__init__(name) first fixes it.",
+  "wrong": [
+   "That needs Animal.__init__ to run, but Python only runs the __init__ it finds on Dog.",
+   "Python attributes do not default to None; an attribute that was never assigned does not exist.",
+   null,
+   "Animal.__init__ is never called at all, so its parameters are never checked."
+  ],
+  "ref": "https://docs.python.org/3/library/functions.html#super",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-Python, ל-Dog יש __init__ משלו, והוא לא קורא ל-super().__init__(). מה יודפס?",
+   "options": [
+    "lab Rex",
+    "lab None",
+    "AttributeError: ל-object מסוג Dog אין attribute בשם name",
+    "TypeError: ל-Animal.__init__ חסר הארגומנט name"
+   ],
+   "why": "ה-__init__ של Dog עושה override לזה של Animal, ו-Python לא קוראת לגרסה של ה-parent אוטומטית, בניגוד ל-constructor ב-Java. לכן self.name אף פעם לא מקבל ערך, והקריאה שלו נכשלת. קריאה ל-super().__init__(name) בהתחלה מתקנת את זה.",
+   "wrong": [
+    "כדי שזה יקרה, Animal.__init__ צריכה לרוץ, אבל Python מריצה רק את ה-__init__ שהיא מוצאת ב-Dog.",
+    "ל-attributes ב-Python אין ערך ברירת מחדל None: attribute שאף פעם לא קיבל ערך פשוט לא קיים.",
+    null,
+    "Animal.__init__ לא נקראת בכלל, ולכן אף אחד לא בודק את הפרמטרים שלה."
+   ]
+  }
+ },
+ {
+  "id": "oop-cpp-slicing-in-vector",
+  "topic": "oop",
+  "subtopic": "dispatch",
+  "concepts": [
+   "polymorphic-collection",
+   "object-slicing",
+   "virtual-function",
+   "cpp"
+  ],
+  "level": "medium",
+  "q": "In C++, the same Dog is stored in a vector of Animal values and in a vector of Animal pointers. sound() is virtual. What does this print?",
+  "code": "#include <iostream>\n#include <string>\n#include <vector>\nstruct Animal { virtual std::string sound() const { return \"...\"; } };\nstruct Dog : Animal { std::string sound() const override { return \"woof\"; } };\nint main() {\n    Dog d;\n    std::vector<Animal> byValue{d};\n    std::vector<Animal*> byPointer{&d};\n    std::cout << byValue[0].sound() << \" \" << byPointer[0]->sound() << \"\\n\";\n}",
+  "lang": "cpp",
+  "options": [
+   "woof woof",
+   "... woof",
+   "... ...",
+   "Compile error: a vector<Animal> cannot store a Dog"
+  ],
+  "answer": 1,
+  "why": "vector<Animal> stores Animal objects, so copying the Dog in keeps only its Animal part (slicing). Through a pointer the object is still the Dog, so the virtual call reaches Dog::sound. Polymorphic collections in C++ hold pointers or references.",
+  "wrong": [
+   "The value vector holds a copy made as an Animal; the Dog part is cut off, so nothing is left to dispatch to.",
+   null,
+   "The pointer still points to the original Dog, so the virtual call dispatches to Dog::sound.",
+   "A Dog converts to an Animal, so the copy compiles; it just loses the Dog part."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-C++, אותו Dog נשמר גם ב-vector של ערכי Animal וגם ב-vector של pointers ל-Animal. sound() היא virtual. מה יודפס?",
+   "options": [
+    "woof woof",
+    "... woof",
+    "... ...",
+    "שגיאת compile: vector<Animal> לא יכול לשמור Dog"
+   ],
+   "why": "vector<Animal> שומר objects מסוג Animal, ולכן ההעתקה של ה-Dog פנימה שומרת רק את החלק של Animal (slicing). דרך pointer ה-object הוא עדיין ה-Dog, ולכן הקריאה ה-virtual מגיעה ל-Dog::sound. ב-C++ אוספים פולימורפיים מחזיקים pointers או references.",
+   "wrong": [
+    "ה-vector של הערכים מחזיק עותק שנוצר כ-Animal: החלק של Dog נחתך, ולכן לא נשאר למה לעשות dispatch.",
+    null,
+    "ה-pointer עדיין מצביע על ה-Dog המקורי, ולכן הקריאה ה-virtual עוברת ל-Dog::sound.",
+    "Dog מומר ל-Animal, ולכן ההעתקה עוברת compile: היא פשוט מאבדת את החלק של Dog."
+   ]
+  }
+ },
+ {
+  "id": "oop-abstract-method-called-by-base",
+  "topic": "oop",
+  "subtopic": "dispatch",
+  "concepts": [
+   "abstract-method",
+   "dynamic-dispatch",
+   "abstract-class"
+  ],
+  "level": "easy",
+  "q": "Abstract class Report has a concrete print() that calls abstract body(). SalesReport implements body(). What happens with `Report r = new SalesReport(); r.print();`?",
+  "options": [
+   "It runs SalesReport's body(), since the object is a SalesReport",
+   "Compile error: print() calls body(), which has no code in Report",
+   "A run time error, because r is typed as Report and body() is abstract there",
+   "print() runs, and body() returns null because Report gives it no code"
+  ],
+  "answer": 0,
+  "why": "A concrete method may call an abstract one: any object that exists is of a concrete class, which must implement body(). At run time the call dispatches to SalesReport's body(). This lets a base class fix the steps and leave one step to subclasses.",
+  "wrong": [
+   null,
+   "Calling an abstract method is legal; the compiler knows every concrete subclass must provide it.",
+   "The declared type does not pick the code; the object is a SalesReport, which has body().",
+   "Abstract methods have no default return value; the subclass body is what runs."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/abstract.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-abstract class בשם Report יש method קונקרטית print() שקוראת ל-method האבסטרקטית body(). SalesReport מממש את body(). מה יקרה עם `Report r = new SalesReport(); r.print();`?",
+   "options": [
+    "רצה ה-body() של SalesReport, כי ה-object הוא SalesReport",
+    "שגיאת compile: print() קוראת ל-body(), שאין לה קוד ב-Report",
+    "שגיאה ב-runtime, כי r מטיפוס Report ו-body() אבסטרקטית שם",
+    "print() רצה, ו-body() מחזירה null כי ל-Report אין קוד עבורה"
+   ],
+   "why": "method קונקרטית יכולה לקרוא ל-method אבסטרקטית: כל object שקיים הוא מ-class קונקרטי, שחייב לממש את body(). ב-runtime הקריאה עוברת ל-body() של SalesReport. כך base class יכול לקבוע את השלבים ולהשאיר שלב אחד ל-subclasses.",
+   "wrong": [
+    null,
+    "מותר לקרוא ל-method אבסטרקטית: ה-compiler יודע שכל subclass קונקרטי חייב לספק אותה.",
+    "הטיפוס המוצהר לא בוחר את הקוד: ה-object הוא SalesReport, ויש לו body().",
+    "ל-methods אבסטרקטיות אין ערך החזרה ברירת מחדל: מה שרץ הוא הגוף שב-subclass."
+   ]
+  }
+ },
+ {
+  "id": "oop-cast-does-not-change-object",
+  "topic": "oop",
+  "subtopic": "dispatch",
+  "concepts": [
+   "casting",
+   "declared-type",
+   "dynamic-dispatch",
+   "class-cast-exception"
+  ],
+  "level": "medium",
+  "q": "A Dog is held in an Object variable, cast to Animal, and later cast to Cat. What happens when this runs?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        Object o = new Dog();\n        Animal a = (Animal) o;\n        System.out.println(a.name());\n        Cat c = (Cat) a;\n    }\n}\nclass Animal { String name() { return \"animal\"; } }\nclass Dog extends Animal { String name() { return \"dog\"; } }\nclass Cat extends Animal { }",
+  "lang": "java",
+  "options": [
+   "animal, then a ClassCastException",
+   "dog, then a ClassCastException",
+   "dog, and c becomes a Cat view of the same Dog",
+   "Compile error: a Dog can never be cast to Cat"
+  ],
+  "answer": 1,
+  "why": "A cast changes only the type the compiler checks; the object stays a Dog. So a.name() runs Dog's override. The cast to Cat compiles because an Animal might be a Cat, but at run time the object is checked, and it is not one.",
+  "wrong": [
+   "Casting to Animal does not turn the object into an Animal; overridden methods still follow the real class.",
+   null,
+   "A cast never converts an object; when the object is not a Cat, the cast throws.",
+   "The compiler only sees a, declared Animal, which could hold a Cat, so the cast compiles."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/subclasses.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Dog מוחזק במשתנה מטיפוס Object, עובר cast ל-Animal, ואחר כך cast ל-Cat. מה יקרה כשהקוד ירוץ?",
+   "options": [
+    "animal, ואז ClassCastException",
+    "dog, ואז ClassCastException",
+    "dog, ו-c מתייחס לאותו Dog כאל Cat",
+    "שגיאת compile: אי אפשר אף פעם לעשות cast של Dog ל-Cat"
+   ],
+   "why": "cast משנה רק את הטיפוס שה-compiler בודק: ה-object נשאר Dog. לכן a.name() מריצה את ה-override של Dog. ה-cast ל-Cat עובר compile כי Animal יכול להיות Cat, אבל ב-runtime נבדק ה-object עצמו, והוא לא Cat.",
+   "wrong": [
+    "cast ל-Animal לא הופך את ה-object ל-Animal: methods שעברו override עדיין הולכות לפי ה-class האמיתי.",
+    null,
+    "cast אף פעם לא ממיר object: כשה-object הוא לא Cat, ה-cast זורק exception.",
+    "ה-compiler רואה רק את a, שמוצהר כ-Animal ויכול להחזיק Cat, ולכן ה-cast עובר compile."
+   ]
+  }
+ },
+ {
+  "id": "oop-override-return-type",
+  "topic": "oop",
+  "subtopic": "overload-override",
+  "concepts": [
+   "overriding",
+   "return-type",
+   "covariant-return"
+  ],
+  "level": "medium",
+  "q": "Shape declares `Shape copy()`. Circle overrides it as `Circle copy()`. In another subclass, a teammate writes `String copy()`. What does the compiler say?",
+  "options": [
+   "Circle's is fine, since a Circle is a Shape; String's is an error",
+   "Both compile: an override may return any type it likes",
+   "Both fail: an override must repeat the return type exactly",
+   "Both compile: the String version just counts as an overload of copy()"
+  ],
+  "answer": 0,
+  "why": "An override may narrow the return type to a subtype, because callers expecting a Shape still get one. String is not a Shape, so it is rejected. It is not an overload either: the parameter lists are the same, and the return type alone never makes an overload.",
+  "wrong": [
+   null,
+   "Callers of Shape.copy() rely on getting a Shape, so the return type must stay compatible.",
+   "Java allows a more specific return type in an override, called a covariant return type.",
+   "Overloads need different parameter lists; a different return type alone is a clash."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/override.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Shape מצהיר על `Shape copy()`. Circle עושה לה override בתור `Circle copy()`. ב-subclass אחר, חבר צוות כותב `String copy()`. מה ה-compiler יגיד?",
+   "options": [
+    "של Circle תקין, כי Circle הוא Shape, ושל String הוא שגיאה",
+    "שניהם עוברים compile: override יכול להחזיר כל טיפוס שירצה",
+    "שניהם נכשלים: override חייב לחזור בדיוק על טיפוס ההחזרה",
+    "שניהם עוברים compile: גרסת String פשוט נחשבת overload של copy()"
+   ],
+   "why": "override יכול לצמצם את טיפוס ההחזרה ל-subtype, כי מי שמצפה ל-Shape עדיין מקבל Shape. String הוא לא Shape, ולכן הוא נדחה. זה גם לא overload: רשימות הפרמטרים זהות, וטיפוס החזרה לבדו אף פעם לא יוצר overload.",
+   "wrong": [
+    null,
+    "מי שקורא ל-Shape.copy() סומך על כך שיקבל Shape, ולכן טיפוס ההחזרה חייב להישאר תואם.",
+    "Java מאפשרת טיפוס החזרה ספציפי יותר ב-override, מה שנקרא covariant return type.",
+    "overloads צריכים רשימות פרמטרים שונות: טיפוס החזרה שונה לבדו הוא התנגשות."
+   ]
+  }
+ },
+ {
+  "id": "oop-override-weaker-access",
+  "topic": "oop",
+  "subtopic": "overload-override",
+  "concepts": [
+   "overriding",
+   "access-modifiers",
+   "substitutability"
+  ],
+  "level": "easy",
+  "q": "Animal's sound() is public, and Dog overrides it as private. What happens when this program is compiled and run?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        Animal a = new Dog();\n        System.out.println(a.sound());\n    }\n}\nclass Animal { public String sound() { return \"...\"; } }\nclass Dog extends Animal { private String sound() { return \"woof\"; } }",
+  "lang": "java",
+  "options": [
+   "It prints woof, since dispatch still finds Dog's version",
+   "It compiles, but calling sound() through an Animal reference throws at run time",
+   "Compile error: an override cannot be less visible than the method it overrides",
+   "It prints ..., since Dog's private version is hidden from code outside Dog"
+  ],
+  "answer": 2,
+  "why": "Code holding an Animal may call sound() on any Animal, including a Dog. If Dog could make it private, that promise would break. So Java rejects an override that reduces access; widening, like protected to public, is allowed.",
+  "wrong": [
+   "Dispatch never comes into play: the compiler rejects the private override first.",
+   "The check happens at compile time, so the program never gets to run.",
+   null,
+   "private cannot hide an inherited public method; the compiler reports weaker access."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/override.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-sound() של Animal היא public, ו-Dog עושה לה override כ-private. מה יקרה כשעושים compile לתוכנית ומריצים אותה?",
+   "options": [
+    "יודפס woof, כי ה-dispatch עדיין מוצא את הגרסה של Dog",
+    "הקוד עובר compile, אבל קריאה ל-sound() דרך reference מטיפוס Animal זורקת exception ב-runtime",
+    "שגיאת compile: override לא יכול להיות פחות נגיש מה-method שהוא עושה לה override",
+    "יודפס ..., כי הגרסה ה-private של Dog מוסתרת מקוד שמחוץ ל-Dog"
+   ],
+   "why": "קוד שמחזיק Animal רשאי לקרוא ל-sound() על כל Animal, כולל Dog. אם Dog היה יכול להפוך אותה ל-private, ההבטחה הזו הייתה נשברת. לכן Java דוחה override שמצמצם את הגישה. הרחבה, למשל מ-protected ל-public, מותרת.",
+   "wrong": [
+    "ה-dispatch לא נכנס לתמונה בכלל: ה-compiler דוחה קודם את ה-override ה-private.",
+    "הבדיקה קורית בזמן compile, ולכן התוכנית אף פעם לא מגיעה לרוץ.",
+    null,
+    "private לא יכול להסתיר public method שעברה בירושה: ה-compiler מדווח על גישה חלשה יותר."
+   ]
+  }
+ },
+ {
+  "id": "oop-abstract-class-for-shared-state",
+  "topic": "oop",
+  "subtopic": "abstract-interface",
+  "concepts": [
+   "abstract-class",
+   "interface",
+   "shared-state"
+  ],
+  "level": "easy",
+  "q": "CardPayment and PayPalPayment share the fields amount and currency and the same validate() code, but each charges money differently. What fits best in Java?",
+  "options": [
+   "An abstract class Payment with the fields and validate(), and an abstract charge()",
+   "An interface Payment with charge(), and the fields and validate() copied into each class",
+   "A concrete Payment class whose charge() switches on a type field",
+   "An interface Payment that stores amount and currency in its own fields"
+  ],
+  "answer": 0,
+  "why": "The types are closely related and share state and code, which is what an abstract class is for: it holds fields, constructors and shared methods, and leaves charge() to each subclass. An interface would force the shared parts to be copied.",
+  "wrong": [
+   null,
+   "Copying the fields and validate() means every fix has to be made twice.",
+   "A type switch must be edited for each new payment kind; an abstract charge() lets each subclass supply its own.",
+   "Interface fields are constants (static final), so an interface cannot hold per-object amount and currency."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/abstract.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-CardPayment ול-PayPalPayment יש את אותם fields, amount ו-currency, ואותו קוד validate(), אבל כל אחד מחייב כסף בדרך אחרת. מה הכי מתאים ב-Java?",
+   "options": [
+    "abstract class בשם Payment עם ה-fields ו-validate(), ו-charge() אבסטרקטית",
+    "interface בשם Payment עם charge(), וה-fields ו-validate() מועתקים לכל class",
+    "class קונקרטי Payment שה-charge() שלו עושה switch על field של טיפוס",
+    "interface בשם Payment ששומר את amount ו-currency ב-fields משלו"
+   ],
+   "why": "הטיפוסים קשורים מאוד וחולקים state וקוד, ובשביל זה בדיוק יש abstract class: הוא מחזיק fields, constructors ו-methods משותפות, ומשאיר את charge() לכל subclass. interface היה מכריח להעתיק את החלקים המשותפים.",
+   "wrong": [
+    null,
+    "העתקה של ה-fields ושל validate() אומרת שכל תיקון צריך להיעשות פעמיים.",
+    "את ה-switch על הטיפוס צריך לערוך עבור כל סוג תשלום חדש, ו-charge() אבסטרקטית נותנת לכל subclass לספק גרסה משלו.",
+    "fields של interface הם קבועים (static final), ולכן interface לא יכול להחזיק amount ו-currency לכל object."
+   ]
+  }
+ },
+ {
+  "id": "oop-multiple-interfaces-view",
+  "topic": "oop",
+  "subtopic": "abstract-interface",
+  "concepts": [
+   "interface",
+   "multiple-interfaces",
+   "declared-type"
+  ],
+  "level": "easy",
+  "q": "Duck implements both Flyer, which has fly(), and Swimmer, which has swim(). Code has `Flyer f = new Duck();`. Which statement is true?",
+  "options": [
+   "It does not compile: a Java class may implement only one interface",
+   "f.fly() compiles, but f.swim() does not compile without a cast",
+   "Duck must also extend an abstract class that joins the two interfaces",
+   "f.fly() and f.swim() both compile, because the object is a Duck"
+  ],
+  "answer": 1,
+  "why": "A class can implement any number of interfaces; that is how one object plays several roles. The variable's type decides which methods the compiler allows. Through a Flyer, only Flyer's methods are visible, even though the object can also swim.",
+  "wrong": [
+   "The one-class limit is for extends; a class may implement many interfaces.",
+   null,
+   "Implementing both interfaces directly is enough; no extra class is needed.",
+   "Dispatch picks the code at run time, but the compiler only allows methods of the declared type, Flyer."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/interfaceDef.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Duck מממש גם את Flyer, שיש בו fly(), וגם את Swimmer, שיש בו swim(). בקוד יש `Flyer f = new Duck();`. איזו טענה נכונה?",
+   "options": [
+    "זה לא עובר compile: class ב-Java יכול לממש רק interface אחד",
+    "f.fly() עובר compile, אבל f.swim() לא עובר compile בלי cast",
+    "Duck חייב גם לרשת מ-abstract class שמחבר את שני ה-interfaces",
+    "גם f.fly() וגם f.swim() עוברים compile, כי ה-object הוא Duck"
+   ],
+   "why": "class יכול לממש כמה interfaces שירצה, וכך object אחד ממלא כמה תפקידים. הטיפוס של המשתנה קובע לאילו methods ה-compiler מרשה לקרוא. דרך Flyer רואים רק את ה-methods של Flyer, למרות שה-object יודע גם לשחות.",
+   "wrong": [
+    "המגבלה של class אחד היא על extends: class יכול לממש הרבה interfaces.",
+    null,
+    "מספיק לממש את שני ה-interfaces ישירות, ואין צורך ב-class נוסף.",
+    "ה-dispatch בוחר את הקוד ב-runtime, אבל ה-compiler מרשה רק methods של הטיפוס המוצהר, Flyer."
+   ]
+  }
+ },
+ {
+  "id": "oop-default-method-conflict",
+  "topic": "oop",
+  "subtopic": "abstract-interface",
+  "concepts": [
+   "interface",
+   "default-method",
+   "diamond-problem"
+  ],
+  "level": "medium",
+  "q": "Camera and Phone each have a default method name(). SmartPhone implements both and does not override name(). What happens?",
+  "code": "interface Camera { default String name() { return \"camera\"; } }\ninterface Phone { default String name() { return \"phone\"; } }\nclass SmartPhone implements Camera, Phone { }\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new SmartPhone().name());\n    }\n}",
+  "lang": "java",
+  "options": [
+   "camera, because the first interface listed wins",
+   "phone, because the last interface listed wins",
+   "A run time error when name() is called, since the JVM cannot pick one of them",
+   "Compile error: SmartPhone inherits two defaults and must override name()"
+  ],
+  "answer": 3,
+  "why": "Two unrelated defaults with the same signature are a conflict, and Java does not guess by order. The compiler makes SmartPhone override name(); inside, it can pick one with Camera.super.name() or combine both. This is the diamond problem, caught at compile time.",
+  "wrong": [
+   "The order of the implements list has no meaning to the compiler.",
+   "Java does not settle the clash by position, first or last.",
+   "The conflict is found when SmartPhone is compiled, before anything runs.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/override.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Camera ול-Phone יש לכל אחד default method בשם name(). SmartPhone מממש את שניהם ולא עושה override ל-name(). מה יקרה?",
+   "options": [
+    "camera, כי ה-interface הראשון ברשימה מנצח",
+    "phone, כי ה-interface האחרון ברשימה מנצח",
+    "שגיאה ב-runtime כשקוראים ל-name(), כי ה-JVM לא יכול לבחור אחת מהן",
+    "שגיאת compile: SmartPhone יורש שני defaults וחייב לעשות override ל-name()"
+   ],
+   "why": "שני defaults לא קשורים עם אותה signature הם התנגשות, ו-Java לא מנחשת לפי הסדר. ה-compiler מחייב את SmartPhone לעשות override ל-name(), ובתוכה אפשר לבחור אחד מהם עם Camera.super.name() או לשלב את שניהם. זו בעיית היהלום (diamond problem), שנתפסת בזמן compile.",
+   "wrong": [
+    "לסדר של רשימת ה-implements אין שום משמעות עבור ה-compiler.",
+    "Java לא מכריעה בהתנגשות לפי המיקום, לא ראשון ולא אחרון.",
+    "ההתנגשות מתגלה כש-SmartPhone עובר compile, לפני שמשהו רץ.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "oop-deep-hierarchy-combinations",
+  "topic": "oop",
+  "subtopic": "composition-inheritance",
+  "concepts": [
+   "composition",
+   "inheritance",
+   "class-explosion"
+  ],
+  "level": "medium",
+  "q": "A game has Enemy, FlyingEnemy, ShootingFlyingEnemy and SwimmingEnemy. Now it needs an enemy that swims and shoots. What is the main problem, and a better approach?",
+  "options": [
+   "Each mix of abilities needs a new subclass; build Enemy from movement and attack parts",
+   "Deep hierarchies are slow, since each call walks up every level; flatten them for speed",
+   "Java caps the depth of a class hierarchy, so the new subclass will not compile",
+   "Add canFly, canSwim and canShoot flags to Enemy, with if checks in each method"
+  ],
+  "answer": 0,
+  "why": "Abilities are modelled as a tree of subclasses, so every new mix means a new class, and shooting code gets copied between branches. Building an Enemy from a movement object and an attack object lets you mix any abilities, even at run time.",
+  "wrong": [
+   null,
+   "An overridden call is looked up directly, not by walking the tree; the cost is in design, not speed.",
+   "There is no small depth limit; the problem is the number of classes, not a compiler rule.",
+   "Flags pile every ability into one class, with if checks that grow with each new ability."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "במשחק יש Enemy, FlyingEnemy, ShootingFlyingEnemy ו-SwimmingEnemy. עכשיו צריך אויב ששוחה ויורה. מה הבעיה המרכזית, ומה גישה טובה יותר?",
+   "options": [
+    "כל שילוב של יכולות דורש subclass חדש: עדיף לבנות את Enemy מחלקי תנועה ותקיפה",
+    "היררכיות עמוקות איטיות, כי כל קריאה עולה בכל הרמות: צריך לשטח אותן בשביל מהירות",
+    "Java מגבילה את העומק של היררכיית classes, ולכן ה-subclass החדש לא יעבור compile",
+    "להוסיף ל-Enemy דגלים canFly, canSwim ו-canShoot, עם בדיקות if בכל method"
+   ],
+   "why": "היכולות ממודלות כעץ של subclasses, ולכן כל שילוב חדש דורש class חדש, וקוד הירי מועתק בין ענפים. בנייה של Enemy מ-object של תנועה ו-object של תקיפה מאפשרת לשלב כל יכולות, אפילו ב-runtime.",
+   "wrong": [
+    null,
+    "קריאה ל-method שעברה override נמצאת ישירות, בלי לטפס על העץ: המחיר הוא בתכנון, לא במהירות.",
+    "אין מגבלת עומק קטנה: הבעיה היא מספר ה-classes, לא כלל של ה-compiler.",
+    "דגלים דוחסים כל יכולת ל-class אחד, עם בדיקות if שגדלות עם כל יכולת חדשה."
+   ]
+  }
+ },
+ {
+  "id": "oop-share-code-without-base-class",
+  "topic": "oop",
+  "subtopic": "composition-inheritance",
+  "concepts": [
+   "composition",
+   "code-reuse",
+   "is-a"
+  ],
+  "level": "easy",
+  "q": "Invoice and Report both need the same formatMoney() code. A teammate adds a base class MoneyThing that both extend just to share it. What is the better choice?",
+  "options": [
+   "Keep the base class: extends is how Java shares code between two classes",
+   "Copy formatMoney() into both classes, since any shared code adds coupling",
+   "A MoneyFormatter class that Invoice and Report both use",
+   "Make Invoice extend Report, since Report already has formatMoney()"
+  ],
+  "answer": 2,
+  "why": "Invoice and Report are not kinds of MoneyThing; they just need a helper. A separate class they call shares the code without a false IS-A, and keeps their one superclass slot free for a real one.",
+  "wrong": [
+   "Inheritance is not the only way to reuse code; calling another class shares it with less coupling.",
+   "Copies drift apart when only one gets a fix; one shared helper is the usual answer.",
+   null,
+   "An invoice is not a report; this creates a false IS-A and drags in all of Report."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "גם Invoice וגם Report צריכים את אותו קוד formatMoney(). חבר צוות מוסיף base class בשם MoneyThing ששניהם יורשים ממנו רק כדי לשתף אותו. מה הבחירה הטובה יותר?",
+   "options": [
+    "להשאיר את ה-base class: extends הוא הדרך של Java לשתף קוד בין שני classes",
+    "להעתיק את formatMoney() לשני ה-classes, כי כל קוד משותף מוסיף coupling",
+    "class בשם MoneyFormatter שגם Invoice וגם Report משתמשים בו",
+    "לגרום ל-Invoice לעשות extends ל-Report, כי ל-Report כבר יש formatMoney()"
+   ],
+   "why": "Invoice ו-Report הם לא סוגים של MoneyThing: הם רק צריכים helper. class נפרד שהם קוראים לו משתף את הקוד בלי IS-A שגוי, ומשאיר את המקום היחיד שלהם ל-superclass פנוי בשביל superclass אמיתי.",
+   "wrong": [
+    "inheritance היא לא הדרך היחידה לשימוש חוזר בקוד: קריאה ל-class אחר משתפת אותו עם פחות coupling.",
+    "עותקים מתרחקים זה מזה כשרק אחד מהם מקבל תיקון: helper משותף אחד הוא הפתרון הרגיל.",
+    null,
+    "חשבונית היא לא דוח: זה יוצר IS-A שגוי וגורר פנימה את כל Report."
+   ]
+  }
+ },
+ {
+  "id": "oop-protected-field-coupling",
+  "topic": "oop",
+  "subtopic": "composition-inheritance",
+  "concepts": [
+   "protected",
+   "coupling",
+   "encapsulation",
+   "inheritance"
+  ],
+  "level": "medium",
+  "q": "Account has `protected double balance`, and five subclasses read and write it directly. The team now wants to store the balance as whole cents in a long. Why is this hard?",
+  "options": [
+   "It is not hard: protected members are hidden from subclasses as well",
+   "protected means package-only, so subclasses in other packages cannot see it anyway",
+   "Each subclass has its own copy of balance, so the change must be made six times",
+   "Every subclass touches the field, so all five must change, and any can skip checks"
+  ],
+  "answer": 3,
+  "why": "A protected field is part of the class's contract with every subclass, so changing its type breaks all of them, and any subclass can write a value that skips Account's rules. A private field with methods for subclasses keeps that choice inside Account.",
+  "wrong": [
+   "protected is exactly what makes a member visible to subclasses.",
+   "protected also gives access to subclasses in other packages.",
+   "An object has one balance field, declared in Account; subclasses use that same field.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/accesscontrol.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Account יש `protected double balance`, וחמישה subclasses קוראים וכותבים אותו ישירות. עכשיו הצוות רוצה לשמור את היתרה כמספר שלם של סנטים ב-long. למה זה קשה?",
+   "options": [
+    "זה לא קשה: protected members מוסתרים גם מ-subclasses",
+    "protected אומר רק בתוך ה-package, אז subclasses ב-packages אחרים ממילא לא רואים אותו",
+    "לכל subclass יש עותק משלו של balance, ולכן צריך לעשות את השינוי שש פעמים",
+    "כל subclass נוגע ב-field, ולכן כל החמישה צריכים להשתנות, וכל אחד יכול לדלג על בדיקות"
+   ],
+   "why": "protected field הוא חלק מהחוזה של ה-class עם כל subclass, ולכן שינוי הטיפוס שלו שובר את כולם, וכל subclass יכול לכתוב ערך שעוקף את הכללים של Account. private field עם methods עבור subclasses שומר את ההחלטה הזו בתוך Account.",
+   "wrong": [
+    "protected הוא בדיוק מה שהופך member לגלוי ל-subclasses.",
+    "protected נותן גישה גם ל-subclasses ב-packages אחרים.",
+    "ל-object יש field אחד בשם balance, שמוגדר ב-Account, וה-subclasses משתמשים באותו field.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "oop-immutable-class-design",
+  "topic": "oop",
+  "subtopic": "encapsulation",
+  "concepts": [
+   "immutability",
+   "final",
+   "encapsulation"
+  ],
+  "level": "easy",
+  "q": "Which set of choices makes a Money class with an amount and a currency immutable?",
+  "options": [
+   "Private fields with getters and validating setters, and a constructor that checks every value",
+   "Public final fields, plus setters that copy new values into them",
+   "Private final fields set in the constructor, no setters, and add() returns a new Money",
+   "Make every method static, so that no Money object can change its state"
+  ],
+  "answer": 2,
+  "why": "Immutable means no state change after construction: fields set once in the constructor, no setters, and operations that return a new object. Making the class final also stops a subclass from adding state that can change.",
+  "wrong": [
+   "Setters, even validating ones, change the object after it is built.",
+   "A final field cannot be assigned after construction, so those setters would not compile.",
+   null,
+   "Static methods do not hold or protect any Money object's state; they just avoid the question."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/essential/concurrency/imstrat.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "איזה סט של החלטות הופך class בשם Money, עם amount ו-currency, ל-immutable?",
+   "options": [
+    "private fields עם getters ו-setters שמוודאים ערכים, ו-constructor שבודק כל ערך",
+    "public final fields, ועוד setters שמעתיקים לתוכם ערכים חדשים",
+    "private final fields שמוגדרים ב-constructor, בלי setters, ו-add() מחזירה Money חדש",
+    "להפוך כל method ל-static, כך שאף object מסוג Money לא יוכל לשנות את ה-state שלו"
+   ],
+   "why": "immutable אומר שאין שינוי state אחרי הבנייה: ה-fields מוגדרים פעם אחת ב-constructor, אין setters, ופעולות מחזירות object חדש. אם הופכים גם את ה-class ל-final, subclass לא יכול להוסיף state שיכול להשתנות.",
+   "wrong": [
+    "setters, גם כאלה שמוודאים ערכים, משנים את ה-object אחרי שהוא נבנה.",
+    "אי אפשר להציב ערך ב-final field אחרי הבנייה, ולכן ה-setters האלה לא יעברו compile.",
+    null,
+    "static methods לא מחזיקות ולא מגינות על ה-state של שום object מסוג Money: הן פשוט מתחמקות מהשאלה."
+   ]
+  }
+ },
+ {
+  "id": "oop-defensive-copy-constructor",
+  "topic": "oop",
+  "subtopic": "encapsulation",
+  "concepts": [
+   "defensive-copy",
+   "reference-escape",
+   "final"
+  ],
+  "level": "medium",
+  "q": "Team keeps its list private and final. The caller changes its own list after building the Team. What does this print?",
+  "code": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        List<String> names = new ArrayList<>(List.of(\"Ann\"));\n        Team t = new Team(names);\n        names.add(\"Bob\");\n        System.out.println(t.size());\n    }\n}\nclass Team { private final List<String> members;\n    Team(List<String> m) { members = m; }\n    int size() { return members.size(); } }",
+  "lang": "java",
+  "options": [
+   "2, because Team stores the caller's list rather than a copy",
+   "1, because members is private and final",
+   "1, because Java passed Team its own copy of the list",
+   "UnsupportedOperationException, because the list came from List.of"
+  ],
+  "answer": 0,
+  "why": "The constructor stores a reference to the caller's list, so both share one list object, and the caller can change Team's state from outside. Copying in the constructor, members = new ArrayList<>(m), keeps Team in control.",
+  "wrong": [
+   null,
+   "private and final protect the field, not the list object that the caller still holds.",
+   "Java passes the reference by value; the list itself is never copied.",
+   "names is a new ArrayList built from List.of, so it can be changed."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/arguments.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Team שומר את ה-list שלו כ-private ו-final. הקוד הקורא משנה את ה-list שלו אחרי שבנה את ה-Team. מה יודפס?",
+   "options": [
+    "2, כי Team שומר את ה-list של הקוד הקורא ולא עותק שלה",
+    "1, כי members הוא private ו-final",
+    "1, כי Java העבירה ל-Team עותק משלו של ה-list",
+    "UnsupportedOperationException, כי ה-list נוצרה מ-List.of"
+   ],
+   "why": "ה-constructor שומר reference ל-list של הקוד הקורא, ולכן שניהם חולקים אותו object של list, והקוד הקורא יכול לשנות את ה-state של Team מבחוץ. העתקה ב-constructor, members = new ArrayList<>(m), משאירה את Team בשליטה.",
+   "wrong": [
+    null,
+    "private ו-final מגינים על ה-field, לא על object ה-list שהקוד הקורא עדיין מחזיק.",
+    "Java מעבירה את ה-reference by value: ה-list עצמה אף פעם לא מועתקת.",
+    "names הוא ArrayList חדש שנבנה מ-List.of, ולכן אפשר לשנות אותו."
+   ]
+  }
+ },
+ {
+  "id": "oop-behavior-over-setters",
+  "topic": "oop",
+  "subtopic": "encapsulation",
+  "concepts": [
+   "encapsulation",
+   "tell-dont-ask",
+   "setters"
+  ],
+  "level": "easy",
+  "q": "Order has getStatus() and setStatus(). Five places in the code run `if (o.getStatus() == PAID) o.setStatus(SHIPPED);`. What is the more encapsulated design?",
+  "options": [
+   "Make status a public field, since a plain getter and setter add nothing",
+   "Keep the setter, and document the allowed status changes in a comment",
+   "Give Order a ship() method that checks the payment and changes the status",
+   "Move the check into a static OrderUtils.ship(o) that all five places call"
+  ],
+  "answer": 2,
+  "why": "The rule lives in the callers, and setStatus() lets any code skip it. A ship() method on Order puts the rule next to the data, so every status change is checked in one place. Asking an object to do something beats pulling its state out.",
+  "wrong": [
+   "A public field removes even the chance to add checks later.",
+   "A comment does not stop any code from setting any status.",
+   null,
+   "This removes the copies, but setStatus() still lets other code skip the rule; it belongs in Order."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Order יש getStatus() ו-setStatus(). בחמישה מקומות בקוד רץ `if (o.getStatus() == PAID) o.setStatus(SHIPPED);`. מה התכנון עם ה-encapsulation הטוב יותר?",
+   "options": [
+    "להפוך את status ל-public field, כי getter ו-setter פשוטים לא מוסיפים כלום",
+    "להשאיר את ה-setter, ולתעד בהערה את שינויי ה-status המותרים",
+    "לתת ל-Order method בשם ship() שבודקת את התשלום ומשנה את ה-status",
+    "להעביר את הבדיקה ל-static OrderUtils.ship(o) שכל חמשת המקומות קוראים לה"
+   ],
+   "why": "הכלל יושב בקוד הקורא, ו-setStatus() מאפשרת לכל קוד לדלג עליו. method בשם ship() ב-Order שמה את הכלל ליד הנתונים, וכך כל שינוי status נבדק במקום אחד. עדיף לבקש מ-object לעשות משהו מאשר לשלוף ממנו את ה-state.",
+   "wrong": [
+    "public field מבטל אפילו את האפשרות להוסיף בדיקות בהמשך.",
+    "הערה לא מונעת מאף קוד לקבוע כל status שהוא.",
+    null,
+    "זה מוריד את העותקים, אבל setStatus() עדיין מאפשרת לקוד אחר לדלג על הכלל: המקום שלו ב-Order."
+   ]
+  }
+ },
+ {
+  "id": "oop-python-property-invariant",
+  "topic": "oop",
+  "subtopic": "encapsulation",
+  "concepts": [
+   "invariant",
+   "property",
+   "python"
+  ],
+  "level": "medium",
+  "q": "In Python, balance is a property whose setter rejects negative values, and __init__ assigns self.balance. What happens on the last line?",
+  "code": "class Account:\n    def __init__(self, balance):\n        self.balance = balance\n    @property\n    def balance(self):\n        return self._balance\n    @balance.setter\n    def balance(self, value):\n        if value < 0:\n            raise ValueError(\"negative balance\")\n        self._balance = value\nacct = Account(-5)",
+  "lang": "python",
+  "options": [
+   "An Account with balance -5, since __init__ sets the attribute directly",
+   "ValueError, since the assignment in __init__ also goes through the setter",
+   "AttributeError, since a property cannot be assigned inside __init__",
+   "An Account with balance 0, since the setter rejects -5 and keeps a default"
+  ],
+  "answer": 1,
+  "why": "self.balance = balance is an ordinary attribute assignment, so Python routes it through the property setter, which raises. A property lets a class add a check later without changing callers' syntax, and the rule holds from construction on.",
+  "wrong": [
+   "Inside __init__, self.balance is still the property, so the setter runs.",
+   null,
+   "A property with a setter can be assigned anywhere, including __init__.",
+   "The setter raises instead of returning; there is no default value to fall back to."
+  ],
+  "ref": "https://docs.python.org/3/library/functions.html#property",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-Python, balance הוא property שה-setter שלו דוחה ערכים שליליים, ו-__init__ מציב ערך ב-self.balance. מה יקרה בשורה האחרונה?",
+   "options": [
+    "Account עם balance של -5, כי __init__ קובע את ה-attribute ישירות",
+    "ValueError, כי גם ההשמה ב-__init__ עוברת דרך ה-setter",
+    "AttributeError, כי אי אפשר להציב ערך ב-property בתוך __init__",
+    "Account עם balance של 0, כי ה-setter דוחה את -5 ושומר ערך ברירת מחדל"
+   ],
+   "why": "self.balance = balance היא השמה רגילה ל-attribute, ולכן Python מעבירה אותה דרך ה-setter של ה-property, שזורק exception. property מאפשר ל-class להוסיף בדיקה בהמשך בלי לשנות את התחביר בקוד הקורא, והכלל נשמר כבר מרגע הבנייה.",
+   "wrong": [
+    "בתוך __init__, self.balance הוא עדיין ה-property, ולכן ה-setter רץ.",
+    null,
+    "אפשר להציב ערך ב-property עם setter בכל מקום, כולל ב-__init__.",
+    "ה-setter זורק exception במקום לחזור: אין ערך ברירת מחדל ליפול אליו."
+   ]
+  }
+ },
+ {
+  "id": "oop-hide-how-total-is-computed",
+  "topic": "oop",
+  "subtopic": "encapsulation",
+  "concepts": [
+   "information-hiding",
+   "encapsulation",
+   "responsibilities"
+  ],
+  "level": "easy",
+  "q": "Callers in 12 places sum a cart's item prices themselves to get the total. Now a discount rule must apply to every total. What design change helps most?",
+  "options": [
+   "Add a public total field that each caller updates after it changes the cart",
+   "Make the items list private, but keep a getter so callers can still sum it",
+   "Add a comment at each of the 12 places that explains the discount rule",
+   "Give Cart a total() method, so callers need not know how it is computed"
+  ],
+  "answer": 3,
+  "why": "Information hiding: callers should depend on what the cart offers, not on how the total is computed. With total() on Cart, the discount rule, and any later rule, changes in one place, and the 12 callers stay as they are.",
+  "wrong": [
+   "Callers would now be responsible for keeping the total right, which is easy to forget.",
+   "The callers still do the summing, so the rule must still be added in 12 places.",
+   "Comments do not change code; each place still has to be edited and can still be missed.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-12 מקומות, הקוד הקורא מסכם בעצמו את מחירי הפריטים בעגלה כדי לקבל את הסכום. עכשיו כלל הנחה צריך לחול על כל סכום. איזה שינוי בתכנון יעזור הכי הרבה?",
+   "options": [
+    "להוסיף public field בשם total שכל קוד קורא מעדכן אחרי שהוא משנה את העגלה",
+    "להפוך את ה-list של הפריטים ל-private, אבל להשאיר getter כדי שהקוד הקורא עדיין יוכל לסכם אותה",
+    "להוסיף בכל אחד מ-12 המקומות הערה שמסבירה את כלל ההנחה",
+    "לתת ל-Cart method בשם total(), כדי שהקוד הקורא לא יצטרך לדעת איך הסכום מחושב"
+   ],
+   "why": "הסתרת מידע (information hiding): הקוד הקורא צריך להיות תלוי במה שהעגלה מציעה, לא באופן שבו הסכום מחושב. עם total() ב-Cart, כלל ההנחה, וכל כלל עתידי, משתנים במקום אחד, ו-12 המקומות נשארים כמו שהם.",
+   "wrong": [
+    "הקוד הקורא יהיה עכשיו אחראי לשמור על סכום נכון, וקל לשכוח את זה.",
+    "הקוד הקורא עדיין מבצע את הסיכום, ולכן עדיין צריך להוסיף את הכלל ב-12 מקומות.",
+    "הערות לא משנות קוד: עדיין צריך לערוך כל מקום, ועדיין אפשר לפספס אחד.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "oop-static-block-runs-once",
+  "topic": "oop",
+  "subtopic": "constructors-static",
+  "concepts": [
+   "static-initialization",
+   "constructor",
+   "class-vs-object"
+  ],
+  "level": "easy",
+  "q": "Counter has a static block that prints S and a constructor that prints C, and main creates two Counters. What does this print?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        new Counter();\n        new Counter();\n    }\n}\nclass Counter {\n    static { System.out.print(\"S \"); }\n    Counter() { System.out.print(\"C \"); }\n}",
+  "lang": "java",
+  "options": [
+   "S C S C",
+   "S C C",
+   "C C S",
+   "C C"
+  ],
+  "answer": 1,
+  "why": "A static block initializes the class, not an object, so it runs once, when the class is first used. Each new Counter then runs the constructor. One-time class setup goes in static initialization; per-object setup goes in constructors.",
+  "wrong": [
+   "Static initialization belongs to the class, so it does not repeat for each object.",
+   null,
+   "The class is initialized before its first object is created, so S comes first.",
+   "The static block runs when the class is first used, and creating an object counts as a use."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/initial.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Counter יש static block שמדפיס S ו-constructor שמדפיס C, ו-main יוצרת שני Counters. מה יודפס?",
+   "options": [
+    "S C S C",
+    "S C C",
+    "C C S",
+    "C C"
+   ],
+   "why": "static block מאתחל את ה-class, לא object, ולכן הוא רץ פעם אחת, כשמשתמשים ב-class בפעם הראשונה. אחר כך כל new Counter מריץ את ה-constructor. הגדרה חד-פעמית של ה-class שייכת לאתחול static, והגדרה של כל object שייכת ל-constructors.",
+   "wrong": [
+    "אתחול static שייך ל-class, ולכן הוא לא חוזר על עצמו לכל object.",
+    null,
+    "ה-class מאותחל לפני שה-object הראשון שלו נוצר, ולכן S מופיע ראשון.",
+    "ה-static block רץ כשמשתמשים ב-class בפעם הראשונה, ויצירת object נחשבת שימוש."
+   ]
+  }
+ },
+ {
+  "id": "oop-static-method-no-this",
+  "topic": "oop",
+  "subtopic": "constructors-static",
+  "concepts": [
+   "static-method",
+   "this",
+   "instance-field"
+  ],
+  "level": "easy",
+  "q": "Counter has an instance field `int value` and the method `static int next() { return ++this.value; }`. What happens?",
+  "options": [
+   "It compiles, and next() returns 1 the first time it is called",
+   "It compiles, but next() throws NullPointerException since no Counter exists",
+   "It compiles, and every Counter object shares the value field through next()",
+   "Compile error: a static method has no this, so it cannot reach value"
+  ],
+  "answer": 3,
+  "why": "A static method belongs to the class and runs without any object, so there is no this to read value from. Make next() an instance method, or make value static if one counter for the whole class is what you want.",
+  "wrong": [
+   "The compiler stops it: value belongs to an object, and a static method has none.",
+   "This is caught at compile time; the program never gets to run.",
+   "value is an instance field, so each object has its own, and static next() can reach none of them.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/classvars.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Counter יש instance field `int value` ו-method `static int next() { return ++this.value; }`. מה יקרה?",
+   "options": [
+    "הקוד עובר compile, ו-next() מחזירה 1 בפעם הראשונה שקוראים לה",
+    "הקוד עובר compile, אבל next() זורקת NullPointerException כי אין אף Counter",
+    "הקוד עובר compile, וכל ה-objects מסוג Counter חולקים את ה-field value דרך next()",
+    "שגיאת compile: ל-static method אין this, ולכן היא לא יכולה להגיע ל-value"
+   ],
+   "why": "static method שייכת ל-class ורצה בלי שום object, ולכן אין this שממנו אפשר לקרוא את value. צריך להפוך את next() ל-instance method, או להפוך את value ל-static אם רוצים מונה אחד לכל ה-class.",
+   "wrong": [
+    "ה-compiler עוצר את זה: value שייך ל-object, ול-static method אין object.",
+    "זה נתפס בזמן compile: התוכנית אף פעם לא מגיעה לרוץ.",
+    "value הוא instance field, ולכן לכל object יש עותק משלו, ו-next() שהיא static לא מגיעה לאף אחד מהם.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "oop-constructor-chaining-this",
+  "topic": "oop",
+  "subtopic": "constructors-static",
+  "concepts": [
+   "constructor-chaining",
+   "this",
+   "constructor"
+  ],
+  "level": "medium",
+  "q": "The one-argument Pizza constructor calls this(size, 4) and then prints A. The two-argument one sets both fields and prints B. What does this print?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(new Pizza(\"small\").describe());\n    }\n}\nclass Pizza { String size; int slices;\n    Pizza(String size) { this(size, 4); System.out.print(\"A \"); }\n    Pizza(String size, int slices) {\n        this.size = size; this.slices = slices; System.out.print(\"B \");\n    }\n    String describe() { return size + \"/\" + slices; }\n}",
+  "lang": "java",
+  "options": [
+   "B A small/4",
+   "A B small/4",
+   "B A small/0, since this(...) built a second Pizza",
+   "Compile error: one constructor cannot call another"
+  ],
+  "answer": 0,
+  "why": "this(size, 4) must be the first statement, so the two-argument constructor runs fully first: it sets size and slices and prints B. Then the rest of the one-argument constructor prints A. Chaining keeps the field setup in one constructor.",
+  "wrong": [
+   null,
+   "this(...) runs before anything else in the calling constructor, so B is printed first.",
+   "this(...) runs another constructor on the same object; it does not create a new one.",
+   "A constructor may call another one with this(...) as its first statement."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/thiskey.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-constructor של Pizza עם ארגומנט אחד קורא ל-this(size, 4) ואז מדפיס A. ה-constructor עם שני ארגומנטים קובע את שני ה-fields ומדפיס B. מה יודפס?",
+   "options": [
+    "B A small/4",
+    "A B small/4",
+    "B A small/0, כי this(...) בנה Pizza שני",
+    "שגיאת compile: constructor לא יכול לקרוא ל-constructor אחר"
+   ],
+   "why": "this(size, 4) חייב להיות ההוראה הראשונה, ולכן ה-constructor עם שני הארגומנטים רץ קודם עד הסוף: הוא קובע את size ואת slices ומדפיס B. אחר כך שאר ה-constructor עם הארגומנט האחד מדפיס A. שרשור constructors שומר את אתחול ה-fields ב-constructor אחד.",
+   "wrong": [
+    null,
+    "this(...) רץ לפני כל דבר אחר ב-constructor הקורא, ולכן B מודפס ראשון.",
+    "this(...) מריץ constructor אחר על אותו object: הוא לא יוצר object חדש.",
+    "constructor יכול לקרוא ל-constructor אחר עם this(...) כהוראה הראשונה שלו."
+   ]
+  }
+ },
+ {
+  "id": "oop-constant-hashcode-slow",
+  "topic": "oop",
+  "subtopic": "identity-equality",
+  "concepts": [
+   "hashcode",
+   "equals",
+   "hash-set"
+  ],
+  "level": "medium",
+  "q": "Book overrides equals correctly, and its hashCode() returns 42 for every book. A HashSet holds 100,000 books. What is the effect?",
+  "options": [
+   "Lookups stay correct but slow, since all books land in one bucket",
+   "contains() can miss books that are in the set, since the hashes are not unique",
+   "The set keeps duplicate books, since every hash code is the same",
+   "It does not compile: hashCode must depend on the object's fields"
+  ],
+  "answer": 0,
+  "why": "The contract only requires equal objects to have equal hash codes, and a constant meets it, so results stay correct. But every book shares one bucket, so each lookup compares against many books with equals, and the set loses its fast average lookups.",
+  "wrong": [
+   null,
+   "Equal books still get equal hashes, so the set finds them; hashes do not need to be unique.",
+   "The set calls equals within the bucket, so a duplicate is still found and rejected.",
+   "The compiler does not check what hashCode computes; any int is legal."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Book עושה override נכון ל-equals, וה-hashCode() שלו מחזיר 42 לכל ספר. HashSet מחזיק 100,000 ספרים. מה ההשפעה?",
+   "options": [
+    "החיפושים נשארים נכונים אבל איטיים, כי כל הספרים נופלים ל-bucket אחד",
+    "contains() יכולה לפספס ספרים שנמצאים ב-set, כי ה-hashes לא ייחודיים",
+    "ה-set שומר ספרים כפולים, כי כל ה-hash codes זהים",
+    "זה לא עובר compile: hashCode חייב להיות תלוי ב-fields של ה-object"
+   ],
+   "why": "החוזה דורש רק ש-objects שווים יקבלו hash codes שווים, וקבוע עומד בזה, ולכן התוצאות נשארות נכונות. אבל כל הספרים חולקים bucket אחד, אז כל חיפוש משווה עם equals מול הרבה ספרים, וה-set מאבד את החיפוש המהיר בממוצע.",
+   "wrong": [
+    null,
+    "ספרים שווים עדיין מקבלים hashes שווים, ולכן ה-set מוצא אותם: hashes לא חייבים להיות ייחודיים.",
+    "ה-set קורא ל-equals בתוך ה-bucket, ולכן כפילות עדיין נמצאת ונדחית.",
+    "ה-compiler לא בודק מה hashCode מחשב: כל int הוא חוקי."
+   ]
+  }
+ },
+ {
+  "id": "oop-library-model",
+  "topic": "oop",
+  "subtopic": "design",
+  "concepts": [
+   "ood",
+   "has-a",
+   "association",
+   "responsibilities"
+  ],
+  "level": "easy",
+  "q": "You model a library where one title can have several copies, and members borrow copies with due dates. Which class design fits best?",
+  "options": [
+   "Member extends Book, so a member object holds the book's data while borrowing it",
+   "Book has borrowedBy and dueDate fields, with exactly one Book object per title",
+   "Book has Copies; a Loan links a Member, a Copy and a due date",
+   "One Library class with string lists of titles, member names and loans"
+  ],
+  "answer": 2,
+  "why": "A title and a physical copy are different things: two copies of one book can be out at once. A Loan object holds what belongs to the borrowing itself, the member, the copy and the due date, and it can be kept as history after the return.",
+  "wrong": [
+   "A member is not a kind of book; a member borrows copies, which is an association.",
+   "One Book per title cannot show two copies on loan, and the loan history is lost on return.",
+   null,
+   "Strings lose the objects' behaviour and rules, and every check piles into one large class."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צריך למדל ספרייה שבה לכל כותר יכולים להיות כמה עותקים, וחברים שואלים עותקים עם תאריכי החזרה. איזה תכנון classes הכי מתאים?",
+   "options": [
+    "Member יורש מ-Book, כך ש-object של חבר מחזיק את נתוני הספר בזמן ההשאלה",
+    "ל-Book יש fields בשם borrowedBy ו-dueDate, עם object אחד בדיוק מסוג Book לכל כותר",
+    "ל-Book יש Copies, ו-Loan מקשר בין Member, Copy ותאריך החזרה",
+    "class אחד בשם Library עם lists של מחרוזות של כותרים, שמות חברים והשאלות"
+   ],
+   "why": "כותר ועותק פיזי הם דברים שונים: שני עותקים של אותו ספר יכולים להיות מושאלים בו זמנית. object מסוג Loan מחזיק את מה ששייך להשאלה עצמה, החבר, העותק ותאריך ההחזרה, ואפשר לשמור אותו כהיסטוריה אחרי ההחזרה.",
+   "wrong": [
+    "חבר הוא לא סוג של ספר: חבר שואל עותקים, וזה קשר (association).",
+    "Book אחד לכל כותר לא יכול להראות שני עותקים מושאלים, והיסטוריית ההשאלות הולכת לאיבוד בהחזרה.",
+    null,
+    "מחרוזות מאבדות את ההתנהגות והכללים של ה-objects, וכל בדיקה נערמת ב-class אחד גדול."
+   ]
+  }
+ },
+ {
+  "id": "oop-elevator-model",
+  "topic": "oop",
+  "subtopic": "design",
+  "concepts": [
+   "ood",
+   "responsibilities",
+   "has-a"
+  ],
+  "level": "medium",
+  "q": "A building has several elevators. When someone presses a hall button, one elevator must be sent. Which design gives that decision a sensible home?",
+  "options": [
+   "Each floor's call button scans every elevator and picks the nearest one by itself",
+   "A Dispatcher owns the elevators and assigns requests; each Elevator tracks its stops",
+   "Elevator extends Building, so every elevator can see all the floors and their requests",
+   "A static method on Elevator that reads the public fields of every other elevator"
+  ],
+  "answer": 1,
+  "why": "Choosing among elevators needs a view of all of them, so it belongs to one object that owns them. Each Elevator keeps its own state (floor, direction, stops) and changes it through its own methods. Buttons only report a request.",
+  "wrong": [
+   "Every button would repeat the choice logic and need to reach into all elevators.",
+   null,
+   "An elevator is part of a building, not a kind of building: HAS-A, not IS-A.",
+   "Public fields and a static method put the decision outside any object and expose every elevator's state."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "בבניין יש כמה מעליות. כשמישהו לוחץ על כפתור בקומה, צריך לשלוח מעלית אחת. איזה תכנון נותן להחלטה הזו בית הגיוני?",
+   "options": [
+    "כפתור הקריאה בכל קומה סורק את כל המעליות ובוחר בעצמו את הקרובה ביותר",
+    "Dispatcher מחזיק את המעליות ומקצה בקשות, וכל Elevator עוקב אחרי העצירות שלו",
+    "Elevator יורש מ-Building, כך שכל מעלית רואה את כל הקומות והבקשות שלהן",
+    "static method ב-Elevator שקוראת את ה-public fields של כל אחת מהמעליות האחרות"
+   ],
+   "why": "בחירה בין מעליות דורשת מבט על כולן, ולכן היא שייכת ל-object אחד שמחזיק אותן. כל Elevator שומר את ה-state שלו (קומה, כיוון, עצירות) ומשנה אותו דרך ה-methods שלו. הכפתורים רק מדווחים על בקשה.",
+   "wrong": [
+    "כל כפתור היה חוזר על לוגיקת הבחירה וצריך לגשת לתוך כל המעליות.",
+    null,
+    "מעלית היא חלק מבניין, לא סוג של בניין: HAS-A, לא IS-A.",
+    "public fields ו-static method שמים את ההחלטה מחוץ לכל object וחושפים את ה-state של כל מעלית."
+   ]
+  }
+ },
+ {
+  "id": "oop-attribute-not-subclass",
+  "topic": "oop",
+  "subtopic": "design",
+  "concepts": [
+   "ood",
+   "inheritance-misuse",
+   "attribute-vs-subclass"
+  ],
+  "level": "easy",
+  "q": "A shapes app needs circles and squares in red, blue or green. A teammate creates RedCircle, BlueCircle, GreenCircle, RedSquare and so on. What is the better model?",
+  "options": [
+   "Keep the subclasses, since each color is a different kind of shape",
+   "Red, Blue and Green as interfaces that each shape class implements",
+   "One Shape class with a kind string and a color string",
+   "A color field on Shape; subclasses only where the geometry differs"
+  ],
+  "answer": 3,
+  "why": "Subclasses are for different behaviour, and color changes only data. With a color field, a new color needs no new class, and a shape can even change color. Circle and Square stay subclasses, since their area and drawing differ.",
+  "wrong": [
+   "Color does not change behaviour, and the class count becomes shapes times colors.",
+   "Interfaces describe capabilities; a color is a value, and this still multiplies the types.",
+   "Shapes do differ in behaviour, so a kind string brings back type switches.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אפליקציית צורות צריכה עיגולים וריבועים באדום, כחול או ירוק. חבר צוות יוצר RedCircle, BlueCircle, GreenCircle, RedSquare וכן הלאה. מה המודל הטוב יותר?",
+   "options": [
+    "להשאיר את ה-subclasses, כי כל צבע הוא סוג אחר של צורה",
+    "Red, Blue ו-Green בתור interfaces שכל class של צורה מממש",
+    "class אחד בשם Shape עם מחרוזת kind ומחרוזת color",
+    "field בשם color ב-Shape, ו-subclasses רק איפה שהגיאומטריה שונה"
+   ],
+   "why": "subclasses מיועדים להתנהגות שונה, וצבע משנה רק נתונים. עם field של color, צבע חדש לא דורש class חדש, וצורה יכולה אפילו להחליף צבע. Circle ו-Square נשארים subclasses, כי השטח והציור שלהם שונים.",
+   "wrong": [
+    "צבע לא משנה התנהגות, ומספר ה-classes נהיה מספר הצורות כפול מספר הצבעים.",
+    "interfaces מתארים יכולות, וצבע הוא ערך, וזה עדיין מכפיל את מספר הטיפוסים.",
+    "הצורות כן שונות בהתנהגות, ולכן מחרוזת kind מחזירה את ה-switches על טיפוס.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "oop-declared-vs-actual-type",
+  "topic": "oop",
+  "subtopic": "dispatch",
+  "concepts": [
+   "dynamic-dispatch",
+   "overriding",
+   "declared-type"
+  ],
+  "level": "easy",
+  "q": "A variable is declared as Animal but holds a Dog. Dog overrides speak(). What does this program print?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        Animal a = new Dog();\n        System.out.println(a.speak());\n    }\n}\nclass Animal { String speak() { return \"generic\"; } }\nclass Dog extends Animal { String speak() { return \"woof\"; } }",
+  "lang": "java",
+  "options": [
+   "generic",
+   "woof",
+   "generic, then woof",
+   "Nothing: it does not compile until a is cast to Dog"
+  ],
+  "answer": 1,
+  "why": "Overridden methods are chosen at run time from the object's actual class. The object is a Dog, so Dog.speak() runs even though the variable's declared type is Animal.",
+  "wrong": [
+   "The declared type only decides which methods you may call, not which override runs.",
+   null,
+   "Only one method runs; an override replaces the base version for that object, it does not add to it.",
+   "A Dog is an Animal, so the assignment and the call compile without a cast."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/polymorphism.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "משתנה מוצהר כ-Animal אבל מחזיק Dog, ו-Dog עושה override ל-speak(). מה התוכנית תדפיס?",
+   "options": [
+    "generic",
+    "woof",
+    "generic, ואז woof",
+    "כלום: הקוד לא עובר compile עד שעושים cast של a ל-Dog"
+   ],
+   "why": "ב-methods שעברו override, הבחירה נעשית ב-runtime לפי ה-class בפועל של ה-object. ה-object הוא Dog, ולכן Dog.speak() רצה, למרות שהטיפוס המוצהר של המשתנה הוא Animal.",
+   "wrong": [
+    "הטיפוס המוצהר קובע רק לאילו methods מותר לקרוא, לא איזה override ירוץ.",
+    null,
+    "רק method אחת רצה: override מחליף את גרסת הבסיס עבור ה-object הזה, הוא לא מוסיף עליה.",
+    "Dog הוא Animal, ולכן גם ההשמה וגם הקריאה עוברות compile בלי cast."
+   ]
+  }
+ },
+ {
+  "id": "oop-fields-not-polymorphic",
+  "topic": "oop",
+  "subtopic": "dispatch",
+  "concepts": [
+   "dynamic-dispatch",
+   "field-hiding",
+   "declared-type"
+  ],
+  "level": "medium",
+  "q": "Base and Derived each declare a field called name and a method getName(). Through a Base reference to a Derived object, what does this print?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        Base b = new Derived();\n        System.out.println(b.name + \" \" + b.getName());\n    }\n}\nclass Base { String name = \"base\"; String getName() { return name; } }\nclass Derived extends Base { String name = \"derived\"; String getName() { return name; } }",
+  "lang": "java",
+  "options": [
+   "derived derived",
+   "base base",
+   "Compile error: name is declared twice",
+   "base derived"
+  ],
+  "answer": 3,
+  "why": "Methods are dispatched on the object's class, so getName() runs Derived's version. Fields are not: b.name is resolved from the declared type Base. Derived's field only hides Base's; the object holds both.",
+  "wrong": [
+   "Field access is not dynamic; it follows the reference type, so b.name reads Base's field.",
+   "getName() is overridden, so it runs in Derived and returns Derived's field.",
+   "A subclass may declare a field with the same name; it hides the base field rather than clashing.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/hidevariables.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "גם Base וגם Derived מגדירים field בשם name ו-method בשם getName(). דרך reference מטיפוס Base ל-object מסוג Derived, מה יודפס?",
+   "options": [
+    "derived derived",
+    "base base",
+    "שגיאת compile: name מוגדר פעמיים",
+    "base derived"
+   ],
+   "why": "methods נבחרות לפי ה-class של ה-object, ולכן getName() מריצה את הגרסה של Derived. ב-fields זה לא כך: b.name נקבע לפי הטיפוס המוצהר Base. ה-field של Derived רק מסתיר את זה של Base, וה-object מחזיק את שניהם.",
+   "wrong": [
+    "גישה ל-field היא לא דינמית: היא הולכת לפי טיפוס ה-reference, ולכן b.name קורא את ה-field של Base.",
+    "getName() עברה override, ולכן היא רצה ב-Derived ומחזירה את ה-field של Derived.",
+    "subclass רשאי להגדיר field עם אותו שם: הוא מסתיר את ה-field של ה-base class ולא מתנגש בו.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "oop-cpp-virtual-vs-non-virtual",
+  "topic": "oop",
+  "subtopic": "dispatch",
+  "concepts": [
+   "dynamic-dispatch",
+   "virtual-function",
+   "cpp",
+   "static-binding"
+  ],
+  "level": "medium",
+  "q": "In C++, a Base reference refers to a Derived object. Only a() is declared virtual. What does this print?",
+  "code": "#include <iostream>\nstruct Base {\n    virtual void a() { std::cout << \"Base.a \"; }\n    void b() { std::cout << \"Base.b\\n\"; }\n};\nstruct Derived : Base {\n    void a() override { std::cout << \"Derived.a \"; }\n    void b() { std::cout << \"Derived.b\\n\"; }\n};\nint main() { Derived d; Base& r = d; r.a(); r.b(); }",
+  "lang": "cpp",
+  "options": [
+   "Derived.a Base.b",
+   "Derived.a Derived.b",
+   "Base.a Base.b",
+   "Compile error: Derived::b must be marked override"
+  ],
+  "answer": 0,
+  "why": "In C++ a call is dispatched on the object's type only for virtual functions. a() is virtual, so Derived.a runs. b() is not virtual, so the call is bound at compile time from the reference type Base.",
+  "wrong": [
+   null,
+   "That is Java behaviour, where instance methods are virtual by default. In C++ b() needs the virtual keyword.",
+   "a() is virtual, so the Derived override is chosen through the base reference.",
+   "override is only for virtual functions. A non-virtual b() in Derived compiles and simply hides Base::b."
+  ],
+  "ref": "https://en.cppreference.com/w/cpp/language/virtual",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-C++, reference מטיפוס Base מפנה ל-object מסוג Derived. רק a() מוגדרת virtual. מה יודפס?",
+   "options": [
+    "Derived.a Base.b",
+    "Derived.a Derived.b",
+    "Base.a Base.b",
+    "שגיאת compile: צריך לסמן את Derived::b כ-override"
+   ],
+   "why": "ב-C++ ה-function שרצה נבחרת לפי הטיפוס של ה-object רק עבור virtual functions. a() היא virtual, ולכן Derived.a רצה. b() לא virtual, ולכן הקריאה נקשרת בזמן compile לפי טיפוס ה-reference, Base.",
+   "wrong": [
+    null,
+    "זו ההתנהגות ב-Java, שבה instance methods הן virtual כברירת מחדל. ב-C++ צריך להוסיף ל-b() את מילת המפתח virtual.",
+    "a() היא virtual, ולכן ה-override של Derived נבחר גם דרך reference ל-base.",
+    "override מיועד רק ל-virtual functions. b() שאינה virtual ב-Derived עוברת compile ופשוט מסתירה את Base::b."
+   ]
+  }
+ },
+ {
+  "id": "oop-replace-type-switch",
+  "topic": "oop",
+  "subtopic": "dispatch",
+  "concepts": [
+   "polymorphism",
+   "type-switch",
+   "open-closed"
+  ],
+  "level": "easy",
+  "q": "A drawing app computes area with a switch on each shape's type string, and the same switch is copied into draw and export. What does polymorphism change when a new shape is added?",
+  "options": [
+   "Nothing: polymorphism only affects speed, so the switches have to stay",
+   "The switch moves into a base class, which still lists every shape type",
+   "Each shape class implements area(); adding a shape means adding one class",
+   "Overloads like area(Circle) and area(Square) remove the need for any type check"
+  ],
+  "answer": 2,
+  "why": "With a common Shape type, callers just call shape.area() and dynamic dispatch picks the right code. A new shape is a new class with its own methods, and the existing callers do not change.",
+  "wrong": [
+   "Polymorphism is about structure and change, not speed; it is exactly what removes the switches.",
+   "A base class that lists all subtypes still has to be edited for each new shape.",
+   null,
+   "Overloads are chosen from the declared type at compile time, so a Shape variable still cannot pick one."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אפליקציית ציור מחשבת שטח עם switch על מחרוזת הטיפוס של כל צורה, ואותו switch מועתק גם ל-draw ול-export. מה polymorphism משנה כשמוסיפים צורה חדשה?",
+   "options": [
+    "כלום: polymorphism משפיע רק על מהירות, אז ה-switches חייבים להישאר",
+    "ה-switch עובר ל-base class, שעדיין מונה את כל סוגי הצורות",
+    "כל class של צורה מממש area(), והוספת צורה היא הוספה של class אחד",
+    "overloads כמו area(Circle) ו-area(Square) מבטלים את הצורך בכל בדיקת טיפוס"
+   ],
+   "why": "עם טיפוס משותף Shape, הקוד הקורא פשוט קורא ל-shape.area() ו-dynamic dispatch בוחר את הקוד הנכון. צורה חדשה היא class חדש עם methods משלו, והקוד הקורא הקיים לא משתנה.",
+   "wrong": [
+    "polymorphism עוסק במבנה ובשינויים, לא במהירות, והוא בדיוק מה שמבטל את ה-switches.",
+    "base class שמונה את כל ה-subtypes עדיין צריך לערוך אותו בכל פעם שנוספת צורה חדשה.",
+    null,
+    "overloads נבחרים לפי הטיפוס המוצהר בזמן compile, ולכן משתנה מטיפוס Shape עדיין לא יכול לבחור אחד מהם."
+   ]
+  }
+ },
+ {
+  "id": "oop-overload-vs-override-basics",
+  "topic": "oop",
+  "subtopic": "overload-override",
+  "concepts": [
+   "overloading",
+   "overriding",
+   "compile-time-vs-run-time"
+  ],
+  "level": "easy",
+  "q": "An interviewer asks for the key difference between overloading and overriding. Which answer is correct?",
+  "options": [
+   "Overloading is chosen at compile time by parameter types; overriding at run time by object type",
+   "Overloading replaces a parent class method, while overriding adds a same-named method with new parameters",
+   "Both are resolved at run time from the actual object, and they only differ in how they are written",
+   "Overloading only works across a class hierarchy, while overriding happens inside one class"
+  ],
+  "answer": 0,
+  "why": "Overloads share a name but differ in parameter lists, and the compiler picks one from the argument types. An override has the same signature in a subclass, and the one that runs depends on the object's class at run time.",
+  "wrong": [
+   null,
+   "This swaps the two terms: overriding replaces an inherited method, overloading adds one with different parameters.",
+   "Overload resolution happens at compile time from the declared argument types, not at run time.",
+   "It is the other way round: overriding needs a subclass, while overloads can live in one class."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/override.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מראיין שואל מה ההבדל המרכזי בין overloading ל-overriding. איזו תשובה נכונה?",
+   "options": [
+    "overloading נבחר בזמן compile לפי טיפוסי הפרמטרים, overriding ב-runtime לפי טיפוס ה-object",
+    "overloading מחליף method של ה-class האב, ו-overriding מוסיף method באותו שם עם פרמטרים חדשים",
+    "שניהם נקבעים ב-runtime לפי ה-object בפועל, וההבדל ביניהם הוא רק באופן הכתיבה",
+    "overloading עובד רק לאורך היררכיית classes, ו-overriding קורה בתוך class אחד"
+   ],
+   "why": "ל-overloads יש אותו שם אבל רשימת פרמטרים שונה, וה-compiler בוחר אחד מהם לפי טיפוסי הארגומנטים. ל-override יש אותה signature ב-subclass, ומה שרץ תלוי ב-class של ה-object ב-runtime.",
+   "wrong": [
+    null,
+    "זה מחליף בין שני המונחים: overriding מחליף method שעברה בירושה, overloading מוסיף method עם פרמטרים אחרים.",
+    "הבחירה בין overloads קורית בזמן compile לפי הטיפוסים המוצהרים של הארגומנטים, לא ב-runtime.",
+    "זה בדיוק הפוך: overriding דורש subclass, ואילו overloads יכולים לחיות בתוך class אחד."
+   ]
+  }
+ },
+ {
+  "id": "oop-overload-static-type-with-override",
+  "topic": "oop",
+  "subtopic": "overload-override",
+  "concepts": [
+   "overloading",
+   "overriding",
+   "declared-type",
+   "dynamic-dispatch"
+  ],
+  "level": "hard",
+  "q": "describe() is overloaded for Animal and Dog, and Dog overrides sound(). The argument is declared as Animal but holds a Dog. What is printed?",
+  "code": "public class Main {\n    static String describe(Animal a) { return \"animal:\" + a.sound(); }\n    static String describe(Dog d) { return \"dog:\" + d.sound(); }\n    public static void main(String[] args) {\n        Animal x = new Dog();\n        System.out.println(describe(x));\n    }\n}\nclass Animal { String sound() { return \"...\"; } }\nclass Dog extends Animal { String sound() { return \"woof\"; } }",
+  "lang": "java",
+  "options": [
+   "dog:woof",
+   "animal:...",
+   "animal:woof",
+   "dog:..."
+  ],
+  "answer": 2,
+  "why": "Two decisions happen at different times. The overload is chosen at compile time from x's declared type, Animal, so describe(Animal) runs. Inside it, a.sound() is overridden, so the Dog object's version runs.",
+  "wrong": [
+   "Overloads are not picked from the run time object; the compiler only sees the declared type Animal.",
+   "The overload is right, but sound() is overridden, so the Dog version runs inside it.",
+   null,
+   "This gets both steps backwards: the overload follows the declared type and the override follows the object."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-describe() יש overload עבור Animal ועבור Dog, ו-Dog עושה override ל-sound(). הארגומנט מוצהר כ-Animal אבל מחזיק Dog. מה יודפס?",
+   "options": [
+    "dog:woof",
+    "animal:...",
+    "animal:woof",
+    "dog:..."
+   ],
+   "why": "יש כאן שתי החלטות שקורות בזמנים שונים. ה-overload נבחר בזמן compile לפי הטיפוס המוצהר של x, Animal, ולכן describe(Animal) רצה. בתוכה, a.sound() עברה override, ולכן רצה הגרסה של ה-object מסוג Dog.",
+   "wrong": [
+    "overloads לא נבחרים לפי ה-object ב-runtime: ה-compiler רואה רק את הטיפוס המוצהר Animal.",
+    "ה-overload נכון, אבל sound() עברה override, ולכן גרסת Dog רצה בתוכה.",
+    null,
+    "זה הופך את שני השלבים: ה-overload הולך לפי הטיפוס המוצהר וה-override הולך לפי ה-object."
+   ]
+  }
+ },
+ {
+  "id": "oop-static-method-hiding",
+  "topic": "oop",
+  "subtopic": "overload-override",
+  "concepts": [
+   "static-method",
+   "method-hiding",
+   "overriding"
+  ],
+  "level": "medium",
+  "q": "Parent and Child both define a static who() and an instance method name(). Called through a Parent variable that holds a Child, what does this print?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        Parent p = new Child();\n        System.out.println(p.who() + \" \" + p.name());\n    }\n}\nclass Parent { static String who() { return \"P\"; } String name() { return \"P\"; } }\nclass Child extends Parent { static String who() { return \"C\"; } String name() { return \"C\"; } }",
+  "lang": "java",
+  "options": [
+   "C C",
+   "P P",
+   "Compile error: a static method cannot be redefined",
+   "P C"
+  ],
+  "answer": 3,
+  "why": "Static methods belong to the class and are hidden, not overridden, so the call is bound from the variable's declared type, Parent. name() is an instance method, so it is overridden and the Child version runs.",
+  "wrong": [
+   "who() is static, so dynamic dispatch does not apply to it.",
+   "name() is an ordinary instance method, so the Child override runs.",
+   "A subclass may declare a static method with the same signature; it hides the parent's.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/override.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "גם Parent וגם Child מגדירים static method בשם who() ו-instance method בשם name(). כשקוראים להן דרך משתנה מטיפוס Parent שמחזיק Child, מה יודפס?",
+   "options": [
+    "C C",
+    "P P",
+    "שגיאת compile: אי אפשר להגדיר מחדש static method",
+    "P C"
+   ],
+   "why": "static methods שייכות ל-class, והן מוסתרות (hidden) ולא עוברות override, ולכן הקריאה נקשרת לפי הטיפוס המוצהר של המשתנה, Parent. name() היא instance method, ולכן היא עוברת override וגרסת Child רצה.",
+   "wrong": [
+    "who() היא static, ולכן dynamic dispatch לא חל עליה.",
+    "name() היא instance method רגילה, ולכן ה-override של Child רץ.",
+    "subclass רשאי להגדיר static method עם אותה signature, והיא מסתירה את זו של ה-parent.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "oop-abstract-class-instantiation",
+  "topic": "oop",
+  "subtopic": "abstract-interface",
+  "concepts": [
+   "abstract-class",
+   "instantiation",
+   "reference-type"
+  ],
+  "level": "easy",
+  "q": "Shape is an abstract class and Circle is a concrete subclass. A teammate writes `Shape a = new Shape();` and `Shape b = new Circle();`. What does the compiler do?",
+  "options": [
+   "Both compile: abstract only means some of its methods may have no body",
+   "Only the first fails: you cannot create a Shape, yet a Shape variable can hold a Circle",
+   "Only the second fails: a variable of type Shape can only refer to an object of class Shape",
+   "Both fail: an abstract class cannot even be used as the type of a variable"
+  ],
+  "answer": 1,
+  "why": "An abstract class may be incomplete, so new Shape() is a compile error. Its type is still useful: a Shape reference can point to any concrete subclass, which keeps callers independent of the exact class.",
+  "wrong": [
+   "The compiler rejects new on an abstract class, whatever its methods look like.",
+   null,
+   "A subclass object can always be assigned to a variable of its superclass type.",
+   "Declaring variables of an abstract type is the normal way to use it."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/abstract.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Shape הוא abstract class ו-Circle הוא subclass קונקרטי. חבר צוות כותב `Shape a = new Shape();` ו-`Shape b = new Circle();`. מה ה-compiler יעשה?",
+   "options": [
+    "שניהם עוברים compile: abstract רק אומר שלחלק מה-methods אולי אין גוף",
+    "רק הראשון נכשל: אי אפשר ליצור Shape, אבל משתנה מטיפוס Shape יכול להחזיק Circle",
+    "רק השני נכשל: משתנה מטיפוס Shape יכול להפנות רק ל-object מה-class Shape",
+    "שניהם נכשלים: אי אפשר אפילו להשתמש ב-abstract class כטיפוס של משתנה"
+   ],
+   "why": "abstract class יכול להיות לא שלם, ולכן new Shape() היא שגיאת compile. הטיפוס שלו עדיין שימושי: reference מטיפוס Shape יכול להפנות לכל subclass קונקרטי, וכך הקוד הקורא לא תלוי ב-class המדויק.",
+   "wrong": [
+    "ה-compiler דוחה new על abstract class, לא משנה איך ה-methods שלו נראות.",
+    null,
+    "תמיד אפשר להציב object של subclass במשתנה מטיפוס ה-superclass שלו.",
+    "הצהרה על משתנים מטיפוס abstract היא הדרך הרגילה להשתמש בו."
+   ]
+  }
+ },
+ {
+  "id": "oop-interface-for-shared-capability",
+  "topic": "oop",
+  "subtopic": "abstract-interface",
+  "concepts": [
+   "interface",
+   "single-inheritance",
+   "capability"
+  ],
+  "level": "medium",
+  "q": "Invoice, Photo and Ticket are unrelated classes, and Photo already extends Image. All three must be accepted by one print queue. What fits best in Java?",
+  "options": [
+   "A Printable interface that each of the three classes implements",
+   "An abstract Printable class that all three classes extend",
+   "Make Invoice and Ticket extend Photo so they inherit printing",
+   "A static print method that uses an instanceof check for each class"
+  ],
+  "answer": 0,
+  "why": "The classes share a capability, not an identity or code. A Java class can extend only one class but implement many interfaces, so Photo keeps extending Image and is still Printable. The queue depends only on the interface.",
+  "wrong": [
+   null,
+   "Photo already extends Image, and Java allows one superclass, so it cannot also extend an abstract class.",
+   "That is a false IS-A relation: an Invoice is not a Photo and would inherit image behaviour it should not have.",
+   "An instanceof chain has to be edited for every new printable type; an interface avoids that."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Invoice, Photo ו-Ticket הם classes שאין ביניהם קשר, ו-Photo כבר עושה extends ל-Image. תור הדפסה אחד צריך לקבל את שלושתם. מה הכי מתאים ב-Java?",
+   "options": [
+    "interface בשם Printable שכל אחד משלושת ה-classes מממש",
+    "abstract class בשם Printable ששלושת ה-classes עושים לו extends",
+    "לגרום ל-Invoice ול-Ticket לעשות extends ל-Photo כדי לרשת את ההדפסה",
+    "static method להדפסה שבודקת instanceof עבור כל class"
+   ],
+   "why": "ל-classes יש יכולת משותפת, לא זהות או קוד משותפים. ב-Java class יכול לעשות extends ל-class אחד בלבד אבל לממש הרבה interfaces, ולכן Photo ממשיך לרשת מ-Image ועדיין הוא Printable. התור תלוי רק ב-interface.",
+   "wrong": [
+    null,
+    "Photo כבר עושה extends ל-Image, ו-Java מאפשרת superclass אחד בלבד, אז הוא לא יכול לרשת גם מ-abstract class.",
+    "זה קשר IS-A שגוי: Invoice הוא לא Photo, והוא יירש התנהגות של תמונה שלא אמורה להיות לו.",
+    "צריך לערוך שרשרת instanceof בכל פעם שנוסף טיפוס חדש שאפשר להדפיס, ו-interface חוסך את זה."
+   ]
+  }
+ },
+ {
+  "id": "oop-interface-default-method-evolution",
+  "topic": "oop",
+  "subtopic": "abstract-interface",
+  "concepts": [
+   "interface",
+   "default-method",
+   "api-evolution"
+  ],
+  "level": "medium",
+  "q": "Your Exporter interface is implemented by 40 classes owned by other teams. You must add a method to it. What happens with a plain abstract method, and what does Java offer?",
+  "options": [
+   "Nothing breaks: classes that lack the new method silently inherit an empty body for it",
+   "All 40 classes break, and the only fix is to turn Exporter into an abstract class",
+   "Each implementer fails to compile until it adds the method; a default method avoids that",
+   "Only callers break: implementers are only checked the first time anyone calls the new method"
+  ],
+  "answer": 2,
+  "why": "An abstract interface method is a new obligation for every implementing class, so each fails to compile until updated. A default method ships a body in the interface, so old implementers keep working and can override it later.",
+  "wrong": [
+   "Abstract interface methods have no body to inherit; the compiler requires each class to provide one.",
+   "An abstract class would break classes that already extend another class; default methods exist for this case.",
+   null,
+   "Java checks implementations at compile time, not when a method is first called."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/defaultmethods.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-interface בשם Exporter ממומש על ידי 40 classes של צוותים אחרים, וצריך להוסיף לו method. מה קורה עם abstract method רגילה, ומה Java מציעה?",
+   "options": [
+    "שום דבר לא נשבר: classes שאין להם את ה-method החדשה מקבלים עבורה בשקט גוף ריק בירושה",
+    "כל 40 ה-classes נשברים, והפתרון היחיד הוא להפוך את Exporter ל-abstract class",
+    "כל class שמממש אותו לא יעבור compile עד שיוסיף את ה-method, ו-default method מונעת את זה",
+    "רק הקוד הקורא נשבר: מימושים נבדקים רק בפעם הראשונה שמישהו קורא ל-method החדשה"
+   ],
+   "why": "abstract method ב-interface היא חובה חדשה לכל class שמממש אותו, ולכן כל אחד מהם לא יעבור compile עד שיעודכן. default method מגיעה עם גוף בתוך ה-interface, כך שמימושים ישנים ממשיכים לעבוד ויכולים לעשות לה override בהמשך.",
+   "wrong": [
+    "ל-abstract methods ב-interface אין גוף לרשת, וה-compiler מחייב כל class לספק מימוש.",
+    "abstract class ישבור classes שכבר עושים extends ל-class אחר, ו-default methods קיימות בדיוק למקרה הזה.",
+    null,
+    "Java בודקת מימושים בזמן compile, לא כשקוראים ל-method בפעם הראשונה."
+   ]
+  }
+ },
+ {
+  "id": "oop-has-a-vs-is-a",
+  "topic": "oop",
+  "subtopic": "composition-inheritance",
+  "concepts": [
+   "composition",
+   "inheritance",
+   "is-a",
+   "has-a"
+  ],
+  "level": "easy",
+  "q": "A Car class needs an engine. A teammate writes `class Car extends Engine` so that Car can call start(). What is the main design problem?",
+  "options": [
+   "None: inheritance is the usual way for one class to reuse another class's code",
+   "Only that Engine's private fields become visible to Car, which breaks encapsulation",
+   "It works, but Car must override start() or the engine will never actually run",
+   "A car has an engine but is not one, so Car should hold an Engine field"
+  ],
+  "answer": 3,
+  "why": "Inheritance models IS-A. A car is not a kind of engine, so Car would expose engine methods as its own and could never swap engines. Composition (a private Engine field) models HAS-A and keeps Car's interface its own.",
+  "wrong": [
+   "Inheritance should model IS-A. Reusing code is not a reason to inherit; composition reuses it without the false relationship.",
+   "Private fields stay private in a subclass. The problem is the relationship, not visibility.",
+   "Car inherits start() as is; nothing forces an override. The design is wrong even if it runs.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-class בשם Car צריך מנוע. חבר צוות כותב `class Car extends Engine` כדי ש-Car יוכל לקרוא ל-start(). מה הבעיה העיקרית בתכנון?",
+   "options": [
+    "אין בעיה: inheritance היא הדרך המקובלת ש-class אחד ישתמש מחדש בקוד של class אחר",
+    "הבעיה היחידה היא שה-private fields של Engine נחשפים ל-Car, וזה שובר encapsulation",
+    "זה עובד, אבל Car חייב לעשות override ל-start(), אחרת המנוע אף פעם לא באמת יפעל",
+    "למכונית יש מנוע אבל היא לא מנוע, ולכן Car צריך להחזיק field מטיפוס Engine"
+   ],
+   "why": "inheritance מייצגת IS-A. מכונית היא לא סוג של מנוע, ולכן Car יחשוף methods של מנוע כאילו הן שלו, ולעולם לא יוכל להחליף מנוע. composition (private field מטיפוס Engine) מייצגת HAS-A ומשאירה את ה-interface של Car שלו בלבד.",
+   "wrong": [
+    "inheritance צריכה לייצג IS-A. שימוש חוזר בקוד הוא לא סיבה לרשת, ו-composition משתמשת בקוד מחדש בלי הקשר השגוי.",
+    "private fields נשארים private גם ב-subclass. הבעיה היא סוג הקשר, לא הנראות.",
+    "Car יורש את start() כמו שהיא, ושום דבר לא מחייב override. התכנון שגוי גם אם זה רץ.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "oop-stack-extends-list",
+  "topic": "oop",
+  "subtopic": "composition-inheritance",
+  "concepts": [
+   "composition",
+   "inheritance",
+   "invariant",
+   "leaky-api"
+  ],
+  "level": "medium",
+  "q": "A team writes `class Stack<T> extends ArrayList<T>` and adds push and pop. Soon, bugs appear where items leave the stack out of LIFO order. What is the root cause?",
+  "options": [
+   "ArrayList is not thread-safe, so pushes and pops from threads interleave",
+   "Stack inherits every public list method, like remove(i), so callers can bypass LIFO",
+   "push and pop override ArrayList methods, so ArrayList calls them in the wrong order",
+   "Generic classes cannot be safely extended, because T loses its type at run time"
+  ],
+  "answer": 1,
+  "why": "Extending makes Stack a List in public, so every list operation joins its API, including ones that insert or remove in the middle. Wrapping a private list and exposing only push, pop and peek keeps the rule enforced.",
+  "wrong": [
+   "The bug appears in single-threaded code too; the problem is the public API, not threads.",
+   null,
+   "push and pop are new methods, not overrides, and ArrayList never calls them.",
+   "Generic types can be extended; type erasure is not what breaks the order."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צוות כותב `class Stack<T> extends ArrayList<T>` ומוסיף push ו-pop. די מהר מופיעים bugs שבהם איברים יוצאים מה-stack שלא בסדר LIFO. מה שורש הבעיה?",
+   "options": [
+    "ArrayList הוא לא thread-safe, ולכן push ו-pop מ-threads שונים מתערבבים",
+    "Stack יורש את כל ה-public methods של List, כמו remove(i), כך שאפשר לעקוף את LIFO",
+    "push ו-pop עושים override ל-methods של ArrayList, ולכן ArrayList קורא להן בסדר הלא נכון",
+    "אי אפשר לרשת בבטחה מ-generic classes, כי T מאבד את הטיפוס שלו ב-runtime"
+   ],
+   "why": "extends הופך את Stack ל-List שחשוף כ-public, כך שכל פעולת list נכנסת ל-API שלו, כולל כאלה שמכניסות או מוציאות איברים מהאמצע. עטיפה של private list וחשיפה של push, pop ו-peek בלבד שומרות על הכלל.",
+   "wrong": [
+    "ה-bug מופיע גם בקוד עם thread יחיד: הבעיה היא ה-public API, לא threads.",
+    null,
+    "push ו-pop הן methods חדשות, לא overrides, ו-ArrayList אף פעם לא קורא להן.",
+    "אפשר לרשת מ-generic types, ו-type erasure הוא לא מה ששובר את הסדר."
+   ]
+  }
+ },
+ {
+  "id": "oop-square-extends-rectangle",
+  "topic": "oop",
+  "subtopic": "composition-inheritance",
+  "concepts": [
+   "is-a",
+   "substitutability",
+   "inheritance-misuse"
+  ],
+  "level": "hard",
+  "q": "Code written for Rect sets width 5, then height 4, and expects area 20. It is handed a Square. What prints, and what does that tell you about the design?",
+  "code": "class Rect {\n  int w, h;\n  void setW(int x) { w = x; }\n  void setH(int x) { h = x; }\n  int area() { return w * h; }\n}\nclass Square extends Rect {\n  void setW(int x) { w = h = x; }\n  void setH(int x) { w = h = x; }\n}\n// Rect r = new Square(); r.setW(5); r.setH(4);\n// System.out.println(r.area());",
+  "lang": "java",
+  "options": [
+   "16: Square changes what the setters promise, so it is not a safe stand-in for a Rect",
+   "20: Square inherits area() from Rect, so the result is the same for any subclass",
+   "25: the first setter fixes both sides, and Java ignores later calls on the same object",
+   "It does not compile, because a subclass may not override every setter of its base class"
+  ],
+  "answer": 0,
+  "why": "setH(4) sets both sides to 4, so area() returns 16. A square is a rectangle in math, but this Square breaks what callers of Rect rely on (setting one side leaves the other alone). Inheritance should only model IS-A when the subclass keeps the base class's promises.",
+  "wrong": [
+   null,
+   "area() is inherited, but it reads w and h, which Square's setters changed. Inheriting a method does not freeze its result.",
+   "Every call runs. setW(5) sets both sides to 5, then setH(4) sets both to 4.",
+   "Overriding any number of inherited methods is legal; the problem is the design, not the compiler."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/subclasses.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "קוד שנכתב עבור Rect קובע width ל-5, אחר כך height ל-4, ומצפה לשטח 20. הוא מקבל Square. מה יודפס, ומה זה אומר על התכנון?",
+   "options": [
+    "16: Square משנה את מה שה-setters מבטיחים, ולכן הוא לא תחליף בטוח ל-Rect",
+    "20: Square יורש את area() מ-Rect, ולכן התוצאה זהה לכל subclass",
+    "25: ה-setter הראשון קובע את שתי הצלעות, ו-Java מתעלמת מקריאות נוספות על אותו object",
+    "זה לא עובר compile, כי subclass לא רשאי לעשות override לכל ה-setters של ה-base class שלו"
+   ],
+   "why": "setH(4) קובע את שתי הצלעות ל-4, ולכן area() מחזירה 16. במתמטיקה ריבוע הוא מלבן, אבל ה-Square הזה שובר את מה שהקוד שעובד עם Rect מסתמך עליו (שינוי של צלע אחת משאיר את השנייה כמו שהיא). inheritance צריכה לייצג IS-A רק כשה-subclass שומר על ההבטחות של ה-base class.",
+   "wrong": [
+    null,
+    "area() עוברת בירושה, אבל היא קוראת את w ו-h, שה-setters של Square שינו. inheritance של method לא מקפיאה את התוצאה שלה.",
+    "כל קריאה רצה. setW(5) קובע את שתי הצלעות ל-5, ואז setH(4) קובע את שתיהן ל-4.",
+    "מותר לעשות override לכל מספר של methods שעברו בירושה. הבעיה היא בתכנון, לא ב-compiler."
+   ]
+  }
+ },
+ {
+  "id": "oop-protect-invariant",
+  "topic": "oop",
+  "subtopic": "encapsulation",
+  "concepts": [
+   "encapsulation",
+   "invariant",
+   "access-modifiers"
+  ],
+  "level": "easy",
+  "q": "BankAccount has a public double balance field, and code across the project writes to it directly. Why would an interviewer suggest making it private with deposit() and withdraw()?",
+  "options": [
+   "Private fields make the program run faster because the JVM can cache them",
+   "So the class can add a getter and setter for balance, which is what encapsulation is",
+   "So one class enforces rules like no negative balance and can change how money is stored",
+   "Private fields are hidden from reflection and debuggers, which keeps the balance secure"
+  ],
+  "answer": 2,
+  "why": "Encapsulation lets the class guard its invariants: every change goes through methods that can validate it. It also keeps the representation private, so switching from double to whole cents later touches one class, not every caller.",
+  "wrong": [
+   "Access modifiers are a design tool, not a performance feature.",
+   "A setter that accepts any value protects nothing; the benefit comes from methods that enforce rules.",
+   null,
+   "private is not a security boundary; reflection and debuggers can still read the field."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/accesscontrol.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-BankAccount יש public field מטיפוס double בשם balance, וקוד מכל הפרויקט כותב אליו ישירות. למה מראיין יציע להפוך אותו ל-private עם deposit() ו-withdraw()?",
+   "options": [
+    "private fields גורמים לתוכנית לרוץ מהר יותר כי ה-JVM יכול לשמור אותם ב-cache",
+    "כדי שה-class יוכל להוסיף getter ו-setter ל-balance, כי זה מה ש-encapsulation אומר",
+    "כדי ש-class אחד יאכוף כללים כמו איסור על יתרה שלילית, ויוכל לשנות איך הכסף נשמר",
+    "private fields מוסתרים מ-reflection ומ-debuggers, וכך היתרה נשארת מאובטחת"
+   ],
+   "why": "encapsulation מאפשר ל-class לשמור על ה-invariants שלו: כל שינוי עובר דרך methods שיכולות לבדוק אותו. הוא גם שומר את הייצוג הפנימי private, כך שמעבר בהמשך מ-double למספר שלם של אגורות נוגע ב-class אחד, ולא בכל מי שקורא לו.",
+   "wrong": [
+    "access modifiers הם כלי תכנון, לא feature של ביצועים.",
+    "setter שמקבל כל ערך לא מגן על כלום. היתרון מגיע מ-methods שאוכפות כללים.",
+    null,
+    "private הוא לא גבול אבטחה: reflection ו-debuggers עדיין יכולים לקרוא את ה-field."
+   ]
+  }
+ },
+ {
+  "id": "oop-leaky-getter",
+  "topic": "oop",
+  "subtopic": "encapsulation",
+  "concepts": [
+   "encapsulation",
+   "reference-escape",
+   "final"
+  ],
+  "level": "medium",
+  "q": "Cart keeps its list private and final, but its getter returns that list. What does this program print, and why?",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        Cart c = new Cart(); c.add(\"pen\");\n        c.getItems().clear();\n        System.out.println(c.getItems().size());\n    }\n}\nclass Cart {\n    private final java.util.List<String> items = new java.util.ArrayList<>();\n    void add(String s) { items.add(s); }\n    java.util.List<String> getItems() { return items; }\n}",
+  "lang": "java",
+  "options": [
+   "1, because getItems() returns a copy of the list",
+   "1, because a final list cannot be modified",
+   "It does not compile: items is private, so Main cannot clear it",
+   "0, because the getter hands out the internal list itself"
+  ],
+  "answer": 3,
+  "why": "getItems() returns a reference to the same list object, so the caller can clear it and bypass Cart's rules. final only stops the field from being reassigned. Returning an unmodifiable view or a copy keeps the state encapsulated.",
+  "wrong": [
+   "Java returns the reference; nothing is copied unless the method makes a copy.",
+   "final stops the field from pointing to another list; the list itself can still change.",
+   "Main never names the private field; it calls the getter, which is accessible, and clears what it returns.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Cart שומר את ה-list שלו כ-private ו-final, אבל ה-getter שלו מחזיר את ה-list הזאת. מה התוכנית תדפיס, ולמה?",
+   "options": [
+    "1, כי getItems() מחזירה עותק של ה-list",
+    "1, כי אי אפשר לשנות list שהיא final",
+    "זה לא עובר compile: items הוא private, אז Main לא יכול לרוקן אותו",
+    "0, כי ה-getter מוסר החוצה את ה-list הפנימית עצמה"
+   ],
+   "why": "getItems() מחזירה reference לאותו object של list, כך שהקוד הקורא יכול לרוקן אותה ולעקוף את הכללים של Cart. final רק מונע השמה מחדש ל-field. החזרה של unmodifiable view או של עותק שומרת על ה-encapsulation של ה-state.",
+   "wrong": [
+    "Java מחזירה את ה-reference, ושום דבר לא מועתק אלא אם ה-method יוצרת עותק.",
+    "final מונע מה-field להפנות ל-list אחרת, אבל ה-list עצמה עדיין יכולה להשתנות.",
+    "Main אף פעם לא ניגש בשמו ל-field ה-private: הוא קורא ל-getter, שנגיש לו, ומרוקן את מה שהוא מחזיר.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "oop-constructor-chaining-order",
+  "topic": "oop",
+  "subtopic": "constructors-static",
+  "concepts": [
+   "constructor-chaining",
+   "super",
+   "inheritance"
+  ],
+  "level": "easy",
+  "q": "Vehicle's constructor prints V. Car extends Vehicle, and its constructor prints C without an explicit super() call. What does new Car() print?",
+  "options": [
+   "C then V",
+   "V then C",
+   "Only C, since Car never calls super()",
+   "Only V, since Vehicle's constructor replaces Car's"
+  ],
+  "answer": 1,
+  "why": "Every constructor first runs a superclass constructor. Without an explicit super(), the compiler inserts a call to the no-argument one. The base part is built first, so V prints, then the rest of Car's constructor prints C.",
+  "wrong": [
+   "The base part must be ready before subclass code runs, so Vehicle's constructor goes first.",
+   null,
+   "The compiler adds the super() call automatically when you do not write it.",
+   "Constructors are not inherited or replaced; Car's body still runs after Vehicle's."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/super.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-constructor של Vehicle מדפיס V. Car עושה extends ל-Vehicle, וה-constructor שלו מדפיס C בלי קריאה מפורשת ל-super(). מה new Car() ידפיס?",
+   "options": [
+    "C ואז V",
+    "V ואז C",
+    "רק C, כי Car אף פעם לא קורא ל-super()",
+    "רק V, כי ה-constructor של Vehicle מחליף את זה של Car"
+   ],
+   "why": "כל constructor מריץ קודם constructor של ה-superclass. בלי super() מפורש, ה-compiler מוסיף קריאה ל-constructor בלי ארגומנטים. החלק של ה-base נבנה קודם, ולכן V מודפס, ואז שאר ה-constructor של Car מדפיס C.",
+   "wrong": [
+    "החלק של ה-base חייב להיות מוכן לפני שקוד ה-subclass רץ, ולכן ה-constructor של Vehicle רץ ראשון.",
+    null,
+    "ה-compiler מוסיף את הקריאה ל-super() אוטומטית כשלא כותבים אותה.",
+    "constructors לא עוברים בירושה ולא מוחלפים: הגוף של ה-constructor של Car עדיין רץ אחרי זה של Vehicle."
+   ]
+  }
+ },
+ {
+  "id": "oop-static-vs-instance-field",
+  "topic": "oop",
+  "subtopic": "constructors-static",
+  "concepts": [
+   "static-field",
+   "instance-field",
+   "shared-state"
+  ],
+  "level": "easy",
+  "q": "Ticket has `static int created` and an instance field `int count`. Its constructor runs `created++; count++;`. After three new Tickets, what are the third ticket's count and Ticket.created?",
+  "options": [
+   "count 3, created 3",
+   "count 1, created 1",
+   "count 1, created 3",
+   "count 3, created 1"
+  ],
+  "answer": 2,
+  "why": "A static field exists once for the class and is shared by every object, so all three constructors increment the same created. count is an instance field, so each new object starts at 0 and raises its own copy to 1.",
+  "wrong": [
+   "Each object has its own count, so it never sees the other objects' increments.",
+   "created is static, so the three increments all hit one shared variable.",
+   null,
+   "This swaps the two: the instance field is per object and the static field is shared."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/javaOO/classvars.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Ticket יש `static int created` ו-instance field בשם `int count`. ה-constructor שלו מריץ `created++; count++;`. אחרי שיוצרים שלושה Tickets חדשים, מה הערך של count ב-Ticket השלישי ומה הערך של Ticket.created?",
+   "options": [
+    "count 3, created 3",
+    "count 1, created 1",
+    "count 1, created 3",
+    "count 3, created 1"
+   ],
+   "why": "static field קיים פעם אחת עבור ה-class ומשותף לכל ה-objects, ולכן שלושת ה-constructors מגדילים את אותו created. count הוא instance field, ולכן כל object חדש מתחיל מ-0 ומעלה את העותק שלו ל-1.",
+   "wrong": [
+    "לכל object יש count משלו, ולכן הוא לא רואה את ההגדלות של ה-objects האחרים.",
+    "created הוא static, ולכן שלוש ההגדלות פוגעות כולן באותו משתנה משותף.",
+    null,
+    "זה מחליף בין השניים: ה-instance field הוא נפרד לכל object, וה-static field משותף."
+   ]
+  }
+ },
+ {
+  "id": "oop-default-equals-is-identity",
+  "topic": "oop",
+  "subtopic": "identity-equality",
+  "concepts": [
+   "identity",
+   "equality",
+   "equals",
+   "reference-equality"
+  ],
+  "level": "medium",
+  "q": "Point has fields x and y but does not override equals. p1 and p2 are separate objects, each created with new Point(1, 2). What do p1 == p2 and p1.equals(p2) return?",
+  "options": [
+   "false and false",
+   "false and true",
+   "true and true",
+   "true and false"
+  ],
+  "answer": 0,
+  "why": "== compares references, and these are two objects. The equals inherited from Object also compares identity, so it is false too. To compare by value, Point must override equals, and hashCode along with it.",
+  "wrong": [
+   null,
+   "equals compares fields only when the class overrides it; Object.equals checks identity.",
+   "Two separate new calls create two objects, so == is false.",
+   "== cannot be true for two different objects in Java."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Point יש fields בשם x ו-y, אבל הוא לא עושה override ל-equals. p1 ו-p2 הם objects נפרדים, וכל אחד מהם נוצר עם new Point(1, 2). מה יחזירו p1 == p2 ו-p1.equals(p2)?",
+   "options": [
+    "false ו-false",
+    "false ו-true",
+    "true ו-true",
+    "true ו-false"
+   ],
+   "why": "== משווה references, ופה יש שני objects. ה-equals שעובר בירושה מ-Object גם הוא משווה זהות, ולכן גם הוא מחזיר false. כדי להשוות לפי ערך, Point צריך לעשות override ל-equals, ויחד איתו גם ל-hashCode.",
+   "wrong": [
+    null,
+    "equals משווה fields רק כשה-class עושה לו override. Object.equals בודק זהות.",
+    "שתי קריאות new נפרדות יוצרות שני objects, ולכן == מחזיר false.",
+    "ב-Java, == לא יכול להיות true עבור שני objects שונים."
+   ]
+  }
+ },
+ {
+  "id": "oop-python-is-vs-eq",
+  "topic": "oop",
+  "subtopic": "identity-equality",
+  "concepts": [
+   "identity",
+   "equality",
+   "aliasing",
+   "python"
+  ],
+  "level": "easy",
+  "q": "In Python, c = a binds a second name to a list, and then the list is changed through c. What does this print?",
+  "code": "a = [1, 2, 3]\nb = [1, 2, 3]\nc = a\nc.append(4)\nprint(a == b, a is c, len(a))",
+  "lang": "python",
+  "options": [
+   "True True 4",
+   "False False 4",
+   "True False 3",
+   "False True 4"
+  ],
+  "answer": 3,
+  "why": "c = a copies the reference, not the list, so a and c are one object: a is c is True and a now has 4 items. b is a separate list that still holds [1, 2, 3], so a == b compares unequal values and is False.",
+  "wrong": [
+   "a gained a 4th item through c, so its value no longer equals b.",
+   "a and c are the same object, so a is c is True.",
+   "Assignment does not copy a list; appending through c changes a.",
+   null
+  ],
+  "ref": "https://docs.python.org/3/reference/datamodel.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-Python, c = a קושר שם נוסף ל-list, ואז ה-list משתנה דרך c. מה יודפס?",
+   "options": [
+    "True True 4",
+    "False False 4",
+    "True False 3",
+    "False True 4"
+   ],
+   "why": "c = a מעתיק את ה-reference, לא את ה-list, כך ש-a ו-c הם אותו object: a is c הוא True, ול-a יש עכשיו 4 איברים. b היא list נפרדת שעדיין מכילה [1, 2, 3], ולכן a == b משווה ערכים שונים ומחזיר False.",
+   "wrong": [
+    "ל-a נוסף איבר רביעי דרך c, ולכן הערך שלו כבר לא שווה ל-b.",
+    "a ו-c הם אותו object, ולכן a is c הוא True.",
+    "השמה לא מעתיקה list: append דרך c משנה את a.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "oop-parking-lot-model",
+  "topic": "oop",
+  "subtopic": "design",
+  "concepts": [
+   "ood",
+   "is-a",
+   "has-a",
+   "responsibilities"
+  ],
+  "level": "medium",
+  "q": "You are asked to model a parking lot with cars, motorcycles and trucks, and spots of different sizes. Which class design is the best starting point?",
+  "options": [
+   "Separate CarLot, BikeLot and TruckLot classes, each with its own list of spots",
+   "A Vehicle subtype per kind; ParkingLot has Spots; a Spot holds one Vehicle",
+   "One Vehicle class with a type string, and a switch on that string wherever size matters",
+   "Spot extends Vehicle, so each spot knows the size of whatever vehicle is parked there"
+  ],
+  "answer": 1,
+  "why": "Kinds of vehicles are IS-A relations, so they fit a small hierarchy. The lot and its spots are HAS-A: a lot owns spots, and a spot holds a vehicle. Each class keeps its own state, so rules like size checks have a clear home.",
+  "wrong": [
+   "Duplicates the lot logic three times; a mixed lot with shared spots cannot be modelled.",
+   null,
+   "Every new vehicle kind means editing every switch; subtypes keep size rules in one place.",
+   "A spot is not a kind of vehicle. A spot HOLDS a vehicle, which is composition."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מבקשים ממך למדל חניון עם מכוניות, אופנועים ומשאיות, ומקומות חניה בגדלים שונים. איזה תכנון classes הוא נקודת ההתחלה הטובה ביותר?",
+   "options": [
+    "classes נפרדים CarLot, BikeLot ו-TruckLot, לכל אחד רשימת מקומות חניה משלו",
+    "subtype של Vehicle לכל סוג, ל-ParkingLot יש Spots, ו-Spot מחזיק Vehicle אחד",
+    "class יחיד Vehicle עם מחרוזת type, ו-switch על המחרוזת בכל מקום שבו הגודל משנה",
+    "Spot עושה extends ל-Vehicle, כך שכל מקום חניה יודע מה גודל הרכב שחונה בו"
+   ],
+   "why": "סוגי רכבים הם קשרי IS-A, ולכן הם מתאימים להיררכיה קטנה. החניון ומקומות החניה הם HAS-A: לחניון יש מקומות חניה, ומקום חניה מחזיק רכב. כל class שומר על ה-state שלו, כך שלכללים כמו בדיקות גודל יש מקום ברור.",
+   "wrong": [
+    "זה משכפל את הלוגיקה של החניון שלוש פעמים, ואי אפשר למדל חניון מעורב עם מקומות חניה משותפים.",
+    null,
+    "כל סוג רכב חדש מחייב עריכה של כל switch, ו-subtypes שומרים את כללי הגודל במקום אחד.",
+    "מקום חניה הוא לא סוג של רכב. מקום חניה מחזיק רכב, וזה composition."
+   ]
+  }
+ }
+]
