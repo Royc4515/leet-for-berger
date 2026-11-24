@@ -10,7 +10,7 @@ import { h, mount } from './dom.js';
 import { searchPalette } from '../data/palette-search.js';
 import { availableEntries } from '../problems/index.js';
 import { TOPICS } from '../data/taxonomy.js';
-import { loadSets } from '../data/company-loader.js';
+import { loadSets, loadCompanyLogos, companyLogo } from '../data/company-loader.js';
 
 const PAGES = [
   { kind: 'page', id: 'problems', label: 'Problems', href: '#/', keywords: 'list dashboard bank' },
@@ -29,10 +29,10 @@ const PAGES = [
 
 const KIND_LABEL = { page: 'Page', action: 'Guide', problem: 'Problem', topic: 'Topic', company: 'Company' };
 
-/** Company entries for search; the sets load once, shared with the companies pages. */
+/** Company entries for search, with their logos; the data loads once, shared with the companies pages. */
 const loadCompanies = () =>
-  loadSets().then((d) =>
-    (d?.companies ?? []).map((c) => ({ kind: 'company', id: c.slug, label: c.name, href: `#/companies/${c.slug}`, hint: c.israel === 'major' ? 'Major in Israel' : '', keywords: (c.aliases ?? []).join(' ') })),
+  Promise.all([loadSets(), loadCompanyLogos()]).then(([d, logos]) =>
+    (d?.companies ?? []).map((c) => ({ kind: 'company', id: c.slug, label: c.name, href: `#/companies/${c.slug}`, hint: c.israel === 'major' ? 'Major in Israel' : '', keywords: (c.aliases ?? []).join(' '), logo: companyLogo(logos, c.slug) })),
   );
 
 let dialog = null;
@@ -96,7 +96,7 @@ export function openPalette() {
               'li.palette-item',
               { role: 'option', id: `palette-opt-${i}`, 'aria-selected': String(i === active), onClick: () => go(item), onMousemove: () => select(i) },
               h('span.palette-kind', {}, KIND_LABEL[item.kind]),
-              h('span.palette-label', {}, item.label),
+              h('span.palette-label', {}, item.logo ? h(`span.palette-logo${item.logo.bleed ? '.is-bleed' : ''}`, { 'aria-hidden': 'true' }, h('img', { src: item.logo.src, alt: '', width: 128, height: 128, decoding: 'async' })) : null, item.label),
               item.hint ? h('span.palette-hint', {}, item.hint) : null,
             ),
           )

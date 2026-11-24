@@ -4,7 +4,7 @@
  * Data: src/js/data/company-sets.json (built by scripts/content/build-meta.mjs), fetched on demand.
  */
 import { h, mount, difficulty, chip, chipGroup, segmented, ilMark, stateBlock, loadingState, siteFooter, hexMark, companyMark } from '../dom.js';
-import { loadSets, loadProblemTopics } from '../../data/company-loader.js';
+import { loadSets, loadProblemTopics, loadCompanyLogos, companyLogo } from '../../data/company-loader.js';
 import { TOPICS } from '../../data/taxonomy.js';
 import { expandRows, companyProgress, monogram, frequencyLevel } from '../../data/company-sets.js';
 import { filterRanked, findBySlug, israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
@@ -16,11 +16,12 @@ export { loadSets };
 /**
  * Companies already merged and ordered by Israel relevance (baked into company-sets.json); shared
  * with the mock OA setup.
- * @returns {Promise<{ sets: import('../../data/company-sets.js').CompanySets, ranked: import('../../data/israel-hiring.js').RankedCompany[] }|null>}
+ * Logos load beside them; without logos the marks are monograms.
+ * @returns {Promise<{ sets: import('../../data/company-sets.js').CompanySets, ranked: import('../../data/israel-hiring.js').RankedCompany[], logos: Record<string, { bleed: boolean, color: string|null }>|null }|null>}
  */
 export async function loadRankedCompanies() {
-  const sets = await loadSets();
-  return sets ? { sets, ranked: sets.companies } : null;
+  const [sets, logos] = await Promise.all([loadSets(), loadCompanyLogos()]);
+  return sets ? { sets, ranked: sets.companies, logos } : null;
 }
 
 /**
@@ -47,7 +48,7 @@ export function israelBadgeEl(level) {
 const isSolvedIn = (state) => (id) => state.problems[id]?.status === 'solved';
 
 /** Names identify which companies asked a problem; no logos ship (docs/research/DESIGN_DIRECTIONS.md). */
-const TRADEMARK_NOTE = 'Company names are trademarks of their owners, used here only to say which companies asked a problem. No affiliation or endorsement.';
+const TRADEMARK_NOTE = 'Company names and logos are trademarks of their owners, used here only to say which companies asked a problem. No affiliation or endorsement.';
 const ISRAEL_LINE = {
   major: 'Major engineering presence in Israel',
   present: 'Hires engineers in Israel',
@@ -114,7 +115,7 @@ export function renderCompanies(root, { store }) {
         return h(
           'a.company-card',
           { href: `#/companies/${c.slug}`, 'data-israel': c.israel },
-          companyMark({ letters: monogram(c.name), israel: c.israel, tier: c.tier, fill: prog.onSite ? prog.solved / prog.onSite : 0 }),
+          companyMark({ letters: monogram(c.name), logo: companyLogo(data.logos, c.slug), tile: Boolean(data.logos), israel: c.israel, tier: c.tier, fill: prog.onSite ? prog.solved / prog.onSite : 0 }),
           h(
             'span.company-card-body',
             {},
@@ -202,6 +203,7 @@ export function renderCompany(root, { store, slug }) {
   let clearFilters = null;
   let sets = null;
   let company = null;
+  let logos = null;
 
   const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
 
@@ -316,6 +318,7 @@ export function renderCompany(root, { store, slug }) {
     if (disposed) return;
     if (!d) return loadFailed(root);
     sets = d.sets;
+    logos = d.logos;
     company = findBySlug(d.ranked, slug);
     if (!company) {
       mount(
@@ -380,8 +383,9 @@ export function renderCompany(root, { store, slug }) {
         h('a.back-link', { href: '#/companies' }, 'All companies'),
         h(
           'header.page-head.company-head',
-          {},
-          companyMark({ letters: monogram(company.name), israel: company.israel, tier: company.tier, size: 'lg' }),
+          // The brand's own colour glows faintly behind the header (measured from its logo).
+          logos?.[company.slug]?.color ? { class: 'has-brand', style: { '--brand': logos[company.slug].color } } : {},
+          companyMark({ letters: monogram(company.name), logo: companyLogo(logos, company.slug), tile: Boolean(logos), israel: company.israel, tier: company.tier, size: 'lg' }),
           h(
             'div.company-head-copy',
             {},

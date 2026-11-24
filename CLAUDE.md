@@ -22,7 +22,7 @@ Local e2e on a machine with Chrome but no Playwright browsers: `PW_CHANNEL=chrom
 index.html                 shell: header, <main id="view">, loads src/js/main.js
 src/css/app.css            all styles; Atlas design tokens at the top (docs/DESIGN.md)
 src/fonts/                 self-hosted Bricolage Grotesque (display), Inter, JetBrains Mono woff2 fonts (README.md, ADR 0009)
-src/brand/                 logo, favicon, social preview (scripts/design/social-preview.mjs)
+src/brand/                 logo, favicon, social preview (scripts/design/social-preview.mjs); companies/<slug>.webp = company logos (scripts/content/fetch-logos.mjs, rules in logo-pick.mjs, sources in content/company-domains.json)
 src/js/main.js             bootstrap + hash router (every view returns a cleanup fn)
 src/js/engine/             PURE judging logic + execution
   harness.js               buildSuite (15 cases), judge, deepEqual, preview
@@ -60,7 +60,7 @@ src/js/data/map-world.js   the continuous map: one world layout, camera maths (f
 src/js/data/problem-topics.js taxonomy topic per shipped problem (-> problem-topics.json, build-meta.mjs)
 src/js/data/palette-search.js command palette ranking
 src/js/data/tours.js       guided tour content (one per page + welcome + mentor), validateTour; tour-routes.js = route to tour (startup); tour-layout.js = card and spotlight placement (pure)
-src/js/data/company-loader.js fetch loaders for company-sets.json and problem-topics.json
+src/js/data/company-loader.js fetch loaders for company-sets.json, problem-topics.json and company-logos.json (which companies have a logo, bleed, brand colour)
 content/                   problem index, ladders, families, sources, AUDIT.md (see content/README.md); quiz/<topic>.json = quiz source bank, English + Hebrew (scripts/content/build-quiz.mjs builds the site files)
 scripts/content/           fetch sources, build index, audit
 scripts/verify/            verifier helpers (harnesses.mjs re-exports engine/programs; sql, growth)

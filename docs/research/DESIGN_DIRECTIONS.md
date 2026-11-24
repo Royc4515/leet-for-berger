@@ -93,6 +93,8 @@ Letters, not logos, with a better system. Facts (`DESIGN_REFERENCES.md`, section
 
 This keeps the documented "letters, not logos" decision (no ADR needed) and makes it intentional rather than a placeholder.
 
+**Update (2026-11-24): logos, at the owner's decision.** Shown a mockup of letters against logos, the owner preferred logos and asked for the best quality available. What changed since the facts above: instead of one licensed icon set, a pipeline (`scripts/content/fetch-logos.mjs`) takes each company's own published icons (an SVG favicon, the Apple touch icon, the web manifest), Simple Icons where the brand is there, the favicon services as a fallback, and, for the dozen whose sites only publish 32 px icons, an official logo file reviewed by hand. It cleans each one (white backdrops removed, white logos drawn in the ink, empty margins trimmed) onto a light plate. 187 of 193 companies get a logo, the Israeli ones included; the 6 others keep the monogram on the same tile, so the grid still reads alike. Logos are self-hosted (no request to a third party while browsing) and the trademark note on company pages now names logos too. The monogram system above stays as that fallback.
+
 ## B3.5 Surfaces in the chosen direction
 
 | Surface | Design | References |

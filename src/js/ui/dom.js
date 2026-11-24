@@ -287,17 +287,26 @@ export function progressBar(done, total) {
 }
 
 /**
- * Company mark: a hex tile with the company's monogram (letters, not logos:
- * docs/research/DESIGN_DIRECTIONS.md). A dot marks a major Israeli engineering presence, a ring a
- * tier-1 company, and `fill` (0 to 1) rises from the bottom as the company's set is solved.
- * Decorative: the company name is always written next to it.
- * @param {{ letters: string, israel?: string|null, tier?: number|null, fill?: number, size?: 'sm'|'md'|'lg' }} opts
+ * A company's mark. With logos (the companies pages, the interview picker) it is a light tile:
+ * the company's logo, or its monogram when it has none, so every tile in a grid reads alike. A
+ * logo drawn as an app icon (`bleed`) fills the tile. Without logos it is the hex monogram whose
+ * fill shows progress. The Israel dot and the tier-1 ring work on both.
+ * @param {{ letters: string, logo?: { src: string, bleed: boolean }|null, tile?: boolean, israel?: string|null, tier?: number|null, fill?: number, size?: 'sm'|'md'|'lg' }} opts
+ *   tile: draw the light tile even without a logo (a page that shows logos)
  * @returns {HTMLElement}
  */
-export function companyMark({ letters, israel = null, tier = null, fill = 0, size = 'md' }) {
-  const cls = `span.company-mark.monogram.is-mono${size !== 'md' ? `.${size}` : ''}${israel === 'major' ? '.is-il' : ''}${tier === 1 ? '.is-t1' : ''}`;
+export function companyMark({ letters, logo = null, tile = false, israel = null, tier = null, fill = 0, size = 'md' }) {
+  const mods = `${size !== 'md' ? `.${size}` : ''}${israel === 'major' ? '.is-il' : ''}${tier === 1 ? '.is-t1' : ''}`;
+  if (logo || tile) {
+    return h(
+      `span.company-mark.is-tile${logo?.bleed ? '.is-bleed' : ''}${mods}`,
+      { 'aria-hidden': 'true' },
+      // Decorative: the name is always written beside it.
+      logo ? h('img', { src: logo.src, alt: '', loading: 'lazy', decoding: 'async', width: 128, height: 128, draggable: 'false' }) : h('span.company-mark-letters', {}, letters),
+    );
+  }
   return h(
-    cls,
+    `span.company-mark.monogram.is-mono${mods}`,
     { 'aria-hidden': 'true', style: { '--fill': `${Math.round(Math.min(1, Math.max(0, fill)) * 100)}%` } },
     h('span.company-mark-letters', {}, letters),
   );
