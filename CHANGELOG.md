@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed (daily quiz)
+- **Adding questions never changes a daily quiz already shown.** Each question has the day it joins the daily quiz (`content/quiz/daily-pool.json`): the 526 current ones from the first day, and a question added later from two days after the build that adds it, past tomorrow in every time zone. Browser and server pick from the questions whose day has come. Deleting a question that is in the pool is refused by the build, because it would change past days; edit it instead.
+
 ### Fixed (daily quiz leaderboard)
 - **A daily play that never reached the board is sent later.** The first play of the day was sent only from the results screen, so a player who played signed out, before the leaderboard shipped, or through a failed send stayed off the board for that day. The first play's choices and time are now kept on the device, and the board sends them once when the server has no play for that day. A replay still never counts.
 

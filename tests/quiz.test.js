@@ -5,13 +5,14 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { QUIZ_TOPICS, QUIZ_LANGS } from '../src/js/data/quiz-topics.js';
 import { QUIZ_INDEX } from '../src/js/data/quiz-index.js';
-import { readBank, buildOutputs, forLang } from '../scripts/content/build-quiz.mjs';
+import { readBank, buildOutputs, forLang, readPool, extendPool, poolText, joinDay, POOL } from '../scripts/content/build-quiz.mjs';
 import { shareText } from '../src/js/data/quiz-share.js';
 import { createQuizBoard } from '../src/js/auth/quiz-board.js';
 import {
   QUIZ_MODES,
   SURVIVAL_CAP,
   DAILY_QUIZ_SIZE,
+  DAILY_QUIZ_EPOCH,
   dailyQuizNumber,
   shuffleOptions,
   pickIds,
@@ -67,8 +68,8 @@ test('the shipped bank passes validation in both languages', () => {
 });
 
 test('every topic has its own source file and enough questions for a full round', () => {
-  const files = readdirSync('content/quiz').filter((f) => f.endsWith('.json')).map((f) => f.replace(/\.json$/, '')).sort();
-  assert.deepEqual(files, QUIZ_TOPICS.map((t) => t.id).sort(), 'one file per topic, nothing else');
+  const files = readdirSync('content/quiz').filter((f) => f.endsWith('.json') && f !== 'daily-pool.json').map((f) => f.replace(/\.json$/, '')).sort();
+  assert.deepEqual(files, QUIZ_TOPICS.map((t) => t.id).sort(), 'one file per topic, plus the daily pool, nothing else');
   for (const t of QUIZ_TOPICS) {
     const n = SOURCE.filter((x) => x.topic === t.id).length;
     assert.ok(n >= 10, `${t.id} has ${n} questions, at least 10 so a single-topic practice is a full round`);
@@ -85,10 +86,32 @@ test('correct answers are spread over positions as authored', () => {
 
 test('the built index and per-language files match content/quiz', () => {
   assert.deepEqual(QUIZ_INDEX.map((e) => e.id), SOURCE.map((x) => x.id), `index is stale; ${REGEN}`);
-  for (const [path, text] of buildOutputs(SOURCE)) {
+  const { since } = extendPool(readPool(), SOURCE, '9999-12-31');
+  for (const [path, text] of buildOutputs(SOURCE, since)) {
     if (path.endsWith('quiz-index.js')) continue; // the index is compared above, as data
     assert.equal(readFileSync(path, 'utf8'), text, `${path} is stale; ${REGEN}`);
   }
+  assert.deepEqual(QUIZ_INDEX.map((e) => [e.id, e.since]), SOURCE.map((x) => [x.id, since.get(x.id)]), `index days are stale; ${REGEN}`);
+});
+
+test('the daily pool holds exactly the bank: a new question needs a build, a deleted one is refused', () => {
+  const pool = readPool();
+  const { added, missing } = extendPool(pool, SOURCE, '9999-12-31');
+  assert.deepEqual(added, [], `questions not in the daily pool yet; ${REGEN}`);
+  assert.deepEqual(missing, [], 'questions in the daily pool were deleted from the bank; deleting one changes past daily quizzes');
+  assert.equal(readFileSync(POOL, 'utf8'), poolText(pool), `the pool file is not in build order; ${REGEN}`);
+  for (const day of Object.keys(pool)) assert.ok(day >= DAILY_QUIZ_EPOCH, `${day} is before the first daily quiz`);
+});
+
+test('extendPool: a new question joins on the given day; existing days keep theirs', () => {
+  const { pool, added, since } = extendPool({ '2026-11-23': ['a', 'b'] }, [{ id: 'b' }, { id: 'c' }, { id: 'a' }], '2026-12-01');
+  assert.deepEqual(added, ['c']);
+  assert.deepEqual(pool, { '2026-11-23': ['a', 'b'], '2026-12-01': ['c'] });
+  assert.equal(since.get('a'), '2026-11-23');
+  assert.deepEqual(extendPool({ '2026-11-23': ['a', 'gone'] }, [{ id: 'a' }], 'x').missing, ['gone']);
+  // Past tomorrow everywhere: at 23:59 UTC it is already the next day in UTC+14, so two days ahead.
+  assert.equal(joinDay(Date.parse('2026-11-24T23:59:00Z')), '2026-11-26');
+  assert.equal(joinDay(Date.parse('2026-11-24T00:00:00Z')), '2026-11-26');
 });
 
 test('Hebrew keeps the code, the answer and the shape of every English question', () => {
@@ -251,6 +274,12 @@ test('daily quiz: same questions for a day, different topics, changes by day, sa
   const topics = ids.map((id) => QUIZ_INDEX.find((x) => x.id === id).topic);
   assert.equal(new Set(topics).size, DAILY_QUIZ_SIZE, 'one question per topic');
   assert.notDeepEqual(dailyQuizIds(QUIZ_INDEX, '2026-11-24'), ids);
+  // A question added later never changes a day before it joins, whatever its id or topic.
+  const later = [...QUIZ_INDEX, { id: 'aaa-new', topic: 'oop', level: 'easy', since: '2026-12-10' }, { id: 'zz-new', topic: 'brand-new-topic', level: 'easy', since: '2026-12-10' }];
+  for (let i = 0; i < 17; i++) {
+    const d = new Date(Date.parse('2026-11-23T00:00:00Z') + i * 86400000).toISOString().slice(0, 10);
+    assert.deepEqual(dailyQuizIds(later, d), dailyQuizIds(QUIZ_INDEX, d), d);
+  }
   const load = (lang) => SOURCE.filter((x) => topicsFor(QUIZ_INDEX, ids).includes(x.topic)).map((x) => forLang(x, lang));
   const en = startDailyQuiz({ index: QUIZ_INDEX, questions: load('en'), day, now: 0 });
   const he = startDailyQuiz({ index: QUIZ_INDEX, questions: load('he'), day, now: 999 });

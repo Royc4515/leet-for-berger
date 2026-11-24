@@ -528,6 +528,9 @@ const ROWS = [
   ["bits-point-one-plus-point-two", "bits", "easy"],
   ["bits-compare-with-tolerance", "bits", "medium"],
 ];
+// Questions that join the daily quiz after its first day (content/quiz/daily-pool.json).
+const SINCE = {
+};
 
-/** @type {{ id: string, topic: string, level: string }[]} */
-export const QUIZ_INDEX = ROWS.map(([id, topic, level]) => ({ id, topic, level }));
+/** @type {{ id: string, topic: string, level: string, since: string }[]} */
+export const QUIZ_INDEX = ROWS.map(([id, topic, level]) => ({ id, topic, level, since: SINCE[id] ?? "2026-11-23" }));

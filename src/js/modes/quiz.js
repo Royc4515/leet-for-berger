@@ -17,7 +17,7 @@ import { hashString } from '../data/recommend.js';
 import { daysBetween } from '../data/daily.js';
 
 /**
- * @typedef {{ id: string, topic: string }} IndexEntry
+ * @typedef {{ id: string, topic: string, since?: string }} IndexEntry  `since`: first day in the daily quiz
  * @typedef {{ id: string, topic: string, subtopic?: string, level: string, q: string, code?: string, lang?: string, options: string[], answer: number, why: string, wrong?: (string|null)[], ref?: string }} QuizQuestion
  * @typedef {{ id: string, title: { en: string, he: string } }} QuizTopic
  * @typedef {{ id: string, label: string, note: string, count: number, lives: number|null, seconds: number|null }} QuizMode
@@ -164,6 +164,9 @@ export function startDailyQuiz({ index, questions, day, now }) {
 /**
  * Question ids of the daily quiz for `day`: one per topic from a seeded shuffle of the topics,
  * so five questions cover five subjects. Depends only on the index and the day.
+ *
+ * Only questions whose `since` day has come take part: a question added to the bank joins from a
+ * later day (content/quiz/daily-pool.json), so adding one never changes a day already picked.
  * @param {IndexEntry[]} index
  * @param {string} day "YYYY-MM-DD"
  * @returns {string[]}
@@ -171,7 +174,8 @@ export function startDailyQuiz({ index, questions, day, now }) {
 export function dailyQuizIds(index, day) {
   const rand = mulberry32(hashString(`quiz:${day}`));
   // Sorted first: the pick must not depend on the order questions were written in the file.
-  const sorted = [...index].sort((a, b) => (a.id < b.id ? -1 : 1));
+  // don't touch / the pool filter and the sort must match dailyIds in deploy/supabase/functions/daily-quiz/core.js
+  const sorted = index.filter((q) => !q.since || q.since <= day).sort((a, b) => (a.id < b.id ? -1 : 1));
   const topics = shuffled([...new Set(sorted.map((q) => q.topic))].sort(), rand);
   const picks = [];
   for (const t of topics) {
