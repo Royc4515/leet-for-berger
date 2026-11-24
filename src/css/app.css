@@ -1935,33 +1935,43 @@ body.lockdown .toast-host {
   font-weight: 500;
 }
 
-/* A company's logo in front of its name, on the same light plate as the company tiles. */
-.palette-logo {
+/* A company's logo at text size, on the same light plate as the company tiles (miniLogo in
+   ui/dom.js): in the command palette (20 px) and in front of names in company chips (16 px). */
+.mini-logo {
   display: inline-grid;
+  flex: none;
   place-items: center;
   width: 20px;
   height: 20px;
-  margin-inline-end: var(--s-2);
-  vertical-align: -5px;
   border-radius: var(--r-tag);
   background: var(--logo-plate);
 }
 
-.palette-logo img {
-  width: 15px;
-  height: 15px;
+.mini-logo img {
+  width: 74%;
+  height: 74%;
   object-fit: contain;
 }
 
-.palette-logo.is-bleed {
+.mini-logo.is-sm {
+  width: 16px;
+  height: 16px;
+}
+
+.mini-logo.is-bleed {
   background: transparent;
 }
 
-.palette-logo.is-bleed img {
-  width: 20px;
-  height: 20px;
+.mini-logo.is-bleed img {
+  width: 100%;
+  height: 100%;
   border-radius: inherit;
   object-fit: cover;
+}
+
+.palette-label .mini-logo {
+  margin-inline-end: var(--s-2);
+  vertical-align: -5px;
 }
 
 .palette-hint {
@@ -3016,8 +3026,48 @@ body.lockdown .toast-host {
   color: var(--text-2);
 }
 
+/* "Asked at": the first companies' logos as a row of buttons (each lights its company up on the
+   map), then their names; hovering a logo turns the names into what it does. Tiles sit side by
+   side, not stacked: a wordmark cut by its neighbour stops reading as the company. */
 .brief-asked {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.brief-asked .hint-text {
   margin: 0;
+}
+
+.brief-faces {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1-5);
+}
+
+.brief-face {
+  display: inline-grid;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--ease);
+}
+
+.brief-face:hover,
+.brief-face:focus-visible {
+  transform: translateY(-2px);
+}
+
+.brief-face:focus-visible {
+  z-index: 1;
+  transform: translateY(-3px);
+}
+
+.brief-face:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
 }
 
 .brief-row {

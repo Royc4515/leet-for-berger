@@ -100,6 +100,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Map drill-down (owner's request): all topics, then a topic's subtopics, then a subtopic's problems, then one problem; each level a link (ADR 0010 amendment)
   - [x] One continuous map (owner's request): the levels become camera stops on one zoomable world, names appearing by zoom (ADR 0010 amendment 2)
   - [x] Company logos (owner's decision): logo tiles on the companies pages, the picker and the palette, from a reviewed fetch-and-clean pipeline; monogram tile as the fallback
+  - [x] Logos where companies are named (owner's request): a problem's company chips, and the map's problem card as logo buttons that light the company up on the map (spotlight); Arista Networks and Meesho logos from official files
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)

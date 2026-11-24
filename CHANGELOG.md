@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed (logos where companies are named, owner's request)
+- **A problem's company chips show logos** in front of the names (About this problem), and the command palette uses the same small logo.
+- **The map's problem card shows who asks it as logos**: the first five companies (Israeli first) as a row of logo tiles, then their names. Hovering a logo says what it does; pressing it **lights that company up on the map** (the Company lens) and flies out to frame where it asks, so you see its other problems at a glance; Back returns to the problem. While a company is lit, the map panel opens with its logo, its count of problems and topics, and a link to its practice set.
+- Names in problem data find their logo through the company's slug or an alias (Snap is Snapchat, X is Twitter): `slugifyCompany` and `companyLogoByName` in `src/js/data/company-loader.js`, aliases in `company-logos.json` (`fetch-logos.mjs --manifest-only` rewrites the manifest without fetching).
+- **Arista Networks and Meesho have logos** (189 of 193): Meesho's app icon and the A of Arista's wordmark (its full wordmark is too wide to read in a tile), both from Wikimedia Commons, since their sites turn away scripts.
+- Tests: 2 more unit tests (every company name gives its slug; aliases point to logos), and e2e checks for chip logos and the map spotlight (lens, lit count, panel header, Back).
+
 ### Changed (company logos, owner's request)
 - **Company logos instead of monograms.** Every company card, the company page, the interview picker and the command palette show the company's own logo on a warm light tile; a company page also glows faintly in the brand's colour. 187 of 193 companies have one; the rest keep their monogram on the same tile. Logos are self-hosted WebP, 128 px, under 11 KB each (650 KB for all, loaded lazily as cards scroll in).
 - **Best available quality, by rule** (`scripts/content/fetch-logos.mjs`, run by hand): each company's own SVG favicon, Apple touch icon or manifest icon first, then Simple Icons (vectors in the brand's colour), then the favicon services; anything under 48 px keeps the monogram. A white backdrop is removed only when it surrounds the logo, a logo drawn in white for a dark page is recoloured in the tile's ink (its colours kept), app-icon squares fill the tile, margins are trimmed, and the brand colour is measured. A contact sheet of all 193 was reviewed by eye; wrong picks (a framework's default icon, a mascot, a cropped wordmark) and 32 px-only sites got official files as overrides (`content/company-domains.json`). Pure rules in `scripts/content/logo-pick.mjs`, unit-tested in `tests/company-logos.test.js` (12 tests, with the manifest, the files and the size budget).

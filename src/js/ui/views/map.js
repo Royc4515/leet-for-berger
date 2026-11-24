@@ -24,14 +24,15 @@
  * file draws SVG and HTML, moves the camera and wires input.
  * Data: problem-topics.json and essential-path.json, fetched on demand.
  */
-import { h, mount, difficulty, segmented, stateBlock, loadingState, siteFooter } from '../dom.js';
+import { h, mount, difficulty, segmented, stateBlock, loadingState, siteFooter, companyMark } from '../dom.js';
 import { availableEntries, catalogEntry } from '../../problems/index.js';
 import { TOPICS } from '../../data/taxonomy.js';
 import { TIER_TITLES, pathProgress, conceptLabel } from '../../data/learning-path.js';
 import { topicStates, conceptStates, neighbours, problemStatus, parseMapLevel, mapLevelHash, parentLevel, READY_SOLVES } from '../../data/map-layout.js';
 import { WORLD, layoutWorld, fitCamera, zoomAround, clampCamera, flightPath, lodOf, placeLabels, worldToScreen, hexBox, LOD_SUBTOPICS, LOD_PROBLEMS } from '../../data/map-world.js';
 import { loadPath } from '../../data/path-loader.js';
-import { loadProblemTopics, loadSets } from '../../data/company-loader.js';
+import { monogram } from '../../data/company-sets.js';
+import { loadProblemTopics, loadSets, loadLogoManifest, companyLogoByName, slugifyCompany } from '../../data/company-loader.js';
 import { reducedMotion } from '../motion.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -59,6 +60,8 @@ const K_READ = 0.6;
 const MAX_K = 9;
 /** A topic flies to fit, but not so close that you lose the topics around it. */
 const TOPIC_MAX_K = 3.4;
+// Logos in a problem card's "Asked at" row: enough to recognise, few enough for one line on a phone.
+const FACES = 5;
 /** A subtopic flies close enough to read its problems' names. */
 const CONCEPT_K = { min: LOD_PROBLEMS * 1.08, max: 7.5 };
 /** A problem name's box inside its hex, in world units: the hex's width across its flat sides. */
@@ -158,7 +161,7 @@ function mountMap(root, { store, placed, path, parts }) {
   canonical();
   let view = readView();
   let lens = 'status';
-  let company = null; // { name, ids: Set<string> }
+  let company = null; // { name, slug, ids: Set<string> }
   let states = null;
   let conceptCache = new Map();
   let preview = null; // overview: the topic the panel shows (pointer, focus, or your next topic)
@@ -278,24 +281,70 @@ function mountMap(root, { store, placed, path, parts }) {
   mount(root, page);
 
   /* ---------- Company lens ---------- */
-  let companiesLoaded = false;
+  let companiesReady = null;
+  let logoManifest = null; // company-logos.json, once loaded (the panel's company header uses it)
+  /**
+   * The company sets, loaded once: fills the lens picker and resolves to the companies with a
+   * problem on the map, by slug and by alias slug (null when the sets did not load).
+   */
   function ensureCompanies() {
-    if (companiesLoaded) return;
-    companiesLoaded = true;
-    loadSets().then((sets) => {
-      if (!sets || !page.isConnected) {
+    companiesReady ??= Promise.all([loadSets(), loadLogoManifest()]).then(([sets, logos]) => {
+      logoManifest = logos;
+      if (!sets) {
         mount(companySelect, h('option', { value: '' }, 'Companies did not load'));
-        return;
+        return null;
       }
-      const options = sets.companies.filter((c) => c.rows.some((r) => r[3] !== null && placed[sets.problems[r[3]]?.contentId]));
+      const options = sets.companies
+        .map((c) => ({ name: c.name, slug: c.slug, aliases: c.aliases.map((a) => a.slug), ids: new Set(c.rows.filter((r) => r[3] !== null).map((r) => sets.problems[r[3]].contentId).filter((id) => placed[id])) }))
+        .filter((c) => c.ids.size);
       mount(companySelect, h('option', { value: '' }, 'Pick a company'), options.map((c) => h('option', { value: c.slug }, c.name)));
+      if (company) companySelect.value = company.slug;
       companySelect.onchange = () => {
-        const c = options.find((x) => x.slug === companySelect.value);
-        company = c ? { name: c.name, ids: new Set(c.rows.filter((r) => r[3] !== null).map((r) => sets.problems[r[3]].contentId)) } : null;
+        company = options.find((x) => x.slug === companySelect.value) ?? null;
         paintLens();
         renderBrief();
       };
+      const bySlug = new Map();
+      options.forEach((c) => [c.slug, ...c.aliases].forEach((slug) => bySlug.set(slug, c)));
+      return bySlug;
     });
+    return companiesReady;
+  }
+
+  /**
+   * A company's logo on a problem card: the lens lights up every problem it asks, and the map
+   * flies out to frame them all, so you see where else that company goes (Back returns).
+   */
+  function spotlight(c) {
+    if (lens !== 'company') lensControl.querySelector('[data-value="company"]')?.click();
+    company = c;
+    companySelect.value = c.slug;
+    paintLens();
+    // Whole districts, not just the hexes, and the tier names above them: the names say where
+    // the lit problems are.
+    const boxes = [...new Set([...c.ids].map((id) => hexOf.get(id)?.topic).filter(Boolean))].map((t) => districtOf.get(t));
+    const x = Math.min(...boxes.map((b) => b.x));
+    const box = { x, y: 0, w: Math.max(...boxes.map((b) => b.x + b.w)) - x, h: Math.max(...boxes.map((b) => b.y + b.h)) };
+    const frame = fitCamera(box, vp, { pad: 24, minK: limits.minK, maxK: TOPIC_MAX_K });
+    // A company that asks almost everywhere: the whole map reads better than one cut at its edges.
+    const all = fitCamera(WORLD_RECT, vp, { pad: 20, minK: limits.minK, maxK: MAX_K });
+    pendingCam = frame.k < all.k * 1.3 ? all : frame;
+    go(TOP);
+    // On a phone the card sits below the map: bring the map up to watch the flight.
+    if (brief.getBoundingClientRect().top > canvas.getBoundingClientRect().bottom - 8) canvas.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
+  }
+
+  /** The panel's header while a company is lit: who, how many problems where, and its set. */
+  function companyHead() {
+    if (lens !== 'company' || !company) return null;
+    const topics = new Set([...company.ids].map((id) => placed[id]?.topic).filter(Boolean)).size;
+    return h(
+      'div.brief-company',
+      {},
+      companyMark({ letters: monogram(company.name), logo: companyLogoByName(logoManifest, company.name), tile: true, size: 'sm' }),
+      h('div.brief-company-text', {}, h('strong', {}, company.name), h('span.hint-text', {}, `${company.ids.size} problem${company.ids.size === 1 ? '' : 's'} in ${topics} topic${topics === 1 ? '' : 's'}`)),
+      h('a.btn-link.brief-company-set', { href: `#/companies/${company.slug}`, 'aria-label': `${company.name} practice set` }, 'Practice set'),
+    );
   }
 
   /* ---------- Canvas: the world, its labels, the controls ---------- */
@@ -492,6 +541,7 @@ function mountMap(root, { store, placed, path, parts }) {
   let settleTimer = 0;
   let lastRefresh = 0;
   let touched = false; // the reader moved the camera themselves (a resize then keeps their view)
+  let pendingCam = null; // a spotlight's framing, used by the next level change instead of the level's own camera
 
   function measureViewport() {
     vp = { width: canvas.clientWidth || 800, height: canvas.clientHeight || 520 };
@@ -843,6 +893,7 @@ function mountMap(root, { store, placed, path, parts }) {
     const cs = concepts(st.id);
     mount(
       brief,
+      companyHead(),
       h('span.eyebrow', {}, `Tier ${st.tier + 1} · ${TIER_TITLES[st.tier] ?? ''}`),
       h('h2.brief-title', {}, st.title),
       progressBlock(st.solved, st.total, companyCount !== null ? ` · ${companyCount} asked by ${company.name}` : ''),
@@ -858,6 +909,7 @@ function mountMap(root, { store, placed, path, parts }) {
     const cs = concepts(level.topic);
     mount(
       brief,
+      companyHead(),
       h('span.eyebrow', {}, `Tier ${st.tier + 1} · ${TIER_TITLES[st.tier] ?? ''}`),
       h('h2.brief-title', {}, st.title),
       progressBlock(st.solved, st.total),
@@ -906,6 +958,7 @@ function mountMap(root, { store, placed, path, parts }) {
     const pick = c.essential ? catalogEntry(c.essential)?.title : null;
     mount(
       brief,
+      companyHead(),
       h('span.eyebrow', {}, `${st.title} · Subtopic ${i + 1} of ${cs.length}`),
       h('h2.brief-title', {}, c.title),
       progressBlock(c.solved, c.total),
@@ -924,7 +977,7 @@ function mountMap(root, { store, placed, path, parts }) {
     const status = statusOf(pid);
     const j = c.problems.indexOf(pid);
     const after = c.problems[j + 1] ?? null;
-    const asked = h('p.hint-text.brief-asked', {}, ' ');
+    const asked = h('div.brief-asked', {}, h('p.hint-text', {}, ' '));
     mount(
       brief,
       h('span.eyebrow', {}, `${st.title} · ${c.title}`),
@@ -937,14 +990,41 @@ function mountMap(root, { store, placed, path, parts }) {
     );
     // Where it is asked comes from problem-meta.json, loaded once and only at this level.
     const token = ++metaToken;
-    import('../problem-context.js')
-      .then((m) => m.loadProblemMeta())
-      .then((meta) => {
+    Promise.all([import('../problem-context.js').then((m) => m.loadProblemMeta()), loadLogoManifest(), ensureCompanies()])
+      .then(([meta, logos, bySlug]) => {
         if (token !== metaToken || !asked.isConnected) return;
-        const names = (meta?.[pid]?.companies ?? []).map((x) => x.name);
-        asked.textContent = names.length ? `Asked at ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` and ${names.length - 3} more` : ''}.` : 'No company data for this one.';
+        mount(asked, askedAt(meta?.[pid]?.companies ?? [], logos, bySlug));
       })
       .catch(() => {});
+  }
+
+  /**
+   * "Asked at": the first companies' logos, each a button that spotlights the company on the map
+   * (only companies with a set can be lit), then their names. Hovering a logo says what it does.
+   */
+  function askedAt(all, logos, bySlug) {
+    if (!all.length) return h('p.hint-text', {}, 'No company data for this one.');
+    // Israeli companies first, as on the problem page (ui/problem-context.js), then by frequency.
+    const list = [...all.filter((x) => x.israeli), ...all.filter((x) => !x.israeli)];
+    const names = list.map((x) => x.name);
+    const text = `Asked at ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` and ${names.length - 3} more` : ''}.`;
+    const caption = h('p.hint-text.brief-asked-text', {}, text);
+    const faces = list
+      .map((x) => bySlug?.get(slugifyCompany(x.name)))
+      .filter((c, i, all) => c && all.indexOf(c) === i)
+      .slice(0, FACES);
+    if (!faces.length) return caption;
+    const say = (t) => () => (caption.textContent = t);
+    const pile = h(
+      'div.brief-faces',
+      { role: 'group', 'aria-label': 'Show a company\'s problems on the map' },
+      faces.map((c) => {
+        const label = `Light up ${c.name}'s ${c.ids.size} problem${c.ids.size === 1 ? '' : 's'} on the map`;
+        const mark = companyMark({ letters: monogram(c.name), logo: companyLogoByName(logos, c.name), tile: true, size: 'sm' });
+        return h('button.brief-face', { type: 'button', 'aria-label': label, title: c.name, onClick: () => spotlight(c), onPointerenter: say(label), onFocus: say(label), onPointerleave: say(text), onBlur: say(text) }, mark);
+      }),
+    );
+    return [pile, caption];
   }
 
   function renderSummary() {
@@ -1068,9 +1148,11 @@ function mountMap(root, { store, placed, path, parts }) {
     paint();
     renderBrief();
     if (level.topic || levelDepth(prev) > 0) {
-      touched = false;
-      fly(cameraFor(level));
+      // A spotlight frames its company; the reader's own resize must not undo that.
+      touched = Boolean(pendingCam);
+      fly(pendingCam ?? cameraFor(level));
     }
+    pendingCam = null;
     // On a phone the panel sits below the map: a picked problem's card is what you want next.
     const panelBelow = brief.getBoundingClientRect().top > canvas.getBoundingClientRect().bottom - 8;
     if (level.problem && panelBelow) brief.scrollIntoView({ block: 'nearest' });

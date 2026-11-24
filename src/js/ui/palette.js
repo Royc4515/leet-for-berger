@@ -6,7 +6,7 @@
  * ARIA: a modal dialog holding a combobox (the input) that controls a listbox; the active
  * option is announced through aria-activedescendant, and focus stays in the input.
  */
-import { h, mount } from './dom.js';
+import { h, mount, miniLogo } from './dom.js';
 import { searchPalette } from '../data/palette-search.js';
 import { availableEntries } from '../problems/index.js';
 import { TOPICS } from '../data/taxonomy.js';
@@ -96,7 +96,7 @@ export function openPalette() {
               'li.palette-item',
               { role: 'option', id: `palette-opt-${i}`, 'aria-selected': String(i === active), onClick: () => go(item), onMousemove: () => select(i) },
               h('span.palette-kind', {}, KIND_LABEL[item.kind]),
-              h('span.palette-label', {}, item.logo ? h(`span.palette-logo${item.logo.bleed ? '.is-bleed' : ''}`, { 'aria-hidden': 'true' }, h('img', { src: item.logo.src, alt: '', width: 128, height: 128, decoding: 'async' })) : null, item.label),
+              h('span.palette-label', {}, item.logo ? miniLogo(item.logo) : null, item.label),
               item.hint ? h('span.palette-hint', {}, item.hint) : null,
             ),
           )
