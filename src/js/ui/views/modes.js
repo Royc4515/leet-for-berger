@@ -21,6 +21,7 @@ import { QUIZ_TOPICS } from '../../data/quiz-topics.js';
 import { QUIZ_INDEX } from '../../data/quiz-index.js';
 import { QUIZ_MODES } from '../../modes/quiz.js';
 import { loadQuizProgress } from '../../state/quiz-progress.js';
+import { dailyQuizNeedsSignIn } from '../quiz-card.js';
 import { dayKey } from '../../state/progress.js';
 
 /**
@@ -136,7 +137,7 @@ export function renderModesHub(root) {
           'Multiple-choice questions on the ideas interviews test. No editor, so it works on a phone.',
           quizVisual,
           [`${QUIZ_INDEX.length} questions in ${QUIZ_TOPICS.length} topics, from OOP and data structures to concurrency and SQL`, `${QUIZ_MODES.map((m) => m.label).join(', ')}; one topic, a few, or all mixed`, 'In English or Hebrew, with a daily quiz of 5 questions'],
-          quizToday ? h('p.mode-last', {}, `Daily quiz done today: ${quizToday.correct} / ${quizToday.total}`) : h('p.mode-last.is-empty', {}, h('a', { href: '#/quiz/daily' }, 'Today\'s daily quiz is open.')),
+          quizToday ? h('p.mode-last', {}, `Daily quiz done today: ${quizToday.correct} / ${quizToday.total}`) : h('p.mode-last.is-empty', {}, h('a', { href: '#/quiz/daily' }, 'Today\'s daily quiz is open.'), dailyQuizNeedsSignIn() ? ' Sign in to play.' : null),
           h('a.btn.btn-secondary', { href: '#/quiz' }, 'Start a quiz'),
         ),
       ),

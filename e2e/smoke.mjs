@@ -1625,6 +1625,16 @@ try {
       throw new Error('backdrop click did not restore focus to Sign in toggle');
     }
     await acct.setViewportSize({ width: 1440, height: 900 });
+    // Sign-in comes back to the page it started from: the provider returns to the site root with ?code=.
+    await acct.goto(`${BASE}#/quiz/daily`);
+    await acct.click('.quiz-gate button.btn-primary');
+    await acct.waitForFunction(() => sessionStorage.getItem('lfb:return-to') === '#/quiz/daily');
+    await acct.goto(`${BASE}?code=e2e`);
+    await acct.waitForSelector('.quiz-gate');
+    const back = await acct.evaluate(() => ({ hash: location.hash, saved: sessionStorage.getItem('lfb:return-to') }));
+    if (back.hash !== '#/quiz/daily' || back.saved !== null) throw new Error(`sign-in did not return to the daily quiz: ${JSON.stringify(back)}`);
+    await acct.goto(`${BASE}#/`);
+    await acct.waitForSelector('.today-quiz .quiz-signin-note');
 
     signedIn = true;
     // supabase-js keeps a returning user's session here; its presence is what starts the client at page load.
@@ -2268,6 +2278,9 @@ try {
     await bp.waitForSelector('.quiz-gate a[href="#/quiz/board"]');
     if (await bp.locator('.quiz-option').count()) throw new Error('a signed-out player got the daily quiz');
     if (shotsDir) await bp.screenshot({ path: `${shotsDir}/30-quiz-gate.png` });
+    // Every Play button of the daily quiz says it needs sign-in first.
+    await bp.goto(`${BASE}#/quiz`);
+    await bp.waitForSelector('.quiz-daily .quiz-signin-note');
     await bp.goto(`${BASE}#/quiz/board`);
     await bp.waitForSelector('.quiz-board-row');
     const res = await bp.evaluate(() => ({ rows: document.querySelectorAll('.quiz-board-row').length, join: Boolean(document.querySelector('.quiz-board-join')), players: document.querySelector('.quiz-board-head')?.textContent }));

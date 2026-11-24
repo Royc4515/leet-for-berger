@@ -5,8 +5,22 @@
  */
 import { h } from './dom.js';
 import { loadQuizProgress, dailyQuizStreak } from '../state/quiz-progress.js';
-import { dailyQuizNumber, DAILY_QUIZ_SIZE } from '../modes/quiz.js';
+import { dailyQuizNumber, DAILY_QUIZ_SIZE, dailyQuizAccess } from '../modes/quiz.js';
 import { dayKey } from '../state/progress.js';
+import { services } from '../auth/services.js';
+
+/** Said next to every Play button of the daily quiz while signed out, so the sign-in step is no surprise. */
+export const SIGN_IN_NOTE = 'Sign in to play.';
+
+/**
+ * Whether today's daily quiz would ask this visitor to sign in first. False while a stored session
+ * is still being checked, so a returning player never sees the note flash.
+ * @returns {boolean}
+ */
+export function dailyQuizNeedsSignIn() {
+  const account = services.account;
+  return dailyQuizAccess({ accounts: Boolean(account?.config?.enabled), status: account?.get?.().status }) === 'sign-in';
+}
 
 /**
  * @param {{ now: Date }} opts
@@ -31,6 +45,7 @@ export function quizCard({ now }) {
         {},
         done ? 'Same questions for everyone. See where you stand, or share your squares.' : 'Interview ideas from 5 topics, the same for everyone today. English or Hebrew.',
       ),
+      !done && dailyQuizNeedsSignIn() ? h('p.quiz-signin-note', {}, SIGN_IN_NOTE) : null,
     ),
     squares
       ? h(
