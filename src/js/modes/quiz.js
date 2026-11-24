@@ -190,6 +190,18 @@ export function dailyQuizIds(index, day) {
 }
 
 /**
+ * Whether today's daily quiz can be played now. Where the site has accounts, the daily quiz is
+ * played signed in: its score goes to the server-checked leaderboard. A site without accounts (a
+ * fork, a local run) has no way to sign in, so the quiz stays open there.
+ * @param {{ accounts: boolean, status?: 'off'|'loading'|'signed-out'|'signed-in' }} p
+ * @returns {'play'|'wait'|'sign-in'} wait while a stored session is still being checked
+ */
+export function dailyQuizAccess({ accounts, status }) {
+  if (!accounts || status === 'signed-in') return 'play';
+  return status === 'loading' ? 'wait' : 'sign-in';
+}
+
+/**
  * A finished session's choices in authored option order, for the daily-quiz server.
  * @param {QuizSession} s
  * @returns {{ id: string, choice: number }[]}

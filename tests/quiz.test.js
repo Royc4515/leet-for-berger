@@ -30,6 +30,7 @@ import {
   timeLeft,
   quizSummary,
   validateBank,
+  dailyQuizAccess,
 } from '../src/js/modes/quiz.js';
 import { emptyQuizProgress, normalizeQuizProgress, recordSession, masteredIds, topicProgress, dailyQuizStreak } from '../src/js/state/quiz-progress.js';
 import { mulberry32 } from '../src/js/engine/rng.js';
@@ -412,4 +413,12 @@ test('board client: reads the board signed out, submits choices with the session
   assert.equal(createQuizBoard({ account: { ...account, config: { ...account.config, enabled: false } }, fetchImpl }).available, false);
   const failing = createQuizBoard({ account: { ...account, config: { ...account.config, supabaseUrl: 'https://p/fail' } }, fetchImpl });
   await assert.rejects(failing.board('2026-11-24'), /nope/);
+});
+
+test('dailyQuizAccess: signed in to play where the site has accounts, open where it has none', () => {
+  assert.equal(dailyQuizAccess({ accounts: true, status: 'signed-in' }), 'play');
+  assert.equal(dailyQuizAccess({ accounts: true, status: 'signed-out' }), 'sign-in');
+  assert.equal(dailyQuizAccess({ accounts: true, status: 'loading' }), 'wait', 'a stored session is still being checked');
+  assert.equal(dailyQuizAccess({ accounts: true }), 'sign-in', 'no account service yet: ask, never play unchecked');
+  assert.equal(dailyQuizAccess({ accounts: false, status: 'off' }), 'play', 'no way to sign in, so no gate');
 });

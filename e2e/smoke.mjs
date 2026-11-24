@@ -1405,7 +1405,7 @@ try {
       { url: '#/map', wait: '.map-svg .district', name: '390-touch-map' },
       { url: '#/daily', wait: '.cal-day', name: '390-touch-daily' },
       { url: '#/quiz', wait: '.quiz-topic', name: '390-touch-quiz' },
-      { url: '#/quiz/daily', wait: '.quiz-option', name: '390-touch-quiz-play' },
+      { url: '#/quiz/daily', wait: '.quiz-gate', name: '390-touch-quiz-gate' },
     ];
     for (const sc of screens) {
       await touch.goto(`${BASE}${sc.url}`);
@@ -1733,6 +1733,10 @@ try {
       if (!submits.length) return r.fulfill({ contentType: 'application/json', headers: cors, body: JSON.stringify({ day, week: { start: day, end: day }, players: 0, daily: [], weekly: [], me: { streak: 0, played: false, name: shown, custom: Boolean(nick) } }) });
       return r.fulfill({ contentType: 'application/json', headers: cors, body: JSON.stringify({ day, week: { start: day, end: day }, players: 1, daily: [{ rank: 1, name: shown, correct: 4, total: 5, ms: 60000, you: true }], weekly: [], me: { streak: 2, played: true, name: shown, custom: Boolean(nick) } }) });
     });
+    // Signed in, the daily quiz plays at once (signed out it asks to sign in first).
+    await acct.evaluate(() => { localStorage.setItem('lfb:quiz-lang', 'en'); localStorage.removeItem('lfb:quiz:v1'); });
+    await acct.goto(`${BASE}#/quiz/daily`);
+    await acct.waitForSelector('.quiz-option:not(:disabled)');
     // Today was played on this device before the server had it (signed out, or before an update):
     // the board, seeing the server has no play, sends the stored first play once.
     const PLAY = { answers: [{ id: 'q1', choice: 1 }, { id: 'q2', choice: 0 }], ms: 61000 };
@@ -2242,7 +2246,7 @@ try {
     await expectText('.quiz-result-card', /Done for today/);
   });
 
-  await check('daily quiz leaderboard with accounts on: read-only board signed out, today and this week, no submit, its own page', async () => {
+  await check('daily quiz with accounts on: signed out it asks to sign in; the board is read-only, today and this week, no submit, its own page', async () => {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const bp = await ctx.newPage();
     bp.on('console', (m) => m.type() === 'error' && errors.push(`console (board page): ${m.text()}`));
@@ -2276,11 +2280,11 @@ try {
       route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(FAKE_BOARD(url.searchParams.get('day') ?? '')) });
     });
     await bp.goto(`${BASE}#/quiz/daily`);
-    for (let i = 0; i < 5; i++) {
-      await bp.waitForSelector('.quiz-option:not(:disabled)');
-      await bp.click('.quiz-option >> nth=0');
-      await bp.click('.quiz-next');
-    }
+    await bp.waitForSelector('.quiz-gate button:has-text("Continue with Google")');
+    await bp.waitForSelector('.quiz-gate a[href="#/quiz/board"]');
+    if (await bp.locator('.quiz-option').count()) throw new Error('a signed-out player got the daily quiz');
+    if (shotsDir) await bp.screenshot({ path: `${shotsDir}/30-quiz-gate.png` });
+    await bp.goto(`${BASE}#/quiz/board`);
     await bp.waitForSelector('.quiz-board-row');
     const res = await bp.evaluate(() => ({ rows: document.querySelectorAll('.quiz-board-row').length, join: Boolean(document.querySelector('.quiz-board-join')), players: document.querySelector('.quiz-board-head')?.textContent }));
     if (res.rows !== 3 || !res.join || !/3 played today/.test(res.players ?? '')) throw new Error(`board: ${JSON.stringify(res)}`);
@@ -2288,8 +2292,6 @@ try {
     await bp.click('.quiz-board .segmented-btn[data-value="weekly"]');
     await bp.waitForFunction(() => document.querySelectorAll('.quiz-board-row').length === 1 && /Noa Levi/.test(document.querySelector('.quiz-board-row').textContent));
     if (shotsDir) await bp.screenshot({ path: `${shotsDir}/30-quiz-board.png` });
-    await bp.goto(`${BASE}#/quiz/board`);
-    await bp.waitForSelector('.quiz-board-row');
     await bp.waitForFunction(() => /Leaderboard/.test(document.querySelector('h1')?.textContent ?? ''));
     await ctx.close();
   });
