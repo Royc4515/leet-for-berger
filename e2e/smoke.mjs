@@ -1539,7 +1539,8 @@ try {
     const stub = (signedIn) => `export function createClient() {
       const listeners = [];
       const user = ${signedIn ? "{ id: 'u1', email: 'ada@example.com', user_metadata: { full_name: 'Ada' } }" : 'null'};
-      const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async () => ({ error: null }) };
+      // Uploads are kept on the page, so a check can see what reached "the account".
+      const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async (row) => { (globalThis.__upserts ??= []).push(JSON.parse(JSON.stringify(row))); return { error: null }; } };
       return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: (cb) => { listeners.push(cb); return {}; }, signInWithOAuth: async (o) => { window.__oauth = o; return {}; }, signOut: async () => { localStorage.removeItem('sb-example-auth-token'); listeners.forEach((l) => l('SIGNED_OUT', null)); return {}; } }, from: () => chain };
     }`;
     const acctRequests = [];
@@ -1800,7 +1801,7 @@ try {
     await acct.waitForFunction(() => location.hash === '#/me');
     await acct.waitForSelector('.profile-name:has-text("Ada")');
     await acct.waitForSelector('#profile-nickname:has-text("Shown as Ada")');
-    const prof = await acct.evaluate(() => ({ sections: [...document.querySelectorAll('.profile-section-title')].map((e) => e.textContent), note: /Quiz progress stays in this browser/.test(document.querySelector('#profile-progress').textContent), guide: Boolean(document.querySelector('.site-links-tour')), menuOpen: !document.querySelector('.account-menu')?.hidden }));
+    const prof = await acct.evaluate(() => ({ sections: [...document.querySelectorAll('.profile-section-title')].map((e) => e.textContent), note: /quiz progress sync to your account/.test(document.querySelector('#profile-progress').textContent), guide: Boolean(document.querySelector('.site-links-tour')), menuOpen: !document.querySelector('.account-menu')?.hidden }));
     if (JSON.stringify(prof.sections) !== '["Your progress","Leaderboard name","Preferences","GitHub sync","Your data"]' || !prof.note || prof.guide || prof.menuOpen) throw new Error(`profile signed in: ${JSON.stringify(prof)}`);
     await acct.click('#profile-nickname button:has-text("Change")');
     await acct.waitForFunction(() => document.activeElement?.id === 'profile-nickname-input');
@@ -1812,6 +1813,17 @@ try {
     await acct.waitForSelector('#profile-nickname:has-text("Shown as Countess Ada")');
     if (JSON.stringify(nameCalls) !== '["Ace","","Countess Ada"]') throw new Error(`profile name calls: ${JSON.stringify(nameCalls)}`);
     if (shotsDir) await acct.screenshot({ path: `${shotsDir}/32-profile.png`, fullPage: true });
+    // Quiz progress rides in the account record: a quiz save on this device schedules a sync, and
+    // the upload carries it next to problem progress (with the daily play stored above).
+    await acct.evaluate(async () => {
+      const m = await import('/src/js/state/quiz-progress.js');
+      const p = m.loadQuizProgress();
+      p.best.sprint = 7;
+      m.saveQuizProgress(p);
+    });
+    await acct.waitForFunction(() => (globalThis.__upserts ?? []).some((r) => r.state?.quiz?.best?.sprint === 7 && Object.keys(r.state.quiz.daily).length === 1 && r.state.problems), null, { timeout: 10000 }).catch(async () => {
+      throw new Error(`quiz progress not synced: ${JSON.stringify(await acct.evaluate(() => (globalThis.__upserts ?? []).map((r) => r.state?.quiz ?? null).slice(-2)))}`);
+    });
     await acct.goto(`${BASE}#/`);
     await acct.waitForSelector('#account .account-name:has-text("Ada")');
     const stored = () => acct.evaluate(() => ({ progress: JSON.parse(localStorage.getItem('lfb:progress:v1') ?? 'null'), drafts: Object.keys(localStorage).filter((k) => k.startsWith('lfb:draft:')) }));
@@ -1823,8 +1835,7 @@ try {
     if (!(await acct.evaluate(() => document.querySelector('.account-menu')?.hidden))) {
       throw new Error('account menu must close before opening Sign out dialog');
     }
-    // It names what stays in the account and what does not (quiz progress is per browser).
-    await expectDialog(acct, /Sign out\?[\s\S]*stay in your account[\s\S]*removed from this device, including quiz progress/);
+    await expectDialog(acct, /Sign out\?[\s\S]*stays in your account[\s\S]*removed from this device/);
     if (shotsDir) await acct.screenshot({ path: `${shotsDir}/22-sign-out-confirm.png` });
     await acct.click('dialog.modal button:has-text("Cancel")');
     await acct.waitForSelector('dialog.modal', { state: 'detached' });

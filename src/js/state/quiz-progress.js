@@ -1,14 +1,16 @@
 /**
  * Quiz progress: which questions the player has answered (and got right), daily quiz results,
- * and best scores per mode. Local to this browser for now; it is listed in state/user-data.js so
- * sign-out clears it with the rest of the user's data.
+ * and best scores per mode. Kept in the browser; for a signed-in player it also rides in the
+ * account's progress record (auth/account.js, merged by mergeQuizProgress), so it follows them
+ * across devices and survives signing out. Listed in state/user-data.js, so sign-out clears it
+ * from the device with the rest of the user's data.
  *
  * The reducers are pure (no storage, `day` passed in); load/save are the only I/O.
  */
 import { computeStreak } from './progress.js';
-import { QUIZ_STORAGE_KEY } from './user-data.js';
+import { QUIZ_STORAGE_KEY, QUIZ_SAVED_EVENT } from './user-data.js';
 
-export { QUIZ_STORAGE_KEY };
+export { QUIZ_STORAGE_KEY, QUIZ_SAVED_EVENT };
 
 /**
  * @typedef {{ seen: number, correct: number, last: boolean }} QuestionStat
@@ -122,11 +124,48 @@ export function loadQuizProgress() {
   }
 }
 
-/** @param {QuizProgress} p */
-export function saveQuizProgress(p) {
+/**
+ * @param {QuizProgress} p
+ * @param {{ source?: 'local'|'sync' }} [opts] 'sync' when account sync writes a merge, so it does
+ *   not schedule another sync for its own write
+ */
+export function saveQuizProgress(p, { source = 'local' } = {}) {
   try {
     localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(p));
   } catch {
     /* storage full or blocked: the session still shows its result */
   }
+  globalThis.dispatchEvent?.(new CustomEvent(QUIZ_SAVED_EVENT, { detail: { source } }));
+}
+
+/**
+ * Merges this device's quiz progress with the account's copy (owner's request: quiz progress
+ * follows the player across devices and survives signing out). Per question the larger counts,
+ * the way problem progress merges (summing would count a merged session twice); per mode the
+ * better best. A day both copies played keeps the account's: it reached the server first, and
+ * the leaderboard counts the first play. Remote junk is normalized away.
+ *
+ * Idempotent (merge(a, a) = a); for days played on both sides the account wins.
+ * @param {QuizProgress} local
+ * @param {any} remote the account's copy; null when it has none
+ * @returns {QuizProgress}
+ */
+export function mergeQuizProgress(local, remote) {
+  const a = normalizeQuizProgress(local);
+  if (!remote) return a;
+  const b = normalizeQuizProgress(remote);
+  const questions = { ...a.questions };
+  for (const [id, r] of Object.entries(b.questions)) {
+    const l = questions[id];
+    if (!l) {
+      questions[id] = r;
+      continue;
+    }
+    // "Last answer right" follows the copy that saw the question more often; a tie keeps either's yes.
+    const last = l.seen === r.seen ? l.last || r.last : l.seen > r.seen ? l.last : r.last;
+    questions[id] = { seen: Math.max(l.seen, r.seen), correct: Math.max(l.correct, r.correct), last };
+  }
+  const best = { ...a.best };
+  for (const [mode, v] of Object.entries(b.best)) best[mode] = Math.max(best[mode] ?? 0, v);
+  return { questions, daily: { ...a.daily, ...b.daily }, best };
 }
