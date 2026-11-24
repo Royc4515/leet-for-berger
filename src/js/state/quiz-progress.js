@@ -6,9 +6,9 @@
  * The reducers are pure (no storage, `day` passed in); load/save are the only I/O.
  */
 import { computeStreak } from './progress.js';
+import { QUIZ_STORAGE_KEY } from './user-data.js';
 
-/** localStorage key holding quiz progress. */
-export const QUIZ_STORAGE_KEY = 'lfb:quiz:v1';
+export { QUIZ_STORAGE_KEY };
 
 /**
  * @typedef {{ seen: number, correct: number, last: boolean }} QuestionStat

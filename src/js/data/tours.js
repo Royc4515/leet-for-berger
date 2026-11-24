@@ -102,7 +102,7 @@ export const TOURS = {
       { target: ['.quiz-lang .segmented'], title: 'English or Hebrew', body: 'Hebrew keeps the technical terms in English, as interviewers say them.' },
       { target: ['.quiz-daily'], title: 'Daily quiz', body: 'Five questions, the same for everyone today.' },
       { target: ['[data-tour="quiz-mode"]'], title: 'How to play', body: 'Practice, a 2 minute sprint, or survival until three misses.' },
-      { target: ['.quiz-topic-grid'], title: 'Pick topics', body: 'One, a few, or none for all mixed. Then start.' },
+      { target: ['.quiz-topics-head'], title: 'Pick topics', body: 'Tap one or a few, or keep All topics for a mix. Then start.' },
     ],
   },
   workspace: {

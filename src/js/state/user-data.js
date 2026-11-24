@@ -9,7 +9,12 @@
  */
 import { STORAGE_KEY as PROGRESS_KEY } from './progress.js';
 import { DRAFT_PREFIX } from './drafts.js';
-import { QUIZ_STORAGE_KEY } from './quiz-progress.js';
+
+/**
+ * localStorage key holding quiz progress (state/quiz-progress.js). Defined here, not there: this
+ * module loads on every page and must not pull the quiz code into the startup graph.
+ */
+export const QUIZ_STORAGE_KEY = 'lfb:quiz:v1';
 
 /** localStorage key holding the most recent Interview and Battle results shown on the Modes hub. */
 export const LAST_SESSIONS_KEY = 'lfb:last-sessions:v1';
