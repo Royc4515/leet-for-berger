@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Live site
+    url: https://royc4515.github.io/leet-for-berger/
+    about: Try the problem on the live site first; it may already be fixed.
