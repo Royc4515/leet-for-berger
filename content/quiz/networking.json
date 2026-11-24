@@ -1,0 +1,1363 @@
+[
+ {
+  "id": "networking-url-step-order",
+  "topic": "networking",
+  "subtopic": "url-journey",
+  "concepts": [
+   "url-journey",
+   "dns",
+   "tcp-handshake",
+   "tls"
+  ],
+  "level": "easy",
+  "q": "You type https://shop.example into the address bar and nothing is cached. In what order do these steps happen?",
+  "options": [
+   "TCP connection, DNS lookup, TLS handshake, HTTP request",
+   "DNS lookup, TLS handshake, TCP connection, HTTP request",
+   "DNS lookup, TCP connection, TLS handshake, HTTP request",
+   "DNS lookup, TCP connection, HTTP request, TLS handshake"
+  ],
+  "answer": 2,
+  "why": "The browser first needs the server's IP address (DNS) to know where to connect. Then it opens a TCP connection, runs TLS over it to set up encryption, and only then sends the HTTP request, so the request is already protected.",
+  "wrong": [
+   "A TCP connection needs an IP address, and DNS is what turns the name into one.",
+   "TLS runs on top of an open TCP connection, so the connection has to exist first.",
+   null,
+   "Sending the request before TLS would expose it in plain text. HTTPS encrypts before the first request."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/How_browsers_work",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מקלידים https://shop.example בשורת הכתובת, ושום דבר לא נמצא ב-cache. באיזה סדר השלבים האלה קורים?",
+   "options": [
+    "חיבור TCP, חיפוש DNS, TLS handshake, HTTP request",
+    "חיפוש DNS, TLS handshake, חיבור TCP, HTTP request",
+    "חיפוש DNS, חיבור TCP, TLS handshake, HTTP request",
+    "חיפוש DNS, חיבור TCP, HTTP request, TLS handshake"
+   ],
+   "why": "הדפדפן צריך קודם את ה-IP address של השרת (DNS) כדי לדעת לאן להתחבר. אחר כך הוא פותח חיבור TCP, מריץ עליו TLS כדי להקים הצפנה, ורק אז שולח את ה-HTTP request, כך שה-request כבר מוגן.",
+   "wrong": [
+    "חיבור TCP צריך IP address, ו-DNS הוא מה שהופך את השם לכתובת כזו.",
+    "TLS רץ מעל חיבור TCP פתוח, ולכן החיבור צריך להתקיים קודם.",
+    null,
+    "שליחת ה-request לפני TLS הייתה חושפת אותו כטקסט גלוי. HTTPS מצפין לפני ה-request הראשון."
+   ]
+  }
+ },
+ {
+  "id": "networking-url-subresources",
+  "topic": "networking",
+  "subtopic": "url-journey",
+  "concepts": [
+   "url-journey",
+   "page-load",
+   "subresources"
+  ],
+  "level": "easy",
+  "q": "The HTML of a page arrives. It refers to a stylesheet, a script and five images. What does the browser do next?",
+  "options": [
+   "Nothing more: the server sends the referenced files right after the HTML on its own",
+   "It reads the HTML, finds those references and sends a request for each file",
+   "It waits and requests each image only when that image scrolls into view, never earlier",
+   "It opens a brand new DNS lookup and TCP connection for every single file"
+  ],
+  "answer": 1,
+  "why": "An HTML response holds markup and references, not the files themselves. As the browser parses it, it requests each stylesheet, script and image, usually reusing connections it already has to the same server.",
+  "wrong": [
+   "In plain HTTP the server answers requests; the browser must ask for each referenced file by its URL.",
+   null,
+   "Lazy loading exists but is opt-in per image; stylesheets and scripts are requested as soon as they are found.",
+   "Files on the same host can reuse an open connection, and the DNS answer is cached after the first lookup."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/How_browsers_work",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-HTML של דף מגיע. הוא מפנה ל-stylesheet, ל-script ולחמש תמונות. מה הדפדפן עושה עכשיו?",
+   "options": [
+    "כלום: השרת שולח מעצמו את הקבצים שה-HTML מפנה אליהם מיד אחריו",
+    "הוא קורא את ה-HTML, מוצא את ההפניות ושולח request לכל קובץ",
+    "הוא מחכה ומבקש כל תמונה רק כשהיא נגללת לתצוגה, אף פעם לא קודם",
+    "הוא מבצע חיפוש DNS חדש ופותח חיבור TCP חדש לכל קובץ וקובץ"
+   ],
+   "why": "response של HTML מכיל markup והפניות, לא את הקבצים עצמם. תוך כדי ניתוח ה-HTML הדפדפן מבקש כל stylesheet, script ותמונה, ובדרך כלל משתמש מחדש בחיבורים שכבר פתוחים לאותו שרת.",
+   "wrong": [
+    "ב-HTTP רגיל השרת עונה ל-requests: הדפדפן צריך לבקש כל קובץ שמופנה אליו לפי ה-URL שלו.",
+    null,
+    "lazy loading קיים, אבל צריך להפעיל אותו לכל תמונה בנפרד. stylesheets ו-scripts מתבקשים ברגע שהם נמצאים.",
+    "קבצים מאותו host יכולים להשתמש מחדש בחיבור פתוח, והתשובה של DNS נשמרת ב-cache אחרי החיפוש הראשון."
+   ]
+  }
+ },
+ {
+  "id": "networking-url-http-to-https-redirect",
+  "topic": "networking",
+  "subtopic": "url-journey",
+  "concepts": [
+   "redirect",
+   "301",
+   "https",
+   "url-journey"
+  ],
+  "level": "medium",
+  "q": "You type http://shop.example. The server answers 301 with Location: https://shop.example/. What happens next?",
+  "options": [
+   "The browser shows an error, since a 3xx code means the request failed",
+   "The page is already inside the 301 response, so the browser just shows it",
+   "The browser switches the same port 80 connection to encrypted in place",
+   "The browser sends a new request to the https address, this time over TLS"
+  ],
+  "answer": 3,
+  "why": "A 301 says the resource lives at another URL for good. The browser follows the Location header and makes a new request there. An https URL means port 443 and a TLS handshake, so a new secure connection is set up.",
+  "wrong": [
+   "3xx codes are redirects, not failures. Errors are 4xx and 5xx.",
+   "A redirect response points elsewhere. The page itself comes from the follow-up request.",
+   "http and https normally use different ports (80 and 443). The browser opens a separate connection and runs TLS on it.",
+   null
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/301",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מקלידים http://shop.example. השרת עונה 301 עם Location: https://shop.example/. מה יקרה?",
+   "options": [
+    "הדפדפן מציג שגיאה, כי קוד 3xx אומר שה-request נכשל",
+    "הדף כבר נמצא בתוך ה-response של 301, אז הדפדפן פשוט מציג אותו",
+    "הדפדפן הופך את אותו חיבור בפורט 80 למוצפן במקום",
+    "הדפדפן שולח request חדש לכתובת https, והפעם מעל TLS"
+   ],
+   "why": "301 אומר שה-resource נמצא באופן קבוע ב-URL אחר. הדפדפן הולך לפי ה-header Location ושולח לשם request חדש. URL של https פירושו פורט 443 ו-TLS handshake, ולכן מוקם חיבור מאובטח חדש.",
+   "wrong": [
+    "קודי 3xx הם הפניות, לא כישלונות. שגיאות הן 4xx ו-5xx.",
+    "response של הפניה מצביע למקום אחר. הדף עצמו מגיע מה-request שבא אחריו.",
+    "http ו-https משתמשים בדרך כלל בפורטים שונים (80 ו-443). הדפדפן פותח חיבור נפרד ומריץ עליו TLS.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "networking-url-connection-reuse",
+  "topic": "networking",
+  "subtopic": "url-journey",
+  "concepts": [
+   "connection-reuse",
+   "keep-alive",
+   "latency",
+   "round-trip"
+  ],
+  "level": "hard",
+  "q": "A page on https://shop.example has loaded. Seconds later the user clicks a link to another page on the same site. Why does the new request usually start faster?",
+  "options": [
+   "The server remembers the user from the last request and skips its own work",
+   "It reuses the open connection, so DNS, TCP and TLS setup are skipped",
+   "The second page is served from the HTTP cache without contacting the server",
+   "The browser switches to UDP once a site is known, which avoids handshakes"
+  ],
+  "answer": 1,
+  "why": "Setting up a connection costs round trips: a DNS lookup, the TCP handshake and the TLS handshake. Browsers keep connections open for a while, so a request to the same host right after can go out at once on the existing one.",
+  "wrong": [
+   "HTTP is stateless, so the server does not skip its work. The saving is in setup before the request.",
+   null,
+   "This page was never fetched, so there is nothing cached to show. The request still goes to the server.",
+   "HTTP over TCP does not switch protocols per visit. The speedup comes from keeping the TCP and TLS connection open."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Connection_management_in_HTTP_1.x",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "דף ב-https://shop.example סיים להיטען. כמה שניות אחר כך המשתמש לוחץ על קישור לדף אחר באותו אתר. למה ה-request החדש בדרך כלל מתחיל מהר יותר?",
+   "options": [
+    "השרת זוכר את המשתמש מה-request הקודם ומדלג על העבודה שלו",
+    "הוא משתמש מחדש בחיבור הפתוח, כך שמדלגים על הקמת DNS, TCP ו-TLS",
+    "הדף השני מוגש מה-cache של HTTP בלי לפנות לשרת",
+    "הדפדפן עובר ל-UDP ברגע שהאתר מוכר, וכך נחסכים handshakes"
+   ],
+   "why": "הקמת חיבור עולה round trips: חיפוש DNS, ה-handshake של TCP וה-handshake של TLS. דפדפנים משאירים חיבורים פתוחים לזמן מה, כך ש-request לאותו host זמן קצר אחר כך יכול לצאת מיד על החיבור הקיים.",
+   "wrong": [
+    "HTTP הוא stateless, ולכן השרת לא מדלג על העבודה שלו. החיסכון הוא בהקמה שלפני ה-request.",
+    null,
+    "הדף הזה מעולם לא הורד, אז אין שום דבר ב-cache להציג. ה-request עדיין מגיע לשרת.",
+    "HTTP מעל TCP לא מחליף פרוטוקול בכל ביקור. ההאצה מגיעה מכך שחיבור ה-TCP וה-TLS נשאר פתוח."
+   ]
+  }
+ },
+ {
+  "id": "networking-tcp-file-download",
+  "topic": "networking",
+  "subtopic": "tcp-udp",
+  "concepts": [
+   "tcp",
+   "reliability",
+   "ordering"
+  ],
+  "level": "easy",
+  "q": "A user downloads a 2 GB installer. Why is this transfer done over TCP rather than UDP?",
+  "options": [
+   "TCP is faster than UDP for every kind of traffic",
+   "TCP encrypts the bytes, so nobody can tamper with the installer",
+   "UDP cannot send anything larger than a single packet",
+   "Every byte must arrive, in order, and TCP resends what is lost"
+  ],
+  "answer": 3,
+  "why": "A file with one missing or swapped chunk is broken. TCP numbers the bytes, has the receiver acknowledge them, resends what is lost and hands the data to the app in order, so the program does not have to build that itself.",
+  "wrong": [
+   "TCP's acknowledgements and resends add work. For loss-tolerant live data UDP often has lower delay.",
+   "TCP does not encrypt anything. That is TLS, which runs on top of TCP for HTTPS.",
+   "An app can split a file across many UDP packets. It would then have to rebuild ordering and resending itself.",
+   null
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/TCP",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "משתמש מוריד קובץ התקנה של 2 GB. למה ההעברה הזו נעשית מעל TCP ולא מעל UDP?",
+   "options": [
+    "TCP מהיר יותר מ-UDP בכל סוג של תעבורה",
+    "TCP מצפין את ה-bytes, כך שאף אחד לא יכול לשנות את קובץ ההתקנה",
+    "UDP לא יכול לשלוח שום דבר גדול יותר מ-packet בודד",
+    "כל byte חייב להגיע, ובסדר הנכון, ו-TCP שולח מחדש את מה שאבד"
+   ],
+   "why": "קובץ שחסרה בו חתיכה אחת או שחתיכות בו הוחלפו הוא קובץ שבור. TCP ממספר את ה-bytes, הצד המקבל מאשר אותם, TCP שולח מחדש את מה שאבד ומעביר את הנתונים לאפליקציה לפי הסדר, כך שהתוכנה לא צריכה לבנות את זה בעצמה.",
+   "wrong": [
+    "האישורים והשליחות החוזרות של TCP מוסיפים עבודה. בנתונים חיים שסובלים איבוד, ל-UDP יש לעיתים קרובות השהיה נמוכה יותר.",
+    "TCP לא מצפין כלום. זה תפקיד של TLS, שרץ מעל TCP ב-HTTPS.",
+    "אפליקציה יכולה לפצל קובץ להרבה packets של UDP. אבל אז היא צריכה לבנות מחדש בעצמה את הסדר ואת השליחה החוזרת.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "networking-udp-video-call",
+  "topic": "networking",
+  "subtopic": "tcp-udp",
+  "concepts": [
+   "udp",
+   "latency",
+   "real-time"
+  ],
+  "level": "easy",
+  "q": "Most video call apps send audio and video over UDP. What is the main reason?",
+  "options": [
+   "A late audio packet is useless, so skipping it beats waiting for a resend",
+   "UDP keeps packets in the order they were sent, which smooth video depends on",
+   "UDP encrypts the stream by default, which keeps the call private",
+   "UDP does not lose packets as long as the network is fast enough"
+  ],
+  "answer": 0,
+  "why": "In a live call, sound that arrives half a second late is worse than a tiny gap. UDP delivers what it can with no resends and no waiting, and the app hides small losses. TCP would stall the stream to resend old data.",
+  "wrong": [
+   null,
+   "UDP gives no ordering guarantee. Apps add sequence numbers themselves when they need them.",
+   "UDP has no encryption. Calls are encrypted by protocols the app runs on top of it.",
+   "Any network can drop packets, fast or slow. UDP does not detect or fix that."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/UDP",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "רוב אפליקציות שיחות הווידאו שולחות אודיו ווידאו מעל UDP. מה הסיבה העיקרית?",
+   "options": [
+    "packet של אודיו שמגיע באיחור הוא חסר תועלת, ולכן עדיף לדלג עליו מאשר לחכות לשליחה חוזרת",
+    "UDP שומר על ה-packets בסדר שבו נשלחו, ווידאו חלק תלוי בזה",
+    "UDP מצפין את השידור כברירת מחדל, וכך השיחה נשארת פרטית",
+    "UDP לא מאבד packets כל עוד הרשת מהירה מספיק"
+   ],
+   "why": "בשיחה חיה, קול שמגיע חצי שנייה באיחור גרוע יותר מפער קטנטן. UDP מעביר מה שהוא יכול, בלי שליחות חוזרות ובלי המתנה, והאפליקציה מסתירה איבודים קטנים. TCP היה עוצר את השידור כדי לשלוח מחדש נתונים ישנים.",
+   "wrong": [
+    null,
+    "UDP לא מבטיח שום סדר. אפליקציות מוסיפות מספרים סידוריים בעצמן כשהן צריכות.",
+    "ל-UDP אין הצפנה. השיחות מוצפנות על ידי פרוטוקולים שהאפליקציה מריצה מעליו.",
+    "כל רשת יכולה לאבד packets, מהירה או איטית. UDP לא מזהה את זה ולא מתקן."
+   ]
+  }
+ },
+ {
+  "id": "networking-tcp-reliable-meaning",
+  "topic": "networking",
+  "subtopic": "tcp-udp",
+  "concepts": [
+   "tcp",
+   "reliability",
+   "failure"
+  ],
+  "level": "medium",
+  "q": "An upload over TCP is running when the Wi-Fi drops for several hours. What does TCP's \"reliable delivery\" mean in this situation?",
+  "options": [
+   "The data waits inside the network and is delivered as soon as the Wi-Fi returns",
+   "TCP resends lost data for a while, then gives up and the app gets an error",
+   "Lost bytes are skipped so the upload still finishes, just with gaps",
+   "The OS saves the upload and resumes it on a new connection by itself"
+  ],
+  "answer": 1,
+  "why": "Reliable means TCP detects loss through missing acknowledgements and resends while the path might come back. It cannot deliver over a dead network: after enough failed tries the connection breaks and the program sees an error it must handle.",
+  "wrong": [
+   "Routers do not hold your data for minutes. Unacknowledged data stays with the sender, which keeps retrying.",
+   null,
+   "TCP never hands over a stream with holes. Skipping lost data is UDP-style behaviour.",
+   "Resuming on a new connection is the application's job, for example by asking the server which bytes it has."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/TCP",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "העלאה מעל TCP רצה, וה-Wi-Fi נופל לכמה שעות. מה המשמעות של \"מסירה אמינה\" של TCP במצב הזה?",
+   "options": [
+    "הנתונים מחכים בתוך הרשת ונמסרים ברגע שה-Wi-Fi חוזר",
+    "TCP שולח מחדש נתונים שאבדו למשך זמן מה, ואז מוותר והאפליקציה מקבלת שגיאה",
+    "מדלגים על ה-bytes שאבדו כדי שההעלאה עדיין תסתיים, רק עם חורים",
+    "מערכת ההפעלה שומרת את ההעלאה וממשיכה אותה בעצמה על חיבור חדש"
+   ],
+   "why": "אמינות פירושה ש-TCP מזהה איבוד לפי אישורים שלא הגיעו, ושולח מחדש כל עוד הנתיב עשוי לחזור. הוא לא יכול למסור מעל רשת מתה: אחרי מספיק ניסיונות כושלים החיבור נשבר והתוכנה מקבלת שגיאה שהיא צריכה לטפל בה.",
+   "wrong": [
+    "נתבים לא מחזיקים נתונים במשך דקות. נתונים שלא אושרו נשארים אצל השולח, שממשיך לנסות.",
+    null,
+    "TCP אף פעם לא מעביר stream עם חורים. דילוג על נתונים שאבדו הוא התנהגות בסגנון UDP.",
+    "המשך על חיבור חדש הוא התפקיד של האפליקציה, למשל לשאול את השרת אילו bytes כבר יש לו."
+   ]
+  }
+ },
+ {
+  "id": "networking-tcp-in-order-delivery",
+  "topic": "networking",
+  "subtopic": "tcp-udp",
+  "concepts": [
+   "tcp",
+   "ordering",
+   "byte-stream"
+  ],
+  "level": "medium",
+  "q": "On one TCP connection the sender writes \"AB\" and then \"CD\". The packet with CD arrives before the packet with AB. What does the receiving program read?",
+  "options": [
+   "CDAB, because data is handed over in arrival order",
+   "Only CD, because the late packet with AB is thrown away",
+   "ABCD, because TCP holds CD back until AB has arrived",
+   "Two separate messages that the program must sort by number"
+  ],
+  "answer": 2,
+  "why": "TCP numbers every byte. When later bytes arrive early, the receiver keeps them in a buffer and passes data to the program only in the original order, so it reads ABCD.",
+  "wrong": [
+   "Putting data back in order is one of TCP's core jobs. The program never sees arrival order.",
+   "A late packet is not a duplicate. TCP accepts it and fills the gap.",
+   null,
+   "TCP gives the program a single ordered stream of bytes, with no message boundaries and nothing to sort."
+  ],
+  "ref": "https://www.rfc-editor.org/rfc/rfc9293.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "על חיבור TCP אחד השולח כותב \"AB\" ואחר כך \"CD\". ה-packet עם CD מגיע לפני ה-packet עם AB. מה התוכנה המקבלת קוראת?",
+   "options": [
+    "CDAB, כי הנתונים מועברים לפי סדר ההגעה",
+    "רק CD, כי ה-packet המאוחר עם AB נזרק",
+    "ABCD, כי TCP מעכב את CD עד ש-AB מגיע",
+    "שתי הודעות נפרדות שהתוכנה צריכה למיין לפי מספר"
+   ],
+   "why": "TCP ממספר כל byte. כש-bytes מאוחרים מגיעים מוקדם, הצד המקבל שומר אותם ב-buffer ומעביר נתונים לתוכנה רק לפי הסדר המקורי, ולכן היא קוראת ABCD.",
+   "wrong": [
+    "החזרת הנתונים לסדר הנכון היא אחד התפקידים המרכזיים של TCP. התוכנה אף פעם לא רואה את סדר ההגעה.",
+    "packet מאוחר הוא לא כפילות. TCP מקבל אותו וממלא את החור.",
+    null,
+    "TCP נותן לתוכנה stream אחד מסודר של bytes, בלי גבולות בין הודעות ובלי שום דבר למיין."
+   ]
+  }
+ },
+ {
+  "id": "networking-tcp-game-head-of-line",
+  "topic": "networking",
+  "subtopic": "tcp-udp",
+  "concepts": [
+   "head-of-line-blocking",
+   "tcp",
+   "udp",
+   "real-time"
+  ],
+  "level": "hard",
+  "q": "A multiplayer game sends player positions over TCP 30 times a second. When a packet is lost, other players freeze for a moment and then jump. What causes this?",
+  "options": [
+   "TCP opens a new connection with a handshake for every position update",
+   "Routers always serve UDP first, so TCP packets wait in their queues",
+   "TCP encrypts each packet, and the extra work delays every update",
+   "TCP delivers in order, so one lost packet holds back newer updates"
+  ],
+  "answer": 3,
+  "why": "The receiver cannot see any data after a gap until the lost packet is resent, even though the newer positions have already arrived and make the old one useless. That wait is head-of-line blocking, and it is why games often use UDP and just keep the latest update.",
+  "wrong": [
+   "One TCP connection carries all the updates. The handshake happens once, at the start.",
+   "Routers do not give UDP priority by default. The delay is caused by TCP's own ordering.",
+   "TCP itself has no encryption. And a constant cost would not cause sudden freezes.",
+   null
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/Head_of_line_blocking",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "משחק מרובה משתתפים שולח מיקומי שחקנים מעל TCP 30 פעמים בשנייה. כש-packet אובד, שחקנים אחרים קופאים לרגע ואז קופצים. מה גורם לזה?",
+   "options": [
+    "TCP פותח חיבור חדש עם handshake לכל עדכון מיקום",
+    "נתבים תמיד מטפלים קודם ב-UDP, אז packets של TCP מחכים בתור",
+    "TCP מצפין כל packet, והעבודה הנוספת מעכבת כל עדכון",
+    "TCP מוסר לפי הסדר, אז packet אחד שאבד מעכב עדכונים חדשים יותר"
+   ],
+   "why": "הצד המקבל לא יכול לראות שום נתון שאחרי חור עד שה-packet שאבד נשלח מחדש, למרות שהמיקומים החדשים כבר הגיעו והופכים את הישן לחסר תועלת. ההמתנה הזו נקראת head-of-line blocking, ובגללה משחקים משתמשים לעיתים קרובות ב-UDP ופשוט שומרים את העדכון האחרון.",
+   "wrong": [
+    "חיבור TCP אחד מעביר את כל העדכונים. ה-handshake קורה פעם אחת, בהתחלה.",
+    "נתבים לא נותנים עדיפות ל-UDP כברירת מחדל. העיכוב נגרם מהסדר ש-TCP עצמו שומר.",
+    "ל-TCP עצמו אין הצפנה. וחוץ מזה, עלות קבועה לא הייתה גורמת לקפיאות פתאומיות.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "networking-dns-lookup-failed",
+  "topic": "networking",
+  "subtopic": "dns",
+  "concepts": [
+   "dns",
+   "url-journey",
+   "troubleshooting"
+  ],
+  "level": "easy",
+  "q": "Opening shop.example fails at once and the server logs show no request at all, yet the same site loads when you type its IP address. Which step failed?",
+  "options": [
+   "The server returned 404 because the page does not exist",
+   "Turning the hostname into an IP address (DNS)",
+   "The server crashed while it was building the page",
+   "The TLS certificate check found an invalid certificate"
+  ],
+  "answer": 1,
+  "why": "Before the browser can connect it asks DNS for the IP address behind the name. Here that lookup gave no answer, so no connection was even attempted. A typo in the name or a broken resolver are common causes.",
+  "wrong": [
+   "A 404 is a reply from the server, so DNS and the connection must have worked already.",
+   null,
+   "A crash would show as a 5xx code or a dropped connection, which both need the address first.",
+   "The certificate is checked during TLS, after the browser has found and connected to the server."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/DNS",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "פתיחת shop.example נכשלת מיד, ובלוגים של השרת לא מופיע שום request, אבל אותו אתר נטען כשמקלידים את ה-IP address שלו. איזה שלב נכשל?",
+   "options": [
+    "השרת החזיר 404 כי הדף לא קיים",
+    "תרגום ה-hostname ל-IP address (DNS)",
+    "השרת קרס בזמן שבנה את הדף",
+    "בדיקת ה-certificate של TLS מצאה certificate לא תקין"
+   ],
+   "why": "לפני שהדפדפן יכול להתחבר, הוא שואל את DNS מה ה-IP address שמאחורי השם. כאן החיפוש לא החזיר תשובה, ולכן אפילו לא היה ניסיון להתחבר. טעות הקלדה בשם או resolver תקול הם סיבות נפוצות.",
+   "wrong": [
+    "404 הוא תשובה מהשרת, אז DNS והחיבור כבר עבדו.",
+    null,
+    "קריסה הייתה מופיעה כקוד 5xx או כחיבור שנפל, ושניהם צריכים את הכתובת קודם.",
+    "ה-certificate נבדק במהלך TLS, אחרי שהדפדפן כבר מצא את השרת והתחבר אליו."
+   ]
+  }
+ },
+ {
+  "id": "networking-dns-ttl-cache",
+  "topic": "networking",
+  "subtopic": "dns",
+  "concepts": [
+   "dns",
+   "caching",
+   "ttl"
+  ],
+  "level": "medium",
+  "q": "You move a site to a new server and point its DNS record at the new IP. For a few hours some users still reach the old server. Why?",
+  "options": [
+   "Resolvers cached the old answer and keep using it until its TTL runs out",
+   "DNS records around the world are only refreshed once a day, at midnight",
+   "Their browsers cached the HTML, and the IP address is stored inside it",
+   "Routers on the Internet route by domain name and need hours to relearn it"
+  ],
+  "answer": 0,
+  "why": "Each DNS answer comes with a TTL saying how long it may be cached. Resolvers, the OS and the browser reuse the old IP until that time passes. Lowering the TTL a day before a move makes the switch quicker.",
+  "wrong": [
+   null,
+   "There is no global refresh time. Each cached answer expires on its own TTL.",
+   "HTML does not contain the server's IP. The browser looks the name up through DNS.",
+   "Routers forward by IP address only. Names are turned into addresses by DNS before any packet is sent."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/TTL",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מעבירים אתר לשרת חדש ומפנים את רשומת ה-DNS שלו ל-IP החדש. במשך כמה שעות חלק מהמשתמשים עדיין מגיעים לשרת הישן. למה?",
+   "options": [
+    "resolvers שמרו את התשובה הישנה ב-cache וממשיכים להשתמש בה עד שה-TTL שלה נגמר",
+    "רשומות DNS בכל העולם מתרעננות רק פעם ביום, בחצות",
+    "הדפדפנים שלהם שמרו את ה-HTML ב-cache, וה-IP address שמור בתוכו",
+    "נתבים באינטרנט מנתבים לפי שם דומיין וצריכים שעות כדי ללמוד אותו מחדש"
+   ],
+   "why": "כל תשובת DNS מגיעה עם TTL שאומר כמה זמן מותר לשמור אותה ב-cache. resolvers, מערכת ההפעלה והדפדפן ממשיכים להשתמש ב-IP הישן עד שהזמן הזה עובר. הורדת ה-TTL יום לפני המעבר מזרזת את ההחלפה.",
+   "wrong": [
+    null,
+    "אין זמן רענון גלובלי. כל תשובה ששמורה ב-cache פגה לפי ה-TTL שלה.",
+    "HTML לא מכיל את ה-IP של השרת. הדפדפן מחפש את השם דרך DNS.",
+    "נתבים מעבירים רק לפי IP address. שמות מתורגמים לכתובות על ידי DNS לפני שנשלח packet כלשהו."
+   ]
+  }
+ },
+ {
+  "id": "networking-dns-over-udp",
+  "topic": "networking",
+  "subtopic": "dns",
+  "concepts": [
+   "dns",
+   "udp",
+   "latency"
+  ],
+  "level": "medium",
+  "q": "Why do most DNS lookups use UDP instead of TCP?",
+  "options": [
+   "DNS answers are not very important, so losing a few now and then is acceptable",
+   "Each query and answer fits in one packet, so a handshake only adds delay",
+   "UDP hides the looked-up name from anyone watching the network",
+   "TCP cannot carry DNS messages at all, so UDP is the only choice"
+  ],
+  "answer": 1,
+  "why": "A lookup is one short question and one short answer. A TCP handshake would cost an extra round trip before that. With UDP the resolver just sends the query and, if no answer comes back in time, asks again.",
+  "wrong": [
+   "Lookups matter a lot. A lost one is simply sent again after a timeout.",
+   null,
+   "UDP has no encryption. Plain DNS queries can be read by anyone on the path.",
+   "DNS also runs over TCP, for example when an answer is too large for one UDP message."
+  ],
+  "ref": "https://www.rfc-editor.org/rfc/rfc1035.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למה רוב חיפושי ה-DNS משתמשים ב-UDP ולא ב-TCP?",
+   "options": [
+    "תשובות DNS לא כל כך חשובות, אז מקובל לאבד כמה מהן מדי פעם",
+    "כל query וכל תשובה נכנסים ב-packet אחד, אז handshake רק מוסיף השהיה",
+    "UDP מסתיר את השם שחיפשו מכל מי שצופה ברשת",
+    "TCP בכלל לא יכול להעביר הודעות DNS, אז UDP הוא האפשרות היחידה"
+   ],
+   "why": "חיפוש הוא שאלה קצרה אחת ותשובה קצרה אחת. handshake של TCP היה עולה round trip נוסף לפני כן. עם UDP ה-resolver פשוט שולח את ה-query, ואם לא חוזרת תשובה בזמן, הוא שואל שוב.",
+   "wrong": [
+    "חיפושים חשובים מאוד. חיפוש שאבד פשוט נשלח שוב אחרי timeout.",
+    null,
+    "ל-UDP אין הצפנה. queries רגילים של DNS ניתנים לקריאה על ידי כל מי שנמצא בדרך.",
+    "DNS רץ גם מעל TCP, למשל כשתשובה גדולה מדי להודעת UDP אחת."
+   ]
+  }
+ },
+ {
+  "id": "networking-http-login-post-not-get",
+  "topic": "networking",
+  "subtopic": "http",
+  "concepts": [
+   "get-vs-post",
+   "query-string",
+   "privacy"
+  ],
+  "level": "easy",
+  "q": "A login form sends the username and password. Why should it use POST rather than GET?",
+  "options": [
+   "POST encrypts the request body, while GET sends everything in plain text",
+   "GET has no way to send any data to the server at all",
+   "GET puts the fields in the URL, which ends up in history and logs",
+   "Servers process POST requests faster than GET requests"
+  ],
+  "answer": 2,
+  "why": "With GET, form fields become the query string of the URL. URLs are saved in browser history, server and proxy logs and bookmarks, so the password would be stored in many places. POST sends the fields in the request body.",
+  "wrong": [
+   "Neither method encrypts anything. Only HTTPS does, and it protects GET and POST alike.",
+   "GET sends data in the URL's query string. That is exactly the problem here.",
+   null,
+   "Speed is not the difference. The methods differ in meaning and in where the data travels."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods/POST",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "טופס התחברות שולח שם משתמש וסיסמה. למה הוא צריך להשתמש ב-POST ולא ב-GET?",
+   "options": [
+    "POST מצפין את גוף ה-request, בעוד ש-GET שולח הכול כטקסט גלוי",
+    "ל-GET אין שום דרך לשלוח נתונים לשרת",
+    "GET שם את השדות ב-URL, שמגיע להיסטוריה וללוגים",
+    "שרתים מעבדים requests של POST מהר יותר מ-GET"
+   ],
+   "why": "ב-GET, שדות הטופס הופכים ל-query string של ה-URL. כתובות URL נשמרות בהיסטוריית הדפדפן, בלוגים של שרתים ושל proxies ובסימניות, כך שהסיסמה הייתה נשמרת בהרבה מקומות. POST שולח את השדות בגוף ה-request.",
+   "wrong": [
+    "אף אחת מהשיטות לא מצפינה כלום. רק HTTPS מצפין, והוא מגן על GET ועל POST באותה מידה.",
+    "GET שולח נתונים ב-query string של ה-URL. זו בדיוק הבעיה כאן.",
+    null,
+    "מהירות היא לא ההבדל. השיטות נבדלות במשמעות ובמקום שבו הנתונים עוברים."
+   ]
+  }
+ },
+ {
+  "id": "networking-http-get-must-be-safe",
+  "topic": "networking",
+  "subtopic": "http",
+  "concepts": [
+   "safe-methods",
+   "get",
+   "side-effects"
+  ],
+  "level": "medium",
+  "q": "An admin page deletes an item when its link GET /items/5/delete is followed. Items vanish though the admin clicked nothing, and the logs show the browser prefetching links. Which rule was broken?",
+  "options": [
+   "GET requests must never carry cookies or other login data",
+   "GET should be safe: it should not change data on the server",
+   "Deleting data is only allowed over a connection that uses HTTPS",
+   "A delete must answer 204 No Content, never 200 OK"
+  ],
+  "answer": 1,
+  "why": "Browsers, crawlers and link previews assume GET only reads, so they fetch links freely. Putting a delete behind GET means any of them can trigger it. A state change belongs in DELETE or POST, which these tools do not send on their own.",
+  "wrong": [
+   "GET requests normally do carry cookies. That is how pages know who is logged in.",
+   null,
+   "HTTPS protects the data in transit. It does not stop a prefetch from following the link.",
+   "The status code is not the issue. The problem is that a read method changes data."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/Safe/HTTP",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "דף ניהול מוחק פריט כשעוקבים אחרי הקישור GET /items/5/delete. פריטים נעלמים למרות שהמנהל לא לחץ על כלום, והלוגים מראים שהדפדפן עשה prefetch לקישורים. איזה כלל הופר?",
+   "options": [
+    "requests של GET אסור שיכילו cookies או נתוני התחברות אחרים",
+    "GET צריך להיות safe: הוא לא אמור לשנות נתונים בשרת",
+    "מחיקת נתונים מותרת רק על חיבור שמשתמש ב-HTTPS",
+    "מחיקה חייבת לענות 204 No Content, אף פעם לא 200 OK"
+   ],
+   "why": "דפדפנים, crawlers ותצוגות מקדימות של קישורים מניחים ש-GET רק קורא, ולכן הם ניגשים לקישורים בחופשיות. כשמחיקה יושבת מאחורי GET, כל אחד מהם יכול להפעיל אותה. שינוי state שייך ל-DELETE או ל-POST, שהכלים האלה לא שולחים מעצמם.",
+   "wrong": [
+    "requests של GET כן מכילים cookies בדרך כלל. ככה דפים יודעים מי מחובר.",
+    null,
+    "HTTPS מגן על הנתונים בזמן המעבר. הוא לא מונע מ-prefetch לעקוב אחרי הקישור.",
+    "ה-status code הוא לא העניין. הבעיה היא ש-method של קריאה משנה נתונים."
+   ]
+  }
+ },
+ {
+  "id": "networking-http-retry-idempotent",
+  "topic": "networking",
+  "subtopic": "http",
+  "concepts": [
+   "idempotency",
+   "retries",
+   "timeouts"
+  ],
+  "level": "medium",
+  "q": "A mobile app's request times out, and the app cannot tell whether the server handled it. Which request can it simply send again without risking a doubled effect?",
+  "options": [
+   "PUT /users/7/email with the new address",
+   "PATCH /accounts/7 with {\"addCredit\": 10}",
+   "POST /orders with the contents of the cart",
+   "Any of these: HTTP drops repeated requests by itself"
+  ],
+  "answer": 0,
+  "why": "PUT sets a resource to a given value, so doing it twice leaves the same state as doing it once: it is idempotent. Repeating a POST that creates something, or a change that adds an amount, applies the effect twice.",
+  "wrong": [
+   null,
+   "Adding 10 twice gives 20. A change that is relative to the current value is not idempotent.",
+   "Each POST /orders may create one more order, so a retry can place a duplicate order.",
+   "HTTP has no built-in duplicate detection. APIs add idempotency keys when POST must be safe to retry."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/Idempotent",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "request של אפליקציית מובייל נתקל ב-timeout, והאפליקציה לא יודעת אם השרת טיפל בו. איזה request אפשר פשוט לשלוח שוב בלי סיכון לאפקט כפול?",
+   "options": [
+    "PUT /users/7/email עם הכתובת החדשה",
+    "PATCH /accounts/7 עם {\"addCredit\": 10}",
+    "POST /orders עם תוכן העגלה",
+    "כל אחד מהם: HTTP מסנן requests חוזרים בעצמו"
+   ],
+   "why": "PUT קובע ל-resource ערך מסוים, אז ביצוע פעמיים משאיר את אותו state כמו ביצוע פעם אחת: הוא idempotent. חזרה על POST שיוצר משהו, או על שינוי שמוסיף סכום, מפעילה את האפקט פעמיים.",
+   "wrong": [
+    null,
+    "הוספה של 10 פעמיים נותנת 20. שינוי שתלוי בערך הנוכחי הוא לא idempotent.",
+    "כל POST /orders עשוי ליצור הזמנה נוספת, אז ניסיון חוזר יכול ליצור הזמנה כפולה.",
+    "ל-HTTP אין זיהוי כפילויות מובנה. APIs מוסיפים idempotency keys כשצריך שיהיה בטוח לנסות שוב POST."
+   ]
+  }
+ },
+ {
+  "id": "networking-http-delete-idempotent-404",
+  "topic": "networking",
+  "subtopic": "http",
+  "concepts": [
+   "idempotency",
+   "delete",
+   "safe-methods"
+  ],
+  "level": "hard",
+  "q": "DELETE /items/9 returns 204. The client missed the reply and sends the same DELETE again, which now returns 404. Is DELETE idempotent here?",
+  "options": [
+   "No: the second call returned a different status code",
+   "Yes: the item ends up gone either way, and the end state is what counts",
+   "No: only methods that change nothing on the server, like GET, are idempotent",
+   "Yes, because DELETE is a safe method"
+  ],
+  "answer": 1,
+  "why": "Idempotent means repeating a request leaves the server in the same state as sending it once. The responses may differ: the first DELETE removes the item, the second finds nothing, and either way the item is gone.",
+  "wrong": [
+   "Idempotency is about the effect on the server, not about getting identical responses.",
+   null,
+   "That describes safe methods. PUT and DELETE change data and are still idempotent.",
+   "DELETE is not safe, since it changes data. Safe and idempotent are different properties."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/Idempotent",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "DELETE /items/9 מחזיר 204. ה-client פספס את התשובה ושולח שוב את אותו DELETE, שעכשיו מחזיר 404. האם DELETE הוא idempotent כאן?",
+   "options": [
+    "לא: הקריאה השנייה החזירה status code אחר",
+    "כן: הפריט נעלם בכל מקרה, ומה שקובע הוא ה-state הסופי",
+    "לא: רק methods שלא משנים כלום בשרת, כמו GET, הם idempotent",
+    "כן, כי DELETE היא method שהיא safe"
+   ],
+   "why": "idempotent פירושו שחזרה על request משאירה את השרת באותו state כמו שליחה אחת. ה-responses יכולים להיות שונים: ה-DELETE הראשון מוחק את הפריט, השני לא מוצא כלום, ובכל מקרה הפריט נעלם.",
+   "wrong": [
+    "idempotency עוסקת באפקט על השרת, לא בקבלת responses זהים.",
+    null,
+    "זה התיאור של safe methods. PUT ו-DELETE משנים נתונים ועדיין הם idempotent.",
+    "DELETE הוא לא safe, כי הוא משנה נתונים. safe ו-idempotent הן תכונות שונות."
+   ]
+  }
+ },
+ {
+  "id": "networking-http-status-403",
+  "topic": "networking",
+  "subtopic": "http",
+  "concepts": [
+   "status-codes",
+   "403",
+   "401",
+   "authorization"
+  ],
+  "level": "easy",
+  "q": "Dana is logged in with a valid token, but she is not an admin. She calls GET /admin/reports. Which response fits?",
+  "options": [
+   "401 Unauthorized, because she lacks the admin rights",
+   "200 OK with an empty report, so the client does not break",
+   "400 Bad Request, because the request asks for too much",
+   "403 Forbidden, since she is identified but not allowed"
+  ],
+  "answer": 3,
+  "why": "The server knows who Dana is; she is just not allowed to see this. That is 403. 401 is for a request with missing or invalid credentials, where logging in again could help.",
+  "wrong": [
+   "Despite its name, 401 means the server could not identify the caller. Dana's token is valid.",
+   "A 200 tells the client it may see the reports and there are none. That hides a permission problem as success.",
+   "The request is well-formed. Nothing about its syntax or fields needs fixing.",
+   null
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/403",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "דנה מחוברת עם token תקין, אבל היא לא admin. היא קוראת ל-GET /admin/reports. איזה response מתאים?",
+   "options": [
+    "401 Unauthorized, כי חסרות לה הרשאות admin",
+    "200 OK עם דוח ריק, כדי שה-client לא יישבר",
+    "400 Bad Request, כי ה-request מבקש יותר מדי",
+    "403 Forbidden, כי היא מזוהה אך לא מורשית"
+   ],
+   "why": "השרת יודע מי דנה, פשוט אסור לה לראות את זה. זה 403. 401 מיועד ל-request עם credentials חסרים או לא תקינים, שבו התחברות מחדש יכולה לעזור.",
+   "wrong": [
+    "למרות השם, 401 אומר שהשרת לא הצליח לזהות את מי שקורא. ה-token של דנה תקין.",
+    "200 אומר ל-client שמותר לו לראות את הדוחות ושאין כאלה. זה מסתיר בעיית הרשאות כהצלחה.",
+    "ה-request בנוי נכון. אין בתחביר או בשדות שלו שום דבר שצריך לתקן.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "networking-http-status-500-server-bug",
+  "topic": "networking",
+  "subtopic": "http",
+  "concepts": [
+   "status-codes",
+   "500",
+   "4xx-vs-5xx"
+  ],
+  "level": "easy",
+  "q": "A request has valid JSON and every required field. While saving it, a bug in the server code throws an exception. Which status should the client get?",
+  "options": [
+   "400 Bad Request, since this request is what triggered the error",
+   "404 Not Found, since the record was never saved",
+   "500 Internal Server Error, since the server's code failed",
+   "503 Service Unavailable, since the save did not go through"
+  ],
+  "answer": 2,
+  "why": "4xx codes say the client must change something. 5xx codes say the server failed. Here the request is fine and the server's own code broke, so 500 is the honest answer.",
+  "wrong": [
+   "Nothing in the request is wrong, so a 400 would send the client looking for a problem that is not there.",
+   "404 means the URL does not point to anything. The endpoint exists and was reached.",
+   null,
+   "503 means the server is overloaded or down for maintenance and should be tried later. This is a bug."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/500",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "request מכיל JSON תקין ואת כל השדות הנדרשים. בזמן השמירה, bug בקוד של השרת זורק exception. איזה status ה-client צריך לקבל?",
+   "options": [
+    "400 Bad Request, כי ה-request הזה הוא מה שגרם לשגיאה",
+    "404 Not Found, כי הרשומה לא נשמרה",
+    "500 Internal Server Error, כי הקוד של השרת נכשל",
+    "503 Service Unavailable, כי השמירה לא הצליחה"
+   ],
+   "why": "קודי 4xx אומרים שה-client צריך לשנות משהו. קודי 5xx אומרים שהשרת נכשל. כאן ה-request תקין והקוד של השרת עצמו נשבר, ולכן 500 היא התשובה הכנה.",
+   "wrong": [
+    "אין שום דבר לא תקין ב-request, אז 400 היה שולח את ה-client לחפש בעיה שלא קיימת.",
+    "404 אומר שה-URL לא מצביע על כלום. ה-endpoint קיים והגיעו אליו.",
+    null,
+    "503 אומר שהשרת עמוס או מושבת לתחזוקה וכדאי לנסות שוב מאוחר יותר. כאן מדובר ב-bug."
+   ]
+  }
+ },
+ {
+  "id": "networking-http-status-429-rate-limit",
+  "topic": "networking",
+  "subtopic": "http",
+  "concepts": [
+   "status-codes",
+   "429",
+   "rate-limiting"
+  ],
+  "level": "medium",
+  "q": "An API allows 100 requests per minute per key. One key sends its 101st request within the minute. Which response fits best?",
+  "options": [
+   "503 Service Unavailable, since the server will not serve it now",
+   "429 Too Many Requests, ideally with a Retry-After header",
+   "403 Forbidden, since this key may not use the API",
+   "400 Bad Request, since the request breaks the API's rules"
+  ],
+  "answer": 1,
+  "why": "429 tells this one client it is sending too fast, and Retry-After can say when to try again. The request itself is fine and the server is healthy for everyone else.",
+  "wrong": [
+   "503 says the server cannot serve anyone right now. Here only one key went over its limit.",
+   null,
+   "403 means the caller is not allowed at all. This key is allowed again once the minute is over.",
+   "The request is well-formed. The problem is how many requests came, not what this one says."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/429",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "API מרשה 100 requests בדקה לכל key. key אחד שולח את ה-request ה-101 שלו בתוך הדקה. איזה response הכי מתאים?",
+   "options": [
+    "503 Service Unavailable, כי השרת לא ישרת אותו עכשיו",
+    "429 Too Many Requests, רצוי עם header של Retry-After",
+    "403 Forbidden, כי ל-key הזה אסור להשתמש ב-API",
+    "400 Bad Request, כי ה-request מפר את הכללים של ה-API"
+   ],
+   "why": "429 אומר ל-client הספציפי הזה שהוא שולח מהר מדי, ו-Retry-After יכול לומר מתי לנסות שוב. ה-request עצמו תקין, והשרת עובד כרגיל עבור כל השאר.",
+   "wrong": [
+    "503 אומר שהשרת לא יכול לשרת אף אחד כרגע. כאן רק key אחד עבר את המגבלה שלו.",
+    null,
+    "403 אומר שלמי שקורא אסור בכלל. ל-key הזה שוב מותר ברגע שהדקה נגמרת.",
+    "ה-request בנוי נכון. הבעיה היא כמה requests הגיעו, לא מה ה-request הזה אומר."
+   ]
+  }
+ },
+ {
+  "id": "networking-http-status-304-cache",
+  "topic": "networking",
+  "subtopic": "http",
+  "concepts": [
+   "status-codes",
+   "304",
+   "caching",
+   "etag"
+  ],
+  "level": "medium",
+  "q": "The browser already has logo.png cached with the ETag \"v42\". After this exchange, what does it show?",
+  "code": "GET /logo.png HTTP/1.1\nHost: shop.example\nIf-None-Match: \"v42\"\n\nHTTP/1.1 304 Not Modified\nETag: \"v42\"",
+  "lang": "http",
+  "options": [
+   "Its cached copy, since the image was not sent again",
+   "A broken image, since the 304 response has no body",
+   "The image from a new URL, since 3xx codes are redirects",
+   "A fresh copy, after a second GET for the full image"
+  ],
+  "answer": 0,
+  "why": "If-None-Match asks the server to send the image only if it changed since version \"v42\". 304 Not Modified means it has not, so no body is sent and the browser uses the copy it already holds. That saves the download.",
+  "wrong": [
+   null,
+   "An empty body is the point of 304. The content is already in the browser's cache.",
+   "304 belongs to the 3xx class but redirects nowhere. It has no Location and means \"use your copy\".",
+   "No second request is needed. The 304 already confirms the cached copy is current."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/304",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "לדפדפן כבר יש את logo.png ב-cache עם ה-ETag \"v42\". אחרי חילופי ההודעות האלה, מה הוא מציג?",
+   "options": [
+    "את העותק שלו מה-cache, כי התמונה לא נשלחה שוב",
+    "תמונה שבורה, כי ל-response של 304 אין גוף",
+    "את התמונה מ-URL חדש, כי קודי 3xx הם הפניות",
+    "עותק טרי, אחרי GET נוסף לתמונה המלאה"
+   ],
+   "why": "If-None-Match מבקש מהשרת לשלוח את התמונה רק אם היא השתנתה מאז גרסה \"v42\". 304 Not Modified אומר שהיא לא השתנתה, ולכן לא נשלח גוף והדפדפן משתמש בעותק שכבר יש לו. זה חוסך את ההורדה.",
+   "wrong": [
+    null,
+    "גוף ריק הוא כל הרעיון של 304. התוכן כבר נמצא ב-cache של הדפדפן.",
+    "304 שייך למחלקת 3xx אבל לא מפנה לשום מקום. אין לו Location, והוא אומר \"להשתמש בעותק הקיים\".",
+    "אין צורך ב-request נוסף. ה-304 כבר מאשר שהעותק ב-cache עדכני."
+   ]
+  }
+ },
+ {
+  "id": "networking-rest-create-201",
+  "topic": "networking",
+  "subtopic": "rest",
+  "concepts": [
+   "rest",
+   "status-codes",
+   "201",
+   "post"
+  ],
+  "level": "easy",
+  "q": "POST /users creates a new user, and the server gives it id 42. Which response fits best?",
+  "options": [
+   "200 OK with an empty body, since the request worked as intended",
+   "204 No Content, since the client already knows what it sent",
+   "302 Found, sending the client on to /users/42 to read the user",
+   "201 Created, with a Location header for /users/42"
+  ],
+  "answer": 3,
+  "why": "201 says a new resource was created, and the Location header tells the client where it lives. The client needs that, because the server picked the id.",
+  "wrong": [
+   "200 only says the request succeeded. With an empty body the client never learns the new id.",
+   "The client does not know the id the server chose, and 204 has no body to carry it.",
+   "302 is a redirect for a resource found elsewhere. It does not report that something was created.",
+   null
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/201",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "POST /users יוצר משתמש חדש, והשרת נותן לו id 42. איזה response הכי מתאים?",
+   "options": [
+    "200 OK עם גוף ריק, כי ה-request עבד כמו שצריך",
+    "204 No Content, כי ה-client כבר יודע מה הוא שלח",
+    "302 Found, שמפנה את ה-client ל-/users/42 כדי לקרוא את המשתמש",
+    "201 Created, עם header של Location ל-/users/42"
+   ],
+   "why": "201 אומר שנוצר resource חדש, וה-header Location אומר ל-client איפה הוא נמצא. ה-client צריך את זה, כי השרת הוא שבחר את ה-id.",
+   "wrong": [
+    "200 רק אומר שה-request הצליח. עם גוף ריק ה-client אף פעם לא לומד את ה-id החדש.",
+    "ה-client לא יודע איזה id השרת בחר, ול-204 אין גוף שיכול להעביר אותו.",
+    "302 הוא הפניה ל-resource שנמצא במקום אחר. הוא לא מדווח שמשהו נוצר.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "networking-rest-delete-resource-url",
+  "topic": "networking",
+  "subtopic": "rest",
+  "concepts": [
+   "rest",
+   "resource-urls",
+   "http-methods"
+  ],
+  "level": "easy",
+  "q": "Which request best follows REST style for deleting order 7?",
+  "options": [
+   "DELETE /orders/7",
+   "GET /orders/7/delete",
+   "POST /deleteOrder?id=7",
+   "DELETE /orders with the body {\"id\": 7}"
+  ],
+  "answer": 0,
+  "why": "In REST the URL names the resource and the HTTP method says what to do with it. /orders/7 is order 7, and DELETE is the action, so no verb belongs in the path.",
+  "wrong": [
+   null,
+   "GET must not change anything. Browsers and crawlers may follow such a link on their own.",
+   "That puts the action in the URL, RPC style. In REST the method carries the action.",
+   "DELETE /orders targets the whole collection. The order to delete belongs in the URL."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/REST",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "איזה request הכי מתאים לסגנון REST כדי למחוק את הזמנה מספר 7?",
+   "options": [
+    "DELETE /orders/7",
+    "GET /orders/7/delete",
+    "POST /deleteOrder?id=7",
+    "DELETE /orders עם הגוף {\"id\": 7}"
+   ],
+   "why": "ב-REST ה-URL נותן שם ל-resource, וה-HTTP method אומרת מה לעשות איתו. /orders/7 היא הזמנה מספר 7, ו-DELETE הוא הפעולה, ולכן אין מקום לפועל בתוך ה-path.",
+   "wrong": [
+    null,
+    "GET אסור שישנה משהו. דפדפנים ו-crawlers עשויים לעקוב אחרי קישור כזה מעצמם.",
+    "זה שם את הפעולה בתוך ה-URL, בסגנון RPC. ב-REST ה-method היא שנושאת את הפעולה.",
+    "DELETE /orders מכוון לכל האוסף. ההזמנה שצריך למחוק שייכת ל-URL."
+   ]
+  }
+ },
+ {
+  "id": "networking-rest-patch-vs-put",
+  "topic": "networking",
+  "subtopic": "rest",
+  "concepts": [
+   "rest",
+   "patch",
+   "put",
+   "partial-update"
+  ],
+  "level": "medium",
+  "q": "User 42 has a name, an email and a phone number. A settings screen changes only the email and sends just that field. Which request fits?",
+  "options": [
+   "PUT /users/42 with only {\"email\": \"new@mail.example\"}",
+   "POST /users with {\"email\": \"new@mail.example\"}",
+   "PATCH /users/42 with {\"email\": \"new@mail.example\"}",
+   "GET /users/42?email=new@mail.example"
+  ],
+  "answer": 2,
+  "why": "PATCH applies a partial change to a resource, so the fields that are not mentioned stay as they are. PUT is meant to replace the whole resource with the body it carries.",
+  "wrong": [
+   "PUT replaces the user with what it receives. A body with only the email may wipe the name and phone.",
+   "POST /users creates a new user. It does not update user 42.",
+   null,
+   "GET must not change data, and the email would end up in logs and history as part of the URL."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods/PATCH",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למשתמש 42 יש שם, email ומספר טלפון. מסך הגדרות משנה רק את ה-email ושולח רק את השדה הזה. איזה request מתאים?",
+   "options": [
+    "PUT /users/42 עם {\"email\": \"new@mail.example\"} בלבד",
+    "POST /users עם {\"email\": \"new@mail.example\"}",
+    "PATCH /users/42 עם {\"email\": \"new@mail.example\"}",
+    "GET /users/42?email=new@mail.example"
+   ],
+   "why": "PATCH מחיל שינוי חלקי על resource, כך שהשדות שלא הוזכרו נשארים כמו שהם. PUT נועד להחליף את כל ה-resource בגוף שהוא מביא.",
+   "wrong": [
+    "PUT מחליף את המשתמש במה שהוא מקבל. גוף עם email בלבד עלול למחוק את השם ואת הטלפון.",
+    "POST /users יוצר משתמש חדש. הוא לא מעדכן את משתמש 42.",
+    null,
+    "GET אסור שישנה נתונים, וה-email היה מגיע ללוגים ולהיסטוריה כחלק מה-URL."
+   ]
+  }
+ },
+ {
+  "id": "networking-rest-conflict-409",
+  "topic": "networking",
+  "subtopic": "rest",
+  "concepts": [
+   "rest",
+   "status-codes",
+   "409",
+   "lost-update"
+  ],
+  "level": "medium",
+  "q": "Ana and Ben both open version 3 of a wiki page. Ana saves, making version 4. Ben then saves his edit, still based on version 3. Which response fits Ben's save?",
+  "options": [
+   "200 OK, saving Ben's page over Ana's, since the last write should win",
+   "400 Bad Request",
+   "500 Internal Server Error",
+   "409 Conflict, so Ben can review Ana's changes first"
+  ],
+  "answer": 3,
+  "why": "Ben's request is valid, but it clashes with the page's current state: saving it would silently erase Ana's work. 409 tells the client about the clash so it can fetch the latest version and merge.",
+  "wrong": [
+   "Accepting it loses Ana's edit without anyone noticing, the classic lost update.",
+   "Ben's request is well-formed. A minute earlier the same request would have been accepted.",
+   "Nothing failed on the server. It detected a conflict between two users on purpose.",
+   null
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/409",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אנה ובן פותחים שניהם את גרסה 3 של דף wiki. אנה שומרת ויוצרת את גרסה 4. אחר כך בן שומר את העריכה שלו, שעדיין מבוססת על גרסה 3. איזה response מתאים לשמירה של בן?",
+   "options": [
+    "200 OK, ושמירת הדף של בן מעל זה של אנה, כי הכתיבה האחרונה צריכה לנצח",
+    "400 Bad Request",
+    "500 Internal Server Error",
+    "409 Conflict, כדי שבן יוכל לעבור קודם על השינויים של אנה"
+   ],
+   "why": "ה-request של בן תקין, אבל הוא מתנגש ב-state הנוכחי של הדף: שמירה שלו הייתה מוחקת בשקט את העבודה של אנה. 409 מודיע ל-client על ההתנגשות כדי שיוכל להביא את הגרסה האחרונה ולמזג.",
+   "wrong": [
+    "קבלת השמירה מאבדת את העריכה של אנה בלי שאף אחד ישים לב, ה-lost update הקלאסי.",
+    "ה-request של בן בנוי נכון. דקה קודם אותו request בדיוק היה מתקבל.",
+    "שום דבר לא נכשל בשרת. הוא זיהה בכוונה התנגשות בין שני משתמשים.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "networking-cookie-session-id",
+  "topic": "networking",
+  "subtopic": "cookies-sessions",
+  "concepts": [
+   "cookies",
+   "sessions",
+   "stateless-http"
+  ],
+  "level": "easy",
+  "q": "HTTP is stateless. After Maya logs in, how does the server know that her next request comes from her?",
+  "options": [
+   "It recognizes her TCP connection, which stays open for the whole visit",
+   "It knows her by her IP address, which belongs to her alone",
+   "A cookie holding a session id, which the browser sends back each time",
+   "It assumes each request comes from whoever sent the request just before"
+  ],
+  "answer": 2,
+  "why": "At login the server stores a session and sends its id in a cookie. The browser attaches that cookie to every later request to the same site, so the server can look the session up and know who is asking.",
+  "wrong": [
+   "Connections close and reopen during a visit, and one connection is not a user identity.",
+   "Many users can share one public IP, and one user's IP can change. It does not identify a person.",
+   null,
+   "A server handles many users at once. Without a cookie or token, requests carry no link to each other."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "HTTP הוא stateless. אחרי שמאיה מתחברת, איך השרת יודע שה-request הבא שלה מגיע ממנה?",
+   "options": [
+    "הוא מזהה את חיבור ה-TCP שלה, שנשאר פתוח לאורך כל הביקור",
+    "הוא מזהה אותה לפי ה-IP address שלה, ששייך רק לה",
+    "cookie שמכיל session id, שהדפדפן שולח בחזרה בכל פעם",
+    "הוא מניח שכל request מגיע ממי ששלח את ה-request שלפניו"
+   ],
+   "why": "בהתחברות השרת שומר session ושולח את ה-id שלו ב-cookie. הדפדפן מצרף את ה-cookie הזה לכל request מאוחר יותר לאותו אתר, כך שהשרת יכול למצוא את ה-session ולדעת מי שואל.",
+   "wrong": [
+    "חיבורים נסגרים ונפתחים מחדש במהלך ביקור, וחיבור אחד הוא לא זהות של משתמש.",
+    "הרבה משתמשים יכולים לחלוק IP ציבורי אחד, וה-IP של משתמש אחד יכול להשתנות. הוא לא מזהה אדם.",
+    null,
+    "שרת מטפל בהרבה משתמשים בו-זמנית. בלי cookie או token, אין שום קשר בין requests."
+   ]
+  }
+ },
+ {
+  "id": "networking-session-vs-token-revoke",
+  "topic": "networking",
+  "subtopic": "cookies-sessions",
+  "concepts": [
+   "sessions",
+   "tokens",
+   "revocation"
+  ],
+  "level": "medium",
+  "q": "A user reports a stolen laptop, and support must end that login right away. Which setup makes this easiest?",
+  "options": [
+   "Server-side sessions: delete the session record on the server",
+   "Self-contained signed tokens: withdraw the token's signature",
+   "Either one: deleting the cookie in the user's other browser ends every login",
+   "Either one: changing the password cancels both kinds by itself"
+  ],
+  "answer": 0,
+  "why": "With server-side sessions every request is checked against the stored session, so deleting it ends the login on the next request. A self-contained token is checked only by its signature, so it keeps working until it expires unless the server adds a block list.",
+  "wrong": [
+   null,
+   "A signature cannot be withdrawn. The server would need extra state, such as a block list, to reject that token.",
+   "Deleting the cookie in your own browser does nothing to the copy on the stolen laptop.",
+   "Only if the server is built to check that. Existing sessions and tokens stay valid otherwise."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "משתמש מדווח על לפטופ שנגנב, והתמיכה צריכה לסיים את ההתחברות הזו מיד. איזה מבנה הופך את זה לקל ביותר?",
+   "options": [
+    "sessions בצד השרת: מוחקים את רשומת ה-session בשרת",
+    "tokens חתומים מסוג self-contained: מבטלים את החתימה של ה-token",
+    "כל אחד מהם: מחיקת ה-cookie בדפדפן האחר של המשתמש מסיימת כל התחברות",
+    "כל אחד מהם: שינוי הסיסמה מבטל את שני הסוגים מעצמו"
+   ],
+   "why": "עם sessions בצד השרת, כל request נבדק מול ה-session השמור, ולכן מחיקה שלו מסיימת את ההתחברות ב-request הבא. token שמכיל הכול נבדק רק לפי החתימה שלו, אז הוא ממשיך לעבוד עד שהוא פג, אלא אם השרת מוסיף רשימת חסימה.",
+   "wrong": [
+    null,
+    "אי אפשר לבטל חתימה. השרת יצטרך state נוסף, כמו רשימת חסימה, כדי לדחות את ה-token הזה.",
+    "מחיקת ה-cookie בדפדפן אחד לא עושה כלום לעותק שעל הלפטופ הגנוב.",
+    "רק אם השרת בנוי לבדוק את זה. אחרת sessions ו-tokens קיימים נשארים תקפים."
+   ]
+  }
+ },
+ {
+  "id": "networking-cookie-httponly",
+  "topic": "networking",
+  "subtopic": "cookies-sessions",
+  "concepts": [
+   "cookies",
+   "httponly",
+   "xss"
+  ],
+  "level": "medium",
+  "q": "A session cookie is set with the HttpOnly attribute. What does that protect against?",
+  "options": [
+   "Anyone on the network reading the cookie, since HttpOnly encrypts it",
+   "The cookie going out over plain HTTP instead of HTTPS",
+   "A script injected into the page reading the cookie and leaking it",
+   "Other websites receiving the cookie when the user visits them"
+  ],
+  "answer": 2,
+  "why": "HttpOnly hides the cookie from JavaScript on the page. If an attacker manages to inject a script (XSS), that script cannot read the session id and send it away. The browser still sends the cookie with requests as usual.",
+  "wrong": [
+   "HttpOnly does not encrypt anything. HTTPS protects the cookie on the network.",
+   "That is the Secure attribute. HttpOnly is about scripts, not about the protocol.",
+   null,
+   "A browser never sends a site's cookie to unrelated sites anyway. HttpOnly is about script access."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "cookie של session מוגדר עם המאפיין HttpOnly. מפני מה זה מגן?",
+   "options": [
+    "מפני כל מי שברשת שקורא את ה-cookie, כי HttpOnly מצפין אותו",
+    "מפני שליחת ה-cookie מעל HTTP רגיל במקום HTTPS",
+    "מפני script שהוזרק לדף, שקורא את ה-cookie ומדליף אותו",
+    "מפני אתרים אחרים שמקבלים את ה-cookie כשהמשתמש מבקר בהם"
+   ],
+   "why": "HttpOnly מסתיר את ה-cookie מ-JavaScript שרץ בדף. אם תוקף מצליח להזריק script (XSS), ה-script הזה לא יכול לקרוא את ה-session id ולשלוח אותו החוצה. הדפדפן עדיין שולח את ה-cookie עם requests כרגיל.",
+   "wrong": [
+    "HttpOnly לא מצפין כלום. HTTPS הוא שמגן על ה-cookie ברשת.",
+    "זה המאפיין Secure. HttpOnly עוסק ב-scripts, לא בפרוטוקול.",
+    null,
+    "דפדפן ממילא אף פעם לא שולח cookie של אתר לאתרים שלא קשורים אליו. HttpOnly עוסק בגישה של scripts."
+   ]
+  }
+ },
+ {
+  "id": "networking-https-what-network-sees",
+  "topic": "networking",
+  "subtopic": "https",
+  "concepts": [
+   "https",
+   "tls",
+   "privacy"
+  ],
+  "level": "easy",
+  "q": "On cafe Wi-Fi you log in to https://mail.example and read your inbox. What can the cafe's network owner still learn?",
+  "options": [
+   "Nothing: HTTPS hides the whole connection, even where it goes",
+   "Your password, since login forms are sent before encryption starts",
+   "The emails you read, but not what you type",
+   "That you visited mail.example, and about how much data moved"
+  ],
+  "answer": 3,
+  "why": "HTTPS encrypts what is inside the connection: URL paths, form fields, pages and cookies. It does not hide that you connected to that server's address, the site name is usually visible too, and so are the timing and size of the traffic.",
+  "wrong": [
+   "The server's IP address must stay visible for packets to be routed, and the site name usually is too.",
+   "TLS is set up before the first HTTP request, so the login form is sent encrypted.",
+   "Encryption covers both directions. Pages you receive are as protected as what you send.",
+   null
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/HTTPS",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ברשת Wi-Fi של בית קפה מתחברים ל-https://mail.example וקוראים את תיבת הדואר. מה בעל הרשת של בית הקפה עדיין יכול לדעת?",
+   "options": [
+    "כלום: HTTPS מסתיר את כל החיבור, אפילו לאן הוא הולך",
+    "את הסיסמה, כי טפסי התחברות נשלחים לפני שההצפנה מתחילה",
+    "את המיילים שקוראים, אבל לא את מה שמקלידים",
+    "שביקרו ב-mail.example, ובערך כמה נתונים עברו"
+   ],
+   "why": "HTTPS מצפין את מה שבתוך החיבור: ה-paths של ה-URL, שדות טפסים, דפים ו-cookies. הוא לא מסתיר שהתחברו לכתובת של השרת הזה, שם האתר בדרך כלל גלוי גם הוא, וכך גם התזמון והגודל של התעבורה.",
+   "wrong": [
+    "ה-IP address של השרת חייב להישאר גלוי כדי שאפשר יהיה לנתב packets, ובדרך כלל גם שם האתר.",
+    "TLS מוקם לפני ה-HTTP request הראשון, ולכן טופס ההתחברות נשלח מוצפן.",
+    "ההצפנה מכסה את שני הכיוונים. דפים שמתקבלים מוגנים בדיוק כמו מה ששולחים.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "networking-https-padlock-meaning",
+  "topic": "networking",
+  "subtopic": "https",
+  "concepts": [
+   "https",
+   "certificates",
+   "phishing"
+  ],
+  "level": "easy",
+  "q": "A phishing site at examp1e-bank-login.example shows a padlock in the address bar. What does the padlock tell you?",
+  "options": [
+   "The connection is encrypted to whoever controls that domain name",
+   "The site is run by a verified company that has been checked as trustworthy",
+   "The browser scanned the site and found no malware on it",
+   "The real bank approved this domain as one of its own"
+  ],
+  "answer": 0,
+  "why": "The padlock means the server proved, with a certificate, that it controls the domain shown, and that traffic is encrypted. Anyone who owns a look-alike domain can get such a certificate, so the padlock says nothing about honesty.",
+  "wrong": [
+   null,
+   "Basic certificates only prove control of the domain name. They say nothing about who runs the site.",
+   "The padlock is about the connection, not a malware check of the site's content.",
+   "The certificate covers the look-alike name its owner registered. The real bank had no say in it."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/Digital_certificate",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אתר phishing בכתובת examp1e-bank-login.example מציג מנעול בשורת הכתובת. מה המנעול אומר?",
+   "options": [
+    "החיבור מוצפן אל מי שמחזיק בשם הדומיין הזה",
+    "האתר מופעל על ידי חברה מאומתת שנבדקה ונמצאה אמינה",
+    "הדפדפן סרק את האתר ולא מצא בו malware",
+    "הבנק האמיתי אישר את הדומיין הזה כאחד משלו"
+   ],
+   "why": "המנעול אומר שהשרת הוכיח, באמצעות certificate, שהוא שולט בדומיין שמוצג, ושהתעבורה מוצפנת. כל מי שמחזיק בדומיין שנראה דומה יכול לקבל certificate כזה, ולכן המנעול לא אומר כלום על יושר.",
+   "wrong": [
+    null,
+    "certificates בסיסיים מוכיחים רק שליטה בשם הדומיין. הם לא אומרים כלום על מי שמפעיל את האתר.",
+    "המנעול עוסק בחיבור, לא בסריקת malware של התוכן באתר.",
+    "ה-certificate מכסה את השם הדומה שהבעלים שלו רשם. לבנק האמיתי לא היה בזה שום חלק."
+   ]
+  }
+ },
+ {
+  "id": "networking-https-certificate-warning",
+  "topic": "networking",
+  "subtopic": "https",
+  "concepts": [
+   "https",
+   "certificates",
+   "man-in-the-middle"
+  ],
+  "level": "medium",
+  "q": "On airport Wi-Fi your bank's site shows a full-page certificate warning. What is the safest way to read it?",
+  "options": [
+   "The bank's server is down and this is an old copy",
+   "The site uses older encryption that is slower but still safe",
+   "The server could not prove it owns the bank's name; someone may be in between",
+   "The certificate is a formality, so clicking through keeps exactly the same protection"
+  ],
+  "answer": 2,
+  "why": "Encryption only helps if you are talking to the right server. The certificate is how the server proves it owns the name. If that check fails, an attacker on the network could be posing as the bank, so you should not continue.",
+  "wrong": [
+   "A server that is down gives a connection error, not a certificate warning.",
+   "The warning is about who the server is, not about the strength of the encryption.",
+   null,
+   "Without a valid certificate you could have an encrypted connection to an attacker, which protects nothing."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/Certificate_authority",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ברשת Wi-Fi של שדה תעופה, האתר של הבנק מציג אזהרת certificate על כל הדף. מה הדרך הבטוחה ביותר להבין אותה?",
+   "options": [
+    "השרת של הבנק נפל וזה עותק ישן",
+    "האתר משתמש בהצפנה ישנה יותר, איטית יותר אבל עדיין בטוחה",
+    "השרת לא הצליח להוכיח שהשם של הבנק שייך לו, ואולי מישהו מיירט את החיבור",
+    "ה-certificate הוא רק פורמליות, אז לחיצה על המשך שומרת בדיוק על אותה הגנה"
+   ],
+   "why": "הצפנה עוזרת רק אם מדברים עם השרת הנכון. ה-certificate הוא הדרך של השרת להוכיח שהשם שייך לו. אם הבדיקה נכשלת, תוקף ברשת עלול להתחזות לבנק, ולכן לא כדאי להמשיך.",
+   "wrong": [
+    "שרת שנפל נותן שגיאת חיבור, לא אזהרת certificate.",
+    "האזהרה עוסקת בשאלה מי השרת, לא בחוזק ההצפנה.",
+    null,
+    "בלי certificate תקין אפשר לקבל חיבור מוצפן אל תוקף, וזה לא מגן על כלום."
+   ]
+  }
+ }
+]

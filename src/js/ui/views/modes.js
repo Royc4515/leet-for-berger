@@ -15,6 +15,11 @@ import { israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/i
 import { usedTopics, pickRandom } from '../../modes/battle-picker.js';
 import { LAST_SESSIONS_KEY } from '../../state/user-data.js';
 import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
+import { QUIZ_TOPICS } from '../../data/quiz-topics.js';
+import { QUIZ_INDEX } from '../../data/quiz-index.js';
+import { QUIZ_MODES } from '../../modes/quiz.js';
+import { loadQuizProgress } from '../../state/quiz-progress.js';
+import { dayKey } from '../../state/progress.js';
 
 /**
  * "How it works" for a mode's setup page. The first visit's tour is started by the router
@@ -86,12 +91,16 @@ export function renderModesHub(root) {
     h('div.race-preview-lane', {}, h('span.race-preview-name', {}, 'Bot'), h('span.race-preview-track', {}, h('span.race-preview-fill.is-bot'))),
   );
 
+  const quizToday = loadQuizProgress().daily[dayKey()];
+  // The quiz: four answer bars, one lit.
+  const quizVisual = h('ol.quiz-preview', {}, ['A', 'B', 'C', 'D'].map((l, i) => h(`li.quiz-preview-row${i === 2 ? '.is-lit' : ''}`, {}, h('span.quiz-preview-key', {}, l), h('span.quiz-preview-line'))));
+
   mount(
     root,
     h(
       'div.page',
       {},
-      h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, 'Under pressure'), h('h1', {}, 'Modes'), h('p.page-sub', {}, 'Practice the way it feels on the day: a timed exam room, or a race against a bot. Both use the same 15-case judge.'))),
+      h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, 'Under pressure'), h('h1', {}, 'Modes'), h('p.page-sub', {}, 'Practice the way it feels on the day: a timed exam room, a race against a bot, or a quick multiple-choice quiz.'))),
       h(
         'div.mode-grid',
         {},
@@ -116,6 +125,17 @@ export function renderModesHub(root) {
           [`${BOT_LEVELS.length} opponents, from ${BOT_LEVELS[0].label.replace(' bot', '')} to ${BOT_LEVELS.at(-1).label.replace(' bot', '')}`, 'Two lanes show tests passed out of 15, live', 'Bots only: there are no live races against people'],
           lastBattle ? h(`p.mode-last${lastBattle.won ? '.is-win' : ''}`, {}, lastBattle.text) : h('p.mode-last.is-empty', {}, 'No race yet.'),
           h('a.btn.btn-secondary', { href: '#/battle' }, 'Race a bot'),
+        ),
+        card(
+          'mode-quiz',
+          'Five spare minutes',
+          'Quiz',
+          'Live',
+          'Multiple-choice questions on the ideas interviews test. No editor, so it works on a phone.',
+          quizVisual,
+          [`${QUIZ_INDEX.length} questions in ${QUIZ_TOPICS.length} topics, from OOP and data structures to concurrency and SQL`, `${QUIZ_MODES.map((m) => m.label).join(', ')}; one topic, a few, or all mixed`, 'In English or Hebrew, with a daily quiz of 5 questions'],
+          quizToday ? h('p.mode-last', {}, `Daily quiz done today: ${quizToday.correct} / ${quizToday.total}`) : h('p.mode-last.is-empty', {}, h('a', { href: '#/quiz/daily' }, 'Today\'s daily quiz is open.')),
+          h('a.btn.btn-secondary', { href: '#/quiz' }, 'Start a quiz'),
         ),
       ),
       h(

@@ -1,0 +1,1818 @@
+[
+ {
+  "id": "databases-inner-join-row-count",
+  "topic": "databases",
+  "subtopic": "joins",
+  "concepts": [
+   "inner-join",
+   "row-count"
+  ],
+  "level": "easy",
+  "q": "Ana has two orders, Ben has one, and Cy and Dee have none. How many rows does this inner join return?",
+  "code": "-- customers(id, name): (1,'Ana'), (2,'Ben'), (3,'Cy'), (4,'Dee')\n-- orders(id, customer_id): (10,1), (11,1), (12,2)\nSELECT c.name, o.id\nFROM customers c\nJOIN orders o ON o.customer_id = c.id;",
+  "lang": "sql",
+  "options": [
+   "4",
+   "2",
+   "3",
+   "12"
+  ],
+  "answer": 2,
+  "why": "An inner join returns one row for every pair of rows that satisfies ON. Ana matches two orders, Ben matches one, and Cy and Dee match nothing, so they are left out: 2 + 1 = 3 rows.",
+  "wrong": [
+   "An inner join does not return one row per customer. Customers with no match are dropped, and Ana appears twice.",
+   "Rows are not merged per customer. Each matching pair is its own row, so Ana's two orders give two rows.",
+   null,
+   "That is 4 customers times 3 orders, the CROSS JOIN count. The ON condition keeps only the matching pairs."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-join.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Ana יש שתי הזמנות, ל-Ben אחת, ול-Cy ול-Dee אין בכלל. כמה rows יחזיר ה-inner join הזה?",
+   "options": [
+    "4",
+    "2",
+    "3",
+    "12"
+   ],
+   "why": "inner join מחזיר row אחת לכל זוג rows שמקיים את תנאי ה-ON. Ana מתאימה לשתי הזמנות, Ben לאחת, ול-Cy ול-Dee אין שום התאמה, ולכן הם לא נכללים: 2 + 1 = 3 rows.",
+   "wrong": [
+    "inner join לא מחזיר row אחת לכל לקוח. לקוחות בלי התאמה נשמטים, ו-Ana מופיעה פעמיים.",
+    "ה-rows לא מתמזגות לפי לקוח. כל זוג מתאים הוא row נפרדת, ולכן שתי ההזמנות של Ana נותנות שתי rows.",
+    null,
+    "זה 4 לקוחות כפול 3 הזמנות, מספר ה-rows של CROSS JOIN. תנאי ה-ON משאיר רק את הזוגות המתאימים."
+   ]
+  }
+ },
+ {
+  "id": "databases-left-join-row-count",
+  "topic": "databases",
+  "subtopic": "joins",
+  "concepts": [
+   "left-join",
+   "row-count",
+   "unmatched-rows"
+  ],
+  "level": "easy",
+  "q": "Ana has two orders, Ben has one, and Cy and Dee have none. This query uses a LEFT JOIN. What does the result contain?",
+  "code": "-- customers(id, name): (1,'Ana'), (2,'Ben'), (3,'Cy'), (4,'Dee')\n-- orders(id, customer_id): (10,1), (11,1), (12,2)\nSELECT c.name, o.id\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id;",
+  "lang": "sql",
+  "options": [
+   "5 rows; Cy and Dee appear once each, with NULL in o.id",
+   "4 rows; a LEFT JOIN returns exactly one row per customer",
+   "3 rows; customers without orders are still left out",
+   "5 rows; Cy and Dee appear once each, with 0 in o.id"
+  ],
+  "answer": 0,
+  "why": "A LEFT JOIN returns every match an inner join would, plus each left row that matched nothing, padded with NULL on the right. That is Ana twice, Ben once, then Cy and Dee once each: 5 rows.",
+  "wrong": [
+   null,
+   "LEFT JOIN guarantees at least one row per customer, not exactly one. Ana matches two orders, so she appears twice.",
+   "That is the inner join result. LEFT JOIN keeps every left row and fills the right side with NULL.",
+   "Missing values are filled with NULL, not 0. NULL here means there is no matching row at all."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/queries-table-expressions.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Ana יש שתי הזמנות, ל-Ben אחת, ול-Cy ול-Dee אין בכלל. ה-query משתמש ב-LEFT JOIN. מה תכיל התוצאה?",
+   "options": [
+    "5 rows; Cy ו-Dee מופיעים פעם אחת כל אחד, עם NULL ב-o.id",
+    "4 rows; LEFT JOIN מחזיר בדיוק row אחת לכל לקוח",
+    "3 rows; לקוחות בלי הזמנות עדיין לא נכללים",
+    "5 rows; Cy ו-Dee מופיעים פעם אחת כל אחד, עם 0 ב-o.id"
+   ],
+   "why": "LEFT JOIN מחזיר כל התאמה ש-inner join היה מחזיר, ובנוסף כל row משמאל שלא מצאה התאמה, כשהצד הימני מתמלא ב-NULL. כלומר Ana פעמיים, Ben פעם אחת, ואז Cy ו-Dee פעם אחת כל אחד: 5 rows.",
+   "wrong": [
+    null,
+    "LEFT JOIN מבטיח לפחות row אחת לכל לקוח, לא בדיוק אחת. Ana מתאימה לשתי הזמנות, ולכן היא מופיעה פעמיים.",
+    "זו התוצאה של inner join. LEFT JOIN שומר כל row משמאל וממלא את הצד הימני ב-NULL.",
+    "ערכים חסרים מתמלאים ב-NULL, לא ב-0. NULL כאן אומר שאין בכלל row מתאימה."
+   ]
+  }
+ },
+ {
+  "id": "databases-choose-left-join",
+  "topic": "databases",
+  "subtopic": "joins",
+  "concepts": [
+   "left-join",
+   "inner-join",
+   "unmatched-rows"
+  ],
+  "level": "easy",
+  "q": "A report must list every customer with their orders, and customers who never ordered must still appear. Which FROM clause fits?",
+  "options": [
+   "customers JOIN orders ON orders.customer_id = customers.id",
+   "customers LEFT JOIN orders ON orders.customer_id = customers.id",
+   "customers RIGHT JOIN orders ON orders.customer_id = customers.id",
+   "customers CROSS JOIN orders"
+  ],
+  "answer": 1,
+  "why": "LEFT JOIN keeps every row of the table on its left. A customer with orders gets one row per order; a customer with none gets one row with NULL in the order columns.",
+  "wrong": [
+   "A plain (inner) join keeps only customers with at least one order, so the ones who never ordered vanish.",
+   null,
+   "RIGHT JOIN keeps every order, not every customer. Customers with no orders are still missing.",
+   "CROSS JOIN pairs every customer with every order, including orders that belong to someone else."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/queries-table-expressions.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "דוח צריך להציג כל לקוח עם ההזמנות שלו, וגם לקוחות שמעולם לא הזמינו חייבים להופיע בו. איזה FROM clause מתאים?",
+   "options": [
+    "customers JOIN orders ON orders.customer_id = customers.id",
+    "customers LEFT JOIN orders ON orders.customer_id = customers.id",
+    "customers RIGHT JOIN orders ON orders.customer_id = customers.id",
+    "customers CROSS JOIN orders"
+   ],
+   "why": "LEFT JOIN שומר כל row של ה-table שמשמאלו. לקוח עם הזמנות מקבל row אחת לכל הזמנה, ולקוח בלי הזמנות מקבל row אחת עם NULL ב-columns של ההזמנה.",
+   "wrong": [
+    "join רגיל (inner) שומר רק לקוחות עם הזמנה אחת לפחות, ולכן אלה שמעולם לא הזמינו נעלמים.",
+    null,
+    "RIGHT JOIN שומר כל הזמנה, לא כל לקוח. לקוחות בלי הזמנות עדיין חסרים.",
+    "CROSS JOIN מצמיד כל לקוח לכל הזמנה, כולל הזמנות ששייכות למישהו אחר."
+   ]
+  }
+ },
+ {
+  "id": "databases-left-join-where-filter",
+  "topic": "databases",
+  "subtopic": "joins",
+  "concepts": [
+   "left-join",
+   "where-vs-on",
+   "null-comparison"
+  ],
+  "level": "hard",
+  "q": "Ana has an order of 100, Ben an order of 20, and Cy no orders. The query uses a LEFT JOIN but filters o.amount in WHERE. Which names come back?",
+  "code": "-- customers(id, name): (1,'Ana'), (2,'Ben'), (3,'Cy')\n-- orders(customer_id, amount): (1,100), (2,20)\nSELECT c.name, o.amount\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nWHERE o.amount > 50;",
+  "lang": "sql",
+  "options": [
+   "Ana, Ben and Cy",
+   "Ana and Cy",
+   "An error: WHERE cannot use a column from the right side of a LEFT JOIN",
+   "Ana only"
+  ],
+  "answer": 3,
+  "why": "WHERE runs after the join. Ben's row fails 20 > 50, and Cy's row has o.amount NULL, so NULL > 50 is unknown and the row is dropped. The LEFT JOIN ends up acting like an inner join. To keep every customer, put the condition in ON.",
+  "wrong": [
+   "That is the result with AND o.amount > 50 inside ON. In WHERE, the filter runs after the join and removes rows.",
+   "Cy's row has o.amount NULL, and NULL > 50 is not true, so WHERE removes Cy as well.",
+   "WHERE may use any joined column. The query is legal; it just means something else than intended.",
+   null
+  ],
+  "ref": "https://www.postgresql.org/docs/current/queries-table-expressions.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Ana יש הזמנה של 100, ל-Ben הזמנה של 20, ול-Cy אין הזמנות. ה-query משתמש ב-LEFT JOIN אבל מסנן את o.amount ב-WHERE. אילו שמות יחזרו?",
+   "options": [
+    "Ana, Ben ו-Cy",
+    "Ana ו-Cy",
+    "שגיאה: WHERE לא יכול להשתמש ב-column מהצד הימני של LEFT JOIN",
+    "רק Ana"
+   ],
+   "why": "WHERE רץ אחרי ה-join. ה-row של Ben נכשלת ב-20 > 50, וב-row של Cy הערך של o.amount הוא NULL, כך ש-NULL > 50 הוא לא ידוע וה-row נזרקת. בפועל ה-LEFT JOIN מתנהג כמו inner join. כדי לשמור את כל הלקוחות, צריך לשים את התנאי ב-ON.",
+   "wrong": [
+    "זו התוצאה כש-AND o.amount > 50 נמצא בתוך ה-ON. ב-WHERE, הסינון רץ אחרי ה-join ומסיר rows.",
+    "ב-row של Cy הערך של o.amount הוא NULL, ו-NULL > 50 לא מתקיים, ולכן WHERE מסיר גם את Cy.",
+    "WHERE יכול להשתמש בכל column שהשתתף ב-join. ה-query חוקי, הוא פשוט אומר משהו אחר ממה שהתכוונו.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "databases-anti-join-is-null",
+  "topic": "databases",
+  "subtopic": "joins",
+  "concepts": [
+   "left-join",
+   "anti-join",
+   "is-null"
+  ],
+  "level": "medium",
+  "q": "Starting from customers c LEFT JOIN orders o ON o.customer_id = c.id, which WHERE clause returns only the customers who have never ordered?",
+  "options": [
+   "WHERE o.id IS NULL",
+   "WHERE o.id = NULL",
+   "WHERE c.id IS NULL",
+   "WHERE o.customer_id <> c.id"
+  ],
+  "answer": 0,
+  "why": "For a customer with no orders, the LEFT JOIN produces one row whose order columns are all NULL. Keeping only rows where o.id IS NULL leaves exactly those customers. This is called an anti-join; NOT EXISTS is another way to write it.",
+  "wrong": [
+   null,
+   "A comparison with NULL is never true, so = NULL matches no rows. Testing for a missing value needs IS NULL.",
+   "c.id comes from customers and is filled in for every customer. Only the right side gets NULL padding.",
+   "Matched rows are equal by the ON clause, and for unmatched rows NULL <> c.id is unknown, not true. Nothing comes back."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/queries-table-expressions.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "בהינתן customers c LEFT JOIN orders o ON o.customer_id = c.id, איזה WHERE clause מחזיר רק את הלקוחות שמעולם לא הזמינו?",
+   "options": [
+    "WHERE o.id IS NULL",
+    "WHERE o.id = NULL",
+    "WHERE c.id IS NULL",
+    "WHERE o.customer_id <> c.id"
+   ],
+   "why": "עבור לקוח בלי הזמנות, ה-LEFT JOIN מייצר row אחת שכל ה-columns של ההזמנה בה הן NULL. אם משאירים רק את ה-rows שבהן o.id IS NULL, נשארים בדיוק הלקוחות האלה. זה נקרא anti-join, ו-NOT EXISTS היא דרך נוספת לכתוב את זה.",
+   "wrong": [
+    null,
+    "השוואה ל-NULL אף פעם לא מתקיימת, ולכן = NULL לא מתאים לאף row. כדי לבדוק ערך חסר צריך IS NULL.",
+    "c.id מגיע מ-customers ויש לו ערך אצל כל לקוח. רק הצד הימני מתמלא ב-NULL.",
+    "ב-rows עם התאמה הערכים שווים לפי ה-ON, וב-rows בלי התאמה NULL <> c.id הוא לא ידוע, ולא מתקיים. שום דבר לא חוזר."
+   ]
+  }
+ },
+ {
+  "id": "databases-join-fan-out",
+  "topic": "databases",
+  "subtopic": "joins",
+  "concepts": [
+   "inner-join",
+   "row-count",
+   "fan-out"
+  ],
+  "level": "medium",
+  "q": "A product has 2 tags and 3 reviews. The query joins the product to both child tables at once. How many rows come back?",
+  "code": "-- products(id, name): (1,'Lamp')\n-- tags(product_id, tag): (1,'home'), (1,'light')\n-- reviews(product_id, stars): (1,4), (1,5), (1,3)\nSELECT p.name, t.tag, r.stars\nFROM products p\nJOIN tags t ON t.product_id = p.id\nJOIN reviews r ON r.product_id = p.id;",
+  "lang": "sql",
+  "options": [
+   "5",
+   "3",
+   "6",
+   "1"
+  ],
+  "answer": 2,
+  "why": "Both child tables match on the product, not on each other, so every tag pairs with every review: 2 x 3 = 6 rows. This fan-out is why a SUM or COUNT over such a join comes out too large.",
+  "wrong": [
+   "Joins do not add up the rows of each table. Each tag is paired with each review.",
+   "The tags do not just ride along on the review rows; every review row is repeated once per tag.",
+   null,
+   "Joining never collapses a product into one row. That takes GROUP BY."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/queries-table-expressions.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למוצר יש 2 תגיות ו-3 ביקורות. ה-query עושה join בין המוצר לשתי ה-child tables בבת אחת. כמה rows יחזרו?",
+   "options": [
+    "5",
+    "3",
+    "6",
+    "1"
+   ],
+   "why": "שתי ה-child tables מותאמות לפי המוצר, לא אחת לשנייה, ולכן כל תגית מוצמדת לכל ביקורת: 2 x 3 = 6 rows. ה-fan-out הזה הוא הסיבה ש-SUM או COUNT על join כזה יוצאים גדולים מדי.",
+   "wrong": [
+    "join לא מחבר את מספרי ה-rows של כל table. כל תגית מוצמדת לכל ביקורת.",
+    "התגיות לא סתם מצטרפות ל-rows של הביקורות: כל row של ביקורת חוזרת פעם אחת לכל תגית.",
+    null,
+    "join אף פעם לא מכווץ מוצר ל-row אחת. בשביל זה צריך GROUP BY."
+   ]
+  }
+ },
+ {
+  "id": "databases-self-join-null-manager",
+  "topic": "databases",
+  "subtopic": "joins",
+  "concepts": [
+   "self-join",
+   "inner-join",
+   "unmatched-rows"
+  ],
+  "level": "medium",
+  "q": "Ada is the CEO, so her manager_id is NULL. Bo and Cy report to Ada. What does this self join return?",
+  "code": "-- employees(id, name, manager_id):\n--   (1,'Ada',NULL), (2,'Bo',1), (3,'Cy',1)\nSELECT e.name AS employee, m.name AS manager\nFROM employees e\nJOIN employees m ON e.manager_id = m.id;",
+  "lang": "sql",
+  "options": [
+   "Three rows, with Ada's manager shown as NULL",
+   "Two rows: Bo with Ada, and Cy with Ada",
+   "One row: Ada, the only manager in the table",
+   "An error, because a table cannot be joined to itself"
+  ],
+  "answer": 1,
+  "why": "The aliases e and m let the query treat employees as two tables. Bo and Cy each find Ada as their manager. Ada's manager_id is NULL, which equals nothing, so the inner join leaves her out.",
+  "wrong": [
+   "That needs a LEFT JOIN. An inner join drops Ada, because her NULL manager_id matches no id.",
+   null,
+   "Each employee row is matched on its own. The query lists employees with their managers, not distinct managers.",
+   "A table can be joined to itself by giving it two aliases, here e and m."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-join.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Ada היא ה-CEO, ולכן ה-manager_id שלה הוא NULL. Bo ו-Cy כפופים ל-Ada. מה יחזיר ה-self join הזה?",
+   "options": [
+    "שלוש rows, כשהמנהל של Ada מוצג כ-NULL",
+    "שתי rows: Bo עם Ada, ו-Cy עם Ada",
+    "row אחת: Ada, המנהלת היחידה ב-table",
+    "שגיאה, כי אי אפשר לעשות join ל-table עם עצמה"
+   ],
+   "why": "ה-aliases e ו-m מאפשרים ל-query להתייחס ל-employees כאילו היו שתי tables. Bo ו-Cy מוצאים כל אחד את Ada כמנהלת שלו. ה-manager_id של Ada הוא NULL, שלא שווה לשום דבר, ולכן ה-inner join משאיר אותה בחוץ.",
+   "wrong": [
+    "בשביל זה צריך LEFT JOIN. inner join משמיט את Ada, כי ה-manager_id שלה, NULL, לא מתאים לאף id.",
+    null,
+    "כל row של עובד מותאמת בנפרד. ה-query מציג עובדים עם המנהלים שלהם, לא רשימה של מנהלים שונים.",
+    "אפשר לעשות join ל-table עם עצמה אם נותנים לה שני aliases, כאן e ו-m."
+   ]
+  }
+ },
+ {
+  "id": "databases-having-for-aggregate",
+  "topic": "databases",
+  "subtopic": "grouping",
+  "concepts": [
+   "having",
+   "where",
+   "aggregate",
+   "evaluation-order"
+  ],
+  "level": "easy",
+  "q": "You want only the departments whose average salary is above 5000. Where does the condition AVG(salary) > 5000 belong?",
+  "options": [
+   "In WHERE, before GROUP BY",
+   "In ORDER BY, after the groups are built",
+   "In GROUP BY, as GROUP BY AVG(salary) > 5000",
+   "In HAVING, after the groups are formed"
+  ],
+  "answer": 3,
+  "why": "The database filters rows (WHERE), then forms groups (GROUP BY), then filters groups (HAVING). An average only exists once its group exists, so a condition on AVG has to go in HAVING.",
+  "wrong": [
+   "WHERE filters single rows before any groups exist, so it cannot use AVG. The database rejects it.",
+   "ORDER BY only sorts the result. It never removes rows.",
+   "GROUP BY decides how rows are grouped. It does not filter, and it cannot contain an aggregate.",
+   null
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-agg.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "רוצים לקבל רק את המחלקות שהמשכורת הממוצעת בהן גבוהה מ-5000. איפה צריך לשים את התנאי AVG(salary) > 5000?",
+   "options": [
+    "ב-WHERE, לפני GROUP BY",
+    "ב-ORDER BY, אחרי שהקבוצות נבנות",
+    "ב-GROUP BY, בתור GROUP BY AVG(salary) > 5000",
+    "ב-HAVING, אחרי שהקבוצות נוצרות"
+   ],
+   "why": "מסד הנתונים מסנן rows (WHERE), אחר כך יוצר קבוצות (GROUP BY), ואז מסנן קבוצות (HAVING). ממוצע קיים רק אחרי שהקבוצה שלו קיימת, ולכן תנאי על AVG חייב להיות ב-HAVING.",
+   "wrong": [
+    "WHERE מסנן rows בודדות לפני שיש קבוצות, ולכן הוא לא יכול להשתמש ב-AVG. מסד הנתונים דוחה את זה.",
+    "ORDER BY רק ממיין את התוצאה. הוא אף פעם לא מסיר rows.",
+    "GROUP BY קובע איך ה-rows מתקבצות. הוא לא מסנן, והוא לא יכול להכיל aggregate.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "databases-count-star-vs-count-column",
+  "topic": "databases",
+  "subtopic": "grouping",
+  "concepts": [
+   "count",
+   "null",
+   "aggregate"
+  ],
+  "level": "easy",
+  "q": "One of four users has no email (NULL). What does this query return?",
+  "code": "-- users(id, email):\n--   (1,'a@x.io'), (2,NULL),\n--   (3,'c@x.io'), (4,'d@x.io')\nSELECT COUNT(*), COUNT(email)\nFROM users;",
+  "lang": "sql",
+  "options": [
+   "4 and 3",
+   "4 and 4",
+   "3 and 3",
+   "3 and 4"
+  ],
+  "answer": 0,
+  "why": "COUNT(*) counts rows, whatever they contain. COUNT(email) counts only the rows where email is not NULL. Four rows, three emails: 4 and 3.",
+  "wrong": [
+   null,
+   "COUNT(email) skips rows where email is NULL. Only COUNT(*) counts every row.",
+   "COUNT(*) counts rows, not values, so the row with a NULL email still counts.",
+   "COUNT(*) never looks at column values, so a NULL cannot lower it. COUNT(email) is the one that skips the NULL."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/functions-aggregate.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "לאחד מארבעת המשתמשים אין email (NULL). מה ה-query הזה מחזיר?",
+   "options": [
+    "4 ו-3",
+    "4 ו-4",
+    "3 ו-3",
+    "3 ו-4"
+   ],
+   "why": "COUNT(*) סופר rows, לא משנה מה יש בהן. COUNT(email) סופר רק את ה-rows שבהן email אינו NULL. ארבע rows, שלושה emails: 4 ו-3.",
+   "wrong": [
+    null,
+    "COUNT(email) מדלג על rows שבהן email הוא NULL. רק COUNT(*) סופר כל row.",
+    "COUNT(*) סופר rows, לא ערכים, ולכן ה-row שה-email בה הוא NULL עדיין נספרת.",
+    "COUNT(*) אף פעם לא מסתכל על ערכי ה-columns, ולכן NULL לא יכול להוריד אותו. COUNT(email) הוא זה שמדלג על ה-NULL."
+   ]
+  }
+ },
+ {
+  "id": "databases-where-then-having",
+  "topic": "databases",
+  "subtopic": "grouping",
+  "concepts": [
+   "where",
+   "having",
+   "evaluation-order"
+  ],
+  "level": "medium",
+  "q": "This query has both WHERE and HAVING. Which customers does it return?",
+  "code": "-- orders(customer, amount):\n--   ('Ana',5), ('Ana',20), ('Ana',30),\n--   ('Ben',15), ('Ben',8), ('Cy',50)\nSELECT customer, COUNT(*) AS n\nFROM orders\nWHERE amount > 10\nGROUP BY customer\nHAVING COUNT(*) >= 2;",
+  "lang": "sql",
+  "options": [
+   "Ana with n = 3, and Ben with n = 2",
+   "Ana, Ben and Cy",
+   "Ana, with n = 2",
+   "No rows, because a query cannot use both WHERE and HAVING"
+  ],
+  "answer": 2,
+  "why": "WHERE runs first and drops Ana's 5 and Ben's 8. Then groups form: Ana has 2 rows, Ben 1, Cy 1. HAVING keeps groups with at least 2 rows, so only Ana remains, with n = 2.",
+  "wrong": [
+   "HAVING does not count the rows from before WHERE. WHERE has already removed Ana's 5 and Ben's 8.",
+   "HAVING removes the groups that fail COUNT(*) >= 2. Ben and Cy have one row each after WHERE.",
+   null,
+   "They are often combined: WHERE filters rows, then HAVING filters the groups built from them."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-agg.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-query הזה יש גם WHERE וגם HAVING. אילו לקוחות הוא מחזיר?",
+   "options": [
+    "Ana עם n = 3, ו-Ben עם n = 2",
+    "Ana, Ben ו-Cy",
+    "Ana, עם n = 2",
+    "אף row, כי query לא יכול להשתמש גם ב-WHERE וגם ב-HAVING"
+   ],
+   "why": "WHERE רץ ראשון ומסיר את ה-5 של Ana ואת ה-8 של Ben. אחר כך נוצרות קבוצות: ל-Ana יש 2 rows, ל-Ben אחת, ל-Cy אחת. HAVING משאיר קבוצות עם 2 rows לפחות, ולכן נשארת רק Ana, עם n = 2.",
+   "wrong": [
+    "HAVING לא סופר את ה-rows מלפני ה-WHERE. WHERE כבר הסיר את ה-5 של Ana ואת ה-8 של Ben.",
+    "HAVING מסיר את הקבוצות שלא עומדות ב-COUNT(*) >= 2. ל-Ben ול-Cy יש row אחת לכל אחד אחרי ה-WHERE.",
+    null,
+    "משלבים אותם הרבה: WHERE מסנן rows, ואז HAVING מסנן את הקבוצות שנבנו מהן."
+   ]
+  }
+ },
+ {
+  "id": "databases-group-by-row-count",
+  "topic": "databases",
+  "subtopic": "grouping",
+  "concepts": [
+   "group-by",
+   "row-count"
+  ],
+  "level": "easy",
+  "q": "The orders table has 10 rows from 3 different customers. How many rows does SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id return?",
+  "options": [
+   "10",
+   "3",
+   "1",
+   "It depends on how the 10 orders are spread over the customers"
+  ],
+  "answer": 1,
+  "why": "GROUP BY puts all rows with the same customer_id into one group, and the query returns one row per group. Three customers means three rows, each with that customer's order count.",
+  "wrong": [
+   "GROUP BY folds each group into one row. It does not keep every row with a count next to it.",
+   null,
+   "Without GROUP BY, COUNT(*) gives one total row. With GROUP BY you get one row per group.",
+   "The spread only changes the counts. The number of rows is the number of groups."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-agg.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-table orders יש 10 rows של 3 לקוחות שונים. כמה rows מחזיר SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id?",
+   "options": [
+    "10",
+    "3",
+    "1",
+    "תלוי איך 10 ההזמנות מתחלקות בין הלקוחות"
+   ],
+   "why": "GROUP BY מכניס את כל ה-rows עם אותו customer_id לקבוצה אחת, וה-query מחזיר row אחת לכל קבוצה. שלושה לקוחות פירושם שלוש rows, ובכל אחת מספר ההזמנות של אותו לקוח.",
+   "wrong": [
+    "GROUP BY מקפל כל קבוצה ל-row אחת. הוא לא שומר כל row עם ספירה לידה.",
+    null,
+    "בלי GROUP BY, COUNT(*) נותן row אחת של סך הכול. עם GROUP BY מקבלים row אחת לכל קבוצה.",
+    "החלוקה משנה רק את הספירות. מספר ה-rows הוא מספר הקבוצות."
+   ]
+  }
+ },
+ {
+  "id": "databases-where-vs-having-same-filter",
+  "topic": "databases",
+  "subtopic": "grouping",
+  "concepts": [
+   "where",
+   "having",
+   "evaluation-order"
+  ],
+  "level": "medium",
+  "q": "Two queries group employees by dept. One filters with WHERE dept = 'Sales', the other with HAVING dept = 'Sales'. What is true?",
+  "options": [
+   "Same rows, but WHERE is the better place: it filters before grouping",
+   "Only HAVING works, because dept is the column being grouped on",
+   "Only WHERE works, because HAVING may contain aggregates and nothing else",
+   "Different results, because WHERE sees whole groups and HAVING sees single rows"
+  ],
+  "answer": 0,
+  "why": "A condition on the grouping column gives the same answer in either place. In WHERE, the other departments' rows are dropped before grouping. In HAVING, every group is built first and then most are thrown away.",
+  "wrong": [
+   null,
+   "WHERE can filter on any column of the row, grouping column or not.",
+   "HAVING may also use grouping columns. It is just the later, more wasteful place for this filter.",
+   "It is the other way round: WHERE sees rows, HAVING sees groups."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-agg.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני queries מקבצים עובדים לפי dept. אחד מסנן עם WHERE dept = 'Sales', והשני עם HAVING dept = 'Sales'. מה נכון?",
+   "options": [
+    "אותן rows, אבל WHERE הוא המקום הנכון יותר: הוא מסנן לפני הקיבוץ",
+    "רק HAVING עובד, כי dept הוא ה-column שלפיה מקבצים",
+    "רק WHERE עובד, כי HAVING יכול להכיל aggregates ותו לא",
+    "תוצאות שונות, כי WHERE רואה קבוצות שלמות ו-HAVING רואה rows בודדות"
+   ],
+   "why": "תנאי על ה-column של הקיבוץ נותן את אותה תשובה בשני המקומות. ב-WHERE, ה-rows של שאר המחלקות נזרקות לפני הקיבוץ. ב-HAVING, כל הקבוצות נבנות קודם, ואז רובן נזרקות.",
+   "wrong": [
+    null,
+    "WHERE יכול לסנן לפי כל column של ה-row, בין אם מקבצים לפיה ובין אם לא.",
+    "HAVING יכול להשתמש גם ב-columns של הקיבוץ. הוא פשוט המקום המאוחר והבזבזני יותר לסינון הזה.",
+    "זה הפוך: WHERE רואה rows, ו-HAVING רואה קבוצות."
+   ]
+  }
+ },
+ {
+  "id": "databases-left-join-count-star",
+  "topic": "databases",
+  "subtopic": "grouping",
+  "concepts": [
+   "count",
+   "left-join",
+   "null",
+   "aggregate"
+  ],
+  "level": "hard",
+  "q": "Ana has two orders and Ben has none. The query counts orders per customer with COUNT(*) over a LEFT JOIN. What does it return?",
+  "code": "-- customers(id, name): (1,'Ana'), (2,'Ben')\n-- orders(id, customer_id): (10,1), (11,1)\nSELECT c.name, COUNT(*) AS orders\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nGROUP BY c.name;",
+  "lang": "sql",
+  "options": [
+   "Ana 2, Ben 0",
+   "Ana 2, and no row for Ben",
+   "Ana 2, Ben NULL",
+   "Ana 2, Ben 1"
+  ],
+  "answer": 3,
+  "why": "The LEFT JOIN gives Ben one row whose order columns are NULL. COUNT(*) counts rows, so Ben gets 1. COUNT(o.id) skips NULLs and would give the intended 0.",
+  "wrong": [
+   "That needs COUNT(o.id). Ben still has one joined row, filled with NULL, and COUNT(*) counts it.",
+   "The LEFT JOIN keeps Ben's row, so GROUP BY makes a group for him too.",
+   "COUNT always returns a number, never NULL.",
+   null
+  ],
+  "ref": "https://www.postgresql.org/docs/current/functions-aggregate.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Ana יש שתי הזמנות ול-Ben אין. ה-query סופר הזמנות לכל לקוח עם COUNT(*) על LEFT JOIN. מה הוא מחזיר?",
+   "options": [
+    "Ana 2, Ben 0",
+    "Ana 2, ואין row ל-Ben",
+    "Ana 2, Ben NULL",
+    "Ana 2, Ben 1"
+   ],
+   "why": "ה-LEFT JOIN נותן ל-Ben row אחת שה-columns של ההזמנה בה הן NULL. COUNT(*) סופר rows, ולכן Ben מקבל 1. COUNT(o.id) מדלג על NULLs והיה נותן את ה-0 שהתכוונו אליו.",
+   "wrong": [
+    "בשביל זה צריך COUNT(o.id). ל-Ben עדיין יש row אחת אחרי ה-join, מלאה ב-NULL, ו-COUNT(*) סופר אותה.",
+    "ה-LEFT JOIN שומר את ה-row של Ben, ולכן GROUP BY יוצר קבוצה גם בשבילו.",
+    "COUNT תמיד מחזיר מספר, אף פעם לא NULL.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "databases-equals-null",
+  "topic": "databases",
+  "subtopic": "nulls",
+  "concepts": [
+   "null-comparison",
+   "is-null",
+   "three-valued-logic"
+  ],
+  "level": "easy",
+  "q": "Two of three users have no phone number (NULL). What does this query return?",
+  "code": "-- users(id, phone):\n--   (1,'555-0101'), (2,NULL), (3,NULL)\nSELECT COUNT(*)\nFROM users\nWHERE phone = NULL;",
+  "lang": "sql",
+  "options": [
+   "2",
+   "0",
+   "3",
+   "An error, because NULL cannot follow ="
+  ],
+  "answer": 1,
+  "why": "NULL means unknown, so phone = NULL is unknown for every row, even rows where phone is NULL. WHERE keeps only rows where the condition is true, so nothing is counted. IS NULL is the test for a missing value.",
+  "wrong": [
+   "= NULL never matches, not even a NULL. Use phone IS NULL to find missing values.",
+   null,
+   "A comparison with NULL is not skipped or treated as true. It is unknown, and WHERE drops unknown rows.",
+   "It is valid SQL. It just never matches anything."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/functions-comparison.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "לשניים משלושת המשתמשים אין מספר טלפון (NULL). מה ה-query הזה מחזיר?",
+   "options": [
+    "2",
+    "0",
+    "3",
+    "שגיאה, כי NULL לא יכול לבוא אחרי ="
+   ],
+   "why": "NULL פירושו לא ידוע, ולכן phone = NULL הוא לא ידוע בכל row, גם ב-rows שבהן phone הוא NULL. WHERE משאיר רק rows שבהן התנאי מתקיים, ולכן שום דבר לא נספר. IS NULL היא הבדיקה לערך חסר.",
+   "wrong": [
+    "= NULL אף פעם לא מתאים, אפילו לא ל-NULL. כדי למצוא ערכים חסרים משתמשים ב-phone IS NULL.",
+    null,
+    "השוואה ל-NULL לא מדולגת ולא נחשבת כמתקיימת. התוצאה שלה לא ידועה, ו-WHERE זורק rows כאלה.",
+    "זה SQL תקין. הוא פשוט אף פעם לא מתאים לשום דבר."
+   ]
+  }
+ },
+ {
+  "id": "databases-not-equal-drops-null",
+  "topic": "databases",
+  "subtopic": "nulls",
+  "concepts": [
+   "null-comparison",
+   "three-valued-logic"
+  ],
+  "level": "medium",
+  "q": "Cy's status is NULL. Which names does this query return?",
+  "code": "-- users(name, status):\n--   ('Ana','active'), ('Ben','banned'), ('Cy',NULL)\nSELECT name\nFROM users\nWHERE status <> 'banned';",
+  "lang": "sql",
+  "options": [
+   "Ana and Cy",
+   "Ana, Ben and Cy",
+   "Ana",
+   "No rows, because one NULL in the column makes every comparison unknown"
+  ],
+  "answer": 2,
+  "why": "For Cy, NULL <> 'banned' is unknown: the database cannot say whether an unknown value differs. WHERE keeps only true rows, so only Ana passes. Rows with NULL quietly drop out of = and <> filters alike.",
+  "wrong": [
+   "NULL <> 'banned' is unknown, not true, so Cy is dropped. Add OR status IS NULL to keep him.",
+   "Ben's status is 'banned', so his row fails the condition.",
+   null,
+   "Only the row holding the NULL is affected. Other rows compare their own values as usual."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/functions-comparison.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "הסטטוס של Cy הוא NULL. אילו שמות ה-query הזה מחזיר?",
+   "options": [
+    "Ana ו-Cy",
+    "Ana, Ben ו-Cy",
+    "Ana",
+    "אף row, כי NULL אחד ב-column הופך כל השוואה ללא ידועה"
+   ],
+   "why": "עבור Cy, NULL <> 'banned' הוא לא ידוע: מסד הנתונים לא יכול לקבוע אם ערך לא ידוע שונה ממשהו. WHERE משאיר רק rows שבהן התנאי מתקיים, ולכן רק Ana עוברת. rows עם NULL נעלמות בשקט גם מסינון של = וגם מסינון של <>.",
+   "wrong": [
+    "NULL <> 'banned' הוא לא ידוע, ולא מתקיים, ולכן Cy נזרק. כדי לשמור אותו צריך להוסיף OR status IS NULL.",
+    "הסטטוס של Ben הוא 'banned', ולכן ה-row שלו לא עומדת בתנאי.",
+    null,
+    "רק ה-row שמכילה את ה-NULL מושפעת. שאר ה-rows משוות את הערכים שלהן כרגיל."
+   ]
+  }
+ },
+ {
+  "id": "databases-not-in-with-null",
+  "topic": "databases",
+  "subtopic": "nulls",
+  "concepts": [
+   "not-in",
+   "not-exists",
+   "three-valued-logic"
+  ],
+  "level": "hard",
+  "q": "One order has a NULL customer_id. The query is meant to list customers who never ordered. What does it return?",
+  "code": "-- customers(id, name): (1,'Ana'), (2,'Ben'), (3,'Cy')\n-- orders(customer_id): (1), (NULL)\nSELECT name\nFROM customers\nWHERE id NOT IN (SELECT customer_id FROM orders);",
+  "lang": "sql",
+  "options": [
+   "No rows",
+   "Ben and Cy",
+   "Ana, Ben and Cy, as if the filter were ignored",
+   "An error, because the subquery returns a NULL"
+  ],
+  "answer": 0,
+  "why": "id NOT IN (1, NULL) means id <> 1 AND id <> NULL. The second part is unknown for every id, so the whole condition is never true and no row passes. Use NOT EXISTS, or exclude NULLs in the subquery.",
+  "wrong": [
+   null,
+   "That is what NOT EXISTS returns. With NOT IN, the NULL in the list makes every check unknown.",
+   "The NULL does not switch the filter off. It makes the condition unknown, and unknown rows are dropped.",
+   "Subqueries may return NULLs. The query runs; the NULL changes the result, not whether it is valid."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/functions-subquery.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "באחת ההזמנות ה-customer_id הוא NULL. ה-query אמור להציג לקוחות שמעולם לא הזמינו. מה הוא מחזיר?",
+   "options": [
+    "אף row",
+    "Ben ו-Cy",
+    "Ana, Ben ו-Cy, כאילו הסינון לא קיים",
+    "שגיאה, כי ה-subquery מחזיר NULL"
+   ],
+   "why": "id NOT IN (1, NULL) פירושו id <> 1 AND id <> NULL. החלק השני לא ידוע לכל id, ולכן התנאי כולו אף פעם לא מתקיים ואף row לא עוברת. צריך להשתמש ב-NOT EXISTS, או להוציא את ה-NULLs ב-subquery.",
+   "wrong": [
+    null,
+    "זה מה ש-NOT EXISTS מחזיר. עם NOT IN, ה-NULL ברשימה הופך כל בדיקה ללא ידועה.",
+    "ה-NULL לא מכבה את הסינון. הוא הופך את התנאי ללא ידוע, ו-rows שהתנאי עליהן לא ידוע נזרקות.",
+    "subqueries יכולים להחזיר NULLs. ה-query רץ: ה-NULL משנה את התוצאה, לא את התקינות שלו."
+   ]
+  }
+ },
+ {
+  "id": "databases-avg-ignores-null",
+  "topic": "databases",
+  "subtopic": "nulls",
+  "concepts": [
+   "aggregate",
+   "null",
+   "avg"
+  ],
+  "level": "easy",
+  "q": "A rating column holds 10, 20 and NULL in three rows. What does SELECT AVG(rating) return?",
+  "options": [
+   "10",
+   "NULL",
+   "An error until the NULL row is removed",
+   "15"
+  ],
+  "answer": 3,
+  "why": "Aggregate functions other than COUNT(*) skip NULLs. AVG adds 10 and 20 and divides by 2, the number of non-NULL values. If a missing rating should count as 0, write AVG(COALESCE(rating, 0)).",
+  "wrong": [
+   "That treats NULL as 0 and divides by 3. AVG skips NULLs instead of counting them as zero.",
+   "One NULL does not make the whole aggregate NULL. AVG ignores NULLs and averages the rest.",
+   "Aggregates are built to handle NULLs. They simply leave them out.",
+   null
+  ],
+  "ref": "https://www.postgresql.org/docs/current/functions-aggregate.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-column rating יש 10, 20 ו-NULL בשלוש rows. מה מחזיר SELECT AVG(rating)?",
+   "options": [
+    "10",
+    "NULL",
+    "שגיאה, עד שמסירים את ה-row עם ה-NULL",
+    "15"
+   ],
+   "why": "aggregate functions, חוץ מ-COUNT(*), מדלגות על NULLs. AVG מחבר 10 ו-20 ומחלק ב-2, מספר הערכים שאינם NULL. אם דירוג חסר צריך להיחשב כ-0, כותבים AVG(COALESCE(rating, 0)).",
+   "wrong": [
+    "זה מתייחס ל-NULL כאל 0 ומחלק ב-3. AVG מדלג על NULLs במקום לספור אותם כאפס.",
+    "NULL אחד לא הופך את כל ה-aggregate ל-NULL. AVG מתעלם מ-NULLs ומחשב ממוצע של השאר.",
+    "aggregate functions בנויות להתמודד עם NULLs. הן פשוט משאירות אותם בחוץ.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "databases-null-arithmetic-coalesce",
+  "topic": "databases",
+  "subtopic": "nulls",
+  "concepts": [
+   "null-propagation",
+   "coalesce"
+  ],
+  "level": "medium",
+  "q": "SELECT price + shipping AS total returns NULL for orders where shipping was never set. Which version returns just the price for those orders?",
+  "options": [
+   "The same query with WHERE shipping IS NOT NULL",
+   "SELECT price + COALESCE(shipping, 0) AS total",
+   "The same query; the NULL is only how the tool displays it",
+   "SELECT CAST(price + shipping AS INTEGER) AS total"
+  ],
+  "answer": 1,
+  "why": "Arithmetic with NULL gives NULL: a price plus an unknown amount is still unknown. COALESCE returns its first non-NULL argument, so a missing shipping cost counts as 0.",
+  "wrong": [
+   "That hides those orders instead of giving them a total.",
+   null,
+   "The value really is NULL. Arithmetic with NULL gives NULL, and code reading the column gets NULL too.",
+   "The NULL is not a type problem. Casting NULL still gives NULL."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/functions-conditional.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "SELECT price + shipping AS total מחזיר NULL בהזמנות שבהן shipping לא הוגדר מעולם. איזו גרסה מחזירה בהזמנות האלה פשוט את המחיר?",
+   "options": [
+    "אותו query עם WHERE shipping IS NOT NULL",
+    "SELECT price + COALESCE(shipping, 0) AS total",
+    "אותו query; ה-NULL הוא רק הדרך שבה הכלי מציג את זה",
+    "SELECT CAST(price + shipping AS INTEGER) AS total"
+   ],
+   "why": "חשבון עם NULL נותן NULL: מחיר ועוד סכום לא ידוע הוא עדיין לא ידוע. COALESCE מחזירה את הארגומנט הראשון שאינו NULL, ולכן עלות משלוח חסרה נחשבת כ-0.",
+   "wrong": [
+    "זה מסתיר את ההזמנות האלה במקום לחשב להן total.",
+    null,
+    "הערך באמת NULL. חשבון עם NULL נותן NULL, וגם קוד שקורא את ה-column מקבל NULL.",
+    "ה-NULL הוא לא בעיה של טיפוס. cast של NULL עדיין נותן NULL."
+   ]
+  }
+ },
+ {
+  "id": "databases-why-index-is-faster",
+  "topic": "databases",
+  "subtopic": "indexes",
+  "concepts": [
+   "index",
+   "b-tree",
+   "full-scan"
+  ],
+  "level": "easy",
+  "q": "Finding a user by email in a 10 million row table takes seconds. After adding an index on email it takes milliseconds. Why?",
+  "options": [
+   "It loads the whole table into memory, so the scan itself runs faster",
+   "It stores each query's result, so repeated lookups are answered from it",
+   "It keeps emails sorted with row pointers, so lookups skip the scan",
+   "It compresses the table, so a scan has less data to read"
+  ],
+  "answer": 2,
+  "why": "Without an index the database must check every row. An index (usually a B-tree) keeps the values in sorted order with a pointer to each row, so finding one value takes a few steps, about O(log n) instead of O(n).",
+  "wrong": [
+   "An index is a separate sorted structure. It avoids the scan; it does not speed up reading every row.",
+   "That describes a cache. An index speeds up the very first lookup of any email, not only repeats.",
+   null,
+   "An index adds data; it does not shrink the table. The gain comes from skipping rows."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/indexes-intro.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חיפוש משתמש לפי email ב-table של 10 מיליון rows לוקח שניות. אחרי הוספת index על email הוא לוקח מילישניות. למה?",
+   "options": [
+    "הוא טוען את כל ה-table לזיכרון, ולכן הסריקה עצמה רצה מהר יותר",
+    "הוא שומר את התוצאה של כל query, כך שחיפושים חוזרים נענים ממנה",
+    "הוא שומר את ה-emails ממוינים עם pointers ל-rows, כך שהחיפוש מדלג על הסריקה",
+    "הוא דוחס את ה-table, כך שלסריקה יש פחות נתונים לקרוא"
+   ],
+   "why": "בלי index, מסד הנתונים חייב לבדוק כל row. index (בדרך כלל B-tree) שומר את הערכים בסדר ממוין עם pointer לכל row, ולכן מציאת ערך אחד לוקחת מעט צעדים, בערך O(log n) במקום O(n).",
+   "wrong": [
+    "index הוא מבנה ממוין נפרד. הוא חוסך את הסריקה, הוא לא מאיץ קריאה של כל row.",
+    "זה מתאר cache. index מאיץ כבר את החיפוש הראשון של כל email, לא רק חיפושים חוזרים.",
+    null,
+    "index מוסיף נתונים, הוא לא מקטין את ה-table. השיפור מגיע מהדילוג על rows."
+   ]
+  }
+ },
+ {
+  "id": "databases-index-cost-on-writes",
+  "topic": "databases",
+  "subtopic": "indexes",
+  "concepts": [
+   "index",
+   "write-cost"
+  ],
+  "level": "easy",
+  "q": "A logging table takes thousands of inserts per second and has 8 indexes. Inserts are slow. What is the most likely cause?",
+  "options": [
+   "Each insert must also add an entry to all 8 indexes",
+   "Indexes only affect reads, so the cause must be somewhere else",
+   "Each insert rebuilds all 8 indexes from scratch",
+   "The whole table is re-sorted on disk after every insert"
+  ],
+  "answer": 0,
+  "why": "An index is an extra sorted copy of some columns. Every insert has to place a new entry in every index, so write cost grows with the number of indexes. Index the columns your queries really search on, not everything.",
+  "wrong": [
+   null,
+   "Indexes speed up reads but are not free: each one is updated on every insert, update and delete.",
+   "An index is updated in place with one new entry. Rebuilding on every insert would be far slower still.",
+   "Adding a row does not reorder the existing rows. The extra work is keeping the indexes up to date."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/indexes-intro.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "table של לוגים מקבלת אלפי inserts בשנייה ויש עליה 8 indexes. ה-inserts איטיים. מה הסיבה הסבירה ביותר?",
+   "options": [
+    "כל insert צריך להוסיף רשומה גם לכל 8 ה-indexes",
+    "indexes משפיעים רק על קריאות, אז הסיבה חייבת להיות במקום אחר",
+    "כל insert בונה מחדש את כל 8 ה-indexes מאפס",
+    "כל ה-table ממוינת מחדש בדיסק אחרי כל insert"
+   ],
+   "why": "index הוא עותק ממוין נוסף של חלק מה-columns. כל insert צריך להכניס רשומה חדשה לכל index, ולכן עלות הכתיבה גדלה עם מספר ה-indexes. כדאי לשים index על ה-columns שה-queries באמת מחפשים לפיהן, לא על הכול.",
+   "wrong": [
+    null,
+    "indexes מאיצים קריאות אבל לא בחינם: כל אחד מהם מתעדכן בכל insert, update ו-delete.",
+    "index מתעדכן במקום, עם רשומה חדשה אחת. בנייה מחדש בכל insert הייתה איטית עוד הרבה יותר.",
+    "הוספת row לא משנה את הסדר של ה-rows הקיימות. העבודה הנוספת היא לשמור את ה-indexes מעודכנים."
+   ]
+  }
+ },
+ {
+  "id": "databases-composite-index-leftmost",
+  "topic": "databases",
+  "subtopic": "indexes",
+  "concepts": [
+   "composite-index",
+   "leftmost-prefix"
+  ],
+  "level": "medium",
+  "q": "A table has one index on (last_name, first_name). Which query gets the least help from it?",
+  "options": [
+   "WHERE last_name = 'Cohen'",
+   "WHERE last_name = 'Cohen' AND first_name = 'Dana'",
+   "WHERE last_name = 'Cohen' ORDER BY first_name",
+   "WHERE first_name = 'Dana'"
+  ],
+  "answer": 3,
+  "why": "The index is sorted by last_name first, like a phone book. People named Dana are spread across every last name, so the index gives no place to start. A composite index helps when the query fixes a leftmost prefix of its columns.",
+  "wrong": [
+   "last_name is the first column of the index, so the database can jump straight to the Cohens.",
+   "Both columns are given, in index order. This is the best case for the index.",
+   "Within the Cohens, the index is already sorted by first_name, so it serves both the filter and the sort.",
+   null
+  ],
+  "ref": "https://www.postgresql.org/docs/current/indexes-multicolumn.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "על table יש index אחד על (last_name, first_name). איזה query מקבל ממנו הכי מעט עזרה?",
+   "options": [
+    "WHERE last_name = 'Cohen'",
+    "WHERE last_name = 'Cohen' AND first_name = 'Dana'",
+    "WHERE last_name = 'Cohen' ORDER BY first_name",
+    "WHERE first_name = 'Dana'"
+   ],
+   "why": "ה-index ממוין קודם לפי last_name, כמו ספר טלפונים. אנשים בשם Dana מפוזרים בין כל שמות המשפחה, ולכן ה-index לא נותן נקודת התחלה. composite index עוזר כשה-query קובע prefix שמאלי של ה-columns שלו.",
+   "wrong": [
+    "last_name הוא ה-column הראשונה ב-index, ולכן מסד הנתונים יכול לקפוץ ישר לכל ה-Cohen.",
+    "שני ה-columns נתונים, בסדר של ה-index. זה המקרה הטוב ביותר עבור ה-index.",
+    "בתוך ה-Cohen, ה-index כבר ממוין לפי first_name, ולכן הוא משרת גם את הסינון וגם את המיון.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "databases-function-on-indexed-column",
+  "topic": "databases",
+  "subtopic": "indexes",
+  "concepts": [
+   "index",
+   "expression",
+   "full-scan"
+  ],
+  "level": "medium",
+  "q": "email has an index, yet SELECT * FROM users WHERE LOWER(email) = 'dana@x.io' is slow on a large table. Why?",
+  "options": [
+   "LOWER() runs after the index lookup, so the slowness has another cause",
+   "The index is sorted by email, not LOWER(email), so no direct lookup is possible",
+   "Indexes are never used in a query that calls any function",
+   "The index returns rows in the wrong letter case, so each one must be re-checked by hand"
+  ],
+  "answer": 1,
+  "why": "The index orders the stored email values. LOWER(email) is a new value computed per row at query time, so the database has to compute it for every row. Store emails in one case, or create an index on LOWER(email).",
+  "wrong": [
+   "The index cannot be searched for a value it does not store, so LOWER has to run on every row first.",
+   null,
+   "A function on the search value is fine, and so is an index built on LOWER(email). The problem is wrapping the indexed column.",
+   "An index stores the exact column values. The issue is that it cannot be searched for LOWER(email) at all."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/indexes-expressional.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "יש index על email, ובכל זאת SELECT * FROM users WHERE LOWER(email) = 'dana@x.io' איטי על table גדולה. למה?",
+   "options": [
+    "LOWER() רצה אחרי החיפוש ב-index, אז לאיטיות יש סיבה אחרת",
+    "ה-index ממוין לפי email, לא לפי LOWER(email), ולכן אין אפשרות לחיפוש ישיר",
+    "indexes אף פעם לא משמשים query שקורא ל-function כלשהי",
+    "ה-index מחזיר rows ברישיות (case) הלא נכונה, ולכן צריך לבדוק כל אחת מהן מחדש ידנית"
+   ],
+   "why": "ה-index מסדר את ערכי ה-email השמורים. LOWER(email) הוא ערך חדש שמחושב לכל row בזמן ה-query, ולכן מסד הנתונים צריך לחשב אותו לכל row. אפשר לשמור את ה-emails ב-case אחיד, או ליצור index על LOWER(email).",
+   "wrong": [
+    "אי אפשר לחפש ב-index ערך שהוא לא שומר, ולכן LOWER צריכה לרוץ קודם על כל row.",
+    null,
+    "function על ערך החיפוש זה בסדר, וגם index שנבנה על LOWER(email). הבעיה היא לעטוף את ה-column שעליה ה-index.",
+    "index שומר את ערכי ה-column המדויקים. הבעיה היא שאי אפשר לחפש בו את LOWER(email) בכלל."
+   ]
+  }
+ },
+ {
+  "id": "databases-leading-wildcard-like",
+  "topic": "databases",
+  "subtopic": "indexes",
+  "concepts": [
+   "index",
+   "like",
+   "full-scan"
+  ],
+  "level": "medium",
+  "q": "name has an index. Can WHERE name LIKE '%son' use it to jump straight to the matching rows?",
+  "options": [
+   "Yes: the database finds 'son' in the index the same way it finds a prefix",
+   "No: indexes help with = only, never with any range or partial match",
+   "No: the index is ordered by how names start, and '%son' fixes no start",
+   "Yes, as long as the % is escaped so the index reads it as text"
+  ],
+  "answer": 2,
+  "why": "Anderson, Wilson and Olson sit far apart in a list sorted from the first letter, so every entry has to be checked. A pattern with a fixed start, like 'Wil%', covers one contiguous range of the index instead.",
+  "wrong": [
+   "Names ending in 'son' are scattered through a list sorted from the first letter, so there is no range to jump to.",
+   "Sorted indexes also serve ranges such as BETWEEN, and a fixed prefix like 'Wil%' can map to a range.",
+   null,
+   "Escaping makes % a literal character, which asks a different question: names that are exactly '%son'."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/indexes-types.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "יש index על name. האם WHERE name LIKE '%son' יכול להשתמש בו כדי לקפוץ ישר ל-rows המתאימות?",
+   "options": [
+    "כן: מסד הנתונים מוצא את 'son' ב-index באותה דרך שבה הוא מוצא prefix",
+    "לא: indexes עוזרים רק עם =, אף פעם לא עם טווח או התאמה חלקית",
+    "לא: ה-index מסודר לפי איך ששמות מתחילים, ו-'%son' לא קובע התחלה",
+    "כן, בתנאי שעושים escape ל-% כך שה-index יקרא אותו כטקסט"
+   ],
+   "why": "Anderson, Wilson ו-Olson נמצאים רחוק זה מזה ברשימה שממוינת מהאות הראשונה, ולכן צריך לבדוק כל רשומה. תבנית עם התחלה קבועה, כמו 'Wil%', מכסה במקום זה טווח רציף אחד של ה-index.",
+   "wrong": [
+    "שמות שמסתיימים ב-'son' מפוזרים לאורך רשימה שממוינת מהאות הראשונה, ולכן אין טווח לקפוץ אליו.",
+    "indexes ממוינים משרתים גם טווחים כמו BETWEEN, ו-prefix קבוע כמו 'Wil%' יכול להיתרגם לטווח.",
+    null,
+    "escape הופך את % לתו רגיל, וזו כבר שאלה אחרת: שמות שהם בדיוק '%son'."
+   ]
+  }
+ },
+ {
+  "id": "databases-low-selectivity-index",
+  "topic": "databases",
+  "subtopic": "indexes",
+  "concepts": [
+   "index",
+   "selectivity",
+   "full-scan"
+  ],
+  "level": "medium",
+  "q": "is_active is indexed, and 95% of rows have is_active = 1. The database ignores the index for WHERE is_active = 1. Why is that sensible?",
+  "options": [
+   "Nearly every row matches, so reading the table straight through is cheaper",
+   "Indexes cannot be built on a column with only two values",
+   "The index is out of date and has to be rebuilt before the database can use it",
+   "An index only helps queries that also have ORDER BY"
+  ],
+  "answer": 0,
+  "why": "An index pays off when it narrows the search to a few rows. When a value matches almost the whole table, one index jump per row costs more than a single pass over the table. The same index would help a lot for is_active = 0, the rare 5%.",
+  "wrong": [
+   null,
+   "They can be built. They just help little when a value matches most rows.",
+   "Indexes are updated on every write. Staleness is not the reason.",
+   "An index can serve a filter alone. This filter is just not selective."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/indexes-intro.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "יש index על is_active, וב-95% מה-rows is_active = 1. מסד הנתונים מתעלם מה-index עבור WHERE is_active = 1. למה זה הגיוני?",
+   "options": [
+    "כמעט כל row מתאימה, ולכן זול יותר לקרוא את ה-table מההתחלה עד הסוף",
+    "אי אפשר לבנות indexes על column עם שני ערכים בלבד",
+    "ה-index לא מעודכן וצריך לבנות אותו מחדש לפני שמסד הנתונים יוכל להשתמש בו",
+    "index עוזר רק ל-queries שיש בהם גם ORDER BY"
+   ],
+   "why": "index משתלם כשהוא מצמצם את החיפוש למעט rows. כשערך מתאים כמעט לכל ה-table, קפיצה דרך ה-index לכל row עולה יותר ממעבר אחד על ה-table. אותו index יעזור מאוד עבור is_active = 0, ה-5% הנדירים.",
+   "wrong": [
+    null,
+    "אפשר לבנות אותם. הם פשוט עוזרים מעט כשערך מתאים לרוב ה-rows.",
+    "indexes מתעדכנים בכל כתיבה. index לא מעודכן הוא לא הסיבה.",
+    "index יכול לשרת סינון גם לבד. הסינון הזה פשוט לא סלקטיבי."
+   ]
+  }
+ },
+ {
+  "id": "databases-primary-key-is-indexed",
+  "topic": "databases",
+  "subtopic": "indexes",
+  "concepts": [
+   "primary-key",
+   "index"
+  ],
+  "level": "easy",
+  "q": "Nobody created an index on orders, yet SELECT * FROM orders WHERE id = 42 is fast on 10 million rows. id is the primary key. Why?",
+  "options": [
+   "Rows are stored in insertion order, so row 42 is at a known position",
+   "The database caches the result of every query",
+   "Comparing integers is so fast that scanning 10 million rows is instant",
+   "The database keeps an index on the primary key automatically"
+  ],
+  "answer": 3,
+  "why": "To enforce uniqueness quickly, databases back a primary key (and a UNIQUE constraint) with an index, and that same index serves lookups by id. Foreign key columns, by contrast, are often not indexed automatically.",
+  "wrong": [
+   "Ids are not file offsets: rows get deleted, ids can have gaps, and storage order is not guaranteed.",
+   "A cache cannot explain a fast first lookup. The speed comes from the index behind the key.",
+   "A scan still reads every row. A fast comparison does not turn O(n) into a few steps.",
+   null
+  ],
+  "ref": "https://www.postgresql.org/docs/current/indexes-unique.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אף אחד לא יצר index על orders, ובכל זאת SELECT * FROM orders WHERE id = 42 מהיר על 10 מיליון rows. id הוא ה-primary key. למה?",
+   "options": [
+    "rows נשמרות לפי סדר ההכנסה, ולכן row 42 נמצאת במיקום ידוע",
+    "מסד הנתונים שומר ב-cache את התוצאה של כל query",
+    "השוואת מספרים שלמים כל כך מהירה שסריקה של 10 מיליון rows היא מיידית",
+    "מסד הנתונים מחזיק index על ה-primary key באופן אוטומטי"
+   ],
+   "why": "כדי לאכוף ייחודיות במהירות, מסדי נתונים מגבים primary key (וגם UNIQUE constraint) ב-index, ואותו index משרת חיפושים לפי id. לעומת זאת, columns של foreign key לרוב לא מקבלים index אוטומטית.",
+   "wrong": [
+    "ids הם לא מיקומים בקובץ: rows נמחקות, יכולים להיות פערים ב-ids, וסדר האחסון לא מובטח.",
+    "cache לא מסביר חיפוש ראשון מהיר. המהירות מגיעה מה-index שמאחורי ה-primary key.",
+    "סריקה עדיין קוראת כל row. השוואה מהירה לא הופכת O(n) למעט צעדים.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "databases-atomic-transfer-crash",
+  "topic": "databases",
+  "subtopic": "transactions",
+  "concepts": [
+   "atomicity",
+   "rollback",
+   "acid"
+  ],
+  "level": "easy",
+  "q": "A transfer runs in one transaction: subtract 100 from account A, then add 100 to B. The server crashes between the two updates. After restart, what is stored?",
+  "options": [
+   "A is 100 lower and B is unchanged, so someone must fix it by hand",
+   "Neither change: the subtraction from A is undone",
+   "Both changes: the database finishes the transfer on restart",
+   "A is 100 lower, and B gets the 100 the next time someone reads it"
+  ],
+  "answer": 1,
+  "why": "Atomicity means a transaction happens completely or not at all. This one never committed, so during recovery the database rolls its changes back, and both accounts look as they did before the transfer.",
+  "wrong": [
+   "That is what happens without a transaction. Inside one, an unfinished change is rolled back.",
+   null,
+   "The database cannot know how to finish your work. It undoes changes that were never committed.",
+   "Nothing is deferred to later reads. The uncommitted subtraction simply does not survive."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-transactions.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "העברה רצה ב-transaction אחת: מורידים 100 מחשבון A, ואז מוסיפים 100 ל-B. השרת קורס בין שני העדכונים. מה שמור אחרי האתחול?",
+   "options": [
+    "A נמוך ב-100 ו-B לא השתנה, כך שמישהו צריך לתקן את זה ידנית",
+    "אף שינוי: ההורדה מ-A מבוטלת",
+    "שני השינויים: מסד הנתונים משלים את ההעברה באתחול",
+    "A נמוך ב-100, ו-B יקבל את ה-100 בפעם הבאה שמישהו יקרא אותו"
+   ],
+   "why": "Atomicity פירושה ש-transaction מתבצעת במלואה או לא בכלל. ה-transaction הזו לא הגיעה ל-commit, ולכן בזמן ההתאוששות מסד הנתונים עושה rollback לשינויים שלה, ושני החשבונות נראים כמו לפני ההעברה.",
+   "wrong": [
+    "זה מה שקורה בלי transaction. בתוך transaction, שינוי שלא הושלם עובר rollback.",
+    null,
+    "מסד הנתונים לא יכול לדעת איך להשלים את העבודה. הוא מבטל שינויים שמעולם לא עשו להם commit.",
+    "שום דבר לא נדחה לקריאות מאוחרות יותר. ההורדה שלא עשו לה commit פשוט לא שורדת."
+   ]
+  }
+ },
+ {
+  "id": "databases-durability-after-commit",
+  "topic": "databases",
+  "subtopic": "transactions",
+  "concepts": [
+   "durability",
+   "acid",
+   "commit"
+  ],
+  "level": "easy",
+  "q": "COMMIT returns success, and a second later the server loses power. After restart the change is still there. Which ACID property promises this?",
+  "options": [
+   "Atomicity",
+   "Consistency",
+   "Isolation",
+   "Durability"
+  ],
+  "answer": 3,
+  "why": "Durability means a committed transaction stays committed, even after a crash or power loss. Databases usually achieve it by writing the change to a log on disk before they report success.",
+  "wrong": [
+   "Atomicity is about all or nothing inside a transaction, not about surviving a crash after the commit.",
+   "Consistency is about the data obeying its rules and constraints before and after a transaction.",
+   "Isolation is about concurrent transactions not seeing each other's unfinished work.",
+   null
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-transactions.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "COMMIT מחזיר הצלחה, ושנייה אחר כך נופל החשמל בשרת. אחרי האתחול השינוי עדיין שם. איזו תכונה של ACID מבטיחה את זה?",
+   "options": [
+    "Atomicity",
+    "Consistency",
+    "Isolation",
+    "Durability"
+   ],
+   "why": "Durability פירושה ש-transaction שעשתה commit נשארת כזו, גם אחרי קריסה או הפסקת חשמל. מסדי נתונים בדרך כלל משיגים את זה בכך שהם כותבים את השינוי ל-log בדיסק לפני שהם מדווחים על הצלחה.",
+   "wrong": [
+    "Atomicity עוסקת בהכול או כלום בתוך transaction, לא בשרידות אחרי קריסה שקרתה אחרי ה-commit.",
+    "Consistency עוסקת בכך שהנתונים מקיימים את הכללים וה-constraints שלהם לפני transaction ואחריה.",
+    "Isolation עוסקת בכך ש-transactions שרצות במקביל לא רואות עבודה לא גמורה אחת של השנייה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "databases-consistency-meaning",
+  "topic": "databases",
+  "subtopic": "transactions",
+  "concepts": [
+   "consistency",
+   "acid",
+   "constraints"
+  ],
+  "level": "medium",
+  "q": "balance has CHECK (balance >= 0). A transfer would leave one account at -20, so the whole transaction fails. Which idea does this show?",
+  "options": [
+   "Consistency: data only moves from one valid state to another",
+   "Consistency: every replica returns the same value at the same moment",
+   "Isolation: other transactions must not see the -20",
+   "Durability: the database refused to store a value it could not keep"
+  ],
+  "answer": 0,
+  "why": "Consistency in ACID means each committed transaction leaves the data valid under the rules the database knows: keys, constraints, checks. A rule that lives only in app code is not enforced by the database.",
+  "wrong": [
+   null,
+   "That is the C in CAP, about copies on several servers. The C in ACID is about rules on the data.",
+   "Isolation is about concurrent transactions. Here a rule would break even with a single user.",
+   "Durability is about committed data surviving crashes, not about which values are allowed."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/ddl-constraints.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "על balance מוגדר CHECK (balance >= 0). העברה הייתה משאירה חשבון אחד על -20, ולכן כל ה-transaction נכשלת. איזה רעיון זה מדגים?",
+   "options": [
+    "Consistency: הנתונים עוברים רק ממצב תקין אחד למצב תקין אחר",
+    "Consistency: כל replica מחזירה את אותו ערך באותו רגע",
+    "Isolation: transactions אחרות לא אמורות לראות את הערך -20",
+    "Durability: מסד הנתונים סירב לשמור ערך שהוא לא יכול להחזיק"
+   ],
+   "why": "Consistency ב-ACID פירושה שכל transaction שעושה commit משאירה את הנתונים תקינים לפי הכללים שמסד הנתונים מכיר: keys, constraints, checks. כלל שקיים רק בקוד האפליקציה לא נאכף על ידי מסד הנתונים.",
+   "wrong": [
+    null,
+    "זה ה-C של CAP, שעוסק בעותקים על כמה שרתים. ה-C של ACID עוסק בכללים על הנתונים.",
+    "Isolation עוסקת ב-transactions שרצות במקביל. כאן הכלל היה נשבר גם עם משתמש יחיד.",
+    "Durability עוסקת בשרידות של נתונים שעשו להם commit אחרי קריסות, לא בשאלה אילו ערכים מותרים."
+   ]
+  }
+ },
+ {
+  "id": "databases-lost-update",
+  "topic": "databases",
+  "subtopic": "transactions",
+  "concepts": [
+   "lost-update",
+   "race-condition",
+   "read-modify-write"
+  ],
+  "level": "medium",
+  "q": "Two requests run at once, with no explicit transaction. Each reads stock = 10, subtracts 1 in app code, then runs UPDATE items SET stock = 9 WHERE id = 1. What is the final stock?",
+  "options": [
+   "8, because the database applies both updates in turn",
+   "It depends on which request writes first: 9 or 8",
+   "9, because one of the two sales is lost",
+   "An error, because the database sees the row changed after it was read"
+  ],
+  "answer": 2,
+  "why": "This is a lost update. Both requests read 10 before either wrote, so both compute 9, and the second write overwrites the first. Nothing tells the database the two decrements were meant to stack.",
+  "wrong": [
+   "It does apply both, but each writes the fixed value 9, computed from the same old read.",
+   "Either order gives 9, since both requests write a value computed from the same read of 10.",
+   null,
+   "The database cannot know the app read the row earlier. It just runs two valid UPDATE statements."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-transactions.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני requests רצים במקביל, בלי transaction מפורשת. כל אחד קורא stock = 10, מחסיר 1 בקוד האפליקציה, ואז מריץ UPDATE items SET stock = 9 WHERE id = 1. מה ערך ה-stock בסוף?",
+   "options": [
+    "8, כי מסד הנתונים מפעיל את שני העדכונים בזה אחר זה",
+    "תלוי איזה request כותב ראשון: 9 או 8",
+    "9, כי אחת משתי המכירות הולכת לאיבוד",
+    "שגיאה, כי מסד הנתונים רואה שה-row השתנתה אחרי שנקראה"
+   ],
+   "why": "זה lost update. שני ה-requests קראו 10 לפני שאחד מהם כתב, ולכן שניהם מחשבים 9, והכתיבה השנייה דורסת את הראשונה. שום דבר לא אומר למסד הנתונים ששתי ההפחתות היו אמורות להצטבר.",
+   "wrong": [
+    "הוא אכן מפעיל את שניהם, אבל כל אחד מהם כותב את הערך הקבוע 9, שחושב מאותה קריאה ישנה.",
+    "בכל סדר יוצא 9, כי שני ה-requests כותבים ערך שחושב מאותה קריאה של 10.",
+    null,
+    "מסד הנתונים לא יכול לדעת שהאפליקציה קראה את ה-row קודם. הוא פשוט מריץ שתי פקודות UPDATE תקינות."
+   ]
+  }
+ },
+ {
+  "id": "databases-fix-lost-update",
+  "topic": "databases",
+  "subtopic": "transactions",
+  "concepts": [
+   "lost-update",
+   "atomic-update",
+   "read-modify-write"
+  ],
+  "level": "medium",
+  "q": "Many requests sell the same item by reading stock, subtracting 1 in app code, and writing it back. Some sales get lost. What is the simplest reliable fix?",
+  "options": [
+   "Read the stock twice and write only if both reads agree",
+   "UPDATE items SET stock = stock - 1 WHERE id = 1",
+   "Add an index on the stock column",
+   "Have each request wait a short random delay before writing"
+  ],
+  "answer": 1,
+  "why": "With stock = stock - 1, the database reads the current value and writes the new one in a single step that no other write can slip into. Concurrent decrements take turns, so none is lost. Locking the row when reading, or a version check, also work.",
+  "wrong": [
+   "Another request can still write between the second read and your write. The gap only gets smaller.",
+   null,
+   "An index speeds up finding rows. It does nothing about two requests racing on the same row.",
+   "Random delays make the race rarer and harder to reproduce, not impossible."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-transactions.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "הרבה requests מוכרים את אותו פריט: קוראים את ה-stock, מחסירים 1 בקוד האפליקציה וכותבים אותו בחזרה. חלק מהמכירות הולכות לאיבוד. מה התיקון הפשוט והאמין ביותר?",
+   "options": [
+    "לקרוא את ה-stock פעמיים ולכתוב רק אם שתי הקריאות מסכימות",
+    "UPDATE items SET stock = stock - 1 WHERE id = 1",
+    "להוסיף index על ה-column stock",
+    "לגרום לכל request לחכות השהיה אקראית קצרה לפני הכתיבה"
+   ],
+   "why": "עם stock = stock - 1, מסד הנתונים קורא את הערך הנוכחי וכותב את החדש בצעד אחד, שאף כתיבה אחרת לא יכולה להשתחל לתוכו. הפחתות במקביל מתבצעות לפי תור, כך שאף אחת לא הולכת לאיבוד. גם lock על ה-row בזמן הקריאה, או בדיקת גרסה, עובדים.",
+   "wrong": [
+    "request אחר עדיין יכול לכתוב בין הקריאה השנייה לבין הכתיבה. הפער רק נעשה קטן יותר.",
+    null,
+    "index מאיץ מציאת rows. הוא לא עושה כלום נגד שני requests שמתחרים על אותה row.",
+    "השהיות אקראיות הופכות את ה-race לנדיר יותר וקשה יותר לשחזור, לא לבלתי אפשרי."
+   ]
+  }
+ },
+ {
+  "id": "databases-why-use-a-transaction",
+  "topic": "databases",
+  "subtopic": "transactions",
+  "concepts": [
+   "transaction",
+   "atomicity"
+  ],
+  "level": "easy",
+  "q": "Placing an order inserts a row into orders, inserts its lines into order_items, and lowers stock. Why run the three statements in one transaction?",
+  "options": [
+   "So a failure halfway cannot leave an order without its items",
+   "Because INSERT only works inside an explicit transaction",
+   "So other users see each step as soon as it runs",
+   "To lock the whole database so nobody can read during the order"
+  ],
+  "answer": 0,
+  "why": "The three changes only make sense together. Inside a transaction, if any statement fails, a ROLLBACK (or crash recovery) undoes the others, so the database never holds an order with no items or sold stock that was never subtracted.",
+  "wrong": [
+   null,
+   "Each statement runs fine on its own in autocommit mode. The problem is the half-done state between them.",
+   "It is the opposite: other sessions see the changes only at commit, all together.",
+   "A transaction does not normally block all readers. Its job is to make the group of changes all or nothing."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/tutorial-transactions.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ביצוע הזמנה מכניס row ל-orders, מכניס את שורות ההזמנה ל-order_items, ומוריד את המלאי. למה להריץ את שלוש הפקודות ב-transaction אחת?",
+   "options": [
+    "כדי שכישלון באמצע לא ישאיר הזמנה בלי הפריטים שלה",
+    "כי INSERT עובד רק בתוך transaction מפורשת",
+    "כדי שמשתמשים אחרים יראו כל שלב מיד כשהוא רץ",
+    "כדי לנעול את כל מסד הנתונים כך שאף אחד לא יוכל לקרוא בזמן ההזמנה"
+   ],
+   "why": "שלושת השינויים הגיוניים רק ביחד. בתוך transaction, אם פקודה כלשהי נכשלת, ROLLBACK (או ההתאוששות מקריסה) מבטל את האחרות, כך שבמסד הנתונים אף פעם אין הזמנה בלי פריטים, או מלאי שנמכר בלי שהופחת.",
+   "wrong": [
+    null,
+    "כל פקודה רצה בלי בעיה לבד במצב autocommit. הבעיה היא המצב החצי גמור שביניהן.",
+    "זה ההפך: sessions אחרים רואים את השינויים רק ב-commit, כולם ביחד.",
+    "transaction בדרך כלל לא חוסמת את כל הקוראים. התפקיד שלה הוא להפוך את קבוצת השינויים להכול או כלום."
+   ]
+  }
+ },
+ {
+  "id": "databases-autocommit-then-rollback",
+  "topic": "databases",
+  "subtopic": "transactions",
+  "concepts": [
+   "autocommit",
+   "rollback",
+   "atomicity"
+  ],
+  "level": "hard",
+  "q": "The session starts in autocommit mode with no transaction open. Account 1 has 100 and account 2 has 50. What does the final SELECT show?",
+  "code": "-- acct(id, bal): (1,100), (2,50)\nUPDATE acct SET bal = bal - 30 WHERE id = 1;\nBEGIN;\nUPDATE acct SET bal = bal + 30 WHERE id = 2;\nROLLBACK;\nSELECT id, bal FROM acct ORDER BY id;",
+  "lang": "sql",
+  "options": [
+   "1: 100, 2: 50",
+   "1: 70, 2: 80",
+   "1: 70, 2: 50",
+   "1: 100, 2: 80"
+  ],
+  "answer": 2,
+  "why": "Before BEGIN, each statement is its own transaction and commits at once, so the -30 is permanent. BEGIN opens a transaction holding the +30, and ROLLBACK discards it. The 30 vanished: the transfer had to start with BEGIN to be atomic.",
+  "wrong": [
+   "ROLLBACK only undoes work since BEGIN. The first UPDATE ran in autocommit mode and was committed on its own.",
+   "ROLLBACK does undo the second UPDATE. Only committed work survives it.",
+   null,
+   "ROLLBACK does not reach back to the last committed statement. It discards the open transaction, which holds only the +30."
+  ],
+  "ref": "https://www.sqlite.org/lang_transaction.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-session מתחיל במצב autocommit בלי transaction פתוחה. בחשבון 1 יש 100 ובחשבון 2 יש 50. מה יציג ה-SELECT האחרון?",
+   "options": [
+    "1: 100, 2: 50",
+    "1: 70, 2: 80",
+    "1: 70, 2: 50",
+    "1: 100, 2: 80"
+   ],
+   "why": "לפני BEGIN, כל פקודה היא transaction בפני עצמה ועושה commit מיד, ולכן ההורדה של 30 קבועה. BEGIN פותח transaction שמחזיקה את ההוספה של 30, ו-ROLLBACK זורק אותה. ה-30 נעלמו: ההעברה הייתה צריכה להתחיל ב-BEGIN כדי להיות atomic.",
+   "wrong": [
+    "ROLLBACK מבטל רק עבודה מאז ה-BEGIN. ה-UPDATE הראשון רץ במצב autocommit ועשה commit בעצמו.",
+    "ROLLBACK כן מבטל את ה-UPDATE השני. רק עבודה שעשו לה commit שורדת אותו.",
+    null,
+    "ROLLBACK לא חוזר אחורה עד הפקודה האחרונה שעשתה commit. הוא זורק את ה-transaction הפתוחה, שמחזיקה רק את ההוספה של 30."
+   ]
+  }
+ },
+ {
+  "id": "databases-primary-key-rules",
+  "topic": "databases",
+  "subtopic": "design",
+  "concepts": [
+   "primary-key",
+   "unique",
+   "not-null"
+  ],
+  "level": "easy",
+  "q": "A users table needs a primary key column. What must be true of the values in that column?",
+  "options": [
+   "They are auto-incrementing integers",
+   "They are unique, though one row may hold NULL",
+   "They may repeat, as long as the other columns differ",
+   "Each is unique in the table, and none is NULL"
+  ],
+  "answer": 3,
+  "why": "A primary key is how each row is identified, so two rows cannot share a key value and no row may lack one. A table has one primary key, which may span several columns, and the database indexes it.",
+  "wrong": [
+   "Auto-increment is a common way to fill a key, but a product code or an email can be a key too.",
+   "A primary key identifies every row, so NULL is not allowed. Accepting NULLs is a trait of UNIQUE.",
+   "A key that spans several columns is a composite key, and then that whole combination must be unique.",
+   null
+  ],
+  "ref": "https://www.postgresql.org/docs/current/ddl-constraints.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-table של users צריך column של primary key. מה חייב להיות נכון לגבי הערכים ב-column הזאת?",
+   "options": [
+    "הם מספרים שלמים עם auto-increment",
+    "הם ייחודיים, אבל row אחת יכולה להכיל NULL",
+    "הם יכולים לחזור, כל עוד שאר ה-columns שונות",
+    "כל ערך ייחודי ב-table, ואף אחד מהם לא NULL"
+   ],
+   "why": "primary key הוא הדרך לזהות כל row, ולכן שתי rows לא יכולות לחלוק ערך key, ואף row לא יכולה להיות בלי key. ל-table יש primary key אחד, שיכול להשתרע על כמה columns, ומסד הנתונים שם עליו index.",
+   "wrong": [
+    "auto-increment היא דרך נפוצה למלא key, אבל גם קוד מוצר או email יכולים להיות key.",
+    "primary key מזהה כל row, ולכן NULL אסור. קבלת NULLs היא תכונה של UNIQUE.",
+    "key שמשתרע על כמה columns הוא composite key, ואז הצירוף כולו חייב להיות ייחודי.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "databases-foreign-key-guarantee",
+  "topic": "databases",
+  "subtopic": "design",
+  "concepts": [
+   "foreign-key",
+   "referential-integrity"
+  ],
+  "level": "easy",
+  "q": "orders.customer_id is a foreign key referencing customers.id. What does this constraint guarantee?",
+  "options": [
+   "Each customer_id appears at most once in orders",
+   "Queries on orders automatically include the customer's columns",
+   "Each non-NULL customer_id matches an existing customer",
+   "A customer row can never be deleted"
+  ],
+  "answer": 2,
+  "why": "A foreign key enforces referential integrity: you cannot insert an order for a customer that does not exist, or delete a customer that orders still point to (unless the key says to cascade). It does not limit how many orders refer to one customer.",
+  "wrong": [
+   "That is a UNIQUE constraint. A foreign key allows many orders per customer.",
+   "A foreign key does not join anything. You still write the JOIN.",
+   null,
+   "Deleting is blocked only while orders still point to it, and the key can be set to cascade or set NULL instead."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/ddl-constraints.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "orders.customer_id הוא foreign key שמפנה ל-customers.id. מה ה-constraint הזה מבטיח?",
+   "options": [
+    "כל customer_id מופיע לכל היותר פעם אחת ב-orders",
+    "queries על orders כוללים אוטומטית את ה-columns של הלקוח",
+    "כל customer_id שאינו NULL תואם ללקוח קיים",
+    "אי אפשר אף פעם למחוק row של לקוח"
+   ],
+   "why": "foreign key אוכף referential integrity: אי אפשר להכניס הזמנה של לקוח שלא קיים, או למחוק לקוח שהזמנות עדיין מפנות אליו (אלא אם ה-key מוגדר עם cascade). הוא לא מגביל כמה הזמנות מפנות ללקוח אחד.",
+   "wrong": [
+    "זה UNIQUE constraint. foreign key מאפשר הרבה הזמנות לכל לקוח.",
+    "foreign key לא עושה join לשום דבר. עדיין צריך לכתוב את ה-JOIN.",
+    null,
+    "המחיקה נחסמת רק כל עוד הזמנות מפנות אליו, ואפשר להגדיר את ה-key לעשות במקום זה cascade או set NULL."
+   ]
+  }
+ },
+ {
+  "id": "databases-many-to-many-junction",
+  "topic": "databases",
+  "subtopic": "design",
+  "concepts": [
+   "many-to-many",
+   "junction-table",
+   "foreign-key"
+  ],
+  "level": "medium",
+  "q": "A student takes many courses, and a course has many students. How should the tables model this?",
+  "options": [
+   "A course_id column in students, pointing at the course they take",
+   "A junction table, enrollments(student_id, course_id)",
+   "A courses column in students holding a list like '3,7,12'",
+   "A student_id column in courses, pointing at the enrolled student"
+  ],
+  "answer": 1,
+  "why": "A foreign key column holds one value, so it models one-to-many. Many-to-many needs a junction table: each row links one student to one course, with a foreign key to each and the pair as its key.",
+  "wrong": [
+   "One column holds one value, so each student could take only one course.",
+   null,
+   "A list in one cell breaks first normal form: you cannot join, index or constrain the individual ids.",
+   "One column holds one value, so each course could have only one student."
+  ],
+  "ref": "https://www.postgresql.org/docs/current/ddl-constraints.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "סטודנט לומד הרבה קורסים, ובקורס יש הרבה סטודנטים. איך ה-tables צריכות למדל את זה?",
+   "options": [
+    "column בשם course_id ב-students, שמפנה לקורס שהסטודנט לומד",
+    "junction table בשם enrollments(student_id, course_id)",
+    "column בשם courses ב-students שמחזיק רשימה כמו '3,7,12'",
+    "column בשם student_id ב-courses, שמפנה לסטודנט הרשום"
+   ],
+   "why": "column של foreign key מחזיקה ערך אחד, ולכן היא ממדלת one-to-many. many-to-many דורש junction table: כל row בה מקשרת סטודנט אחד לקורס אחד, עם foreign key לכל אחד מהם, והזוג משמש כ-key שלה.",
+   "wrong": [
+    "column אחת מחזיקה ערך אחד, ולכן כל סטודנט יוכל ללמוד רק קורס אחד.",
+    null,
+    "רשימה בתא אחד שוברת את first normal form: אי אפשר לעשות join על ה-ids הבודדים, לשים עליהם index או לאכוף עליהם constraint.",
+    "column אחת מחזיקה ערך אחד, ולכן לכל קורס יוכל להיות רק סטודנט אחד."
+   ]
+  }
+ },
+ {
+  "id": "databases-normalize-repeated-city",
+  "topic": "databases",
+  "subtopic": "design",
+  "concepts": [
+   "normalization",
+   "3nf",
+   "update-anomaly"
+  ],
+  "level": "medium",
+  "q": "orders(order_id, customer_id, customer_city, total) repeats the city on every order. A customer moves and only some rows get updated. What is the design fix?",
+  "options": [
+   "Move the city to customers; it depends on the customer, not the order",
+   "Keep it: repeated data always makes reads faster, so it is the better design",
+   "Add an index on customer_city",
+   "Add customer_city to the primary key of orders"
+  ],
+  "answer": 0,
+  "why": "customer_city is a fact about the customer, reached through customer_id, not about the order. Storing it per order invites update anomalies like this one. Third normal form, in plain terms: every non-key column describes the key and nothing else.",
+  "wrong": [
+   null,
+   "Copies can speed up some reads, but they must be kept in sync, and that is exactly the bug here.",
+   "An index speeds up searches. It does nothing to keep the copies in agreement.",
+   "A bigger key does not make the copies agree. The city simply does not belong to the order."
+  ],
+  "ref": "https://en.wikipedia.org/wiki/Third_normal_form",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "orders(order_id, customer_id, customer_city, total) חוזרת על העיר בכל הזמנה. לקוח עובר דירה, ורק חלק מה-rows מתעדכנות. מה התיקון בתכנון?",
+   "options": [
+    "להעביר את העיר ל-customers: היא תלויה בלקוח, לא בהזמנה",
+    "להשאיר את זה: נתונים כפולים תמיד מאיצים קריאות, ולכן זה התכנון הטוב יותר",
+    "להוסיף index על customer_city",
+    "להוסיף את customer_city ל-primary key של orders"
+   ],
+   "why": "customer_city היא עובדה על הלקוח, שמגיעים אליה דרך customer_id, ולא על ההזמנה. שמירה שלה בכל הזמנה מזמינה update anomalies כמו זו. third normal form במילים פשוטות: כל column שאינו key מתאר את ה-key ושום דבר אחר.",
+   "wrong": [
+    null,
+    "עותקים יכולים להאיץ חלק מהקריאות, אבל צריך לשמור אותם מסונכרנים, ובדיוק זה ה-bug כאן.",
+    "index מאיץ חיפושים. הוא לא עושה כלום כדי שהעותקים יסכימו ביניהם.",
+    "key גדול יותר לא גורם לעותקים להסכים. העיר פשוט לא שייכת להזמנה."
+   ]
+  }
+ },
+ {
+  "id": "databases-one-to-many-key-side",
+  "topic": "databases",
+  "subtopic": "design",
+  "concepts": [
+   "one-to-many",
+   "foreign-key"
+  ],
+  "level": "easy",
+  "q": "Each order belongs to one customer, and a customer can have many orders. Where does the foreign key go?",
+  "options": [
+   "customers.order_id, referencing orders",
+   "In both tables, each pointing at the other",
+   "In a separate customer_orders link table",
+   "orders.customer_id, referencing customers"
+  ],
+  "answer": 3,
+  "why": "In one-to-many, the key goes on the many side. Each order row stores the one customer it belongs to, and a customer's orders are simply the rows that hold its id.",
+  "wrong": [
+   "One column in customers holds one order id, so each customer could have only one order.",
+   "Two links store the same fact twice, and the copies can disagree. One side is enough.",
+   "A link table is for many-to-many. Here it adds a join and would even let one order belong to several customers.",
+   null
+  ],
+  "ref": "https://www.postgresql.org/docs/current/ddl-constraints.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כל הזמנה שייכת ללקוח אחד, וללקוח יכולות להיות הרבה הזמנות. איפה שמים את ה-foreign key?",
+   "options": [
+    "customers.order_id, שמפנה ל-orders",
+    "בשתי ה-tables, כל אחת מפנה לשנייה",
+    "ב-link table נפרדת בשם customer_orders",
+    "orders.customer_id, שמפנה ל-customers"
+   ],
+   "why": "ב-one-to-many, ה-key נמצא בצד של ה-many. כל row של הזמנה שומרת את הלקוח היחיד שהיא שייכת אליו, וההזמנות של לקוח הן פשוט ה-rows שמחזיקות את ה-id שלו.",
+   "wrong": [
+    "column אחת ב-customers מחזיקה order id אחד, ולכן לכל לקוח תוכל להיות רק הזמנה אחת.",
+    "שני קישורים שומרים את אותה עובדה פעמיים, והעותקים יכולים לא להסכים. צד אחד מספיק.",
+    "link table מיועדת ל-many-to-many. כאן היא מוסיפה join, ואפילו תאפשר להזמנה אחת להיות שייכת לכמה לקוחות.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "databases-ledger-store",
+  "topic": "databases",
+  "subtopic": "sql-vs-nosql",
+  "concepts": [
+   "relational",
+   "transactions",
+   "store-choice"
+  ],
+  "level": "easy",
+  "q": "A payments service records money moving between accounts and must never lose or double-count a transfer. Which store fits best?",
+  "options": [
+   "An in-memory key-value cache, for its speed",
+   "A document store, since it needs no fixed schema",
+   "A relational database, with transactions and constraints",
+   "A graph database, since transfers link accounts together"
+  ],
+  "answer": 2,
+  "why": "A transfer touches several rows that must change together and obey rules (no negative balance, valid accounts). Relational databases offer multi-row transactions, foreign keys and checks, which is what a ledger needs.",
+  "wrong": [
+   "A cache may drop data on restart or eviction. It is not a system of record for money.",
+   "Schema flexibility is not the need here. Atomic changes to several rows, with rules enforced, are.",
+   null,
+   "Transfers do form a graph, but the critical need is atomic, constrained updates, a core strength of relational databases."
+  ],
+  "ref": "https://github.com/donnemartin/system-design-primer#sql-or-nosql",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שירות תשלומים רושם העברות כסף בין חשבונות, ואסור לו אף פעם לאבד העברה או לספור אותה פעמיים. איזה מסד נתונים הכי מתאים?",
+   "options": [
+    "cache מסוג key-value בזיכרון, בגלל המהירות",
+    "document store, כי הוא לא דורש schema קבועה",
+    "מסד נתונים רלציוני, עם transactions ו-constraints",
+    "graph database, כי העברות מקשרות בין חשבונות"
+   ],
+   "why": "העברה נוגעת בכמה rows שחייבות להשתנות יחד ולקיים כללים (בלי יתרה שלילית, רק חשבונות תקינים). מסדי נתונים רלציוניים מציעים transactions על כמה rows, foreign keys ו-checks, וזה בדיוק מה ש-ledger צריך.",
+   "wrong": [
+    "cache עלול לאבד נתונים ב-restart או ב-eviction. הוא לא מקור האמת לכסף.",
+    "גמישות ב-schema היא לא הצורך כאן. הצורך הוא שינויים atomic בכמה rows, עם אכיפת כללים.",
+    null,
+    "העברות אכן יוצרות graph, אבל הצורך הקריטי הוא עדכונים atomic עם constraints, חוזקה מרכזית של מסדי נתונים רלציוניים."
+   ]
+  }
+ },
+ {
+  "id": "databases-catalog-store",
+  "topic": "databases",
+  "subtopic": "sql-vs-nosql",
+  "concepts": [
+   "document-store",
+   "schema",
+   "store-choice"
+  ],
+  "level": "medium",
+  "q": "A store sells shoes, laptops and books, each with its own set of attributes, and a page usually loads one whole product. What fits naturally?",
+  "options": [
+   "A pure key-value store, because each product has an id",
+   "A document store, one document per product with its own fields",
+   "One relational table with a column for every attribute of every category",
+   "A graph database, because products relate to categories"
+  ],
+  "answer": 1,
+  "why": "Each product is read as one unit and the fields vary by category, which suits documents. A relational design is still possible (an attribute table or a JSON column); the question is fit, not that SQL cannot do it.",
+  "wrong": [
+   "A key-value store fetches by key only. A catalog also needs to filter and search by product fields.",
+   null,
+   "It works, but most columns are NULL in most rows, and each new attribute needs a schema change.",
+   "Almost every model has relations. Graph stores pay off when queries walk links, like friends of friends."
+  ],
+  "ref": "https://github.com/donnemartin/system-design-primer#sql-or-nosql",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חנות מוכרת נעליים, מחשבים ניידים וספרים, לכל אחד סט מאפיינים משלו, ודף בדרך כלל טוען מוצר שלם אחד. מה מתאים באופן טבעי?",
+   "options": [
+    "key-value store טהור, כי לכל מוצר יש id",
+    "document store, מסמך אחד לכל מוצר עם השדות שלו",
+    "table רלציונית אחת עם column לכל מאפיין של כל קטגוריה",
+    "graph database, כי מוצרים קשורים לקטגוריות"
+   ],
+   "why": "כל מוצר נקרא כיחידה אחת והשדות משתנים לפי קטגוריה, וזה מתאים למסמכים. תכנון רלציוני עדיין אפשרי (table של מאפיינים או column מסוג JSON). השאלה היא התאמה, לא ש-SQL לא יכול לעשות את זה.",
+   "wrong": [
+    "key-value store שולף רק לפי key. קטלוג צריך גם לסנן ולחפש לפי שדות של המוצר.",
+    null,
+    "זה עובד, אבל רוב ה-columns הן NULL ברוב ה-rows, וכל מאפיין חדש דורש שינוי schema.",
+    "כמעט לכל מודל יש קשרים. graph stores משתלמים כשה-queries עוברים על קישורים, כמו חברים של חברים."
+   ]
+  }
+ },
+ {
+  "id": "databases-schemaless-myth",
+  "topic": "databases",
+  "subtopic": "sql-vs-nosql",
+  "concepts": [
+   "document-store",
+   "schema",
+   "migration"
+  ],
+  "level": "medium",
+  "q": "A team picks a document database so they never have to think about schema. A year later, what are they most likely dealing with?",
+  "options": [
+   "Nothing, since the database tracks each shape and migrates old documents itself",
+   "Slow lookups on every field, since a schemaless store cannot have indexes",
+   "Nothing, since NoSQL databases stay fast for any query by design",
+   "Code that must cope with old documents whose fields are missing or renamed"
+  ],
+  "answer": 3,
+  "why": "Dropping the schema from the database moves it into the code. Every reader still expects certain fields and types, so changing a shape means handling old documents or migrating them by hand. Many teams add schema validation back for this reason.",
+  "wrong": [
+   "The database stores what it is given. Reshaping old documents is the team's job.",
+   "Document stores do support indexes on fields.",
+   "Speed depends on fitting the data model and indexes to the queries. A query the model was not built for can still be slow.",
+   null
+  ],
+  "ref": "https://github.com/donnemartin/system-design-primer#sql-or-nosql",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צוות בוחר document database כדי שלעולם לא יצטרך לחשוב על schema. אחרי שנה, עם מה הכי סביר שהצוות מתמודד?",
+   "options": [
+    "כלום, כי מסד הנתונים עוקב אחרי כל מבנה ועושה migration למסמכים ישנים בעצמו",
+    "חיפושים איטיים על כל שדה, כי ב-store בלי schema אי אפשר ליצור indexes",
+    "כלום, כי מסדי נתונים NoSQL נשארים מהירים לכל query מעצם התכנון שלהם",
+    "קוד שצריך להתמודד עם מסמכים ישנים שחסרים בהם שדות או ששדות בהם קיבלו שם אחר"
+   ],
+   "why": "הסרת ה-schema ממסד הנתונים מעבירה אותה לקוד. כל קוד שקורא עדיין מצפה לשדות ולטיפוסים מסוימים, ולכן שינוי מבנה פירושו לטפל במסמכים ישנים או לעשות להם migration ידנית. הרבה צוותים מחזירים schema validation בדיוק מהסיבה הזו.",
+   "wrong": [
+    "מסד הנתונים שומר את מה שנותנים לו. שינוי המבנה של מסמכים ישנים הוא העבודה של הצוות.",
+    "document stores כן תומכים ב-indexes על שדות.",
+    "המהירות תלויה בהתאמה של מודל הנתונים וה-indexes ל-queries. query שהמודל לא נבנה בשבילו עדיין יכול להיות איטי.",
+    null
+   ]
+  }
+ }
+]

@@ -1,0 +1,2726 @@
+[
+ {
+  "id": "data-structures-array-index-constant-time",
+  "topic": "data-structures",
+  "subtopic": "operation-costs",
+  "concepts": [
+   "random-access",
+   "array",
+   "memory-layout"
+  ],
+  "level": "easy",
+  "q": "Why can an array return its 500,000th element as quickly as its first?",
+  "options": [
+   "The array keeps a hidden hash table from each index to its element",
+   "Its address is the start address plus the index times the element size",
+   "The runtime scans from both ends at once, which halves the work",
+   "It is not as quick: reading element i walks past the i elements before it"
+  ],
+  "answer": 1,
+  "why": "Array elements sit next to each other and all have the same size, so the position of element i is one multiplication and one addition away. No other element has to be visited.",
+  "wrong": [
+   "No extra table is needed; the address is computed with arithmetic.",
+   null,
+   "Scanning from both ends would still be O(n). Arrays do not scan at all to reach an index.",
+   "That is how a linked list behaves. An array jumps straight to the computed address."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/array/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למה array מחזיר את האיבר ה-500,000 שלו מהר בדיוק כמו את הראשון?",
+   "options": [
+    "ה-array מחזיק hash table נסתרת מכל index לאיבר שלו",
+    "הכתובת שלו היא כתובת ההתחלה ועוד ה-index כפול גודל האיבר",
+    "ה-runtime סורק משני הקצוות בבת אחת, וזה חוצה את העבודה",
+    "זה לא מהיר באותה מידה: קריאת איבר i עוברת על i האיברים שלפניו"
+   ],
+   "why": "האיברים של array יושבים אחד ליד השני ולכולם אותו גודל, ולכן המיקום של איבר i מחושב בכפל אחד וחיבור אחד. לא צריך לעבור על אף איבר אחר.",
+   "wrong": [
+    "לא צריך טבלה נוספת: הכתובת מחושבת באריתמטיקה.",
+    null,
+    "סריקה משני הקצוות היא עדיין O(n). array לא סורק בכלל כדי להגיע ל-index.",
+    "ככה מתנהגת linked list. array קופץ ישר לכתובת המחושבת."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-linked-list-get-by-index",
+  "topic": "data-structures",
+  "subtopic": "operation-costs",
+  "concepts": [
+   "linked-list",
+   "random-access",
+   "traversal"
+  ],
+  "level": "easy",
+  "q": "A singly linked list holds n items. What does reading the item at index i cost, and why?",
+  "options": [
+   "O(1): every node stores its own index, so the list can jump to it",
+   "O(log n): the list is split in half repeatedly, like binary search",
+   "O(i): it follows next pointers from the head one node at a time",
+   "O(1) on average, because the nodes are usually stored next to each other"
+  ],
+  "answer": 2,
+  "why": "Nodes can live anywhere in memory, and each node only knows where the next one is. To reach index i you start at the head and follow i links, which is O(n) in the worst case.",
+  "wrong": [
+   "A stored index does not help: there is still no way to jump to a node without following links.",
+   "Binary search needs to jump to the middle in O(1), which a linked list cannot do.",
+   null,
+   "Nothing guarantees the nodes are adjacent, and even if they were, the list has no address formula to use."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/linked-list/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "singly linked list מחזיקה n איברים. כמה עולה לקרוא את האיבר ב-index i, ולמה?",
+   "options": [
+    "O(1): כל node שומר את ה-index שלו, ולכן ה-list יכולה לקפוץ אליו",
+    "O(log n): ה-list מחולקת לחצי שוב ושוב, כמו ב-binary search",
+    "O(i): עוברים על pointers של next מה-head, node אחרי node",
+    "O(1) בממוצע, כי ה-nodes בדרך כלל שמורים אחד ליד השני"
+   ],
+   "why": "nodes יכולים לשבת בכל מקום בזיכרון, וכל node יודע רק איפה נמצא הבא. כדי להגיע ל-index i מתחילים מה-head ועוברים על i קישורים, שזה O(n) במקרה הגרוע.",
+   "wrong": [
+    "index שמור לא עוזר: עדיין אין דרך לקפוץ ל-node בלי לעבור על הקישורים.",
+    "binary search צריך לקפוץ לאמצע ב-O(1), ו-linked list לא יכולה לעשות את זה.",
+    null,
+    "שום דבר לא מבטיח שה-nodes צמודים, וגם אם היו, אין ל-list נוסחת כתובת להשתמש בה."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-insert-at-front",
+  "topic": "data-structures",
+  "subtopic": "operation-costs",
+  "concepts": [
+   "dynamic-array",
+   "linked-list",
+   "insertion",
+   "shifting"
+  ],
+  "level": "easy",
+  "q": "You insert many items at the front of a sequence that already holds n items. What does each insert cost in a dynamic array and in a linked list?",
+  "options": [
+   "Array O(n), since every item shifts one slot; linked list O(1)",
+   "Both O(1), because the front of the sequence is always known",
+   "Array O(1) amortized, like append; linked list O(n)",
+   "Both O(n), because each insert must first search for its position"
+  ],
+  "answer": 0,
+  "why": "An array keeps items in consecutive slots, so making room at index 0 moves all n items. A linked list only creates a node and points it at the old head.",
+  "wrong": [
+   null,
+   "Knowing where the front is does not help the array: its items still have to move to make room.",
+   "Amortized O(1) is for adding at the end. Adding at the front of an array shifts everything.",
+   "Inserting at the front needs no search; the position is index 0."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/array/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מכניסים הרבה איברים לתחילת רצף שכבר מחזיק n איברים. כמה עולה כל הכנסה ב-dynamic array וב-linked list?",
+   "options": [
+    "array O(n), כי כל איבר זז מקום אחד; linked list O(1)",
+    "בשניהם O(1), כי תחילת הרצף תמיד ידועה",
+    "array O(1) amortized, כמו append; linked list O(n)",
+    "בשניהם O(n), כי כל הכנסה צריכה קודם לחפש את המיקום שלה"
+   ],
+   "why": "array שומר איברים בתאים רצופים, ולכן פינוי מקום ב-index 0 מזיז את כל n האיברים. linked list רק יוצרת node ומפנה אותו ל-head הישן.",
+   "wrong": [
+    null,
+    "לדעת איפה ההתחלה לא עוזר ל-array: האיברים שלו עדיין צריכים לזוז כדי לפנות מקום.",
+    "O(1) amortized מתאים להוספה בסוף. הוספה בתחילת array מזיזה את הכול.",
+    "הכנסה בהתחלה לא דורשת חיפוש: המיקום הוא index 0."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-sorted-vs-unsorted-search",
+  "topic": "data-structures",
+  "subtopic": "operation-costs",
+  "concepts": [
+   "binary-search",
+   "sorted-array",
+   "search"
+  ],
+  "level": "easy",
+  "q": "You look up a value in an array of n numbers. What does the lookup cost if the array is sorted, and if it is not?",
+  "options": [
+   "Both O(n): sorting only helps when the array is printed",
+   "Sorted: O(1), since the position of a value follows from its size",
+   "Sorted: O(log n) by binary search; unsorted: O(n)",
+   "Both O(log n), because binary search works on any array"
+  ],
+  "answer": 2,
+  "why": "Sorting lets each comparison rule out half of the remaining range. Without order, a slot you have not checked could still hold the value, so the worst case reads all n.",
+  "wrong": [
+   "Sorting is what makes binary search possible, so it does speed up lookups.",
+   "Values are not spread evenly, so you cannot compute a value's index directly.",
+   null,
+   "Binary search on unsorted data can discard the half that holds the value and miss it."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/sorting-searching/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מחפשים ערך ב-array של n מספרים. כמה עולה החיפוש אם ה-array ממוין, וכמה אם לא?",
+   "options": [
+    "בשניהם O(n): מיון עוזר רק כשמדפיסים את ה-array",
+    "ממוין: O(1), כי המיקום של ערך נגזר מהגודל שלו",
+    "ממוין: O(log n) עם binary search; לא ממוין: O(n)",
+    "בשניהם O(log n), כי binary search עובד על כל array"
+   ],
+   "why": "מיון מאפשר לכל השוואה לפסול חצי מהטווח שנשאר. בלי סדר, כל תא שעוד לא נבדק עלול להכיל את הערך, ולכן במקרה הגרוע קוראים את כל n.",
+   "wrong": [
+    "המיון הוא מה שמאפשר binary search, ולכן הוא כן מאיץ חיפושים.",
+    "הערכים לא מפוזרים באופן אחיד, ולכן אי אפשר לחשב ישירות את ה-index של ערך.",
+    null,
+    "binary search על נתונים לא ממוינים עלול לזרוק את החצי שמכיל את הערך ולפספס אותו."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-remove-known-node-doubly",
+  "topic": "data-structures",
+  "subtopic": "operation-costs",
+  "concepts": [
+   "doubly-linked-list",
+   "deletion",
+   "node-handle"
+  ],
+  "level": "easy",
+  "q": "In a doubly linked list of n nodes you already hold a reference to a node in the middle. What does removing that node cost?",
+  "options": [
+   "O(n): the list must be walked from the head to find the node first",
+   "O(log n): the list is halved until the node is reached",
+   "O(1): point its previous and next neighbours at each other",
+   "O(n): every later node shifts one position to the left"
+  ],
+  "answer": 2,
+  "why": "The node knows both neighbours, so removing it is two pointer updates. No other node moves and nothing is searched.",
+  "wrong": [
+   "You already hold the node, so there is nothing to find.",
+   "Linked lists cannot be halved quickly, and here no search is needed at all.",
+   null,
+   "Shifting happens in arrays. List nodes stay where they are; only links change."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/linked-list/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-doubly linked list של n nodes כבר יש reference ל-node באמצע. כמה עולה להסיר את ה-node הזה?",
+   "options": [
+    "O(n): קודם צריך לעבור על ה-list מה-head כדי למצוא את ה-node",
+    "O(log n): חוצים את ה-list לחצי עד שמגיעים ל-node",
+    "O(1): מחברים את השכן הקודם והשכן הבא שלו זה לזה",
+    "O(n): כל node שאחריו זז מקום אחד שמאלה"
+   ],
+   "why": "ה-node מכיר את שני השכנים שלו, ולכן ההסרה היא שני עדכונים של pointers. אף node אחר לא זז ושום דבר לא מחפשים.",
+   "wrong": [
+    "ה-node כבר בידיים, ולכן אין מה למצוא.",
+    "אי אפשר לחצות linked list לחצי מהר, וכאן בכלל לא צריך חיפוש.",
+    null,
+    "הזזות קורות ב-arrays. nodes של list נשארים במקום; רק הקישורים משתנים."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-sorted-linked-list-insert",
+  "topic": "data-structures",
+  "subtopic": "operation-costs",
+  "concepts": [
+   "linked-list",
+   "insertion",
+   "search-cost"
+  ],
+  "level": "medium",
+  "q": "A friend says insertion into a linked list is O(1). You must insert a value into a sorted singly linked list of n nodes and keep it sorted. What is the real cost?",
+  "options": [
+   "O(1), because inserting into a linked list is always O(1)",
+   "O(log n), by binary searching for the position",
+   "O(n log n), because the list is sorted again after the insert",
+   "O(n): the walk to the spot dominates the O(1) splice"
+  ],
+  "answer": 3,
+  "why": "The O(1) claim covers relinking once you stand at the right node. Getting there in a sorted list means walking from the head, which is O(n) in the worst case.",
+  "wrong": [
+   "That ignores the search. The O(1) part starts only after the position is known.",
+   "Binary search needs O(1) access to the middle, which a linked list does not have.",
+   "Inserting at the right spot keeps the list sorted, so no re-sort is needed.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/linked-list/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חבר אומר שהכנסה ל-linked list היא O(1). צריך להכניס ערך ל-singly linked list ממוינת של n nodes ולשמור אותה ממוינת. מה העלות האמיתית?",
+   "options": [
+    "O(1), כי הכנסה ל-linked list היא תמיד O(1)",
+    "O(log n), עם binary search על המיקום",
+    "O(n log n), כי ממיינים את ה-list מחדש אחרי ההכנסה",
+    "O(n): ההליכה עד המקום גוברת על החיבור שעולה O(1)"
+   ],
+   "why": "הטענה על O(1) מתייחסת לחיבור מחדש של הקישורים כשכבר עומדים על ה-node הנכון. כדי להגיע אליו ב-list ממוינת צריך ללכת מה-head, שזה O(n) במקרה הגרוע.",
+   "wrong": [
+    "זה מתעלם מהחיפוש. החלק של O(1) מתחיל רק אחרי שהמיקום ידוע.",
+    "binary search צריך גישה ב-O(1) לאמצע, ול-linked list אין אותה.",
+    "הכנסה במקום הנכון שומרת על ה-list ממוינת, ולכן לא צריך למיין מחדש.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-hidden-loop-in-membership",
+  "topic": "data-structures",
+  "subtopic": "operation-costs",
+  "concepts": [
+   "hidden-loop",
+   "list-membership",
+   "time-complexity"
+  ],
+  "level": "medium",
+  "q": "a and b are Python lists with n items each. What does this print, and how does its running time grow with n?",
+  "code": "def common(a, b):\n    result = []\n    for x in a:\n        if x in b:\n            result.append(x)\n    return result\n\nprint(common([1, 2, 3, 4], [3, 4, 5]))",
+  "lang": "python",
+  "options": [
+   "[3, 4], in O(n) time: x in b is one built-in call, so it is O(1)",
+   "[3, 4], in O(n^2) time: each x in b scans the list b",
+   "[3, 4], in O(n log n) time: x in b uses binary search",
+   "[3, 4], in O(n) time: the scan stops as soon as x is found"
+  ],
+  "answer": 1,
+  "why": "The for loop runs n times, and x in b on a list compares x with the items of b one by one, up to n of them. Turning b into a set first makes each check O(1) on average and the whole function O(n).",
+  "wrong": [
+   "One line of code is not one step. For a list, in is a linear scan.",
+   null,
+   "Python cannot assume a list is sorted, so in scans from the start.",
+   "Stopping early helps only on hits. Values that are not in b, like 1 and 2, scan all of b."
+  ],
+  "ref": "https://wiki.python.org/moin/TimeComplexity",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "a ו-b הן lists של Python עם n איברים כל אחת. מה יודפס, ואיך זמן הריצה גדל עם n?",
+   "options": [
+    "[3, 4], בזמן O(n): x in b היא קריאה מובנית אחת, ולכן O(1)",
+    "[3, 4], בזמן O(n^2): כל x in b סורק את ה-list b",
+    "[3, 4], בזמן O(n log n): x in b משתמש ב-binary search",
+    "[3, 4], בזמן O(n): הסריקה נעצרת ברגע ש-x נמצא"
+   ],
+   "why": "לולאת ה-for רצה n פעמים, ו-x in b על list משווה את x לאיברים של b אחד אחרי השני, עד n מהם. אם הופכים קודם את b ל-set, כל בדיקה היא O(1) בממוצע וכל ה-function O(n).",
+   "wrong": [
+    "שורת קוד אחת היא לא צעד אחד. עבור list, in הוא סריקה לינארית.",
+    null,
+    "Python לא יכולה להניח ש-list ממוינת, ולכן in סורק מההתחלה.",
+    "עצירה מוקדמת עוזרת רק כשיש התאמה. ערכים שלא נמצאים ב-b, כמו 1 ו-2, סורקים את כל b."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-delete-by-value-from-array",
+  "topic": "data-structures",
+  "subtopic": "operation-costs",
+  "concepts": [
+   "array",
+   "deletion",
+   "adding-costs"
+  ],
+  "level": "medium",
+  "q": "You remove one given value from an unsorted array of n items and must keep the order of the rest. What is the cost?",
+  "options": [
+   "O(n^2): every shifted item needs its own scan",
+   "O(1): deleting is just marking the slot as empty",
+   "O(log n): binary search finds the value and then it is removed",
+   "O(n): one O(n) scan, then one O(n) shift"
+  ],
+  "answer": 3,
+  "why": "Two linear steps done in sequence add up to O(n + n), which is still O(n). Costs multiply only when one step runs inside the other.",
+  "wrong": [
+   "The scan happens once, before the shift. Sequential steps add, they do not multiply.",
+   "Marking leaves a hole, which breaks the order and the array's size. The task asks to keep the rest in order.",
+   "The array is unsorted, so binary search cannot find the value, and the shift is O(n) anyway.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/array/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מסירים ערך נתון אחד מ-array לא ממוין של n איברים, וצריך לשמור על הסדר של השאר. מה העלות?",
+   "options": [
+    "O(n^2): כל איבר שזז צריך סריקה משלו",
+    "O(1): מחיקה היא רק סימון של התא כריק",
+    "O(log n): binary search מוצא את הערך ואז מסירים אותו",
+    "O(n): סריקה אחת ב-O(n), ואז הזזה אחת ב-O(n)"
+   ],
+   "why": "שני צעדים לינאריים שרצים אחד אחרי השני מסתכמים ב-O(n + n), שזה עדיין O(n). עלויות מוכפלות רק כשצעד אחד רץ בתוך השני.",
+   "wrong": [
+    "הסריקה קורית פעם אחת, לפני ההזזה. צעדים עוקבים מתחברים, הם לא מוכפלים.",
+    "סימון משאיר חור, וזה שובר את הסדר ואת הגודל של ה-array. המשימה דורשת לשמור את השאר לפי הסדר.",
+    "ה-array לא ממוין, ולכן binary search לא ימצא את הערך, וההזזה היא O(n) בכל מקרה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-swap-with-last-remove",
+  "topic": "data-structures",
+  "subtopic": "operation-costs",
+  "concepts": [
+   "array",
+   "deletion",
+   "trade-off"
+  ],
+  "level": "medium",
+  "q": "A game keeps active enemies in a dynamic array, and their order does not matter. How can it remove the enemy at index i in O(1)?",
+  "options": [
+   "Move the last element into slot i, then drop the last slot",
+   "Shift every later element one slot to the left",
+   "Set slot i to null and leave it there",
+   "Copy the array into a linked list, then unlink the node in O(1)"
+  ],
+  "answer": 0,
+  "why": "Removing the last element of a dynamic array is O(1) and moves nothing. Since order does not matter, filling the gap with the last element avoids shifting the items after i.",
+  "wrong": [
+   null,
+   "That keeps order but costs O(n), and order was not needed here.",
+   "The array keeps a hole, so every loop must skip nulls and the array never shrinks.",
+   "The copy alone is O(n), so the removal is not O(1)."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/array/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "משחק שומר את האויבים הפעילים ב-dynamic array, והסדר שלהם לא משנה. איך אפשר להסיר את האויב ב-index i ב-O(1)?",
+   "options": [
+    "מעבירים את האיבר האחרון לתא i, ואז מורידים את התא האחרון",
+    "מזיזים כל איבר שאחריו תא אחד שמאלה",
+    "שמים null בתא i ומשאירים אותו כך",
+    "מעתיקים את ה-array ל-linked list, ואז מנתקים את ה-node ב-O(1)"
+   ],
+   "why": "הסרת האיבר האחרון מ-dynamic array היא O(1) ולא מזיזה כלום. מכיוון שהסדר לא משנה, מילוי החור באיבר האחרון חוסך את ההזזה של האיברים שאחרי i.",
+   "wrong": [
+    null,
+    "זה שומר על הסדר אבל עולה O(n), והסדר לא נדרש כאן.",
+    "ב-array נשאר חור, ולכן כל לולאה צריכה לדלג על nulls וה-array אף פעם לא מתכווץ.",
+    "ההעתקה לבדה היא O(n), ולכן ההסרה לא O(1)."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-sorted-array-repeated-inserts",
+  "topic": "data-structures",
+  "subtopic": "operation-costs",
+  "concepts": [
+   "binary-search",
+   "shifting",
+   "total-cost"
+  ],
+  "level": "hard",
+  "q": "n numbers arrive one at a time and are kept in a sorted array. Each insert binary searches for its spot and then shifts to make room. What is the total cost for all n?",
+  "options": [
+   "O(n^2): each search is O(log n), but each shift is O(n)",
+   "O(n log n): binary search makes each insert O(log n)",
+   "O(n): inserts into an array are amortized O(1), like append",
+   "O(log n) in total: each insert only needs a position, not a scan"
+  ],
+  "answer": 0,
+  "why": "Each insert pays two costs: O(log n) to find the spot and up to O(n) to shift the items after it. The shift dominates, so n inserts cost O(n^2) in the worst case. Fast search does not make the move cheap.",
+  "wrong": [
+   null,
+   "Binary search finds the position, but the items after it still have to move one slot each.",
+   "Amortized O(1) holds only for adding at the end, where nothing shifts.",
+   "Every insert does at least some work, so n inserts cannot cost less than O(n)."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/array/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "n מספרים מגיעים אחד אחד ונשמרים ב-array ממוין. כל הכנסה מוצאת את המקום שלה עם binary search ואז מזיזה איברים כדי לפנות מקום. מה העלות הכוללת עבור כל n המספרים?",
+   "options": [
+    "O(n^2): כל חיפוש הוא O(log n), אבל כל הזזה היא O(n)",
+    "O(n log n): binary search הופך כל הכנסה ל-O(log n)",
+    "O(n): הכנסות ל-array הן O(1) amortized, כמו append",
+    "O(log n) בסך הכול: כל הכנסה צריכה רק מיקום, לא סריקה"
+   ],
+   "why": "כל הכנסה משלמת שתי עלויות: O(log n) כדי למצוא את המקום ועד O(n) כדי להזיז את האיברים שאחריו. ההזזה שולטת, ולכן n הכנסות עולות O(n^2) במקרה הגרוע. חיפוש מהיר לא הופך את ההזזה לזולה.",
+   "wrong": [
+    null,
+    "binary search מוצא את המיקום, אבל האיברים שאחריו עדיין צריכים לזוז כל אחד תא אחד.",
+    "O(1) amortized נכון רק להוספה בסוף, שם שום דבר לא זז.",
+    "כל הכנסה עושה לפחות קצת עבודה, ולכן n הכנסות לא יכולות לעלות פחות מ-O(n)."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-why-o1-on-average",
+  "topic": "data-structures",
+  "subtopic": "hash-tables",
+  "concepts": [
+   "hashing",
+   "bucket",
+   "average-case"
+  ],
+  "level": "easy",
+  "q": "Why is looking up a key in a hash map O(1) on average?",
+  "options": [
+   "The keys are kept sorted, so the map binary searches them",
+   "The map caches recent lookups, so repeated keys are fast",
+   "The hash picks the bucket directly, and buckets stay small",
+   "The searched key is compared with every key at the same time"
+  ],
+  "answer": 2,
+  "why": "The hash function turns the key into a bucket index, so the map goes straight to one bucket. With a good hash and a table that grows as it fills, each bucket holds only a few entries to compare.",
+  "wrong": [
+   "Sorted keys and binary search would give O(log n). A hash map does not keep keys in order.",
+   "Caching is not the mechanism. A key looked up for the first time is still O(1) on average.",
+   null,
+   "Comparing with every key is O(n) work; a hash map avoids most of those comparisons."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/hash-table/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למה חיפוש key ב-hash map הוא O(1) בממוצע?",
+   "options": [
+    "ה-keys שמורים ממוינים, ולכן ה-map עושה עליהם binary search",
+    "ה-map שומר cache של חיפושים אחרונים, ולכן keys שחוזרים מהירים",
+    "ה-hash בוחר את ה-bucket ישירות, וה-buckets נשארים קטנים",
+    "ה-key שמחפשים מושווה לכל ה-keys בו-זמנית"
+   ],
+   "why": "ה-hash function הופכת את ה-key ל-index של bucket, ולכן ה-map הולך ישר ל-bucket אחד. עם hash טוב וטבלה שגדלה כשהיא מתמלאת, בכל bucket יש רק כמה entries להשוות.",
+   "wrong": [
+    "keys ממוינים ו-binary search היו נותנים O(log n). hash map לא שומר את ה-keys לפי סדר.",
+    "cache הוא לא המנגנון. גם key שמחפשים בפעם הראשונה הוא O(1) בממוצע.",
+    null,
+    "השוואה לכל key היא עבודה של O(n); hash map חוסך את רוב ההשוואות האלה."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-collision-with-chaining",
+  "topic": "data-structures",
+  "subtopic": "hash-tables",
+  "concepts": [
+   "collision",
+   "separate-chaining"
+  ],
+  "level": "easy",
+  "q": "In a hash map that uses separate chaining, two different keys hash to the same bucket. What happens?",
+  "options": [
+   "The second key overwrites the first, since the bucket is taken",
+   "The insert fails with an error until the table is resized",
+   "The table doubles at once so that the two keys separate",
+   "Both are kept in that bucket, and lookups compare the keys"
+  ],
+  "answer": 3,
+  "why": "A collision is normal. With chaining, each bucket holds a small list of entries. A lookup goes to the bucket and compares the actual keys to find the right one.",
+  "wrong": [
+   "Only an equal key replaces a value. A different key with the same bucket is added next to it.",
+   "Collisions are expected, so the map handles them instead of failing.",
+   "Resizing depends on how full the table is, not on a single collision, and the keys may still share a bucket.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/hash-table/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-hash map שמשתמש ב-separate chaining, שני keys שונים ממופים לאותו bucket. מה יקרה?",
+   "options": [
+    "ה-key השני דורס את הראשון, כי ה-bucket כבר תפוס",
+    "ההכנסה נכשלת עם שגיאה עד שעושים resize לטבלה",
+    "הטבלה מוכפלת מיד כדי ששני ה-keys ייפרדו",
+    "שניהם נשמרים ב-bucket, וחיפוש משווה את ה-keys"
+   ],
+   "why": "collision זה דבר רגיל. ב-chaining, כל bucket מחזיק list קטנה של entries. חיפוש הולך ל-bucket ומשווה את ה-keys עצמם כדי למצוא את הנכון.",
+   "wrong": [
+    "רק key שווה מחליף ערך. key אחר עם אותו bucket נוסף לידו.",
+    "collisions הם צפויים, ולכן ה-map מטפל בהם במקום להיכשל.",
+    "resize תלוי בכמה הטבלה מלאה, לא ב-collision בודד, וה-keys עדיין עלולים לחלוק bucket.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-all-keys-one-bucket",
+  "topic": "data-structures",
+  "subtopic": "hash-tables",
+  "concepts": [
+   "worst-case",
+   "collision",
+   "hash-function"
+  ],
+  "level": "medium",
+  "q": "A bad hash function sends every key to the same bucket of a chaining hash map whose chains are plain linked lists. What does a lookup cost now?",
+  "options": [
+   "O(1): hashing still finds the right bucket directly",
+   "O(log n): entries in a bucket are kept sorted",
+   "Lookups fail, because a bucket cannot hold more than one entry",
+   "O(n): the one bucket holds all n entries"
+  ],
+  "answer": 3,
+  "why": "The O(1) average depends on keys spreading across buckets. When they all collide, the map becomes a single linked list, and a lookup compares keys one at a time.",
+  "wrong": [
+   "Finding the bucket is fast, but searching inside it is now O(n).",
+   "Plain chains are unsorted lists, so they are searched from start to end.",
+   "A chain can grow to any length; it just gets slow.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/hash-table/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "hash function גרועה שולחת כל key לאותו bucket ב-hash map מבוסס chaining, שה-chains שלו הם linked lists פשוטות. כמה עולה חיפוש עכשיו?",
+   "options": [
+    "O(1): ה-hash עדיין מוצא את ה-bucket הנכון ישירות",
+    "O(log n): ה-entries ב-bucket שמורים ממוינים",
+    "חיפושים נכשלים, כי bucket לא יכול להחזיק יותר מ-entry אחד",
+    "O(n): ה-bucket היחיד מחזיק את כל n ה-entries"
+   ],
+   "why": "הממוצע של O(1) תלוי בפיזור ה-keys בין ה-buckets. כשכולם מתנגשים, ה-map הופך ל-linked list אחת, וחיפוש משווה keys אחד אחרי השני.",
+   "wrong": [
+    "מציאת ה-bucket מהירה, אבל החיפוש בתוכו הוא עכשיו O(n).",
+    "chains פשוטים הם lists לא ממוינות, ולכן מחפשים בהם מההתחלה ועד הסוף.",
+    "chain יכול לגדול לכל אורך; הוא רק נהיה איטי.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-list-as-dict-key",
+  "topic": "data-structures",
+  "subtopic": "hash-tables",
+  "concepts": [
+   "hashability",
+   "python-dict",
+   "mutable-key"
+  ],
+  "level": "easy",
+  "q": "This Python code tries to use a list as a dictionary key. What does it print?",
+  "code": "counts = {}\nkey = [1, 2]\ntry:\n    counts[key] = 1\n    print(\"stored\")\nexcept TypeError:\n    print(\"TypeError\")\nprint(len(counts))",
+  "lang": "python",
+  "options": [
+   "stored, then 1",
+   "TypeError, then 0",
+   "stored, then 2",
+   "TypeError, then 1"
+  ],
+  "answer": 1,
+  "why": "A dict key must be hashable, and lists are not, because their contents can change. The assignment raises TypeError before anything is stored, so the dict stays empty.",
+  "wrong": [
+   "Lists are not hashable, so the assignment raises TypeError.",
+   null,
+   "A list is never split into separate keys, and here it is not stored at all.",
+   "The error is raised before the entry is added, so nothing is stored."
+  ],
+  "ref": "https://docs.python.org/3/glossary.html#term-hashable",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "קוד ה-Python הזה מנסה להשתמש ב-list כ-key של dict. מה יודפס?",
+   "options": [
+    "stored, ואז 1",
+    "TypeError, ואז 0",
+    "stored, ואז 2",
+    "TypeError, ואז 1"
+   ],
+   "why": "key של dict חייב להיות hashable, ו-lists לא hashable, כי התוכן שלהן יכול להשתנות. ההשמה זורקת TypeError לפני שמשהו נשמר, ולכן ה-dict נשאר ריק.",
+   "wrong": [
+    "lists לא hashable, ולכן ההשמה זורקת TypeError.",
+    null,
+    "list אף פעם לא מתפצלת ל-keys נפרדים, וכאן היא בכלל לא נשמרת.",
+    "השגיאה נזרקת לפני שה-entry נוסף, ולכן שום דבר לא נשמר."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-why-keys-must-not-change",
+  "topic": "data-structures",
+  "subtopic": "hash-tables",
+  "concepts": [
+   "hashability",
+   "mutable-key",
+   "immutability"
+  ],
+  "level": "medium",
+  "q": "Python accepts a tuple of ints as a dict key but rejects a list. What is the reason?",
+  "options": [
+   "Lists can be very long, which makes hashing them too slow",
+   "Tuples are kept sorted, so they compare faster",
+   "A key's hash must not change while stored, and a list can",
+   "Lists are stored by reference and tuples by value"
+  ],
+  "answer": 2,
+  "why": "The map files each entry under its key's hash. If the key changed after insertion, its hash would change too, and lookups would search the wrong bucket. Tuples of ints cannot change, so their hash is stable.",
+  "wrong": [
+   "Tuples can be just as long. The issue is that a list can change, not its length.",
+   "Tuples keep the order you give them; nothing is sorted.",
+   null,
+   "Both are objects accessed by reference in Python. The difference is mutability."
+  ],
+  "ref": "https://docs.python.org/3/glossary.html#term-hashable",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Python מקבלת tuple של ints כ-key של dict אבל דוחה list. מה הסיבה?",
+   "options": [
+    "lists יכולות להיות ארוכות מאוד, וזה הופך את ה-hash שלהן לאיטי מדי",
+    "tuples שמורים ממוינים, ולכן ההשוואה שלהם מהירה יותר",
+    "ה-hash של key אסור שישתנה בזמן שהוא שמור, ושל list יכול",
+    "lists נשמרות by reference ו-tuples נשמרים by value"
+   ],
+   "why": "ה-map מתייק כל entry לפי ה-hash של ה-key שלו. אם ה-key היה משתנה אחרי ההכנסה, גם ה-hash שלו היה משתנה, וחיפושים היו מחפשים ב-bucket הלא נכון. tuples של ints לא יכולים להשתנות, ולכן ה-hash שלהם יציב.",
+   "wrong": [
+    "tuples יכולים להיות ארוכים באותה מידה. הבעיה היא ש-list יכולה להשתנות, לא האורך שלה.",
+    "tuples שומרים את הסדר שנותנים להם; שום דבר לא ממוין.",
+    null,
+    "ב-Python שניהם objects שניגשים אליהם דרך reference. ההבדל הוא mutability."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-mutated-key-lost",
+  "topic": "data-structures",
+  "subtopic": "hash-tables",
+  "concepts": [
+   "mutable-key",
+   "hashcode",
+   "java-hashset"
+  ],
+  "level": "medium",
+  "q": "A Java list is added to a HashSet and then changed. What does this print?",
+  "code": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        List<Integer> key = new ArrayList<>(List.of(1, 2));\n        Set<List<Integer>> seen = new HashSet<>();\n        seen.add(key);\n        key.add(3);\n        System.out.println(seen.contains(key) + \" \" + seen.size());\n    }\n}",
+  "lang": "java",
+  "options": [
+   "true 1",
+   "false 0",
+   "false 1",
+   "An exception: the set detects that one of its keys changed"
+  ],
+  "answer": 2,
+  "why": "A List's hashCode is computed from its contents. After key.add(3), the hash no longer matches the bucket where the entry was stored, so contains looks in the wrong place. The entry is still in the set, just unreachable by lookup.",
+  "wrong": [
+   "The set does not re-hash keys when they change, so the lookup uses a new hash and misses.",
+   "Changing the key does not remove the entry; size() still counts it.",
+   null,
+   "Sets do not watch their keys. The change goes unnoticed, which is why mutable keys are risky."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "list ב-Java נוספת ל-HashSet ואז משתנה. מה יודפס?",
+   "options": [
+    "true 1",
+    "false 0",
+    "false 1",
+    "נזרק exception: ה-set מזהה שאחד ה-keys שלו השתנה"
+   ],
+   "why": "ה-hashCode של List מחושב מהתוכן שלה. אחרי key.add(3), ה-hash כבר לא מתאים ל-bucket שבו ה-entry נשמר, ולכן contains מחפש במקום הלא נכון. ה-entry עדיין ב-set, רק אי אפשר להגיע אליו בחיפוש.",
+   "wrong": [
+    "ה-set לא מחשב hash מחדש ל-keys כשהם משתנים, ולכן החיפוש משתמש ב-hash חדש ומפספס.",
+    "שינוי ה-key לא מסיר את ה-entry; size() עדיין סופר אותו.",
+    null,
+    "sets לא עוקבים אחרי ה-keys שלהם. השינוי עובר בלי שאף אחד שם לב, ולכן keys שיכולים להשתנות מסוכנים."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-equals-without-hashcode",
+  "topic": "data-structures",
+  "subtopic": "hash-tables",
+  "concepts": [
+   "equals-hashcode",
+   "java-hashset",
+   "hash-contract"
+  ],
+  "level": "medium",
+  "q": "Point overrides equals() to compare x and y but does not override hashCode(). Two equal Points are added to a HashSet. What does this print?",
+  "code": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        Set<Point> set = new HashSet<>();\n        set.add(new Point(1, 2));\n        set.add(new Point(1, 2));\n        System.out.println(set.size());\n    }\n}\nclass Point { int x, y; Point(int x, int y) { this.x = x; this.y = y; }\n    public boolean equals(Object o) { return o instanceof Point p && p.x == x && p.y == y; } }",
+  "lang": "java",
+  "options": [
+   "2",
+   "1",
+   "Compile error: equals() needs a matching hashCode()",
+   "An exception on the second add, since sets reject duplicates"
+  ],
+  "answer": 0,
+  "why": "A HashSet first uses hashCode() to pick a bucket and only then calls equals(). The default hashCode() is almost always different for two separate objects, so the second Point is filed elsewhere and never compared. Equal objects must have equal hash codes.",
+  "wrong": [
+   null,
+   "equals() is consulted only for entries with the same hash, and these two objects have different default hash codes.",
+   "The compiler does not enforce the contract. Breaking it compiles and fails at run time.",
+   "Sets never throw on duplicates; add() just returns false for a real duplicate."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/HashMap.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "Point עושה override ל-equals() כדי להשוות את x ו-y, אבל לא עושה override ל-hashCode(). שני Points שווים נוספים ל-HashSet. מה יודפס?",
+   "options": [
+    "2",
+    "1",
+    "שגיאת compile: equals() דורשת hashCode() תואם",
+    "exception בהוספה השנייה, כי sets דוחים כפילויות"
+   ],
+   "why": "HashSet משתמש קודם ב-hashCode() כדי לבחור bucket ורק אחר כך קורא ל-equals(). ה-hashCode() הדיפולטי כמעט תמיד שונה עבור שני objects נפרדים, ולכן ה-Point השני מתויק במקום אחר ולא מושווה בכלל. objects שווים חייבים hash codes שווים.",
+   "wrong": [
+    null,
+    "קוראים ל-equals() רק עבור entries עם אותו hash, ולשני ה-objects האלה יש hash codes דיפולטיים שונים.",
+    "ה-compiler לא אוכף את החוזה. הפרה שלו עוברת compile ונכשלת ב-runtime.",
+    "sets אף פעם לא זורקים exception על כפילויות; add() פשוט מחזירה false לכפילות אמיתית."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-resize-rehashes-entries",
+  "topic": "data-structures",
+  "subtopic": "hash-tables",
+  "concepts": [
+   "resizing",
+   "load-factor",
+   "bucket-index"
+  ],
+  "level": "medium",
+  "q": "When a hash map's bucket array fills up, it allocates a bigger array. Why can it not just copy the old buckets into the first half?",
+  "options": [
+   "The bucket index depends on the table size, so many entries move",
+   "Entries are sorted during a resize, so they must be moved",
+   "The key's hash value changes after a resize, so it is computed again",
+   "Copying blocks of memory is not allowed for map entries"
+  ],
+  "answer": 0,
+  "why": "The bucket is computed from the hash and the current size, for example hash mod size. Once the size changes, an entry's correct bucket usually changes too, so each one is placed again. That is O(n), but it happens rarely.",
+  "wrong": [
+   null,
+   "Hash maps do not sort entries; they only place them by bucket.",
+   "The hash comes from the key and does not change. What changes is how it maps to a bucket.",
+   "Copying is allowed. It would just leave entries in buckets that lookups would no longer check."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/hash-table/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כשה-array של ה-buckets ב-hash map מתמלא, הוא מקצה array גדול יותר. למה אי אפשר פשוט להעתיק את ה-buckets הישנים לחצי הראשון?",
+   "options": [
+    "ה-index של ה-bucket תלוי בגודל הטבלה, ולכן הרבה entries זזים",
+    "ה-entries ממוינים במהלך resize, ולכן צריך להזיז אותם",
+    "ערך ה-hash של ה-key משתנה אחרי resize, ולכן צריך לחשב אותו מחדש",
+    "אסור להעתיק בלוקים של זיכרון עבור entries של map"
+   ],
+   "why": "ה-bucket מחושב מה-hash ומהגודל הנוכחי, למשל hash mod size. ברגע שהגודל משתנה, גם ה-bucket הנכון של entry בדרך כלל משתנה, ולכן כל אחד מוכנס מחדש. זה O(n), אבל זה קורה לעיתים רחוקות.",
+   "wrong": [
+    null,
+    "hash maps לא ממיינים entries; הם רק ממקמים אותם לפי bucket.",
+    "ה-hash מגיע מה-key ולא משתנה. מה שמשתנה הוא איך הוא ממופה ל-bucket.",
+    "מותר להעתיק. זה פשוט היה משאיר entries ב-buckets שחיפושים כבר לא היו בודקים."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-dict-keeps-insertion-order",
+  "topic": "data-structures",
+  "subtopic": "hash-tables",
+  "concepts": [
+   "ordering",
+   "python-dict",
+   "insertion-order"
+  ],
+  "level": "easy",
+  "q": "Three names are added to a Python dict, then the value for \"ada\" is updated. What does this print?",
+  "code": "ages = {}\nfor name in [\"kim\", \"ada\", \"lee\"]:\n    ages[name] = len(name)\nages[\"ada\"] = 30\nprint(list(ages))",
+  "lang": "python",
+  "options": [
+   "['ada', 'kim', 'lee']",
+   "['kim', 'ada', 'lee']",
+   "['kim', 'lee', 'ada']",
+   "The order changes from run to run, since it follows the hash values"
+  ],
+  "answer": 1,
+  "why": "A Python dict remembers the order in which keys were first inserted. Updating the value of an existing key keeps its place. Insertion order is not sorted order; for that, sort the keys.",
+  "wrong": [
+   "A dict does not sort its keys. It keeps the order they were first added.",
+   null,
+   "Updating an existing key changes its value but not its position.",
+   "That is true of sets of strings, not of dicts, which keep insertion order."
+  ],
+  "ref": "https://docs.python.org/3/library/stdtypes.html#mapping-types-dict",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שלושה שמות נוספים ל-dict של Python, ואז הערך של \"ada\" מתעדכן. מה יודפס?",
+   "options": [
+    "['ada', 'kim', 'lee']",
+    "['kim', 'ada', 'lee']",
+    "['kim', 'lee', 'ada']",
+    "הסדר משתנה מריצה לריצה, כי הוא הולך לפי ערכי ה-hash"
+   ],
+   "why": "dict ב-Python זוכר את הסדר שבו ה-keys הוכנסו לראשונה. עדכון הערך של key קיים שומר על המקום שלו. סדר הכנסה הוא לא סדר ממוין; בשביל זה ממיינים את ה-keys.",
+   "wrong": [
+    "dict לא ממיין את ה-keys שלו. הוא שומר את הסדר שבו הם נוספו לראשונה.",
+    null,
+    "עדכון של key קיים משנה את הערך שלו אבל לא את המיקום שלו.",
+    "זה נכון ל-sets של מחרוזות, לא ל-dicts, ששומרים סדר הכנסה."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-crafted-colliding-keys",
+  "topic": "data-structures",
+  "subtopic": "hash-tables",
+  "concepts": [
+   "worst-case",
+   "collision",
+   "hash-randomization"
+  ],
+  "level": "medium",
+  "q": "A server stores user-sent strings as keys of a hash map. An attacker sends many different keys that all land in the same bucket. What happens to the map?",
+  "options": [
+   "The map rejects the keys once a bucket gets too long",
+   "A resize spreads the keys out again, so the slowdown is brief",
+   "Lookups and inserts degrade to O(n) as one bucket fills up",
+   "Not much, since hash map lookups and inserts are always O(1)"
+  ],
+  "answer": 2,
+  "why": "All crafted keys land in one bucket, so each insert or lookup scans it: O(n) per operation and about O(n^2) for n requests. Runtimes such as Python defend against this with a secret random seed for string hashes in each process.",
+  "wrong": [
+   "A plain hash map has no such limit; it keeps accepting keys and gets slower.",
+   "Keys with the same hash land in the same bucket at any table size.",
+   null,
+   "O(1) is the average when keys spread out. When every key shares one bucket, each operation scans it."
+  ],
+  "ref": "https://docs.python.org/3/reference/datamodel.html#object.__hash__",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שרת שומר מחרוזות שמשתמשים שולחים כ-keys של hash map. תוקף שולח הרבה keys שונים שכולם נוחתים באותו bucket. מה קורה ל-map?",
+   "options": [
+    "ה-map דוחה את ה-keys ברגע ש-bucket נהיה ארוך מדי",
+    "resize מפזר את ה-keys מחדש, ולכן ההאטה קצרה",
+    "חיפוש והכנסה מתדרדרים ל-O(n) כש-bucket אחד מתמלא",
+    "לא הרבה, כי חיפוש והכנסה ב-hash map הם תמיד O(1)"
+   ],
+   "why": "כל ה-keys שנבנו נוחתים ב-bucket אחד, ולכן כל הכנסה או חיפוש סורקים אותו: O(n) לפעולה ובערך O(n^2) עבור n requests. runtimes כמו Python מתגוננים מזה בעזרת seed אקראי וסודי ל-hash של מחרוזות בכל process.",
+   "wrong": [
+    "ל-hash map רגיל אין מגבלה כזו; הוא ממשיך לקבל keys ונהיה איטי יותר.",
+    "keys עם אותו hash נוחתים באותו bucket בכל גודל של טבלה.",
+    null,
+    "O(1) הוא הממוצע כשה-keys מפוזרים. כשכל ה-keys חולקים bucket אחד, כל פעולה סורקת אותו."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-amortized-append",
+  "topic": "data-structures",
+  "subtopic": "arrays-lists",
+  "concepts": [
+   "dynamic-array",
+   "amortized",
+   "resizing"
+  ],
+  "level": "easy",
+  "q": "Appending to an ArrayList or a Python list is called amortized O(1). What does that mean?",
+  "options": [
+   "A rare O(n) copy averages out to O(1) per append",
+   "Every single append is O(1), because the array never copies",
+   "Appends are O(n), because an append can trigger a copy",
+   "On random input, an append is usually O(1)"
+  ],
+  "answer": 0,
+  "why": "When the array is full, it moves everything to a bigger buffer, which is O(n). Because the capacity grows by a factor, this happens rarely enough that the total over n appends is O(n), so O(1) per append.",
+  "wrong": [
+   null,
+   "Copies do happen when the array is full; they are just rare.",
+   "One expensive append does not make all appends expensive. The cost is averaged over the sequence.",
+   "Amortized is not about random input. It is a guaranteed average over any sequence of operations."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/ArrayList.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "append ל-ArrayList או ל-list של Python נחשב O(1) amortized. מה זה אומר?",
+   "options": [
+    "העתקה נדירה של O(n) מתפזרת לממוצע של O(1) לכל append",
+    "כל append בודד הוא O(1), כי ה-array אף פעם לא מועתק מחדש",
+    "appends הם O(n), כי append יכול לגרום להעתקה",
+    "על קלט אקראי, append הוא בדרך כלל O(1)"
+   ],
+   "why": "כשה-array מלא, הוא מעביר את הכול ל-buffer גדול יותר, שזה O(n). מכיוון שה-capacity גדל פי קבוע, זה קורה מספיק לעיתים רחוקות כדי שהסכום על פני n appends יהיה O(n), כלומר O(1) לכל append.",
+   "wrong": [
+    null,
+    "העתקות כן קורות כשה-array מלא; הן פשוט נדירות.",
+    "append יקר אחד לא הופך את כל ה-appends ליקרים. העלות ממוצעת על פני כל הרצף.",
+    "amortized לא קשור לקלט אקראי. זה ממוצע מובטח על פני כל רצף של פעולות."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-grow-by-doubling",
+  "topic": "data-structures",
+  "subtopic": "arrays-lists",
+  "concepts": [
+   "dynamic-array",
+   "growth-factor",
+   "amortized"
+  ],
+  "level": "medium",
+  "q": "Why does a dynamic array grow by doubling its capacity instead of adding 10 slots each time it fills up?",
+  "options": [
+   "Doubling uses less memory than adding a fixed number of slots",
+   "With +10, n appends copy O(n^2) items; doubling copies O(n)",
+   "Both are amortized O(1); doubling just has smaller constants",
+   "The capacity must stay a power of two for indexing to work"
+  ],
+  "answer": 1,
+  "why": "With +10, a full copy happens every 10 appends, and copies get longer as the array grows, adding up to O(n^2). With doubling, the copies are 1, 2, 4 and so on, which sum to less than 2n.",
+  "wrong": [
+   "Doubling can leave up to half the buffer unused; it trades memory for speed.",
+   null,
+   "Fixed growth makes each append O(n) on average, not O(1).",
+   "Indexing works with any size; it is just base plus index times size."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/ArrayList.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למה dynamic array גדל בהכפלה של ה-capacity ולא בהוספה של 10 תאים בכל פעם שהוא מתמלא?",
+   "options": [
+    "הכפלה צורכת פחות זיכרון מאשר הוספה של מספר קבוע של תאים",
+    "עם +10, n appends מעתיקים O(n^2) איברים; בהכפלה O(n)",
+    "שניהם O(1) amortized; להכפלה פשוט יש קבועים קטנים יותר",
+    "ה-capacity חייב להישאר חזקה של 2 כדי ש-indexing יעבוד"
+   ],
+   "why": "עם +10, העתקה מלאה קורה כל 10 appends, וההעתקות מתארכות ככל שה-array גדל, ומסתכמות ב-O(n^2). עם הכפלה, ההעתקות הן 1, 2, 4 וכן הלאה, וסכומן קטן מ-2n.",
+   "wrong": [
+    "הכפלה יכולה להשאיר עד חצי מה-buffer לא בשימוש; היא מחליפה זיכרון במהירות.",
+    null,
+    "גדילה קבועה הופכת כל append ל-O(n) בממוצע, לא O(1).",
+    "indexing עובד עם כל גודל; זה רק בסיס ועוד index כפול גודל."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-cache-locality",
+  "topic": "data-structures",
+  "subtopic": "arrays-lists",
+  "concepts": [
+   "cache-locality",
+   "array",
+   "linked-list"
+  ],
+  "level": "medium",
+  "q": "Summing n ints is O(n) for an array and for a linked list, yet the array is often several times faster. Why?",
+  "options": [
+   "Summing a linked list is really O(n log n)",
+   "Arrays are summed in parallel on all CPU cores by default, lists are not",
+   "The list is copied into an array before it is summed",
+   "Array items are adjacent, so the CPU cache serves most reads"
+  ],
+  "answer": 3,
+  "why": "Big-O hides constant factors. The CPU loads memory in blocks, so an array's next items are usually already in the cache. List nodes can be scattered, and each step follows a pointer to a new place in memory.",
+  "wrong": [
+   "Each node is visited once, so it is O(n). The difference is in the constant factor.",
+   "A plain loop runs on one core. The speedup comes from the cache, not from threads.",
+   "No copy is made. The list is walked node by node.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/linked-list/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "סכימה של n ints היא O(n) גם ב-array וגם ב-linked list, ובכל זאת ה-array לרוב מהיר פי כמה. למה?",
+   "options": [
+    "סכימה של linked list היא בעצם O(n log n)",
+    "arrays נסכמים במקביל על כל הליבות של ה-CPU כברירת מחדל, ו-lists לא",
+    "ה-list מועתקת ל-array לפני הסכימה",
+    "איברי array צמודים, ולכן ה-cache של ה-CPU מספק את רוב הקריאות"
+   ],
+   "why": "Big-O מסתיר קבועים. ה-CPU טוען זיכרון בבלוקים, ולכן האיברים הבאים של array בדרך כלל כבר נמצאים ב-cache. nodes של list יכולים להיות מפוזרים, וכל צעד עוקב אחרי pointer למקום חדש בזיכרון.",
+   "wrong": [
+    "כל node נסרק פעם אחת, ולכן זה O(n). ההבדל הוא בקבוע.",
+    "לולאה רגילה רצה על ליבה אחת. ההאצה מגיעה מה-cache, לא מ-threads.",
+    "שום העתקה לא נעשית. עוברים על ה-list node אחרי node.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-when-linked-list-wins",
+  "topic": "data-structures",
+  "subtopic": "arrays-lists",
+  "concepts": [
+   "linked-list",
+   "dynamic-array",
+   "trade-off"
+  ],
+  "level": "easy",
+  "q": "In which situation does a linked list beat a dynamic array?",
+  "options": [
+   "Many reads by index, such as items[i] inside a loop",
+   "Binary search over data that is kept sorted",
+   "Many inserts and removals at nodes you already hold",
+   "Tight memory, since nodes store only their values"
+  ],
+  "answer": 2,
+  "why": "With a reference to the node, a list inserts or removes by changing a few pointers, while an array shifts every later item. For index access, binary search and memory use, the array wins.",
+  "wrong": [
+   "Index access is O(1) in an array and O(n) in a list.",
+   "Binary search needs to jump to the middle, which a list cannot do quickly.",
+   null,
+   "Each node also stores at least one pointer, so a list uses more memory per item."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/linked-list/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "באיזה מצב linked list עדיפה על dynamic array?",
+   "options": [
+    "הרבה קריאות לפי index, כמו items[i] בתוך לולאה",
+    "binary search על נתונים שנשמרים ממוינים",
+    "הרבה הכנסות והסרות ב-nodes שיש אליהם reference",
+    "זיכרון מוגבל, כי nodes שומרים רק את הערכים שלהם"
+   ],
+   "why": "עם reference ל-node, list מכניסה או מסירה על ידי שינוי של כמה pointers, בעוד ש-array מזיז כל איבר שאחרי. בגישה לפי index, ב-binary search ובצריכת זיכרון, ה-array מנצח.",
+   "wrong": [
+    "גישה לפי index היא O(1) ב-array ו-O(n) ב-list.",
+    "binary search צריך לקפוץ לאמצע, ו-list לא יכולה לעשות את זה מהר.",
+    null,
+    "כל node שומר גם לפחות pointer אחד, ולכן list צורכת יותר זיכרון לכל איבר."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-remove-while-iterating",
+  "topic": "data-structures",
+  "subtopic": "arrays-lists",
+  "concepts": [
+   "shifting",
+   "iteration",
+   "python-list"
+  ],
+  "level": "medium",
+  "q": "This loop removes every 2 from a Python list while iterating over it. What does it print?",
+  "code": "nums = [1, 2, 2, 3]\nfor x in nums:\n    if x == 2:\n        nums.remove(x)\nprint(nums)",
+  "lang": "python",
+  "options": [
+   "[1, 3]",
+   "RuntimeError: the list changed size during iteration",
+   "[1, 2, 2, 3]",
+   "[1, 2, 3]"
+  ],
+  "answer": 3,
+  "why": "The for loop walks by index. Removing the first 2 at index 1 shifts the second 2 into index 1, and the loop moves on to index 2 and never sees it. Build a new list instead, for example with a comprehension.",
+  "wrong": [
+   "That is the intended result, but the shift after each removal makes the loop skip an item.",
+   "Python raises that for dicts and sets. Lists allow it and silently skip items.",
+   "remove() changes the same list the loop is reading; the loop does not work on a copy.",
+   null
+  ],
+  "ref": "https://wiki.python.org/moin/TimeComplexity",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "הלולאה הזו מסירה כל 2 מ-list של Python תוך כדי איטרציה עליה. מה יודפס?",
+   "options": [
+    "[1, 3]",
+    "RuntimeError: ה-list שינתה את הגודל שלה במהלך האיטרציה",
+    "[1, 2, 2, 3]",
+    "[1, 2, 3]"
+   ],
+   "why": "לולאת ה-for מתקדמת לפי index. הסרת ה-2 הראשון ב-index 1 מזיזה את ה-2 השני ל-index 1, והלולאה ממשיכה ל-index 2 ולא רואה אותו. עדיף לבנות list חדשה, למשל עם comprehension.",
+   "wrong": [
+    "זו התוצאה המיועדת, אבל ההזזה אחרי כל הסרה גורמת ללולאה לדלג על איבר.",
+    "Python זורקת את זה עבור dicts ו-sets. lists מאפשרות את זה ומדלגות על איברים בשקט.",
+    "remove() משנה את אותה list שהלולאה קוראת; הלולאה לא עובדת על עותק.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-singly-linked-remove-needs-prev",
+  "topic": "data-structures",
+  "subtopic": "arrays-lists",
+  "concepts": [
+   "singly-linked-list",
+   "deletion",
+   "predecessor"
+  ],
+  "level": "easy",
+  "q": "In a singly linked list you hold a reference to node X and want to unlink X. What makes this harder than in a doubly linked list?",
+  "options": [
+   "A node cannot be removed from a singly linked list at all",
+   "The node before X must be updated, and only a walk finds it",
+   "Every node after X must have its stored index updated",
+   "Nothing: setting X to null is enough to remove it from the list"
+  ],
+  "answer": 1,
+  "why": "Unlinking X means the previous node must skip over it. A singly linked node has no pointer back, so you walk from the head to find the predecessor, which is O(n).",
+  "wrong": [
+   "It can; you just need the previous node first.",
+   null,
+   "List nodes do not store indexes, so nothing after X changes.",
+   "That changes only your local variable. The previous node still points at X."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/linked-list/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-singly linked list יש reference ל-node X ורוצים לנתק את X. מה הופך את זה לקשה יותר מאשר ב-doubly linked list?",
+   "options": [
+    "אי אפשר בכלל להסיר node מ-singly linked list",
+    "צריך לעדכן את הקודם ל-X, ורק הליכה מוצאת אותו",
+    "צריך לעדכן את ה-index השמור של כל node שאחרי X",
+    "כלום: מספיק לשים null ב-X כדי להסיר אותו מה-list"
+   ],
+   "why": "ניתוק של X אומר שה-node הקודם צריך לדלג עליו. ל-node ב-singly linked list אין pointer אחורה, ולכן הולכים מה-head כדי למצוא את הקודם, שזה O(n).",
+   "wrong": [
+    "אפשר; רק צריך קודם את ה-node הקודם.",
+    null,
+    "nodes של list לא שומרים indexes, ולכן שום דבר אחרי X לא משתנה.",
+    "זה משנה רק את המשתנה המקומי. ה-node הקודם עדיין מצביע על X."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-reverse-loses-next",
+  "topic": "data-structures",
+  "subtopic": "arrays-lists",
+  "concepts": [
+   "linked-list",
+   "reversal",
+   "pointer-bug"
+  ],
+  "level": "medium",
+  "q": "This function is meant to reverse a linked list 1 -> 2 -> 3. What does it print?",
+  "code": "class Node:\n    def __init__(self, val, nxt=None):\n        self.val, self.next = val, nxt\ndef reverse(head):\n    prev = None\n    while head:\n        head.next = prev\n        prev, head = head, head.next\n    return prev\n\nr = reverse(Node(1, Node(2, Node(3))))\nprint(r.val, r.next)",
+  "lang": "python",
+  "options": [
+   "3 <__main__.Node object at ...>",
+   "It never ends, because two nodes keep pointing at each other",
+   "AttributeError: 'NoneType' object has no attribute 'next'",
+   "1 None"
+  ],
+  "answer": 3,
+  "why": "head.next is overwritten with prev before the old next is saved. The tuple then reads the new head.next, which is None, so the loop stops after one node and the rest of the list is lost. Save nxt = head.next first.",
+  "wrong": [
+   "That would be a correct reversal, but the link to node 2 is overwritten before it is saved.",
+   "The loop ends quickly: head becomes None after the first pass.",
+   "The loop checks while head before reading head.next, so None is never used as a node.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/linked-list/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-function הזו אמורה להפוך linked list 1 -> 2 -> 3. מה יודפס?",
+   "options": [
+    "3 <__main__.Node object at ...>",
+    "היא לא מסתיימת, כי שני nodes ממשיכים להצביע זה על זה",
+    "AttributeError: 'NoneType' object has no attribute 'next'",
+    "1 None"
+   ],
+   "why": "head.next נדרס עם prev לפני שה-next הישן נשמר. ה-tuple קורא אז את head.next החדש, שהוא None, ולכן הלולאה נעצרת אחרי node אחד ושאר ה-list הולכת לאיבוד. צריך לשמור קודם nxt = head.next.",
+   "wrong": [
+    "זה היה היפוך נכון, אבל הקישור ל-node 2 נדרס לפני שהוא נשמר.",
+    "הלולאה מסתיימת מהר: head הופך ל-None אחרי המעבר הראשון.",
+    "הלולאה בודקת while head לפני שהיא קוראת את head.next, ולכן אף פעם לא משתמשים ב-None כ-node.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-doubling-total-copies",
+  "topic": "data-structures",
+  "subtopic": "arrays-lists",
+  "concepts": [
+   "amortized",
+   "geometric-series",
+   "dynamic-array"
+  ],
+  "level": "hard",
+  "q": "A dynamic array starts with capacity 1 and doubles when full. About how many element copies do resizes cause in total for 1,000,000 appends?",
+  "options": [
+   "Fewer than 2,000,000: 1 + 2 + 4 + ... stays under twice the final size",
+   "About 20,000,000: about 20 resizes, each copying up to 1,000,000 items",
+   "About 500,000,000,000: each append copies everything before it",
+   "Zero, because the array always extends in place in memory"
+  ],
+  "answer": 0,
+  "why": "Each resize copies the current items: 1, 2, 4, up to about 500,000. This series sums to less than twice the last term, so total copying is O(n) and each append is O(1) amortized.",
+  "wrong": [
+   null,
+   "Only the last resize copies that many. Earlier ones copy half, a quarter and so on.",
+   "That is growing by one slot each time. Doubling makes resizes rare.",
+   "The memory after the buffer may be in use, so a resize normally moves everything."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/ArrayList.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "dynamic array מתחיל עם capacity 1 ומוכפל כשהוא מתמלא. בערך כמה העתקות של איברים גורמים ה-resizes בסך הכול עבור 1,000,000 appends?",
+   "options": [
+    "פחות מ-2,000,000: 1 + 2 + 4 + ... נשאר מתחת לפעמיים הגודל הסופי",
+    "בערך 20,000,000: בערך 20 resizes, וכל אחד מעתיק עד 1,000,000 איברים",
+    "בערך 500,000,000,000: כל append מעתיק את כל מה שלפניו",
+    "אפס, כי ה-array תמיד מתרחב במקום בזיכרון"
+   ],
+   "why": "כל resize מעתיק את האיברים הנוכחיים: 1, 2, 4, עד בערך 500,000. הטור הזה מסתכם בפחות מפעמיים האיבר האחרון, ולכן סך ההעתקות הוא O(n) וכל append הוא O(1) amortized.",
+   "wrong": [
+    null,
+    "רק ה-resize האחרון מעתיק כל כך הרבה. הקודמים מעתיקים חצי, רבע וכן הלאה.",
+    "זו גדילה של תא אחד בכל פעם. הכפלה הופכת את ה-resizes לנדירים.",
+    "הזיכרון שאחרי ה-buffer עשוי להיות בשימוש, ולכן resize בדרך כלל מזיז את הכול."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-undo-uses-stack",
+  "topic": "data-structures",
+  "subtopic": "stacks-queues",
+  "concepts": [
+   "stack",
+   "lifo",
+   "undo"
+  ],
+  "level": "easy",
+  "q": "An editor's undo must reverse the most recent change first, then the one before it. Which structure fits the history of changes?",
+  "options": [
+   "A queue, so changes are undone in the order they were made",
+   "A hash map from change id to change, for O(1) access to any change",
+   "A stack: push each change, and undo pops the latest",
+   "A min-heap keyed by the time of each change"
+  ],
+  "answer": 2,
+  "why": "Undo is last in, first out: the change made last is undone first. A stack gives exactly that with O(1) push and pop.",
+  "wrong": [
+   "A queue is first in, first out, so it would undo the oldest change first.",
+   "A map can find any change quickly, but it does not track which one is the latest.",
+   null,
+   "A min-heap returns the smallest time first, which is the oldest change."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/stack/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "פעולת undo בעורך צריכה לבטל קודם את השינוי האחרון, ואז את זה שלפניו. איזה מבנה מתאים להיסטוריית השינויים?",
+   "options": [
+    "queue, כדי שהשינויים יבוטלו לפי הסדר שבו נעשו",
+    "hash map ממזהה של שינוי לשינוי, לגישה ב-O(1) לכל שינוי",
+    "stack: עושים push לכל שינוי, ו-undo עושה pop לאחרון",
+    "min-heap לפי הזמן של כל שינוי"
+   ],
+   "why": "undo הוא last in, first out: השינוי שנעשה אחרון מבוטל ראשון. stack נותן בדיוק את זה, עם push ו-pop ב-O(1).",
+   "wrong": [
+    "queue הוא first in, first out, ולכן הוא היה מבטל קודם את השינוי הכי ישן.",
+    "map יכול למצוא כל שינוי מהר, אבל הוא לא עוקב אחרי מי האחרון.",
+    null,
+    "min-heap מחזיר קודם את הזמן הקטן ביותר, כלומר את השינוי הכי ישן."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-balanced-brackets",
+  "topic": "data-structures",
+  "subtopic": "stacks-queues",
+  "concepts": [
+   "stack",
+   "bracket-matching",
+   "lifo"
+  ],
+  "level": "easy",
+  "q": "This function checks whether brackets are balanced using a stack. What does it print?",
+  "code": "def balanced(s):\n    pairs = {\")\": \"(\", \"]\": \"[\"}\n    stack = []\n    for ch in s:\n        if ch in \"([\":\n            stack.append(ch)\n        elif not stack or stack.pop() != pairs[ch]:\n            return False\n    return not stack\n\nprint(balanced(\"([)]\"), balanced(\"(()\"))",
+  "lang": "python",
+  "options": [
+   "True False",
+   "False True",
+   "True True",
+   "False False"
+  ],
+  "answer": 3,
+  "why": "In \"([)]\" the ) arrives while [ is on top of the stack, so the pair does not match. In \"(()\" every closer matches, but one ( is left on the stack at the end, and return not stack catches that.",
+  "wrong": [
+   "\"([)]\" has as many closers as openers, but order matters: ) cannot close the [ opened after it.",
+   "The final check returns False when openers are left on the stack, as in \"(()\".",
+   "Both strings fail: one closes in the wrong order and the other leaves a bracket open.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/stack/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-function הזו בודקת אם הסוגריים מאוזנים בעזרת stack. מה יודפס?",
+   "options": [
+    "True False",
+    "False True",
+    "True True",
+    "False False"
+   ],
+   "why": "ב-\"([)]\" ה-) מגיע כשה-[ בראש ה-stack, ולכן הזוג לא מתאים. ב-\"(()\" כל סוגר מתאים, אבל ( אחד נשאר ב-stack בסוף, ו-return not stack תופס את זה.",
+   "wrong": [
+    "ב-\"([)]\" יש אותו מספר של סוגרים ופותחים, אבל הסדר משנה: ) לא יכול לסגור את ה-[ שנפתח אחריו.",
+    "הבדיקה בסוף מחזירה False כשנשארים פותחים ב-stack, כמו ב-\"(()\".",
+    "שתי המחרוזות נכשלות: אחת סוגרת בסדר הלא נכון והשנייה משאירה סוגר פתוח.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-list-pop-front-queue",
+  "topic": "data-structures",
+  "subtopic": "stacks-queues",
+  "concepts": [
+   "queue",
+   "deque",
+   "python-list"
+  ],
+  "level": "easy",
+  "q": "Python code implements a queue with list.append() and list.pop(0). Why does a reviewer suggest collections.deque instead?",
+  "options": [
+   "Lists are not thread-safe, and that is the only difference",
+   "pop(0) shifts every other item; deque.popleft() is O(1)",
+   "pop(0) on an empty list returns None, which hides bugs",
+   "A list cannot grow past a fixed size, so the queue would fill up"
+  ],
+  "answer": 1,
+  "why": "A list is a dynamic array, so taking from the front moves all other items one slot, which is O(n). A deque supports O(1) appends and pops at both ends.",
+  "wrong": [
+   "The main gain is speed: pop(0) is O(n) on a list and popleft() is O(1).",
+   null,
+   "pop(0) on an empty list raises IndexError, and so does popleft() on an empty deque.",
+   "Python lists grow as needed. The problem is the cost of removing from the front."
+  ],
+  "ref": "https://docs.python.org/3/library/collections.html#collections.deque",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "קוד Python מממש queue עם list.append() ו-list.pop(0). למה reviewer מציע להשתמש ב-collections.deque במקום?",
+   "options": [
+    "lists לא thread-safe, וזה ההבדל היחיד",
+    "pop(0) מזיז את כל שאר האיברים; deque.popleft() הוא O(1)",
+    "pop(0) על list ריקה מחזיר None, וזה מסתיר bugs",
+    "list לא יכולה לגדול מעבר לגודל קבוע מראש, ולכן ה-queue עלול להתמלא"
+   ],
+   "why": "list היא dynamic array, ולכן הוצאה מההתחלה מזיזה את כל שאר האיברים תא אחד, שזה O(n). deque תומך ב-appends וב-pops ב-O(1) בשני הקצוות.",
+   "wrong": [
+    "הרווח העיקרי הוא מהירות: pop(0) הוא O(n) על list ו-popleft() הוא O(1).",
+    null,
+    "pop(0) על list ריקה זורק IndexError, וגם popleft() על deque ריק.",
+    "lists ב-Python גדלות לפי הצורך. הבעיה היא העלות של הסרה מההתחלה."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-queue-from-two-stacks",
+  "topic": "data-structures",
+  "subtopic": "stacks-queues",
+  "concepts": [
+   "queue",
+   "stack",
+   "amortized"
+  ],
+  "level": "medium",
+  "q": "A queue uses two stacks: enqueue pushes onto In; dequeue pops from Out, first moving everything from In to Out if Out is empty. What does dequeue cost over many operations?",
+  "options": [
+   "Amortized O(1): each item moves from In to Out at most once",
+   "O(n) for every dequeue, since it moves everything between stacks",
+   "O(log n), because the stacks keep the items sorted",
+   "It cannot work: stacks reverse the order, so items come out LIFO"
+  ],
+  "answer": 0,
+  "why": "One dequeue can move many items, but each item is pushed onto In once, moved once and popped from Out once. Spread over all operations, that is O(1) per item. The two reversals also keep FIFO order.",
+  "wrong": [
+   null,
+   "The move only happens when Out is empty. Most dequeues just pop.",
+   "The stacks are not sorted; they only reverse the order once.",
+   "Reversing twice restores the original order, so items leave FIFO."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/queue/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "queue בנוי משני stacks: enqueue עושה push ל-In; dequeue עושה pop מ-Out, ואם Out ריק מעבירים קודם את כל מה שב-In ל-Out. כמה עולה dequeue על פני הרבה פעולות?",
+   "options": [
+    "O(1) amortized: כל איבר עובר מ-In ל-Out לכל היותר פעם אחת",
+    "O(n) לכל dequeue, כי הוא מעביר את הכול בין ה-stacks",
+    "O(log n), כי ה-stacks שומרים את האיברים ממוינים",
+    "זה לא יכול לעבוד: stacks הופכים את הסדר, ולכן האיברים יוצאים LIFO"
+   ],
+   "why": "dequeue אחד יכול להעביר הרבה איברים, אבל כל איבר נדחף ל-In פעם אחת, מועבר פעם אחת ונשלף מ-Out פעם אחת. בממוצע על פני כל הפעולות זה O(1) לאיבר. שני ההיפוכים גם שומרים על סדר FIFO.",
+   "wrong": [
+    null,
+    "ההעברה קורית רק כש-Out ריק. רוב ה-dequeues פשוט עושים pop.",
+    "ה-stacks לא ממוינים; הם רק הופכים את הסדר פעם אחת.",
+    "היפוך כפול מחזיר את הסדר המקורי, ולכן האיברים יוצאים FIFO."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-circular-buffer-wraps",
+  "topic": "data-structures",
+  "subtopic": "stacks-queues",
+  "concepts": [
+   "queue",
+   "circular-buffer",
+   "array"
+  ],
+  "level": "easy",
+  "q": "A fixed-size queue lives in an array with a head index and a tail index that wrap around to 0 at the end. Why wrap instead of shifting items left after each dequeue?",
+  "options": [
+   "Wrapping keeps the items in sorted order",
+   "Arrays do not allow items to be moved",
+   "Moving the head is O(1), and freed front slots get reused",
+   "Wrapping lets the queue hold more items than the array has slots"
+  ],
+  "answer": 2,
+  "why": "Dequeue just advances the head index. Without wrapping, the tail would run off the end while free slots sit at the start; shifting would fix that but make each dequeue O(n).",
+  "wrong": [
+   "A queue keeps arrival order; wrapping has nothing to do with sorting.",
+   "Items can be moved; it is just O(n) per dequeue.",
+   null,
+   "The capacity is still the array size. Wrapping only reuses slots."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/queue/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "queue בגודל קבוע יושב ב-array עם index של head ו-index של tail שחוזרים ל-0 כשהם מגיעים לסוף. למה לחזור להתחלה במקום להזיז את האיברים שמאלה אחרי כל dequeue?",
+   "options": [
+    "החזרה להתחלה שומרת את האיברים ממוינים",
+    "arrays לא מאפשרים להזיז איברים",
+    "הזזת ה-head היא O(1), ותאים שהתפנו בהתחלה מנוצלים מחדש",
+    "החזרה להתחלה מאפשרת ל-queue להחזיק יותר איברים ממספר התאים ב-array"
+   ],
+   "why": "dequeue רק מקדם את ה-index של ה-head. בלי חזרה להתחלה, ה-tail היה מגיע לסוף ה-array בזמן שתאים פנויים נשארים בהתחלה; הזזה הייתה פותרת את זה אבל הופכת כל dequeue ל-O(n).",
+   "wrong": [
+    "queue שומר על סדר ההגעה; לחזרה להתחלה אין קשר למיון.",
+    "אפשר להזיז איברים; זה פשוט O(n) לכל dequeue.",
+    null,
+    "ה-capacity הוא עדיין גודל ה-array. החזרה להתחלה רק מנצלת תאים מחדש."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-queue-vs-stack-trace",
+  "topic": "data-structures",
+  "subtopic": "stacks-queues",
+  "concepts": [
+   "stack",
+   "queue",
+   "lifo",
+   "fifo"
+  ],
+  "level": "easy",
+  "q": "The same three numbers are added to a deque used as a queue and to a list used as a stack. What does this print?",
+  "code": "from collections import deque\nq = deque()\ns = []\nfor x in [1, 2, 3]:\n    q.append(x)\n    s.append(x)\nprint(q.popleft(), s.pop())",
+  "lang": "python",
+  "options": [
+   "3 1",
+   "1 1",
+   "1 3",
+   "3 3"
+  ],
+  "answer": 2,
+  "why": "A queue is first in, first out, so popleft() returns 1, the first number added. A stack is last in, first out, so pop() returns 3, the last number added.",
+  "wrong": [
+   "That swaps the two: the queue gives the oldest item and the stack the newest.",
+   "pop() on a list removes from the end, so the stack returns the last item, 3.",
+   null,
+   "popleft() removes from the front of the deque, which holds the first item, 1."
+  ],
+  "ref": "https://docs.python.org/3/library/collections.html#collections.deque",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אותם שלושה מספרים נוספים ל-deque שמשמש כ-queue ול-list שמשמשת כ-stack. מה יודפס?",
+   "options": [
+    "3 1",
+    "1 1",
+    "1 3",
+    "3 3"
+   ],
+   "why": "queue הוא first in, first out, ולכן popleft() מחזיר 1, המספר הראשון שנוסף. stack הוא last in, first out, ולכן pop() מחזיר 3, המספר האחרון שנוסף.",
+   "wrong": [
+    "זה מחליף בין השניים: ה-queue נותן את האיבר הכי ישן וה-stack את הכי חדש.",
+    "pop() על list מסיר מהסוף, ולכן ה-stack מחזיר את האיבר האחרון, 3.",
+    null,
+    "popleft() מסיר מתחילת ה-deque, שם נמצא האיבר הראשון, 1."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-monotonic-stack-linear",
+  "topic": "data-structures",
+  "subtopic": "stacks-queues",
+  "concepts": [
+   "monotonic-stack",
+   "amortized",
+   "time-complexity"
+  ],
+  "level": "medium",
+  "q": "To find the next warmer day for each day, a solution loops over the days with a stack and, inside the loop, pops while the top is colder. What is its running time?",
+  "options": [
+   "O(n): each day is pushed once and popped at most once",
+   "O(n^2), since there is a loop inside a loop",
+   "O(n log n), because the stack is kept sorted with binary search",
+   "O(n^2): one day can pop up to n earlier days, and that can happen at every step"
+  ],
+  "answer": 0,
+  "why": "The inner while loop can run many times in one step, but every pop removes a day that never comes back. Across the whole run there are at most n pushes and n pops.",
+  "wrong": [
+   null,
+   "Nested loops are not always O(n^2). Count the total work: each item is popped at most once.",
+   "The stack is only pushed and popped at the top; no binary search is used.",
+   "One step can pop many days, but across the whole run there are at most n pops, because each day is pushed once. The bound comes from the total, not from each step."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/stack/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כדי למצוא לכל יום את היום החם יותר הבא, פתרון עובר בלולאה על הימים עם stack, ובתוך הלולאה עושה pop כל עוד היום שבראש ה-stack קר יותר. מה זמן הריצה?",
+   "options": [
+    "O(n): כל יום נדחף פעם אחת ונשלף לכל היותר פעם אחת",
+    "O(n^2), כי יש לולאה בתוך לולאה",
+    "O(n log n), כי ה-stack נשמר ממוין עם binary search",
+    "O(n^2): יום אחד יכול לשלוף עד n ימים קודמים, וזה יכול לקרות בכל צעד"
+   ],
+   "why": "לולאת ה-while הפנימית יכולה לרוץ הרבה פעמים בצעד אחד, אבל כל pop מסיר יום שלא חוזר. לאורך כל הריצה יש לכל היותר n פעולות push ו-n פעולות pop.",
+   "wrong": [
+    null,
+    "לולאות מקוננות הן לא תמיד O(n^2). צריך לספור את העבודה הכוללת: כל איבר נשלף לכל היותר פעם אחת.",
+    "עושים push ו-pop רק בראש ה-stack; אין binary search.",
+    "יום אחד יכול לשלוף הרבה ימים בבת אחת, אבל בכל הריצה יש לכל היותר n פעולות pop, כי כל יום נדחף פעם אחת. החסם מגיע מהסכום, לא מכל צעד."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-bst-property",
+  "topic": "data-structures",
+  "subtopic": "trees-bst",
+  "concepts": [
+   "bst-property",
+   "binary-search-tree"
+  ],
+  "level": "easy",
+  "q": "Which rule defines a binary search tree?",
+  "options": [
+   "Each node's left child is smaller than the node, and its right child is larger",
+   "Left subtree keys are all smaller than the node, right subtree keys all larger",
+   "Each parent is smaller than both of its children",
+   "Every leaf is at the same depth, so the tree is balanced"
+  ],
+  "answer": 1,
+  "why": "The rule covers whole subtrees, not only direct children. That is what lets a search discard one side at every step and what makes an in-order walk come out sorted.",
+  "wrong": [
+   "Checking only direct children is not enough; a deeper node on the wrong side breaks searches.",
+   null,
+   "That is the min-heap property, which does not support searching by key.",
+   "Balance is about height. A BST can be unbalanced and still follow the ordering rule."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/tree/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "איזה חוק מגדיר binary search tree?",
+   "options": [
+    "הילד השמאלי של כל node קטן ממנו, והילד הימני שלו גדול ממנו",
+    "כל ה-keys ב-subtree השמאלי קטנים מה-node, ובימני גדולים",
+    "כל הורה קטן משני הילדים שלו",
+    "כל העלים באותו עומק, ולכן העץ מאוזן"
+   ],
+   "why": "החוק חל על subtrees שלמים, לא רק על הילדים הישירים. זה מה שמאפשר לחיפוש לזרוק צד אחד בכל צעד, ומה שגורם ל-in-order traversal לצאת ממוין.",
+   "wrong": [
+    "לבדוק רק ילדים ישירים זה לא מספיק; node עמוק יותר בצד הלא נכון שובר חיפושים.",
+    null,
+    "זו תכונת ה-min-heap, שלא תומכת בחיפוש לפי key.",
+    "איזון קשור לגובה. BST יכול להיות לא מאוזן ועדיין לקיים את חוק הסדר."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-validate-only-children",
+  "topic": "data-structures",
+  "subtopic": "trees-bst",
+  "concepts": [
+   "bst-property",
+   "validation",
+   "subtree"
+  ],
+  "level": "medium",
+  "q": "This function checks that a tree is a BST by comparing each node with its children. What does it print for this tree, and is the tree a BST?",
+  "code": "class N:\n    def __init__(self, v, l=None, r=None):\n        self.v, self.l, self.r = v, l, r\n\ndef ok(n):\n    if n is None: return True\n    if n.l and n.l.v > n.v: return False\n    if n.r and n.r.v < n.v: return False\n    return ok(n.l) and ok(n.r)\n\nroot = N(10, N(5, None, N(12)), N(15))\nprint(ok(root))",
+  "lang": "python",
+  "options": [
+   "False, because 12 is greater than 10",
+   "True, but it is not a BST: 12 is in the left subtree of 10",
+   "True, and the tree is a valid BST, since every pair is in order",
+   "False, because 5 has no left child"
+  ],
+  "answer": 1,
+  "why": "Every parent-child pair is in order (5 < 12, 5 < 10, 10 < 15), so the check passes. But 12 sits in 10's left subtree, where all keys must be smaller than 10, so a search for 12 from the root would go right and miss it.",
+  "wrong": [
+   "The function never compares 12 with 10; it only compares a node with its direct children.",
+   null,
+   "The BST rule covers whole subtrees, and 12 breaks it under 10.",
+   "Missing children are allowed; the function returns True for None."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/tree/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-function הזו בודקת שעץ הוא BST על ידי השוואה של כל node לילדים שלו. מה היא תדפיס עבור העץ הזה, והאם העץ הוא BST?",
+   "options": [
+    "False, כי 12 גדול מ-10",
+    "True, אבל זה לא BST: 12 נמצא ב-subtree השמאלי של 10",
+    "True, והעץ הוא BST תקין, כי כל זוג של הורה וילד בסדר הנכון",
+    "False, כי ל-5 אין ילד שמאלי"
+   ],
+   "why": "כל זוג של הורה וילד בסדר הנכון (5 < 12, 5 < 10, 10 < 15), ולכן הבדיקה עוברת. אבל 12 יושב ב-subtree השמאלי של 10, שבו כל ה-keys חייבים להיות קטנים מ-10, ולכן חיפוש של 12 מהשורש ילך ימינה ויפספס אותו.",
+   "wrong": [
+    "ה-function אף פעם לא משווה את 12 ל-10; היא משווה node רק לילדים הישירים שלו.",
+    null,
+    "חוק ה-BST חל על subtrees שלמים, ו-12 שובר אותו מתחת ל-10.",
+    "מותר שיחסרו ילדים; ה-function מחזירה True עבור None."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-inorder-is-sorted",
+  "topic": "data-structures",
+  "subtopic": "trees-bst",
+  "concepts": [
+   "traversal",
+   "in-order",
+   "binary-search-tree"
+  ],
+  "level": "easy",
+  "q": "Keys 8, 3, 10, 1, 6 are inserted in that order into an empty BST. What does an in-order traversal print?",
+  "options": [
+   "8 3 10 1 6",
+   "8 3 1 6 10",
+   "1 3 6 8 10",
+   "1 6 3 10 8"
+  ],
+  "answer": 2,
+  "why": "In-order visits the left subtree, then the node, then the right subtree. With the BST rule, that always produces keys in ascending order, whatever order they were inserted in.",
+  "wrong": [
+   "That is the insertion order, which here also matches level order. In-order goes left, node, right.",
+   "That is pre-order: the node is printed before its subtrees.",
+   null,
+   "That is post-order: the node is printed after both subtrees."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/tree/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-keys 8, 3, 10, 1, 6 מוכנסים בסדר הזה ל-BST ריק. מה in-order traversal ידפיס?",
+   "options": [
+    "8 3 10 1 6",
+    "8 3 1 6 10",
+    "1 3 6 8 10",
+    "1 6 3 10 8"
+   ],
+   "why": "in-order מבקר ב-subtree השמאלי, אחר כך ב-node, ואז ב-subtree הימני. עם חוק ה-BST זה תמיד נותן את ה-keys בסדר עולה, לא משנה באיזה סדר הם הוכנסו.",
+   "wrong": [
+    "זה סדר ההכנסה, שכאן גם תואם ל-level order. in-order הולך שמאל, node, ימין.",
+    "זה pre-order: ה-node מודפס לפני ה-subtrees שלו.",
+    null,
+    "זה post-order: ה-node מודפס אחרי שני ה-subtrees."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-sorted-inserts-degenerate",
+  "topic": "data-structures",
+  "subtopic": "trees-bst",
+  "concepts": [
+   "degenerate-tree",
+   "height",
+   "worst-case"
+  ],
+  "level": "easy",
+  "q": "Keys 1 to n are inserted in increasing order into a plain BST with no balancing. What does a search cost afterwards?",
+  "options": [
+   "O(log n), as with every binary search tree",
+   "O(1), because the largest key ends up at the root",
+   "O(n log n), since each level must be sorted again",
+   "O(n): the tree becomes one long chain"
+  ],
+  "answer": 3,
+  "why": "A BST search costs O(height). Sorted inserts always go right, so the tree has height n and behaves like a linked list. Balanced trees fix this by keeping the height near log n.",
+  "wrong": [
+   "O(log n) needs a balanced tree. The shape depends on the insert order.",
+   "The first key inserted, 1, is the root, and nothing moves it.",
+   "Nothing is sorted during a search; the cost is the length of one path.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/tree/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-keys 1 עד n מוכנסים בסדר עולה ל-BST פשוט בלי איזון. כמה עולה חיפוש אחר כך?",
+   "options": [
+    "O(log n), כמו בכל binary search tree",
+    "O(1), כי ה-key הגדול ביותר מגיע לשורש",
+    "O(n log n), כי צריך למיין מחדש כל רמה",
+    "O(n): העץ הופך לשרשרת ארוכה אחת"
+   ],
+   "why": "חיפוש ב-BST עולה O(height). הכנסות ממוינות תמיד הולכות ימינה, ולכן לעץ יש גובה n והוא מתנהג כמו linked list. עצים מאוזנים פותרים את זה כי הם שומרים על גובה קרוב ל-log n.",
+   "wrong": [
+    "O(log n) דורש עץ מאוזן. הצורה תלויה בסדר ההכנסה.",
+    "ה-key הראשון שהוכנס, 1, הוא השורש, ושום דבר לא מזיז אותו.",
+    "שום דבר לא ממוין במהלך חיפוש; העלות היא האורך של מסלול אחד.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-treemap-for-range-queries",
+  "topic": "data-structures",
+  "subtopic": "trees-bst",
+  "concepts": [
+   "balanced-bst",
+   "range-query",
+   "hash-vs-tree"
+  ],
+  "level": "medium",
+  "q": "Orders are looked up by timestamp, and you also need all orders between two timestamps. Which map fits better, and why?",
+  "options": [
+   "A HashMap, since O(1) lookups beat O(log n) for every kind of query",
+   "A HashMap: it returns its keys in timestamp order, so ranges work too",
+   "A TreeMap, because it inserts in O(1), faster than a HashMap",
+   "A TreeMap: sorted keys make a range one O(log n) seek plus a walk"
+  ],
+  "answer": 3,
+  "why": "A balanced BST finds the start of the range in O(log n) and then walks forward in order. A hash map scatters keys, so a range query has to check every entry. The price is O(log n) lookups instead of O(1) on average.",
+  "wrong": [
+   "O(1) applies to single-key lookups. A hash map has no fast way to answer a range.",
+   "A HashMap iterates in an order that depends on hashes, not on key order.",
+   "TreeMap inserts are O(log n). The win is ordering, not insert speed.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/TreeMap.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מחפשים הזמנות לפי timestamp, וצריך גם את כל ההזמנות בין שני timestamps. איזה map מתאים יותר, ולמה?",
+   "options": [
+    "HashMap, כי חיפוש ב-O(1) עדיף על O(log n) בכל סוג של query",
+    "HashMap: הוא מחזיר את ה-keys שלו לפי סדר ה-timestamps, ולכן גם טווחים עובדים",
+    "TreeMap, כי הוא מכניס ב-O(1), מהר יותר מ-HashMap",
+    "TreeMap: keys ממוינים הופכים טווח ל-seek אחד ב-O(log n) ועוד הליכה"
+   ],
+   "why": "BST מאוזן מוצא את תחילת הטווח ב-O(log n) ואז הולך קדימה לפי הסדר. hash map מפזר את ה-keys, ולכן query על טווח צריך לבדוק כל entry. המחיר הוא חיפושים ב-O(log n) במקום O(1) בממוצע.",
+   "wrong": [
+    "O(1) חל על חיפוש של key בודד. ל-hash map אין דרך מהירה לענות על טווח.",
+    "HashMap עובר על ה-keys בסדר שתלוי ב-hashes, לא בסדר ה-keys.",
+    "הכנסות ל-TreeMap הן O(log n). היתרון הוא הסדר, לא מהירות ההכנסה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-balanced-height",
+  "topic": "data-structures",
+  "subtopic": "trees-bst",
+  "concepts": [
+   "balanced-bst",
+   "height",
+   "logarithm"
+  ],
+  "level": "easy",
+  "q": "A balanced BST holds about 1,000,000 keys. About how many comparisons does a search need in the worst case?",
+  "options": [
+   "About 1,000, which is the square root of the number of keys",
+   "About 20, because the height is about log2 of 1,000,000",
+   "About 500,000, half the keys on average",
+   "One, because a key leads straight to its node"
+  ],
+  "answer": 1,
+  "why": "Each level of a balanced tree roughly doubles the number of nodes, so a million keys fit in about 20 levels. A search does one comparison per level.",
+  "wrong": [
+   "Square roots come from other structures. A balanced binary tree halves the range per step.",
+   null,
+   "That is a linear scan. A BST discards a whole subtree at each step.",
+   "That is the idea of a hash map. A BST compares its way down from the root."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/tree/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "BST מאוזן מחזיק בערך 1,000,000 keys. בערך כמה השוואות צריך חיפוש במקרה הגרוע?",
+   "options": [
+    "בערך 1,000, כלומר השורש הריבועי של מספר ה-keys",
+    "בערך 20, כי הגובה הוא בערך log2 של 1,000,000",
+    "בערך 500,000, חצי מה-keys בממוצע",
+    "אחת, כי key מוביל ישר ל-node שלו"
+   ],
+   "why": "כל רמה בעץ מאוזן בערך מכפילה את מספר ה-nodes, ולכן מיליון keys נכנסים בערך ב-20 רמות. חיפוש עושה השוואה אחת לכל רמה.",
+   "wrong": [
+    "שורשים ריבועיים מגיעים ממבנים אחרים. עץ בינארי מאוזן חוצה את הטווח בכל צעד.",
+    null,
+    "זו סריקה לינארית. BST זורק subtree שלם בכל צעד.",
+    "זה הרעיון של hash map. BST יורד מהשורש עם השוואות."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-postorder-to-free-tree",
+  "topic": "data-structures",
+  "subtopic": "trees-bst",
+  "concepts": [
+   "traversal",
+   "post-order",
+   "memory"
+  ],
+  "level": "medium",
+  "q": "In C, each node of a tree must be freed, and a node's children must be freed before the node itself. Which traversal fits?",
+  "options": [
+   "Pre-order: free the node, then its subtrees",
+   "In-order: free the left subtree, the node, then the right subtree",
+   "Level order: free the root, then each level below it",
+   "Post-order: free both subtrees, then the node"
+  ],
+  "answer": 3,
+  "why": "Post-order handles a node only after its subtrees. If the node were freed first, its child pointers would be gone or invalid, and the subtrees would leak or be read from freed memory.",
+  "wrong": [
+   "This frees each node before its children, the opposite of the rule, and loses its child pointers unless they are saved.",
+   "This frees each node before its right subtree, which breaks the rule.",
+   "Like pre-order, this frees every parent before its children.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/tree/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-C צריך לשחרר כל node של עץ, ואת הילדים של node צריך לשחרר לפני ה-node עצמו. איזה traversal מתאים?",
+   "options": [
+    "Pre-order: משחררים את ה-node, ואז את ה-subtrees שלו",
+    "In-order: משחררים את ה-subtree השמאלי, את ה-node, ואז את ה-subtree הימני",
+    "Level order: משחררים את השורש, ואז כל רמה מתחתיו",
+    "Post-order: משחררים את שני ה-subtrees, ואז את ה-node"
+   ],
+   "why": "post-order מטפל ב-node רק אחרי ה-subtrees שלו. אם ה-node היה משוחרר קודם, ה-pointers לילדים שלו היו נעלמים או לא תקפים, וה-subtrees היו דולפים או נקראים מזיכרון משוחרר.",
+   "wrong": [
+    "זה משחרר כל node לפני הילדים שלו, הפוך מהחוק, ומאבד את ה-pointers לילדים אלא אם שומרים אותם.",
+    "זה משחרר כל node לפני ה-subtree הימני שלו, וזה שובר את החוק.",
+    "כמו pre-order, זה משחרר כל הורה לפני הילדים שלו.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-level-order-needs-queue",
+  "topic": "data-structures",
+  "subtopic": "trees-bst",
+  "concepts": [
+   "traversal",
+   "level-order",
+   "queue"
+  ],
+  "level": "medium",
+  "q": "You must print a tree level by level: the root, then all nodes at depth 1, then depth 2. Which approach fits?",
+  "options": [
+   "Recursive in-order traversal",
+   "A stack, since DFS reaches every level",
+   "A queue: dequeue a node, enqueue its children",
+   "Pre-order traversal, then sort the output by value"
+  ],
+  "answer": 2,
+  "why": "A queue hands out nodes in the order they were found, and nodes are found level by level, so every node at depth d comes out before any at depth d + 1. This is breadth-first search on a tree.",
+  "wrong": [
+   "In-order follows key order, so it mixes nodes from different levels.",
+   "A stack goes deep along one branch before visiting the rest of a level.",
+   null,
+   "Values say nothing about depth, so sorting them does not group by level."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/tree/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צריך להדפיס עץ רמה אחרי רמה: השורש, אחר כך כל ה-nodes בעומק 1, ואז בעומק 2. איזו גישה מתאימה?",
+   "options": [
+    "in-order traversal רקורסיבי",
+    "stack, כי DFS מגיע לכל רמה",
+    "queue: עושים dequeue ל-node ו-enqueue לילדיו",
+    "pre-order traversal, ואחר כך מיון של הפלט לפי ערך"
+   ],
+   "why": "queue מוציא nodes בסדר שבו הם נמצאו, ו-nodes נמצאים רמה אחרי רמה, ולכן כל node בעומק d יוצא לפני כל node בעומק d + 1. זה BFS על עץ.",
+   "wrong": [
+    "in-order הולך לפי סדר ה-keys, ולכן הוא מערבב nodes מרמות שונות.",
+    "stack יורד לעומק בענף אחד לפני שהוא מבקר בשאר הרמה.",
+    null,
+    "ערכים לא אומרים כלום על עומק, ולכן מיון שלהם לא מקבץ לפי רמה."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-shuffled-inserts",
+  "topic": "data-structures",
+  "subtopic": "trees-bst",
+  "concepts": [
+   "degenerate-tree",
+   "insert-order",
+   "in-order"
+  ],
+  "level": "hard",
+  "q": "Sorted input made a plain BST into a chain. A teammate now shuffles the keys randomly before inserting them. What changes?",
+  "options": [
+   "Height is O(log n) on average; in-order output stays sorted",
+   "The height becomes exactly log2(n), as in a balanced tree",
+   "Nothing changes, because a BST's shape depends only on its keys",
+   "Searches get faster, but in-order output is now shuffled too"
+  ],
+  "answer": 0,
+  "why": "The shape of a plain BST depends on insert order, and random order gives height about O(log n) with high probability, though not a guarantee. In-order output depends only on the BST rule, so it stays sorted.",
+  "wrong": [
+   null,
+   "Random order makes a short tree likely, not certain. Only balancing guarantees the height.",
+   "Shape depends on insert order: the same keys can form a chain or a bushy tree.",
+   "In-order output is sorted for any valid BST, whatever its shape."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/tree/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "קלט ממוין הפך BST פשוט לשרשרת. עכשיו חבר צוות מערבב את ה-keys בסדר אקראי לפני ההכנסה. מה משתנה?",
+   "options": [
+    "הגובה הוא O(log n) בממוצע; פלט ה-in-order נשאר ממוין",
+    "הגובה הופך להיות בדיוק log2(n), כמו בעץ מאוזן",
+    "שום דבר לא משתנה, כי הצורה של BST תלויה רק ב-keys שלו",
+    "חיפושים נהיים מהירים יותר, אבל גם פלט ה-in-order מעורבב עכשיו"
+   ],
+   "why": "הצורה של BST פשוט תלויה בסדר ההכנסה, וסדר אקראי נותן גובה של בערך O(log n) בהסתברות גבוהה, אבל בלי הבטחה. פלט ה-in-order תלוי רק בחוק ה-BST, ולכן הוא נשאר ממוין.",
+   "wrong": [
+    null,
+    "סדר אקראי הופך עץ נמוך לסביר, לא לוודאי. רק איזון מבטיח את הגובה.",
+    "הצורה תלויה בסדר ההכנסה: אותם keys יכולים ליצור שרשרת או עץ מסועף.",
+    "פלט in-order ממוין בכל BST תקין, לא משנה מה הצורה שלו."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-heap-is-not-sorted",
+  "topic": "data-structures",
+  "subtopic": "heaps",
+  "concepts": [
+   "heap",
+   "heap-property",
+   "python-heapq"
+  ],
+  "level": "easy",
+  "q": "Five numbers are pushed onto a heap with Python's heapq. What does this print?",
+  "code": "import heapq\nh = []\nfor x in [5, 1, 4, 2, 3]:\n    heapq.heappush(h, x)\nprint(h[0], h == sorted(h))",
+  "lang": "python",
+  "options": [
+   "1 False",
+   "1 True",
+   "5 False",
+   "3 False"
+  ],
+  "answer": 0,
+  "why": "heapq is a min-heap, so h[0] is always the smallest item. The rest of the list only satisfies parent <= children; here it is [1, 2, 4, 5, 3], which is not sorted.",
+  "wrong": [
+   null,
+   "A heap guarantees only that each parent is no larger than its children, not that the whole list is sorted.",
+   "heapq is a min-heap, so the smallest item is at index 0.",
+   "The last item pushed sifts up only while it is smaller than its parent; the top is the minimum."
+  ],
+  "ref": "https://docs.python.org/3/library/heapq.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חמישה מספרים נדחפים ל-heap עם heapq של Python. מה יודפס?",
+   "options": [
+    "1 False",
+    "1 True",
+    "5 False",
+    "3 False"
+   ],
+   "why": "heapq הוא min-heap, ולכן h[0] הוא תמיד האיבר הקטן ביותר. שאר ה-list רק מקיימת הורה <= ילדים; כאן היא [1, 2, 4, 5, 3], שאינה ממוינת.",
+   "wrong": [
+    null,
+    "heap מבטיח רק שכל הורה לא גדול מהילדים שלו, לא שכל ה-list ממוינת.",
+    "heapq הוא min-heap, ולכן האיבר הקטן ביותר נמצא ב-index 0.",
+    "האיבר האחרון שנדחף עולה למעלה רק כל עוד הוא קטן מההורה שלו; בראש נמצא המינימום."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-heap-operation-costs",
+  "topic": "data-structures",
+  "subtopic": "heaps",
+  "concepts": [
+   "heap",
+   "priority-queue",
+   "operation-costs"
+  ],
+  "level": "easy",
+  "q": "A binary min-heap holds n items. What do peek at the minimum, insert and remove the minimum cost?",
+  "options": [
+   "O(1), O(1), O(1)",
+   "O(1), O(log n), O(log n)",
+   "O(1), O(n), O(1)",
+   "O(log n), O(log n), O(n)"
+  ],
+  "answer": 1,
+  "why": "The minimum is always at the root, so peeking is O(1). Insert and remove move one item up or down a path of a complete tree, whose height is about log n.",
+  "wrong": [
+   "Insert and remove must restore the heap order along a path of length log n.",
+   null,
+   "Insert does not shift items like a sorted array; it sifts one item up a single path.",
+   "The minimum is at the root, so peek is O(1), and removal sifts down one path, O(log n)."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/heap/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "binary min-heap מחזיק n איברים. כמה עולים peek על המינימום, insert והסרת המינימום?",
+   "options": [
+    "O(1), O(1), O(1)",
+    "O(1), O(log n), O(log n)",
+    "O(1), O(n), O(1)",
+    "O(log n), O(log n), O(n)"
+   ],
+   "why": "המינימום תמיד בשורש, ולכן peek הוא O(1). insert והסרה מזיזות איבר אחד למעלה או למטה לאורך מסלול בעץ שלם, שגובהו בערך log n.",
+   "wrong": [
+    "הכנסה והסרה חייבות לשחזר את סדר ה-heap לאורך מסלול באורך log n.",
+    null,
+    "הכנסה לא מזיזה איברים כמו ב-array ממוין; היא מעלה איבר אחד לאורך מסלול יחיד.",
+    "המינימום בשורש, ולכן peek הוא O(1), והסרה מורידה איבר לאורך מסלול אחד, O(log n)."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-heap-search-is-linear",
+  "topic": "data-structures",
+  "subtopic": "heaps",
+  "concepts": [
+   "heap",
+   "search",
+   "heap-vs-bst"
+  ],
+  "level": "medium",
+  "q": "How long does it take to check whether some value x is anywhere in a min-heap of n items?",
+  "options": [
+   "O(log n), by walking down from the root as in a BST",
+   "O(n): x could be in any branch of the heap",
+   "O(1), since a heap is stored in an array",
+   "O(log n), by binary searching the underlying array"
+  ],
+  "answer": 1,
+  "why": "A heap does not say whether x is in the left or the right branch, so a search cannot discard half of the items. It can skip a subtree only when its root is already larger than x, and in the worst case it checks every item.",
+  "wrong": [
+   "A heap has no left-smaller, right-larger rule, so there is no single path to follow.",
+   null,
+   "Being an array gives fast access by index, not by value.",
+   "The array is not sorted, so binary search can give wrong answers."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/heap/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כמה זמן לוקח לבדוק אם ערך x נמצא איפשהו ב-min-heap של n איברים?",
+   "options": [
+    "O(log n), בירידה מהשורש כמו ב-BST",
+    "O(n): x יכול להיות בכל ענף של ה-heap",
+    "O(1), כי heap שמור ב-array",
+    "O(log n), עם binary search על ה-array שמתחת"
+   ],
+   "why": "heap לא אומר אם x בענף השמאלי או בימני, ולכן חיפוש לא יכול לזרוק חצי מהאיברים. אפשר לדלג על subtree רק כשהשורש שלו כבר גדול מ-x, ובמקרה הגרוע בודקים כל איבר.",
+   "wrong": [
+    "ל-heap אין חוק של קטן משמאל וגדול מימין, ולכן אין מסלול יחיד ללכת בו.",
+    null,
+    "העובדה שהוא array נותנת גישה מהירה לפי index, לא לפי ערך.",
+    "ה-array לא ממוין, ולכן binary search יכול לתת תשובות שגויות."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-top-k-min-heap",
+  "topic": "data-structures",
+  "subtopic": "heaps",
+  "concepts": [
+   "top-k",
+   "min-heap",
+   "streaming"
+  ],
+  "level": "medium",
+  "q": "You need the 10 largest numbers from a stream of 10 million, with little memory. Which approach fits?",
+  "options": [
+   "Push everything into a max-heap, then pop 10 times",
+   "A max-heap of size 10, popping the largest when it passes 10 items",
+   "Sort the whole stream and take the last 10",
+   "A min-heap of size 10, replacing its minimum when beaten"
+  ],
+  "answer": 3,
+  "why": "The min-heap holds the 10 largest seen so far, with the weakest of them on top, so each new number is compared with that one. Memory stays at 10 items and the time is O(n log 10), which is close to O(n).",
+  "wrong": [
+   "This gives the right answer but stores all 10 million numbers, which breaks the memory limit.",
+   "Popping the largest keeps the 10 smallest numbers instead.",
+   "Sorting needs the whole stream in memory and costs O(n log n).",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/heap/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "צריך את 10 המספרים הגדולים ביותר מתוך stream של 10 מיליון, עם מעט זיכרון. איזו גישה מתאימה?",
+   "options": [
+    "לדחוף הכול ל-max-heap, ואז לעשות pop עשר פעמים",
+    "max-heap בגודל 10, ושולפים את הגדול ביותר כשעוברים 10 איברים",
+    "למיין את כל ה-stream ולקחת את 10 האחרונים",
+    "min-heap בגודל 10, ומחליפים את המינימום כשמספר עוקף אותו"
+   ],
+   "why": "ה-min-heap מחזיק את 10 הגדולים שנראו עד עכשיו, כשהחלש מביניהם בראש, ולכן כל מספר חדש מושווה אליו. הזיכרון נשאר 10 איברים והזמן הוא O(n log 10), שזה קרוב ל-O(n).",
+   "wrong": [
+    "זה נותן את התשובה הנכונה אבל שומר את כל 10 המיליון מספרים, וזה שובר את מגבלת הזיכרון.",
+    "שליפת הגדול ביותר משאירה דווקא את 10 המספרים הקטנים ביותר.",
+    "מיון דורש את כל ה-stream בזיכרון ועולה O(n log n).",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-heap-vs-bst-priority-queue",
+  "topic": "data-structures",
+  "subtopic": "heaps",
+  "concepts": [
+   "heap-vs-bst",
+   "priority-queue",
+   "trade-off"
+  ],
+  "level": "medium",
+  "q": "A min-heap and a balanced BST can both return the smallest item. Why is a heap the usual choice for a plain priority queue?",
+  "options": [
+   "It is a compact array with O(1) peek and no full ordering",
+   "A heap finds any item in O(log n), which a BST cannot",
+   "A heap keeps all items sorted, so iterating over it is cheap",
+   "A BST needs O(n) to find its minimum"
+  ],
+  "answer": 0,
+  "why": "A priority queue only needs insert, peek and remove-min. A heap does that in a compact array without pointers. A balanced BST keeps full order, which costs more memory and work for no gain here.",
+  "wrong": [
+   null,
+   "Searching a heap for an arbitrary item is O(n); the BST is the one with O(log n) search.",
+   "A heap is only partly ordered; iterating gives no sorted order.",
+   "In a balanced BST the minimum is the leftmost node, found in O(log n)."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/heap/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "גם min-heap וגם BST מאוזן יכולים להחזיר את האיבר הקטן ביותר. למה heap הוא הבחירה המקובלת ל-priority queue פשוט?",
+   "options": [
+    "הוא array קומפקטי עם peek ב-O(1) ובלי סדר מלא",
+    "heap מוצא כל איבר ב-O(log n), ו-BST לא יכול",
+    "heap שומר את כל האיברים ממוינים, ולכן איטרציה עליו זולה",
+    "BST צריך O(n) כדי למצוא את המינימום שלו"
+   ],
+   "why": "priority queue צריך רק insert, peek ו-remove-min. heap עושה את זה ב-array קומפקטי בלי pointers. BST מאוזן שומר סדר מלא, וזה עולה יותר זיכרון ועבודה בלי שום רווח כאן.",
+   "wrong": [
+    null,
+    "חיפוש של איבר שרירותי ב-heap הוא O(n); דווקא ל-BST יש חיפוש ב-O(log n).",
+    "heap ממוין רק חלקית; איטרציה עליו לא נותנת סדר ממוין.",
+    "ב-BST מאוזן המינימום הוא ה-node השמאלי ביותר, ומוצאים אותו ב-O(log n)."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-heap-in-array",
+  "topic": "data-structures",
+  "subtopic": "heaps",
+  "concepts": [
+   "heap",
+   "complete-tree",
+   "array-layout"
+  ],
+  "level": "easy",
+  "q": "A binary heap with the root at index 0 is stored in a plain array with no child pointers. How does code find a node's children?",
+  "options": [
+   "The array is sorted, so the next slots hold the children",
+   "Each slot stores the indexes of its two children next to the value",
+   "The tree is complete, so node i has children at 2i + 1 and 2i + 2",
+   "Each node's hash gives the slot of its children"
+  ],
+  "answer": 2,
+  "why": "A heap fills each level from left to right with no gaps. That fixed shape lets index arithmetic replace pointers: children at 2i + 1 and 2i + 2, and the parent at (i - 1) // 2.",
+  "wrong": [
+   "The array is not sorted; positions come from the complete tree shape.",
+   "No extra indexes are stored; they are computed from i.",
+   null,
+   "There is no hashing in a heap, only arithmetic on positions."
+  ],
+  "ref": "https://docs.python.org/3/library/heapq.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "binary heap שהשורש שלו ב-index 0 שמור ב-array רגיל בלי pointers לילדים. איך הקוד מוצא את הילדים של node?",
+   "options": [
+    "ה-array ממוין, ולכן התאים הבאים מחזיקים את הילדים",
+    "כל תא שומר את ה-indexes של שני הילדים שלו ליד הערך",
+    "העץ שלם, ולכן הילדים של i נמצאים ב-2i + 1 וב-2i + 2",
+    "ה-hash של כל node נותן את התא של הילדים שלו"
+   ],
+   "why": "heap ממלא כל רמה משמאל לימין בלי חורים. הצורה הקבועה הזו מאפשרת לחשב indexes במקום להחזיק pointers: ילדים ב-2i + 1 וב-2i + 2, וההורה ב-(i - 1) // 2.",
+   "wrong": [
+    "ה-array לא ממוין; המיקומים נובעים מהצורה של עץ שלם.",
+    "לא שומרים indexes נוספים; מחשבים אותם מ-i.",
+    null,
+    "אין hashing ב-heap, רק אריתמטיקה על מיקומים."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-merge-k-sorted-lists",
+  "topic": "data-structures",
+  "subtopic": "heaps",
+  "concepts": [
+   "k-way-merge",
+   "min-heap",
+   "time-complexity"
+  ],
+  "level": "hard",
+  "q": "You merge k sorted lists with n items in total, using a min-heap that holds the current head of each list. What is the tightest bound on the total cost?",
+  "options": [
+   "O(n log n), because every item passes through a heap",
+   "O(n log k): each item enters and leaves a heap of size at most k",
+   "O(nk), because each step compares the current heads of all k lists",
+   "O(k log n), because only k items are ever in the heap"
+  ],
+  "answer": 1,
+  "why": "Each of the n items is pushed once and popped once, and the heap holds at most k items, one per list, so each push or pop is O(log k). Comparing all k heads at every step instead would cost O(nk).",
+  "wrong": [
+   "The heap holds at most k items, not n, so its operations cost O(log k).",
+   null,
+   "That is merging without a heap. The heap finds the smallest head in O(log k).",
+   "Every one of the n items is pushed and popped, so the cost grows with n."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/heap/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ממזגים k lists ממוינות עם n איברים בסך הכול, בעזרת min-heap שמחזיק את האיבר הנוכחי בראש כל list. מה החסם המדויק ביותר על העלות הכוללת?",
+   "options": [
+    "O(n log n), כי כל איבר עובר דרך heap",
+    "O(n log k): כל איבר נכנס ויוצא מ-heap בגודל k לכל היותר",
+    "O(nk), כי כל צעד משווה את הראשים הנוכחיים של כל k ה-lists",
+    "O(k log n), כי רק k איברים נמצאים אי פעם ב-heap"
+   ],
+   "why": "כל אחד מ-n האיברים נדחף פעם אחת ונשלף פעם אחת, וה-heap מחזיק לכל היותר k איברים, אחד מכל list, ולכן כל push או pop הוא O(log k). השוואה של כל k הראשים בכל צעד הייתה עולה O(nk).",
+   "wrong": [
+    "ה-heap מחזיק לכל היותר k איברים, לא n, ולכן הפעולות עליו עולות O(log k).",
+    null,
+    "זה merge בלי heap. ה-heap מוצא את הראש הקטן ביותר ב-O(log k).",
+    "כל אחד מ-n האיברים נדחף ונשלף, ולכן העלות גדלה עם n."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-sparse-graph-adjacency-list",
+  "topic": "data-structures",
+  "subtopic": "graphs",
+  "concepts": [
+   "adjacency-list",
+   "adjacency-matrix",
+   "sparse-graph"
+  ],
+  "level": "easy",
+  "q": "A social network has 1,000,000 users with about 200 friends each. Should the friendships be stored as an adjacency list or an adjacency matrix?",
+  "options": [
+   "A matrix, because checking one friendship is O(1)",
+   "A matrix, because an undirected graph only needs half of the matrix",
+   "Either one, since both store the same edges",
+   "An adjacency list, which stores only the existing friendships"
+  ],
+  "answer": 3,
+  "why": "A list stores only existing edges, about 200 million entries here. A matrix needs a cell for every pair of users, a trillion cells, almost all empty.",
+  "wrong": [
+   "Fast edge checks do not help if the matrix does not fit in memory.",
+   "Half of a trillion cells is still far more than the list needs.",
+   "They hold the same edges, but the matrix also spends a cell on every missing edge.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/graph/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ברשת חברתית יש 1,000,000 משתמשים, ולכל אחד בערך 200 חברים. האם לשמור את החברויות כ-adjacency list או כ-adjacency matrix?",
+   "options": [
+    "matrix, כי בדיקה של חברות אחת היא O(1)",
+    "matrix, כי graph לא מכוון צריך רק חצי מה-matrix",
+    "כל אחד מהם, כי שניהם שומרים את אותם edges",
+    "adjacency list, ששומרת רק את החברויות שקיימות"
+   ],
+   "why": "list שומרת רק edges קיימים, בערך 200 מיליון רשומות כאן. matrix צריכה תא לכל זוג משתמשים, טריליון תאים, כמעט כולם ריקים.",
+   "wrong": [
+    "בדיקות edge מהירות לא עוזרות אם ה-matrix לא נכנסת לזיכרון.",
+    "חצי מטריליון תאים זה עדיין הרבה יותר ממה שה-list צריכה.",
+    "הם מחזיקים את אותם edges, אבל ה-matrix מבזבזת גם תא על כל edge שלא קיים.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-when-adjacency-matrix",
+  "topic": "data-structures",
+  "subtopic": "graphs",
+  "concepts": [
+   "adjacency-matrix",
+   "dense-graph",
+   "edge-lookup"
+  ],
+  "level": "medium",
+  "q": "When is an adjacency matrix a good choice for a graph?",
+  "options": [
+   "A small or dense graph with many is-there-an-edge checks",
+   "A sparse graph, because a matrix saves memory",
+   "Code that often loops over the neighbours of every node in turn",
+   "Any directed graph, since lists cannot store direction"
+  ],
+  "answer": 0,
+  "why": "A matrix answers whether u and v are connected in O(1), and its O(V^2) memory is acceptable when V is small or most pairs are connected anyway.",
+  "wrong": [
+   null,
+   "A matrix always uses V^2 cells, which wastes the most memory when edges are few.",
+   "Finding a node's neighbours in a matrix reads a whole row, O(V), even if the node has only two.",
+   "Adjacency lists store direction naturally: v is in u's list only for an edge u to v."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/graph/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מתי adjacency matrix היא בחירה טובה ל-graph?",
+   "options": [
+    "graph קטן או צפוף עם הרבה בדיקות של האם יש edge",
+    "graph דליל, כי matrix חוסכת זיכרון",
+    "קוד שעובר לעיתים קרובות על השכנים של כל node בתורו",
+    "כל graph מכוון, כי lists לא יכולות לשמור כיוון"
+   ],
+   "why": "matrix עונה אם u ו-v מחוברים ב-O(1), וצריכת הזיכרון של O(V^2) סבירה כש-V קטן או כשרוב הזוגות מחוברים בכל מקרה.",
+   "wrong": [
+    null,
+    "matrix תמיד צורכת V^2 תאים, וזה מבזבז הכי הרבה זיכרון כשיש מעט edges.",
+    "מציאת השכנים של node ב-matrix קוראת שורה שלמה, O(V), גם אם יש לו רק שניים.",
+    "adjacency lists שומרות כיוון באופן טבעי: v נמצא ב-list של u רק אם יש edge מ-u ל-v."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-directed-adjacency-list",
+  "topic": "data-structures",
+  "subtopic": "graphs",
+  "concepts": [
+   "directed-graph",
+   "adjacency-list",
+   "python-dict"
+  ],
+  "level": "easy",
+  "q": "Directed edges are stored in a dict of lists. What does this print?",
+  "code": "edges = [(\"a\", \"b\"), (\"a\", \"c\"), (\"c\", \"b\")]\ngraph = {}\nfor u, v in edges:\n    graph.setdefault(u, []).append(v)\nprint(graph.get(\"b\", []), len(graph[\"a\"]))",
+  "lang": "python",
+  "options": [
+   "['a', 'c'] 2",
+   "['a', 'c'] 3",
+   "KeyError: 'b'",
+   "[] 2"
+  ],
+  "answer": 3,
+  "why": "Each edge u to v is stored only in u's list. b has no outgoing edges, so get returns the default []. a has edges to b and c, so its list has 2 entries. Edges into b are not in b's list.",
+  "wrong": [
+   "Those are the nodes with edges into b. Only outgoing edges are stored in a node's list.",
+   "b's list has no incoming edges, and a has two outgoing edges, not three.",
+   "get() returns the default when a key is missing; only graph['b'] would raise.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/graph/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "edges מכוונים שמורים ב-dict של lists. מה יודפס?",
+   "options": [
+    "['a', 'c'] 2",
+    "['a', 'c'] 3",
+    "KeyError: 'b'",
+    "[] 2"
+   ],
+   "why": "כל edge מ-u ל-v נשמר רק ב-list של u. ל-b אין edges יוצאים, ולכן get מחזיר את ברירת המחדל []. ל-a יש edges ל-b ול-c, ולכן ב-list שלו יש 2 רשומות. edges שנכנסים ל-b לא נמצאים ב-list של b.",
+   "wrong": [
+    "אלה ה-nodes שיש להם edges שנכנסים ל-b. ב-list של node נשמרים רק edges יוצאים.",
+    "ב-list של b אין edges נכנסים, ול-a יש שני edges יוצאים, לא שלושה.",
+    "get() מחזיר את ברירת המחדל כשה-key חסר; רק graph['b'] היה זורק.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-visited-set-in-graphs",
+  "topic": "data-structures",
+  "subtopic": "graphs",
+  "concepts": [
+   "visited-set",
+   "cycle",
+   "graph-traversal"
+  ],
+  "level": "medium",
+  "q": "Why does DFS on a general graph need a visited set, while walking a tree from its root does not?",
+  "options": [
+   "The visited set keeps the output in sorted order",
+   "It is needed only for weighted graphs, to remember distances",
+   "Graphs can have cycles and several paths to one node",
+   "It makes DFS run in O(log n) instead of O(n)"
+  ],
+  "answer": 2,
+  "why": "Without a visited set, DFS can go around a cycle forever or explore the same node many times. From the root of a tree, each node is reached by exactly one path, so nothing repeats.",
+  "wrong": [
+   "It only records which nodes were seen; it does not order them.",
+   "Cycles break traversal whether or not edges have weights.",
+   null,
+   "DFS is O(V + E) with the set. Without it, it may never finish."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/graph/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למה DFS על graph כללי צריך visited set, ואילו הליכה על עץ מהשורש לא צריכה?",
+   "options": [
+    "ה-visited set שומר את הפלט בסדר ממוין",
+    "הוא נחוץ רק ב-graphs ממושקלים, כדי לזכור את המרחקים",
+    "ל-graph יכולים להיות מעגלים וכמה מסלולים ל-node",
+    "הוא גורם ל-DFS לרוץ ב-O(log n) במקום O(n)"
+   ],
+   "why": "בלי visited set, DFS יכול להסתובב במעגל לנצח או לחקור את אותו node הרבה פעמים. מהשורש של עץ מגיעים לכל node במסלול אחד בדיוק, ולכן שום דבר לא חוזר.",
+   "wrong": [
+    "הוא רק רושם אילו nodes כבר נראו; הוא לא מסדר אותם.",
+    "מעגלים שוברים את המעבר בין אם ל-edges יש משקלים ובין אם לא.",
+    null,
+    "DFS הוא O(V + E) עם ה-set. בלעדיו הוא אולי לא יסתיים."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-weighted-two-way-roads",
+  "topic": "data-structures",
+  "subtopic": "graphs",
+  "concepts": [
+   "weighted-graph",
+   "undirected-graph",
+   "adjacency-list"
+  ],
+  "level": "medium",
+  "q": "Cities are connected by roads with travel times; most roads are two-way. How should an adjacency list store this?",
+  "options": [
+   "Each city stores one weight, and its roads use that value",
+   "A two-way road is stored once, in the list of just one of its two cities",
+   "Weighted graphs need an adjacency matrix",
+   "Entries are (neighbour, time) pairs; a two-way road goes in both lists"
+  ],
+  "answer": 3,
+  "why": "A weight belongs to an edge, so it is stored with the neighbour. A two-way road is two directed edges, so it goes in both lists and can be found from either city.",
+  "wrong": [
+   "Travel time belongs to a road, and roads from the same city differ.",
+   "Then the road cannot be found from the other city without scanning every list.",
+   "A list stores weights fine as (neighbour, weight) pairs.",
+   null
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/graph/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ערים מחוברות בכבישים עם זמני נסיעה; רוב הכבישים דו-כיווניים. איך adjacency list צריכה לשמור את זה?",
+   "options": [
+    "כל עיר שומרת משקל אחד, וכל הכבישים שלה משתמשים בערך הזה",
+    "כביש דו-כיווני נשמר פעם אחת בלבד, ב-list של רק אחת משתי הערים שלו",
+    "graphs ממושקלים דורשים adjacency matrix",
+    "הרשומות הן זוגות (neighbour, time); כביש דו-כיווני נכנס לשתי ה-lists"
+   ],
+   "why": "משקל שייך ל-edge, ולכן הוא נשמר יחד עם השכן. כביש דו-כיווני הוא שני edges מכוונים, ולכן הוא נכנס לשתי ה-lists ואפשר למצוא אותו מכל אחת מהערים.",
+   "wrong": [
+    "זמן נסיעה שייך לכביש, וכבישים מאותה עיר שונים זה מזה.",
+    "אז אי אפשר למצוא את הכביש מהעיר השנייה בלי לסרוק כל list.",
+    "list שומרת משקלים בלי בעיה כזוגות (neighbour, weight).",
+    null
+   ]
+  }
+ },
+ {
+  "id": "data-structures-seen-before-hash-set",
+  "topic": "data-structures",
+  "subtopic": "choose-structure",
+  "concepts": [
+   "hash-set",
+   "membership",
+   "scenario"
+  ],
+  "level": "easy",
+  "q": "A service reads a stream of user ids and must tell, for each id, whether it has appeared before. Which structure fits?",
+  "options": [
+   "A list, checking membership with a scan",
+   "A hash set, with O(1) average checks",
+   "A sorted array with binary search",
+   "A stack of the ids seen so far"
+  ],
+  "answer": 1,
+  "why": "Only membership is needed, with no order and no counts. A hash set answers it directly and grows with the number of distinct ids.",
+  "wrong": [
+   "Each scan is O(n), so the stream as a whole costs O(n^2).",
+   null,
+   "The check is O(log n), but each new id must be inserted in place, which shifts O(n) items.",
+   "A stack exposes only its top, so checking older ids means popping through it."
+  ],
+  "ref": "https://www.techinterviewhandbook.org/algorithms/hash-table/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שירות קורא stream של user ids וצריך לדעת, עבור כל id, אם הוא כבר הופיע. איזה מבנה מתאים?",
+   "options": [
+    "list, ובדיקת שייכות בעזרת סריקה",
+    "hash set, עם בדיקות ב-O(1) בממוצע",
+    "array ממוין עם binary search",
+    "stack של ה-ids שנראו עד עכשיו"
+   ],
+   "why": "צריך רק בדיקת שייכות, בלי סדר ובלי ספירה. hash set עונה על זה ישירות וגדל לפי מספר ה-ids השונים.",
+   "wrong": [
+    "כל סריקה היא O(n), ולכן ה-stream כולו עולה O(n^2).",
+    null,
+    "הבדיקה היא O(log n), אבל כל id חדש צריך להיכנס למקומו, וזה מזיז O(n) איברים.",
+    "stack חושף רק את הראש שלו, ולכן בדיקה של ids ישנים דורשת לשלוף עד אליהם."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-task-scheduler-heap",
+  "topic": "data-structures",
+  "subtopic": "choose-structure",
+  "concepts": [
+   "priority-queue",
+   "heap",
+   "scenario"
+  ],
+  "level": "medium",
+  "q": "A scheduler receives thousands of tasks per second, each with a priority, and must always run the highest-priority task next. Which structure fits?",
+  "options": [
+   "A sorted array, with the highest priority at the end",
+   "A max-heap, used as a priority queue",
+   "A hash map from priority to task",
+   "A FIFO queue of tasks"
+  ],
+  "answer": 1,
+  "why": "The scheduler only ever needs the current maximum, while new tasks keep arriving. A heap gives the top in O(1) and insert and remove in O(log n), with no need to keep everything sorted.",
+  "wrong": [
+   "Taking the top is O(1), but each insert shifts items to keep the order, which is O(n).",
+   null,
+   "A hash map has no fast way to find the largest key.",
+   "A queue runs tasks in arrival order and ignores their priorities."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/PriorityQueue.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "scheduler מקבל אלפי tasks בשנייה, לכל אחד priority, ותמיד צריך להריץ אחר כך את ה-task עם ה-priority הגבוה ביותר. איזה מבנה מתאים?",
+   "options": [
+    "array ממוין, עם ה-priority הגבוה ביותר בסוף",
+    "max-heap, שמשמש כ-priority queue",
+    "hash map מ-priority ל-task",
+    "FIFO queue של tasks"
+   ],
+   "why": "ה-scheduler צריך תמיד רק את המקסימום הנוכחי, בזמן ש-tasks חדשים ממשיכים להגיע. heap נותן את הראש ב-O(1), והכנסה והסרה ב-O(log n), בלי צורך לשמור הכול ממוין.",
+   "wrong": [
+    "לקחת את הראש זה O(1), אבל כל הכנסה מזיזה איברים כדי לשמור על הסדר, וזה O(n).",
+    null,
+    "ל-hash map אין דרך מהירה למצוא את ה-key הגדול ביותר.",
+    "queue מריץ tasks לפי סדר ההגעה ומתעלם מה-priorities שלהם."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-last-100-readings",
+  "topic": "data-structures",
+  "subtopic": "choose-structure",
+  "concepts": [
+   "deque",
+   "circular-buffer",
+   "scenario"
+  ],
+  "level": "medium",
+  "q": "A sensor sends readings constantly, and the app must keep only the latest 100,000, dropping the oldest when a new one arrives. Which structure fits?",
+  "options": [
+   "A deque or a ring buffer of that size",
+   "A stack, popping when it passes 100,000 readings",
+   "A dynamic array, removing index 0 when it passes 100,000",
+   "A hash set of readings"
+  ],
+  "answer": 0,
+  "why": "The pattern is first in, first out with a fixed size. A deque or ring buffer adds and drops at the two ends in O(1) and keeps the readings in arrival order.",
+  "wrong": [
+   null,
+   "A stack pops the newest reading, but the oldest one is the one to drop.",
+   "Correct result, but each removal at index 0 shifts every other reading.",
+   "A set loses arrival order and merges equal readings into one."
+  ],
+  "ref": "https://docs.python.org/3/library/collections.html#collections.deque",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חיישן שולח קריאות כל הזמן, והאפליקציה צריכה לשמור רק את 100,000 האחרונות ולזרוק את הישנה ביותר כשמגיעה חדשה. איזה מבנה מתאים?",
+   "options": [
+    "deque או ring buffer בגודל הזה",
+    "stack, ועושים pop כשעוברים 100,000 קריאות",
+    "dynamic array, ומסירים את index 0 כשעוברים 100,000",
+    "hash set של קריאות"
+   ],
+   "why": "הדפוס הוא first in, first out עם גודל קבוע. deque או ring buffer מוסיפים ומורידים בשני הקצוות ב-O(1) ושומרים את הקריאות לפי סדר ההגעה.",
+   "wrong": [
+    null,
+    "stack שולף את הקריאה החדשה ביותר, אבל צריך לזרוק דווקא את הישנה ביותר.",
+    "התוצאה נכונה, אבל כל הסרה ב-index 0 מזיזה את כל שאר הקריאות.",
+    "set מאבד את סדר ההגעה ומאחד קריאות שוות לאחת."
+   ]
+  }
+ },
+ {
+  "id": "data-structures-lru-cache-design",
+  "topic": "data-structures",
+  "subtopic": "choose-structure",
+  "concepts": [
+   "lru-cache",
+   "hash-map",
+   "doubly-linked-list"
+  ],
+  "level": "hard",
+  "q": "An LRU cache needs get and put in O(1) and evicts the least recently used entry when full. Why is the usual design a hash map plus a doubly linked list?",
+  "options": [
+   "The map finds each node in O(1); the list moves or evicts it in O(1)",
+   "A hash map alone is enough, since it already keeps track of access order",
+   "A singly linked list would do the same job with less memory",
+   "A min-heap keyed by last use finds the oldest entry"
+  ],
+  "answer": 0,
+  "why": "The list keeps entries in recency order: a used node moves to the front and eviction removes the tail. Both are O(1) only with prev pointers and a direct reference to the node, which the map supplies.",
+  "wrong": [
+   null,
+   "A plain hash map does not track recency, so finding the oldest entry means scanning all of them.",
+   "Unlinking a node from the middle needs its predecessor, which a singly linked list finds only in O(n).",
+   "Every get changes a key's last use, and updating it in a heap costs O(log n) after an O(n) search."
+  ],
+  "ref": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/LinkedHashMap.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "LRU cache צריך get ו-put ב-O(1) ומוציא את ה-entry שהשתמשו בו הכי מזמן כשהוא מלא. למה התכנון המקובל הוא hash map ועוד doubly linked list?",
+   "options": [
+    "ה-map מוצא את ה-node של key ב-O(1); ה-list מזיזה או מוציאה nodes ב-O(1)",
+    "hash map לבד מספיק, כי הוא כבר עוקב אחרי סדר הגישה",
+    "singly linked list הייתה עושה את אותה עבודה עם פחות זיכרון",
+    "min-heap לפי זמן השימוש האחרון מוצא את ה-entry הכי ישן"
+   ],
+   "why": "ה-list שומרת את ה-entries לפי סדר השימוש האחרון: node שהשתמשו בו עובר לחזית, והוצאה מסירה את הזנב. שתי הפעולות הן O(1) רק עם pointers של prev ועם reference ישיר ל-node, שה-map מספק.",
+   "wrong": [
+    null,
+    "hash map רגיל לא עוקב אחרי סדר שימוש, ולכן מציאת ה-entry הכי ישן דורשת לסרוק את כולם.",
+    "ניתוק node מהאמצע דורש את הקודם שלו, ו-singly linked list מוצאת אותו רק ב-O(n).",
+    "כל get משנה את זמן השימוש האחרון של key, ועדכון שלו ב-heap עולה O(log n) אחרי חיפוש של O(n)."
+   ]
+  }
+ }
+]

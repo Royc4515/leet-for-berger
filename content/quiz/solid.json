@@ -1,0 +1,675 @@
+[
+ {
+  "id": "solid-srp-reasons-to-change",
+  "topic": "solid",
+  "subtopic": "srp",
+  "concepts": [
+   "srp",
+   "reason-to-change",
+   "cohesion"
+  ],
+  "level": "easy",
+  "q": "UserService validates sign-up data, saves the user to the database and builds the welcome email text. Marketing rewords the email, and the change forces a retest of the saving code. Which principle is broken?",
+  "options": [
+   "Single Responsibility: it has several unrelated reasons to change",
+   "Open/Closed: a class must never be edited again once it has shipped",
+   "Liskov Substitution: UserService cannot replace its base class",
+   "Interface Segregation: the class has too many public methods"
+  ],
+  "answer": 0,
+  "why": "Validation rules, storage and email wording change for different reasons and are owned by different people. In one class, a wording change touches and risks the saving code. Splitting them gives each reason to change its own class.",
+  "wrong": [
+   null,
+   "OCP is about adding behaviour without rewriting stable code, not a ban on edits, and the pain here comes from mixed jobs.",
+   "No inheritance is involved, so there is nothing to substitute.",
+   "Method count is not the issue; ISP is about clients depending on methods they do not use."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "UserService מוודא את נתוני ההרשמה, שומר את המשתמש במסד הנתונים ובונה את הטקסט של מייל הברוכים הבאים. השיווק מנסח מחדש את המייל, והשינוי מחייב להריץ שוב את ה-tests של קוד השמירה. איזה עיקרון מופר?",
+   "options": [
+    "Single Responsibility: יש לו כמה סיבות לא קשורות להשתנות",
+    "Open/Closed: אסור לערוך class שוב אחרי שהוא שוחרר",
+    "Liskov Substitution: UserService לא יכול להחליף את ה-base class שלו",
+    "Interface Segregation: יש ל-class יותר מדי public methods"
+   ],
+   "why": "כללי ה-validation, השמירה וניסוח המייל משתנים מסיבות שונות, ואנשים שונים אחראים עליהם. כשהם ב-class אחד, שינוי ניסוח נוגע בקוד השמירה ומסכן אותו. פיצול נותן לכל סיבה לשינוי class משלו.",
+   "wrong": [
+    null,
+    "OCP עוסק בהוספת התנהגות בלי לשכתב קוד יציב, הוא לא איסור על עריכה, והכאב כאן נובע מתפקידים מעורבבים.",
+    "אין כאן inheritance, ולכן אין מה להחליף.",
+    "מספר ה-methods הוא לא הבעיה: ISP עוסק ב-clients שתלויים ב-methods שהם לא משתמשים בהן."
+   ]
+  }
+ },
+ {
+  "id": "solid-srp-not-one-method",
+  "topic": "solid",
+  "subtopic": "srp",
+  "concepts": [
+   "srp",
+   "cohesion",
+   "srp-myth"
+  ],
+  "level": "medium",
+  "q": "To follow SRP, a teammate splits a Money class (add, subtract and compareTo on an amount and currency) into MoneyAdder, MoneySubtractor and MoneyComparer, one method each. What is the problem?",
+  "options": [
+   "Nothing: SRP means one public method per class, so the split is correct",
+   "The three new classes should extend one base class so they still count as one",
+   "The methods change for the same reason; splitting them scatters one concept",
+   "SRP only applies to classes that talk to a database or a file"
+  ],
+  "answer": 2,
+  "why": "SRP is about reasons to change, not method count. Every Money operation depends on the same rules for amount and currency, so they change together. Splitting them lowers cohesion: one rule change now touches three classes that must stay in sync.",
+  "wrong": [
+   "This is the most common SRP myth; a class can have many methods that serve one purpose.",
+   "A shared base class does not undo the split; the money logic is still spread across three places.",
+   null,
+   "SRP applies to any code; I/O is just a frequent second reason to change."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כדי לעמוד ב-SRP, חבר צוות מפצל class בשם Money (add, subtract ו-compareTo על amount ו-currency) ל-MoneyAdder, MoneySubtractor ו-MoneyComparer, עם method אחת בכל אחד. מה הבעיה?",
+   "options": [
+    "אין בעיה: SRP אומר public method אחת לכל class, ולכן הפיצול נכון",
+    "שלושת ה-classes החדשים צריכים לרשת מ-base class אחד כדי שעדיין ייחשבו כאחד",
+    "ה-methods משתנות מאותה סיבה, והפיצול מפזר מושג אחד",
+    "SRP חל רק על classes שמדברים עם מסד נתונים או עם קובץ"
+   ],
+   "why": "SRP עוסק בסיבות לשינוי, לא במספר ה-methods. כל הפעולות של Money תלויות באותם כללים של amount ו-currency, ולכן הן משתנות ביחד. הפיצול מוריד את ה-cohesion: שינוי כלל אחד נוגע עכשיו בשלושה classes שחייבים להישאר מסונכרנים.",
+   "wrong": [
+    "זה המיתוס הנפוץ ביותר על SRP: ל-class יכולות להיות הרבה methods שמשרתות מטרה אחת.",
+    "base class משותף לא מבטל את הפיצול: הלוגיקה של הכסף עדיין מפוזרת בשלושה מקומות.",
+    null,
+    "SRP חל על כל קוד: I/O הוא פשוט סיבה שנייה נפוצה לשינוי."
+   ]
+  }
+ },
+ {
+  "id": "solid-srp-report-refactor",
+  "topic": "solid",
+  "subtopic": "srp",
+  "concepts": [
+   "srp",
+   "separation-of-concerns",
+   "refactoring"
+  ],
+  "level": "easy",
+  "q": "This class computes a sales total, formats it as HTML and writes it to a file. Which refactor applies SRP best?",
+  "code": "class Report {\n    private final List<Double> sales;\n    Report(List<Double> sales) { this.sales = sales; }\n\n    double total() { return sales.stream().mapToDouble(Double::doubleValue).sum(); }\n\n    String toHtml() { return \"<p>Total: \" + total() + \"</p>\"; }\n\n    void saveTo(String path) throws IOException {\n        Files.writeString(Path.of(path), toHtml());\n    }\n}",
+  "lang": "java",
+  "options": [
+   "Make all three methods static so the class holds no state",
+   "Keep total() in Report; move HTML to a formatter and file output to a writer",
+   "Create HtmlReport and FileReport subclasses that each override one method",
+   "Merge the three methods into one generate() method so there is a single entry point"
+  ],
+  "answer": 1,
+  "why": "Calculation rules, output format and storage change for different reasons. With a class for each, a new format such as PDF is a new formatter, and a storage change does not touch the totals code.",
+  "wrong": [
+   "Static or not, the class still mixes three jobs that change for different reasons.",
+   null,
+   "Subclasses still inherit all three jobs, and each mix of format and storage would need its own class.",
+   "One big method hides the three jobs instead of separating them."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-class הזה מחשב סכום מכירות, מעצב אותו כ-HTML וכותב אותו לקובץ. איזה refactor מיישם את SRP הכי טוב?",
+   "options": [
+    "להפוך את שלוש ה-methods ל-static כדי שה-class לא יחזיק state",
+    "להשאיר את total() ב-Report, ולהעביר את ה-HTML ל-formatter ואת הכתיבה לקובץ ל-writer",
+    "ליצור subclasses בשם HtmlReport ו-FileReport שכל אחד מהם עושה override ל-method אחת",
+    "לאחד את שלוש ה-methods ל-method אחת generate() כדי שתהיה נקודת כניסה אחת"
+   ],
+   "why": "כללי החישוב, פורמט הפלט והשמירה משתנים מסיבות שונות. עם class לכל אחד, פורמט חדש כמו PDF הוא formatter חדש, ושינוי בשמירה לא נוגע בקוד הסכומים.",
+   "wrong": [
+    "static או לא, ה-class עדיין מערבב שלושה תפקידים שמשתנים מסיבות שונות.",
+    null,
+    "subclasses עדיין יורשים את שלושת התפקידים, וכל שילוב של פורמט ושמירה היה צריך class משלו.",
+    "method אחת גדולה מסתירה את שלושת התפקידים במקום להפריד ביניהם."
+   ]
+  }
+ },
+ {
+  "id": "solid-ocp-new-format-edits",
+  "topic": "solid",
+  "subtopic": "ocp",
+  "concepts": [
+   "ocp",
+   "extension",
+   "type-switch"
+  ],
+  "level": "easy",
+  "q": "ReportExporter.export() has an if/else for CSV and PDF. Each new format (XML, then JSON) means editing and retesting this shipped method. Which principle is this design working against?",
+  "options": [
+   "Interface Segregation, because one method serves every format",
+   "Liskov Substitution, because CSV and PDF exporters behave differently",
+   "Dependency Inversion, because export() is called by high-level code",
+   "Open/Closed: new formats should arrive as new code, not edits"
+  ],
+  "answer": 3,
+  "why": "Open/Closed asks that a module be open to extension and closed to modification. Here every format is an edit to the same method. With an Exporter interface and one class per format, adding JSON is a new class and the tested code stays untouched.",
+  "wrong": [
+   "ISP is about clients being forced to depend on methods they do not use; callers here use the one method they need.",
+   "No subclass replaces a base type here; there is no hierarchy yet.",
+   "Being called by high-level code is normal; DIP is about what a module depends on, and the pain here is repeated edits.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-ReportExporter.export() יש if/else עבור CSV ו-PDF. כל פורמט חדש (XML, ואחריו JSON) מחייב לערוך את ה-method הזו, שכבר שוחררה, ולבדוק אותה מחדש. נגד איזה עיקרון התכנון הזה עובד?",
+   "options": [
+    "Interface Segregation, כי method אחת משרתת את כל הפורמטים",
+    "Liskov Substitution, כי ה-exporters של CSV ו-PDF מתנהגים אחרת",
+    "Dependency Inversion, כי export() נקראת מקוד high-level",
+    "Open/Closed: פורמטים חדשים צריכים להגיע כקוד חדש, לא כעריכות"
+   ],
+   "why": "Open/Closed מבקש שמודול יהיה פתוח להרחבה וסגור לשינוי. כאן כל פורמט הוא עריכה של אותה method. עם interface בשם Exporter ו-class לכל פורמט, הוספת JSON היא class חדש, והקוד שכבר נבדק לא נוגעים בו.",
+   "wrong": [
+    "ISP עוסק ב-clients שנאלצים להיות תלויים ב-methods שהם לא משתמשים בהן, והקוד הקורא כאן משתמש ב-method האחת שהוא צריך.",
+    "אף subclass לא מחליף כאן base type: עדיין אין היררכיה.",
+    "זה רגיל שקוד high-level קורא ל-method: DIP עוסק במה שמודול תלוי בו, והכאב כאן הוא עריכות חוזרות.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "solid-ocp-bug-fix-allowed",
+  "topic": "solid",
+  "subtopic": "ocp",
+  "concepts": [
+   "ocp",
+   "ocp-myth",
+   "bug-fix"
+  ],
+  "level": "medium",
+  "q": "A tax class built with Open/Closed in mind has a rounding bug. A teammate says OCP forbids editing it, so the fix must go in a subclass that overrides the method. What is right?",
+  "options": [
+   "The teammate is right: a closed class may only change through subclasses",
+   "Fix the bug in place; OCP is about adding features, not freezing bugs",
+   "Copy the class into TaxV2 with the fix and move callers over one by one",
+   "Leave the bug alone, because callers may now depend on the wrong rounding"
+  ],
+  "answer": 1,
+  "why": "Closed for modification means new behaviour should not require rewriting working code. A bug means the code is not working, so fixing it where it lives is correct. A patching subclass leaves the broken version in use by every caller of the base class.",
+  "wrong": [
+   "OCP does not ban edits; it says new behaviour should come from extension. Bug fixes are normal edits.",
+   null,
+   "Two near-copies double the code to maintain and keep the bug alive for callers not yet moved.",
+   "Keeping a known bug is rarely right; if callers depend on it, that is a separate, deliberate decision."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-class של מס שנבנה לפי Open/Closed יש bug בעיגול. חבר צוות אומר ש-OCP אוסר לערוך אותו, ולכן התיקון חייב להיכנס ל-subclass שעושה override ל-method. מה נכון?",
+   "options": [
+    "חבר הצוות צודק: class סגור יכול להשתנות רק דרך subclasses",
+    "לתקן את ה-bug במקום: OCP עוסק בהוספת features, לא בהקפאת bugs",
+    "להעתיק את ה-class ל-TaxV2 עם התיקון ולהעביר את הקוד הקורא אליו אחד אחד",
+    "להשאיר את ה-bug, כי ייתכן שהקוד הקורא כבר תלוי בעיגול השגוי"
+   ],
+   "why": "סגור לשינוי אומר שהתנהגות חדשה לא צריכה לדרוש שכתוב של קוד שעובד. bug אומר שהקוד לא עובד, ולכן נכון לתקן אותו במקום שבו הוא נמצא. subclass שמטליא את הבעיה משאיר את הגרסה השבורה בשימוש אצל כל מי שקורא ל-base class.",
+   "wrong": [
+    "OCP לא אוסר עריכות: הוא אומר שהתנהגות חדשה צריכה להגיע מהרחבה. תיקוני bugs הם עריכות רגילות.",
+    null,
+    "שני עותקים כמעט זהים מכפילים את הקוד שצריך לתחזק ומשאירים את ה-bug בחיים אצל קוד שעוד לא הועבר.",
+    "להשאיר bug ידוע זה כמעט אף פעם לא נכון: אם קוד קורא תלוי בו, זו החלטה נפרדת ומכוונת."
+   ]
+  }
+ },
+ {
+  "id": "solid-ocp-rule-list",
+  "topic": "solid",
+  "subtopic": "ocp",
+  "concepts": [
+   "ocp",
+   "extension-point",
+   "strategy"
+  ],
+  "level": "medium",
+  "q": "Password rules are plain functions in a list. A new rule is needed: the password must contain a digit. Which change fits this design best?",
+  "code": "def min_length(pw):\n    return len(pw) >= 8\n\ndef has_upper(pw):\n    return any(c.isupper() for c in pw)\n\nRULES = [min_length, has_upper]\n\ndef is_valid(pw, rules=RULES):\n    return all(rule(pw) for rule in rules)\n\nprint(is_valid(\"Secret12\"))",
+  "lang": "python",
+  "options": [
+   "Write has_digit and add it to RULES; is_valid stays unchanged",
+   "Add an if for digits inside is_valid, before the all() call",
+   "Extend has_upper to also look for a digit, since it already loops over characters",
+   "Copy is_valid into is_valid_v2 with the digit check, so old callers are untouched"
+  ],
+  "answer": 0,
+  "why": "is_valid only knows that a rule is a function returning True or False. New rules plug in as new functions, so the checker does not change. This is Open/Closed in practice: extension through a list of small, swappable rules.",
+  "wrong": [
+   null,
+   "It works, but it edits the generic checker for every rule and ignores the extension point the design already has.",
+   "has_upper would then do two jobs and its name would lie; one rule per function keeps each rule testable.",
+   "Two checkers drift apart over time; the list already allows new rules without touching old code."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כללי הסיסמה הם functions פשוטות ב-list. צריך כלל חדש: הסיסמה חייבת להכיל ספרה. איזה שינוי הכי מתאים לתכנון הזה?",
+   "options": [
+    "לכתוב את has_digit ולהוסיף אותה ל-RULES, ו-is_valid נשארת בלי שינוי",
+    "להוסיף if לספרות בתוך is_valid, לפני הקריאה ל-all()",
+    "להרחיב את has_upper כך שתחפש גם ספרה, כי היא כבר עוברת בלולאה על התווים",
+    "להעתיק את is_valid ל-is_valid_v2 עם בדיקת הספרה, כדי שקוד קורא ישן לא ייפגע"
+   ],
+   "why": "is_valid יודעת רק שכלל הוא function שמחזירה True או False. כללים חדשים מתחברים כ-functions חדשות, ולכן הבודק לא משתנה. זה Open/Closed בפועל: הרחבה דרך list של כללים קטנים שאפשר להחליף.",
+   "wrong": [
+    null,
+    "זה עובד, אבל זה עורך את הבודק הכללי עבור כל כלל ומתעלם מנקודת ההרחבה שכבר קיימת בתכנון.",
+    "אז has_upper הייתה עושה שני תפקידים והשם שלה היה משקר: כלל אחד לכל function שומר על כל כלל בר-בדיקה.",
+    "שני בודקים מתרחקים זה מזה עם הזמן: ה-list כבר מאפשרת כללים חדשים בלי לגעת בקוד הישן."
+   ]
+  }
+ },
+ {
+  "id": "solid-lsp-flightless-bird",
+  "topic": "solid",
+  "subtopic": "lsp",
+  "concepts": [
+   "lsp",
+   "hierarchy-design",
+   "instanceof-smell"
+  ],
+  "level": "easy",
+  "q": "Bird has fly(). Penguin extends Bird, and its fly() throws an exception. A loop that calls fly() on every Bird in a list crashes. Which fix addresses the root cause?",
+  "options": [
+   "In the loop, check whether each bird is a Penguin before calling fly()",
+   "Make Penguin.fly() do nothing, so no exception is thrown",
+   "Move fly() out of Bird into a Flyer type that only flying birds have",
+   "Catch the exception around every fly() call in the codebase"
+  ],
+  "answer": 2,
+  "why": "Bird promises that every bird can fly, and Penguin cannot keep that promise, so it is not substitutable (Liskov). With fly() in its own type the promise is true: code that needs flying asks for a Flyer, and a Penguin is never passed in.",
+  "wrong": [
+   "A type check patches one loop; every other caller must remember it, and each new flightless bird adds more checks.",
+   "A silent no-op still breaks the promise: code that expects the bird to be in the air gets a wrong result with no error.",
+   null,
+   "Catching everywhere spreads the problem; the base type still claims something its subtypes cannot do."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-Bird יש fly(). Penguin יורש מ-Bird, וה-fly() שלו זורקת exception. לולאה שקוראת ל-fly() על כל Bird ב-list קורסת. איזה תיקון מטפל בשורש הבעיה?",
+   "options": [
+    "בתוך הלולאה, לבדוק אם כל ציפור היא Penguin לפני שקוראים ל-fly()",
+    "לגרום ל-Penguin.fly() לא לעשות כלום, כדי שלא ייזרק exception",
+    "להוציא את fly() מ-Bird לטיפוס Flyer שיש רק לציפורים שעפות",
+    "לתפוס את ה-exception סביב כל קריאה ל-fly() בכל הקוד"
+   ],
+   "why": "Bird מבטיח שכל ציפור יכולה לעוף, ו-Penguin לא יכול לעמוד בהבטחה, ולכן הוא לא בר-החלפה (Liskov). כש-fly() בטיפוס משלה, ההבטחה נכונה: קוד שצריך תעופה מבקש Flyer, ו-Penguin אף פעם לא מועבר אליו.",
+   "wrong": [
+    "בדיקת טיפוס מטליאה לולאה אחת: כל קוד קורא אחר צריך לזכור אותה, וכל ציפור חדשה שלא עפה מוסיפה עוד בדיקות.",
+    "no-op שקט עדיין שובר את ההבטחה: קוד שמצפה שהציפור תהיה באוויר מקבל תוצאה שגויה בלי שום שגיאה.",
+    null,
+    "לתפוס בכל מקום מפזר את הבעיה: ה-base type עדיין טוען למשהו שה-subtypes שלו לא יכולים לעשות."
+   ]
+  }
+ },
+ {
+  "id": "solid-lsp-stronger-precondition",
+  "topic": "solid",
+  "subtopic": "lsp",
+  "concepts": [
+   "lsp",
+   "precondition",
+   "subtyping-vs-behaviour"
+  ],
+  "level": "medium",
+  "q": "Code written for Account counts on one rule: a withdrawal succeeds when the balance is enough. It gets a LimitedAccount with balance 500 and withdraws 150. Which statement is correct?",
+  "code": "class Account:\n    def __init__(self, balance):\n        self.balance = balance\n    def withdraw(self, amount):\n        if amount > self.balance:\n            raise ValueError(\"insufficient funds\")\n        self.balance -= amount\nclass LimitedAccount(Account):\n    def withdraw(self, amount):\n        if amount > 100:\n            raise ValueError(\"limit is 100\")\n        super().withdraw(amount)",
+  "lang": "python",
+  "options": [
+   "No problem: a subclass may be used anywhere its base class is expected",
+   "This breaks LSP: the subclass refuses a call the base type promises to accept",
+   "This breaks LSP only because the subclass calls super().withdraw()",
+   "LSP holds as long as every caller checks isinstance(acc, LimitedAccount) first"
+  ],
+  "answer": 1,
+  "why": "LSP is about behaviour, not just types. LimitedAccount adds a stricter precondition (at most 100), so a caller that follows Account's rules gets a ValueError. Fixes: put the limit into the base contract, or do not make LimitedAccount a subclass.",
+  "wrong": [
+   "That is plain subtyping: the code runs, but the subclass behaves in a way the caller was not promised.",
+   null,
+   "Calling the base method is fine and common; the problem is the extra rule before it.",
+   "Type checks in callers are a symptom of an LSP break, not a fix; every new caller must remember them."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "קוד שנכתב עבור Account סומך על כלל אחד: משיכה מצליחה כשהיתרה מספיקה. הוא מקבל LimitedAccount עם יתרה של 500 ומושך 150. איזו טענה נכונה?",
+   "options": [
+    "אין בעיה: אפשר להשתמש ב-subclass בכל מקום שבו מצפים ל-base class שלו",
+    "זה שובר את LSP: ה-subclass מסרב לקריאה שה-base type מבטיח לקבל",
+    "זה שובר את LSP רק כי ה-subclass קורא ל-super().withdraw()",
+    "LSP נשמר כל עוד כל קוד קורא בודק קודם isinstance(acc, LimitedAccount)"
+   ],
+   "why": "LSP עוסק בהתנהגות, לא רק בטיפוסים. LimitedAccount מוסיף precondition מחמיר יותר (לכל היותר 100), ולכן קוד קורא שפועל לפי הכללים של Account מקבל ValueError. תיקונים: להכניס את המגבלה לחוזה של ה-base, או לא להפוך את LimitedAccount ל-subclass.",
+   "wrong": [
+    "זה subtyping פשוט: הקוד רץ, אבל ה-subclass מתנהג בצורה שלא הובטחה לקוד הקורא.",
+    null,
+    "קריאה ל-method של ה-base תקינה ונפוצה: הבעיה היא הכלל הנוסף שלפניה.",
+    "בדיקות טיפוס בקוד הקורא הן סימפטום של הפרת LSP, לא תיקון: כל קוד קורא חדש צריך לזכור אותן."
+   ]
+  }
+ },
+ {
+  "id": "solid-isp-split-fat-interface",
+  "topic": "solid",
+  "subtopic": "isp",
+  "concepts": [
+   "isp",
+   "fat-interface",
+   "role-interface"
+  ],
+  "level": "easy",
+  "q": "Interface Machine has print(), scan() and fax(). A SimplePrinter must implement it, so its scan() and fax() just throw errors. Which change fixes the design?",
+  "options": [
+   "Make Machine an abstract class whose scan() and fax() do nothing by default",
+   "Keep Machine, and document that SimplePrinter does not support scan or fax",
+   "Rename the methods to doPrint, doScan and doFax so each one is optional",
+   "Split into Printer, Scanner and Fax; each device implements what it can do"
+  ],
+  "answer": 3,
+  "why": "Interface Segregation says clients should not depend on methods they do not use. Small interfaces let a SimplePrinter be only a Printer, while an office machine implements all three. Code that only prints asks for a Printer.",
+  "wrong": [
+   "Default no-ops hide the problem: callers can still call scan() on a printer and silently get nothing.",
+   "Documentation does not stop the call; the type still claims the printer can scan.",
+   "Renaming does not make a method optional; the interface still requires all three.",
+   null
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/createinterface.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-interface בשם Machine יש print(), scan() ו-fax(). SimplePrinter חייב לממש אותו, ולכן ה-scan() וה-fax() שלו פשוט זורקות שגיאות. איזה שינוי מתקן את התכנון?",
+   "options": [
+    "להפוך את Machine ל-abstract class שה-scan() וה-fax() שלו לא עושות כלום כברירת מחדל",
+    "להשאיר את Machine, ולתעד ש-SimplePrinter לא תומך בסריקה או בפקס",
+    "לשנות את שמות ה-methods ל-doPrint, doScan ו-doFax כדי שכל אחת תהיה אופציונלית",
+    "לפצל ל-Printer, Scanner ו-Fax, וכל מכשיר מממש את מה שהוא יודע לעשות"
+   ],
+   "why": "Interface Segregation אומר ש-clients לא צריכים להיות תלויים ב-methods שהם לא משתמשים בהן. interfaces קטנים מאפשרים ל-SimplePrinter להיות רק Printer, ומכונה משרדית מממשת את שלושתם. קוד שרק מדפיס מבקש Printer.",
+   "wrong": [
+    "no-ops כברירת מחדל מסתירים את הבעיה: קוד קורא עדיין יכול לקרוא ל-scan() על מדפסת ולקבל כלום בשקט.",
+    "תיעוד לא מונע את הקריאה: הטיפוס עדיין טוען שהמדפסת יודעת לסרוק.",
+    "שינוי שם לא הופך method לאופציונלית: ה-interface עדיין דורש את שלושתן.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "solid-isp-narrow-client-view",
+  "topic": "solid",
+  "subtopic": "isp",
+  "concepts": [
+   "isp",
+   "role-interface",
+   "test-fakes"
+  ],
+  "level": "medium",
+  "q": "A report job uses only two read methods of UserRepository, which has 12 methods including delete and update. The job's test fake must stub all 12. What is the best fix?",
+  "options": [
+   "Give the job a narrow UserReader interface that UserRepository implements",
+   "Split UserRepository into separate classes, one per method, to follow SRP",
+   "Pass the job the whole database connection, so it needs no repository at all",
+   "Let the fake extend the real UserRepository and override the two methods"
+  ],
+  "answer": 0,
+  "why": "This is Interface Segregation: the job should depend only on what it uses. One class can implement both the full repository and a narrow reading interface. The job asks for a UserReader, its fake has two methods, and it cannot call delete by mistake.",
+  "wrong": [
+   null,
+   "ISP is about the client's view, not the class's size; the implementation can stay one class.",
+   "That couples the job to even more, the raw database, and makes testing harder.",
+   "The fake then drags in the real class and its setup, and any method not overridden still hits the real store."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "job של דוחות משתמש רק בשתי methods של קריאה מתוך UserRepository, שיש בו 12 methods, כולל delete ו-update. ה-fake של ה-job ב-test צריך לעשות stub לכל ה-12. מה התיקון הכי טוב?",
+   "options": [
+    "לתת ל-job interface צר בשם UserReader ש-UserRepository מממש",
+    "לפצל את UserRepository ל-classes נפרדים, אחד לכל method, כדי לעמוד ב-SRP",
+    "להעביר ל-job את כל ה-connection למסד הנתונים, כך שהוא לא יצטרך repository בכלל",
+    "לתת ל-fake לרשת מה-UserRepository האמיתי ולעשות override לשתי ה-methods"
+   ],
+   "why": "זה Interface Segregation: ה-job צריך להיות תלוי רק במה שהוא משתמש בו. class אחד יכול לממש גם את ה-repository המלא וגם interface צר של קריאה. ה-job מבקש UserReader, ל-fake שלו יש שתי methods, והוא לא יכול לקרוא ל-delete בטעות.",
+   "wrong": [
+    null,
+    "ISP עוסק במבט של ה-client, לא בגודל של ה-class: המימוש יכול להישאר class אחד.",
+    "זה קושר את ה-job להרבה יותר, למסד הנתונים הגולמי, ומקשה על הבדיקות.",
+    "ה-fake גורר אז פנימה את ה-class האמיתי ואת ההגדרות שלו, וכל method שלא עברה override עדיין פונה ל-store האמיתי."
+   ]
+  }
+ },
+ {
+  "id": "solid-dip-inject-abstraction",
+  "topic": "solid",
+  "subtopic": "dip",
+  "concepts": [
+   "dip",
+   "dependency-injection",
+   "testability"
+  ],
+  "level": "easy",
+  "q": "Unit tests for OrderService need a running MySQL server. Which change applies the Dependency Inversion Principle?",
+  "code": "class OrderService {\n    private final MySqlOrderRepository repo = new MySqlOrderRepository();\n\n    double total(int customerId) {\n        double sum = 0;\n        for (Order o : repo.findByCustomer(customerId)) sum += o.amount();\n        return sum;\n    }\n}",
+  "lang": "java",
+  "options": [
+   "Make MySqlOrderRepository a Singleton so tests share one connection",
+   "Move the new MySqlOrderRepository() call into a static helper method",
+   "Depend on an OrderRepository interface passed into the constructor",
+   "Make OrderService extend MySqlOrderRepository so it owns the queries"
+  ],
+  "answer": 2,
+  "why": "OrderService holds the business rule, so it should depend on an abstraction, not on a MySQL class. With the interface passed in, production gives it the MySQL version and a test gives it an in-memory fake, with no database.",
+  "wrong": [
+   "It is still a hard-wired concrete class, now also global; tests still need MySQL.",
+   "Moving the new call around does not remove the dependency on the concrete class.",
+   null,
+   "Inheritance ties the business logic even tighter to MySQL, and an order service is not a repository."
+  ],
+  "ref": "https://docs.oracle.com/javase/tutorial/java/IandI/usinginterface.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-unit tests של OrderService צריכים שרת MySQL פועל. איזה שינוי מיישם את Dependency Inversion Principle?",
+   "options": [
+    "להפוך את MySqlOrderRepository ל-Singleton כדי שה-tests יחלקו connection אחד",
+    "להעביר את הקריאה new MySqlOrderRepository() ל-static helper method",
+    "להיות תלוי ב-interface בשם OrderRepository שמועבר ל-constructor",
+    "לגרום ל-OrderService לרשת מ-MySqlOrderRepository כדי שה-queries יהיו שלו"
+   ],
+   "why": "OrderService מחזיק את הכלל העסקי, ולכן הוא צריך להיות תלוי באבסטרקציה, לא ב-class של MySQL. כשה-interface מועבר פנימה, ב-production נותנים לו את גרסת MySQL, וב-test נותנים לו fake בזיכרון, בלי מסד נתונים.",
+   "wrong": [
+    "זה עדיין class קונקרטי מחווט, ועכשיו גם גלובלי: ה-tests עדיין צריכים MySQL.",
+    "הזזת הקריאה ל-new ממקום למקום לא מסירה את התלות ב-class הקונקרטי.",
+    null,
+    "inheritance קושרת את הלוגיקה העסקית ל-MySQL עוד יותר חזק, ו-service של הזמנות הוא לא repository."
+   ]
+  }
+ },
+ {
+  "id": "solid-dip-injected-concrete-class",
+  "topic": "solid",
+  "subtopic": "dip",
+  "concepts": [
+   "dip",
+   "dependency-injection",
+   "dip-vs-di"
+  ],
+  "level": "medium",
+  "q": "OrderService now gets its repository from the constructor, but the parameter type is MySqlOrderRepository. A teammate says: we inject it, so we follow DIP. Is that right?",
+  "options": [
+   "Yes: dependency injection and the Dependency Inversion Principle are the same",
+   "Yes: any constructor parameter counts as an abstraction",
+   "No: DIP also forbids constructors from taking any parameters",
+   "No: it is injected, but the service still depends on a concrete class"
+  ],
+  "answer": 3,
+  "why": "Injection is a technique; inversion is about which way the dependency points. The high-level service still names a MySQL class, so a test or a new store must be that class or a subclass. Changing the parameter to an OrderRepository interface completes DIP.",
+  "wrong": [
+   "DI is one common way to reach DIP, but you can inject concrete classes and miss the point.",
+   "A parameter whose type is a concrete class still ties the caller to that class.",
+   "Constructor parameters are how DIP is usually applied; the problem is the parameter's type.",
+   null
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "OrderService מקבל עכשיו את ה-repository שלו דרך ה-constructor, אבל טיפוס הפרמטר הוא MySqlOrderRepository. חבר צוות אומר: אנחנו עושים לו inject, אז אנחנו עומדים ב-DIP. האם זה נכון?",
+   "options": [
+    "כן: dependency injection ו-Dependency Inversion Principle הם אותו דבר",
+    "כן: כל פרמטר של constructor נחשב אבסטרקציה",
+    "לא: DIP גם אוסר על constructors לקבל פרמטרים בכלל",
+    "לא: הוא אמנם מוזרק, אבל ה-service עדיין תלוי ב-class קונקרטי"
+   ],
+   "why": "injection היא טכניקה, ו-inversion עוסק בכיוון שאליו התלות מצביעה. ה-service ה-high-level עדיין נוקב בשם של class של MySQL, ולכן test או store חדש חייבים להיות ה-class הזה או subclass שלו. שינוי טיפוס הפרמטר ל-interface בשם OrderRepository משלים את DIP.",
+   "wrong": [
+    "DI היא דרך נפוצה אחת להגיע ל-DIP, אבל אפשר להזריק classes קונקרטיים ולפספס את העיקר.",
+    "פרמטר שהטיפוס שלו הוא class קונקרטי עדיין קושר את הקוד ל-class הזה.",
+    "פרמטרים של constructor הם הדרך הרגילה ליישם DIP: הבעיה היא הטיפוס של הפרמטר.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "solid-cc-train-wreck-coupling",
+  "topic": "solid",
+  "subtopic": "clean-code",
+  "concepts": [
+   "coupling",
+   "law-of-demeter",
+   "encapsulation"
+  ],
+  "level": "medium",
+  "q": "Checkout code calls order.getCustomer().getAddress().getCountry().getTaxRate(). What is the main risk of this line?",
+  "options": [
+   "It is slow, because every getter call allocates a new object on the heap",
+   "It ties Checkout to the inner structure of three other classes",
+   "It breaks the encapsulation of Checkout's own private fields",
+   "Nothing: chaining getters is how objects are meant to be used"
+  ],
+  "answer": 1,
+  "why": "Checkout now knows that orders hold customers, customers hold addresses and addresses hold countries. If any link changes, Checkout breaks. Asking the order for what is needed, like order.taxRate(), keeps that knowledge in one place (low coupling).",
+  "wrong": [
+   "Getters usually return existing objects; the cost is coupling, not speed.",
+   null,
+   "Checkout's own fields are not touched; it is the other classes whose structure leaks out.",
+   "Long chains are a known smell (Law of Demeter): each step is one more class you depend on."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "קוד ה-Checkout קורא ל-order.getCustomer().getAddress().getCountry().getTaxRate(). מה הסיכון המרכזי בשורה הזו?",
+   "options": [
+    "היא איטית, כי כל קריאה ל-getter מקצה object חדש ב-heap",
+    "היא קושרת את Checkout למבנה הפנימי של שלושה classes אחרים",
+    "היא שוברת את ה-encapsulation של ה-fields ה-private של Checkout עצמו",
+    "אין סיכון: שרשור getters הוא הדרך שבה אמורים להשתמש ב-objects"
+   ],
+   "why": "Checkout יודע עכשיו שהזמנות מחזיקות לקוחות, לקוחות מחזיקים כתובות וכתובות מחזיקות מדינות. אם חוליה כלשהי משתנה, Checkout נשבר. לבקש מההזמנה את מה שצריך, למשל order.taxRate(), שומר את הידע הזה במקום אחד (low coupling).",
+   "wrong": [
+    "getters בדרך כלל מחזירים objects קיימים: המחיר הוא coupling, לא מהירות.",
+    null,
+    "ה-fields של Checkout עצמו לא נפגעים: המבנה של ה-classes האחרים הוא מה שדולף החוצה.",
+    "שרשראות ארוכות הן smell מוכר (Law of Demeter): כל צעד הוא עוד class שתלויים בו."
+   ]
+  }
+ },
+ {
+  "id": "solid-cc-coincidental-duplication",
+  "topic": "solid",
+  "subtopic": "clean-code",
+  "concepts": [
+   "dry",
+   "premature-abstraction",
+   "flag-argument",
+   "coupling"
+  ],
+  "level": "medium",
+  "q": "Usernames and product codes shared one rule (3 to 20 letters or digits), so one validate_code() checks both. Different teams own them, and the rules are expected to keep diverging. Now codes must allow dashes. Best move?",
+  "options": [
+   "Add an allow_dash flag to validate_code() and pass True only for product codes",
+   "Allow dashes in validate_code(), since both callers share one function",
+   "Split it back into two validators; the rules only looked alike by chance",
+   "Keep one function, but move it to a base class both validators extend"
+  ],
+  "answer": 2,
+  "why": "DRY is about one piece of knowledge, not similar-looking code. The two rules have different owners and reasons to change, so sharing one function coupled them. Separate validators let each rule evolve; a flag keeps the coupling and grows with every new difference.",
+  "wrong": [
+   "A boolean flag makes one function do two jobs; each new difference adds another flag and another branch.",
+   "That quietly changes the username rule too, a bug caused by false sharing.",
+   null,
+   "Moving the code changes where it lives, not the fact that two different rules are tied together."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "לשמות משתמש ולקודי מוצר היה כלל אחד משותף (3 עד 20 אותיות או ספרות), ולכן validate_code() אחת בודקת את שניהם. צוותים שונים אחראים עליהם, והכללים צפויים להמשיך להתרחק זה מזה. עכשיו קודים צריכים לאפשר מקפים. מה הצעד הכי טוב?",
+   "options": [
+    "להוסיף ל-validate_code() דגל allow_dash ולהעביר True רק עבור קודי מוצר",
+    "לאפשר מקפים ב-validate_code(), כי שני הקוראים חולקים function אחת",
+    "לפצל אותה בחזרה לשני validators: הכללים רק נראו דומים במקרה",
+    "להשאיר function אחת, אבל להעביר אותה ל-base class ששני ה-validators יורשים ממנו"
+   ],
+   "why": "DRY עוסק בפיסת ידע אחת, לא בקוד שנראה דומה. לשני הכללים יש בעלים שונים וסיבות שונות להשתנות, ולכן function משותפת קשרה ביניהם. validators נפרדים מאפשרים לכל כלל להתפתח, ודגל משאיר את הקשר וגדל עם כל הבדל חדש.",
+   "wrong": [
+    "דגל בוליאני גורם ל-function אחת לעשות שני תפקידים: כל הבדל חדש מוסיף עוד דגל ועוד ענף.",
+    "זה משנה בשקט גם את הכלל של שמות המשתמש, bug שנגרם משיתוף שגוי.",
+    null,
+    "הזזת הקוד משנה את המקום שבו הוא נמצא, לא את העובדה ששני כללים שונים קשורים זה לזה."
+   ]
+  }
+ },
+ {
+  "id": "solid-cc-query-with-side-effect",
+  "topic": "solid",
+  "subtopic": "clean-code",
+  "concepts": [
+   "naming",
+   "side-effects",
+   "command-query-separation"
+  ],
+  "level": "easy",
+  "q": "A UI calls has_unread() to decide whether to show a badge. What does this print, and what does it reveal?",
+  "code": "class Inbox:\n    def __init__(self, messages):\n        self.messages = messages\n\n    def has_unread(self):\n        unread = [m for m in self.messages if not m[\"read\"]]\n        for m in unread:\n            m[\"read\"] = True\n        return len(unread) > 0\n\nbox = Inbox([{\"read\": False}])\nprint(box.has_unread(), box.has_unread())",
+  "lang": "python",
+  "options": [
+   "True False: the check itself marks messages as read",
+   "True True: asking a question never changes the object",
+   "False False: unread is computed after the flags are set",
+   "True, then an error: the list is changed while looping"
+  ],
+  "answer": 0,
+  "why": "The name promises a question, but the method also changes state. The first call returns True and marks everything read, so the second returns False. Keep queries free of side effects and put the change in a clearly named command like mark_all_read().",
+  "wrong": [
+   null,
+   "That is what the name suggests, but the loop sets read to True on each unread message.",
+   "The unread list is built before the loop changes anything, so the first call sees one unread message.",
+   "The loop changes the dicts inside the list, not the list itself, which is safe."
+  ],
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ממשק משתמש קורא ל-has_unread() כדי להחליט אם להציג badge. מה יודפס, ומה זה מגלה?",
+   "options": [
+    "True False: הבדיקה עצמה מסמנת את ההודעות כנקראו",
+    "True True: שאלה אף פעם לא משנה את ה-object",
+    "False False: unread מחושב אחרי שהדגלים נקבעים",
+    "True, ואז שגיאה: ה-list משתנה בזמן הלולאה"
+   ],
+   "why": "השם מבטיח שאלה, אבל ה-method גם משנה state. הקריאה הראשונה מחזירה True ומסמנת הכול כנקרא, ולכן השנייה מחזירה False. צריך לשמור queries בלי side effects ולשים את השינוי ב-command עם שם ברור, כמו mark_all_read().",
+   "wrong": [
+    null,
+    "זה מה שהשם מרמז, אבל הלולאה קובעת read ל-True בכל הודעה שלא נקראה.",
+    "ה-list של ה-unread נבנית לפני שהלולאה משנה משהו, ולכן הקריאה הראשונה רואה הודעה אחת שלא נקראה.",
+    "הלולאה משנה את ה-dicts שבתוך ה-list, לא את ה-list עצמה, וזה בטוח."
+   ]
+  }
+ }
+]

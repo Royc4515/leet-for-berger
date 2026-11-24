@@ -1,0 +1,1369 @@
+[
+ {
+  "id": "operating-systems-thread-own-stack",
+  "topic": "operating-systems",
+  "subtopic": "process-thread",
+  "concepts": [
+   "thread",
+   "process",
+   "stack",
+   "shared-state"
+  ],
+  "level": "easy",
+  "q": "Two threads run inside the same process. Which of these does each thread get its own separate copy of?",
+  "options": [
+   "Objects allocated on the heap",
+   "Global variables",
+   "Its call stack: local variables and return addresses",
+   "Its table of open files, so a file one thread opens stays private"
+  ],
+  "answer": 2,
+  "why": "Threads of one process share the address space: code, globals, the heap and open files. What each thread owns is its execution state: registers, program counter and its own stack, so local variables in one thread's calls are separate.",
+  "wrong": [
+   "The heap belongs to the process, so any thread holding a pointer can reach the same object.",
+   "Globals live once in the process's memory and every thread sees the same variable.",
+   null,
+   "File descriptors are per process; a file one thread opens can be read by another."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני threads רצים בתוך אותו process. מה מהבאים מקבל כל thread בעותק נפרד משלו?",
+   "options": [
+    "objects שהוקצו על ה-heap",
+    "משתנים גלובליים",
+    "ה-call stack שלו: משתנים מקומיים וכתובות חזרה",
+    "טבלת הקבצים הפתוחים שלו, כך שקובץ ש-thread אחד פותח נשאר פרטי"
+   ],
+   "why": "threads של אותו process חולקים את מרחב הכתובות: קוד, משתנים גלובליים, ה-heap וקבצים פתוחים. מה ששייך לכל thread הוא מצב הריצה שלו: registers, program counter וה-stack שלו, ולכן משתנים מקומיים בקריאות של thread אחד נפרדים.",
+   "wrong": [
+    "ה-heap שייך ל-process, ולכן כל thread שמחזיק pointer יכול להגיע לאותו object.",
+    "משתנים גלובליים קיימים פעם אחת בזיכרון של ה-process, וכל thread רואה את אותו משתנה.",
+    null,
+    "file descriptors הם ברמת ה-process: קובץ ש-thread אחד פותח יכול להיקרא על ידי thread אחר."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-thread-crash-kills-process",
+  "topic": "operating-systems",
+  "subtopic": "process-thread",
+  "concepts": [
+   "thread",
+   "crash-scope",
+   "segfault",
+   "isolation"
+  ],
+  "level": "easy",
+  "q": "A C server handles each request on its own thread. One thread dereferences a NULL pointer. What happens to the other requests in flight?",
+  "options": [
+   "They are lost: the segfault ends the whole process",
+   "They finish normally: only the faulty thread is stopped",
+   "They pause until the OS restarts the faulty thread from its start",
+   "Each other thread gets an error code back from its next system call"
+  ],
+  "answer": 0,
+  "why": "A segmentation fault is delivered to the process, and the default action ends the process. Threads share one address space, so the OS cannot tell whether memory is still sane and does not keep the other threads alive.",
+  "wrong": [
+   null,
+   "That is how an uncaught exception in one Java thread looks. A memory fault in C ends the whole process.",
+   "The OS does not restart threads; restarting is the program's or a supervisor's job.",
+   "There is no per-thread error code; the other threads simply stop with the process."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שרת ב-C מטפל בכל request ב-thread משלו. thread אחד עושה dereference ל-NULL pointer. מה קורה ל-requests האחרים שנמצאים בטיפול?",
+   "options": [
+    "הם הולכים לאיבוד: ה-segfault מסיים את כל ה-process",
+    "הם מסתיימים כרגיל: רק ה-thread התקול נעצר",
+    "הם מושהים עד שמערכת ההפעלה מפעילה מחדש את ה-thread התקול מההתחלה",
+    "כל thread אחר מקבל קוד שגיאה מה-system call הבא שלו"
+   ],
+   "why": "segmentation fault נשלח ל-process, ופעולת ברירת המחדל מסיימת את ה-process. threads חולקים מרחב כתובות אחד, ולכן מערכת ההפעלה לא יכולה לדעת אם הזיכרון עדיין תקין, והיא לא משאירה את שאר ה-threads בחיים.",
+   "wrong": [
+    null,
+    "כך נראה exception שלא נתפס ב-thread אחד ב-Java. שגיאת זיכרון ב-C מסיימת את כל ה-process.",
+    "מערכת ההפעלה לא מפעילה threads מחדש. הפעלה מחדש היא התפקיד של התוכנית או של supervisor.",
+    "אין קוד שגיאה לכל thread: שאר ה-threads פשוט נעצרים יחד עם ה-process."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-fork-loop-count",
+  "topic": "operating-systems",
+  "subtopic": "process-thread",
+  "concepts": [
+   "fork",
+   "process-creation"
+  ],
+  "level": "medium",
+  "q": "How many times does this C program print hi? Assume every fork() succeeds.",
+  "code": "#include <stdio.h>\n#include <unistd.h>\nint main(void) {\n    for (int i = 0; i < 3; i++) {\n        fork();\n    }\n    printf(\"hi\\n\");\n    return 0;\n}",
+  "lang": "c",
+  "options": [
+   "3",
+   "4",
+   "7",
+   "8"
+  ],
+  "answer": 3,
+  "why": "fork() clones the calling process, and the child continues from the same point, loop counter included. Each round doubles the number of processes: 1, 2, 4, 8. All 8 reach the printf.",
+  "wrong": [
+   "That counts fork calls in the original process only; children keep running the loop too.",
+   "That assumes children skip the rest of the loop. A child continues right after fork, so it forks as well.",
+   "That counts the children only. The original process also reaches the printf.",
+   null
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-api.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "כמה פעמים תוכנית ה-C הזו מדפיסה hi? נניח שכל fork() מצליח.",
+   "options": [
+    "3",
+    "4",
+    "7",
+    "8"
+   ],
+   "why": "fork() משכפל את ה-process הקורא, וה-child ממשיך מאותה נקודה, כולל מונה הלולאה. כל סיבוב מכפיל את מספר ה-processes: 1, 2, 4, 8. כל ה-8 מגיעים ל-printf.",
+   "wrong": [
+    "זה סופר רק את קריאות ה-fork ב-process המקורי. גם ה-children ממשיכים להריץ את הלולאה.",
+    "זה מניח שה-children מדלגים על שאר הלולאה. child ממשיך מיד אחרי ה-fork, ולכן גם הוא עושה fork.",
+    "זה סופר רק את ה-children. גם ה-process המקורי מגיע ל-printf.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-fork-separate-memory",
+  "topic": "operating-systems",
+  "subtopic": "process-thread",
+  "concepts": [
+   "fork",
+   "process",
+   "address-space",
+   "isolation"
+  ],
+  "level": "medium",
+  "q": "The child sets x to 10 and exits; the parent waits for it and then prints x. What does this print?",
+  "code": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/wait.h>\nint main(void) {\n    int x = 5;\n    if (fork() == 0) { x = 10; exit(0); }\n    wait(NULL);\n    printf(\"%d\\n\", x);\n    return 0;\n}",
+  "lang": "c",
+  "options": [
+   "10",
+   "5",
+   "5 or 10, depending on which process the scheduler runs first",
+   "Two lines: 10, then 5"
+  ],
+  "answer": 1,
+  "why": "After fork() the child has its own copy of the parent's memory. Changing x in the child changes only the child's copy, so the parent still sees 5.",
+  "wrong": [
+   "That would be true for threads, which share memory. A forked child writes to its own copy.",
+   null,
+   "Timing cannot matter here: the processes do not share x at all, and wait() orders them anyway.",
+   "The child calls exit(0) inside the if, so it never reaches the printf."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-api.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ה-child מציב 10 ב-x ויוצא. ה-parent מחכה לו ואז מדפיס את x. מה יודפס?",
+   "options": [
+    "10",
+    "5",
+    "5 או 10, תלוי איזה process ה-scheduler מריץ קודם",
+    "שתי שורות: 10, ואז 5"
+   ],
+   "why": "אחרי fork() ל-child יש עותק משלו של הזיכרון של ה-parent. שינוי x ב-child משנה רק את העותק של ה-child, ולכן ה-parent עדיין רואה 5.",
+   "wrong": [
+    "זה היה נכון עבור threads, שחולקים זיכרון. child שנוצר ב-fork כותב לעותק משלו.",
+    null,
+    "התזמון לא יכול לשנות כאן: ה-processes בכלל לא חולקים את x, וממילא wait() קובע ביניהם סדר.",
+    "ה-child קורא ל-exit(0) בתוך ה-if, ולכן הוא אף פעם לא מגיע ל-printf."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-thread-shares-global",
+  "topic": "operating-systems",
+  "subtopic": "process-thread",
+  "concepts": [
+   "thread",
+   "shared-state",
+   "join"
+  ],
+  "level": "easy",
+  "q": "A thread sets the global counter to 10. The main thread waits for it with pthread_join, then prints counter. What does this print?",
+  "code": "#include <pthread.h>\n#include <stdio.h>\nint counter = 0;\nvoid *work(void *arg) { counter = 10; return NULL; }\nint main(void) {\n    pthread_t t;\n    pthread_create(&t, NULL, work, NULL);\n    pthread_join(t, NULL);\n    printf(\"%d\\n\", counter);\n    return 0;\n}",
+  "lang": "c",
+  "options": [
+   "0",
+   "0 or 10, depending on which thread the scheduler runs first",
+   "10",
+   "Nothing: it does not compile, a thread cannot write a global that main reads"
+  ],
+  "answer": 2,
+  "why": "Threads share the process's globals, so the write is visible to main. pthread_join waits until the thread has finished, so the write has already happened when main prints.",
+  "wrong": [
+   "That is process behaviour after fork. Threads see the same global, not a copy.",
+   "pthread_join blocks main until the thread is done, so the order is fixed.",
+   null,
+   "Any thread may read or write a global; C has no such rule."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/threads-api.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "thread מציב 10 במשתנה הגלובלי counter. ה-main thread מחכה לו עם pthread_join ואז מדפיס את counter. מה יודפס?",
+   "options": [
+    "0",
+    "0 או 10, תלוי איזה thread ה-scheduler מריץ קודם",
+    "10",
+    "כלום: זה לא עובר compile, thread לא יכול לכתוב למשתנה גלובלי ש-main קורא"
+   ],
+   "why": "threads חולקים את המשתנים הגלובליים של ה-process, ולכן הכתיבה גלויה ל-main. pthread_join מחכה עד שה-thread מסיים, ולכן הכתיבה כבר קרתה כש-main מדפיס.",
+   "wrong": [
+    "זו ההתנהגות של process אחרי fork. threads רואים את אותו משתנה גלובלי, לא עותק.",
+    "pthread_join חוסם את main עד שה-thread מסיים, ולכן הסדר קבוע.",
+    null,
+    "כל thread רשאי לקרוא או לכתוב משתנה גלובלי. ב-C אין כלל כזה."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-thread-cheaper-to-create",
+  "topic": "operating-systems",
+  "subtopic": "process-thread",
+  "concepts": [
+   "thread",
+   "process-creation",
+   "address-space",
+   "copy-on-write"
+  ],
+  "level": "medium",
+  "q": "Why is creating a new thread usually cheaper than creating a new process?",
+  "options": [
+   "A thread is created without involving the kernel at all",
+   "A new process must copy every byte of the parent's memory before it can run",
+   "It joins an existing address space and needs only a stack and registers",
+   "Threads are always placed on a core that is already idle"
+  ],
+  "answer": 2,
+  "why": "A process needs its own address space, page tables and resource tables. A thread joins an address space that already exists, so the OS only sets up a stack and an execution context.",
+  "wrong": [
+   "OS threads are created through a system call; the saving is in what the kernel has to build.",
+   "Modern fork shares pages copy-on-write, so it does not copy everything up front. It is still more work than a thread.",
+   null,
+   "Creation cost has nothing to do with core placement; the scheduler decides that later."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למה יצירת thread חדש בדרך כלל זולה יותר מיצירת process חדש?",
+   "options": [
+    "thread נוצר בלי מעורבות של ה-kernel בכלל",
+    "process חדש חייב להעתיק כל byte מהזיכרון של ה-parent לפני שהוא יכול לרוץ",
+    "הוא מצטרף למרחב כתובות קיים וצריך רק stack ו-registers",
+    "threads תמיד ממוקמים על core שכבר פנוי"
+   ],
+   "why": "process צריך מרחב כתובות משלו, page tables וטבלאות משאבים. thread מצטרף למרחב כתובות שכבר קיים, ולכן מערכת ההפעלה רק מקימה stack והקשר ריצה.",
+   "wrong": [
+    "threads של מערכת ההפעלה נוצרים דרך system call. החיסכון הוא במה שה-kernel צריך לבנות.",
+    "fork מודרני משתף pages בשיטת copy-on-write, ולכן הוא לא מעתיק הכול מראש. זו עדיין עבודה רבה יותר מ-thread.",
+    null,
+    "עלות היצירה לא קשורה למיקום על core. ה-scheduler מחליט על זה אחר כך."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-plugins-in-processes",
+  "topic": "operating-systems",
+  "subtopic": "process-thread",
+  "concepts": [
+   "process",
+   "isolation",
+   "crash-scope",
+   "fault-containment"
+  ],
+  "level": "easy",
+  "q": "Your app runs plugins written by third parties, in C. A buggy plugin must not be able to crash or corrupt the app. What should each plugin run in?",
+  "options": [
+   "A separate process, talking to the app through IPC",
+   "A thread, so it can share the app's data without copying",
+   "A thread, because a crash in a thread stays inside that thread",
+   "The main thread, wrapped in a try/catch around each plugin call"
+  ],
+  "answer": 0,
+  "why": "A separate process has its own address space, so a bad pointer in the plugin can only damage the plugin's memory, and if it crashes the app keeps running. The price is slower communication through IPC.",
+  "wrong": [
+   null,
+   "Sharing memory is exactly the danger: a buggy plugin could overwrite the app's data.",
+   "A segfault in any thread ends the whole process, the app included.",
+   "try/catch handles exceptions, not memory faults or silent corruption from a bad pointer."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "האפליקציה מריצה plugins שנכתבו ב-C על ידי צד שלישי. אסור ש-plugin עם bug יוכל להקריס את האפליקציה או להשחית אותה. במה כל plugin צריך לרוץ?",
+   "options": [
+    "ב-process נפרד, שמתקשר עם האפליקציה דרך IPC",
+    "ב-thread, כדי שיוכל לחלוק את הנתונים של האפליקציה בלי העתקה",
+    "ב-thread, כי קריסה ב-thread נשארת בתוך אותו thread",
+    "ב-main thread, עם try/catch סביב כל קריאה ל-plugin"
+   ],
+   "why": "ל-process נפרד יש מרחב כתובות משלו, ולכן pointer שגוי ב-plugin יכול לפגוע רק בזיכרון של ה-plugin, ואם הוא קורס, האפליקציה ממשיכה לרוץ. המחיר הוא תקשורת איטית יותר דרך IPC.",
+   "wrong": [
+    null,
+    "שיתוף הזיכרון הוא בדיוק הסכנה: plugin עם bug יכול לדרוס את הנתונים של האפליקציה.",
+    "segfault בכל thread שהוא מסיים את כל ה-process, כולל האפליקציה.",
+    "try/catch מטפל ב-exceptions, לא בשגיאות זיכרון או בהשחתה שקטה מ-pointer שגוי."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-threads-for-shared-work",
+  "topic": "operating-systems",
+  "subtopic": "process-thread",
+  "concepts": [
+   "thread",
+   "parallelism",
+   "shared-state"
+  ],
+  "level": "medium",
+  "q": "A C++ app on an 8-core machine must resize 8 large images and put the results into one in-memory gallery. Which approach fits best?",
+  "options": [
+   "8 processes, because threads of one process cannot run on different cores at once",
+   "8 threads: they run in parallel and write into the shared gallery without copying",
+   "One thread, because switching between threads would cost more than it saves",
+   "8 processes, because child processes share the parent's heap automatically"
+  ],
+  "answer": 1,
+  "why": "The work is CPU-heavy and splits into independent parts, and the results end up in one shared structure. Threads run on separate cores in parallel and see the same memory, so nothing has to be copied between processes.",
+  "wrong": [
+   "The OS schedules the threads of one process on all cores at once; a process is not tied to a single core.",
+   null,
+   "With 8 cores and 8 threads, each thread can have a core; there is little switching and an 8x speedup is possible.",
+   "Processes do not share heap memory; results would have to be sent back through IPC."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אפליקציית C++ על מכונה עם 8 cores צריכה לשנות גודל של 8 תמונות גדולות ולשים את התוצאות בגלריה אחת בזיכרון. איזו גישה הכי מתאימה?",
+   "options": [
+    "8 processes, כי threads של process אחד לא יכולים לרוץ על cores שונים בו זמנית",
+    "8 threads: הם רצים במקביל וכותבים לגלריה המשותפת בלי העתקה",
+    "thread אחד, כי מעבר בין threads יעלה יותר ממה שהוא חוסך",
+    "8 processes, כי child processes חולקים אוטומטית את ה-heap של ה-parent"
+   ],
+   "why": "העבודה כבדה על ה-CPU ומתחלקת לחלקים בלתי תלויים, והתוצאות מגיעות למבנה משותף אחד. threads רצים במקביל על cores נפרדים ורואים את אותו זיכרון, ולכן לא צריך להעתיק שום דבר בין processes.",
+   "wrong": [
+    "מערכת ההפעלה מתזמנת את ה-threads של process אחד על כל ה-cores בו זמנית. process לא קשור ל-core יחיד.",
+    null,
+    "עם 8 cores ו-8 threads, לכל thread יכול להיות core משלו. יש מעט החלפות, ו-speedup של פי 8 אפשרי.",
+    "processes לא חולקים זיכרון heap. התוצאות היו צריכות לחזור דרך IPC."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-stack-vs-heap-lifetime",
+  "topic": "operating-systems",
+  "subtopic": "memory",
+  "concepts": [
+   "stack",
+   "heap",
+   "malloc",
+   "memory-leak"
+  ],
+  "level": "easy",
+  "q": "A C function declares a local array int a[100] and also calls malloc for 100 ints. It returns without calling free. What happens to the two blocks of memory?",
+  "options": [
+   "Both are released automatically when the function returns",
+   "The array goes on return; the malloc block stays until free or exit",
+   "The malloc block is released on return; the local array stays until the program ends",
+   "Neither is released until the process exits"
+  ],
+  "answer": 1,
+  "why": "Locals live in the function's stack frame, which is popped on return. Heap memory from malloc has no owner frame: it stays allocated until free is called, and if the pointer is lost it leaks until the process ends.",
+  "wrong": [
+   "Only stack memory follows function scope. The heap block outlives the pointer variable that held it.",
+   null,
+   "That is reversed: the stack frame is popped, while the heap block remains.",
+   "The stack frame is reused as soon as the function returns, so the local array is gone at once."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/vm-api.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "function ב-C מגדירה array מקומי int a[100] וגם קוראת ל-malloc עבור 100 ints. היא חוזרת בלי לקרוא ל-free. מה קורה לשני בלוקי הזיכרון?",
+   "options": [
+    "שניהם משתחררים אוטומטית כשה-function חוזרת",
+    "ה-array נעלם כשה-function חוזרת; בלוק ה-malloc נשאר עד free או exit",
+    "בלוק ה-malloc משתחרר כשה-function חוזרת; ה-array המקומי נשאר עד סוף התוכנית",
+    "אף אחד מהם לא משתחרר עד שה-process מסתיים"
+   ],
+   "why": "משתנים מקומיים חיים ב-stack frame של ה-function, שמוסר כשהיא חוזרת. לזיכרון heap מ-malloc אין frame שהוא הבעלים שלו: הוא נשאר מוקצה עד שקוראים ל-free, ואם ה-pointer אבד, הוא דולף עד שה-process מסתיים.",
+   "wrong": [
+    "רק זיכרון stack תלוי ב-scope של ה-function. בלוק ה-heap חי יותר מהמשתנה מסוג pointer שהחזיק אותו.",
+    null,
+    "זה הפוך: ה-stack frame מוסר, ובלוק ה-heap נשאר.",
+    "ה-stack frame חוזר לשימוש ברגע שה-function חוזרת, ולכן ה-array המקומי נעלם מיד."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-virtual-memory-purpose",
+  "topic": "operating-systems",
+  "subtopic": "memory",
+  "concepts": [
+   "virtual-memory",
+   "address-space",
+   "isolation"
+  ],
+  "level": "easy",
+  "q": "What is the main purpose of virtual memory?",
+  "options": [
+   "To give each process its own private address space",
+   "To make memory access faster than reading RAM directly",
+   "It is a file on disk that is used instead of RAM once RAM is full",
+   "To let several processes write into each other's variables more easily"
+  ],
+  "answer": 0,
+  "why": "With virtual memory every process sees its own address space. The OS and hardware translate those addresses to physical memory, which isolates processes from each other and lets the OS place, share or move pages to disk freely.",
+  "wrong": [
+   null,
+   "Translation adds work to each access; speed comes from caches, not from virtual memory.",
+   "That describes swap space, one thing virtual memory makes possible, not virtual memory itself.",
+   "The opposite: separate address spaces stop processes from touching each other's memory."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/vm-intro.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מה המטרה העיקרית של virtual memory?",
+   "options": [
+    "לתת לכל process מרחב כתובות פרטי משלו",
+    "להפוך גישה לזיכרון למהירה יותר מקריאה ישירה מה-RAM",
+    "זה קובץ בדיסק שמשמש במקום RAM ברגע שה-RAM מתמלא",
+    "לאפשר לכמה processes לכתוב למשתנים אחד של השני בקלות רבה יותר"
+   ],
+   "why": "עם virtual memory כל process רואה מרחב כתובות משלו. מערכת ההפעלה והחומרה מתרגמות את הכתובות האלה לזיכרון פיזי, וזה מבודד processes זה מזה ומאפשר למערכת ההפעלה למקם pages, לשתף אותם או להעביר אותם לדיסק בחופשיות.",
+   "wrong": [
+    null,
+    "התרגום מוסיף עבודה לכל גישה. המהירות מגיעה מ-caches, לא מ-virtual memory.",
+    "זה מתאר swap space, דבר אחד ש-virtual memory מאפשר, לא את ה-virtual memory עצמו.",
+    "ההפך: מרחבי כתובות נפרדים מונעים מ-processes לגעת בזיכרון אחד של השני."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-same-address-different-value",
+  "topic": "operating-systems",
+  "subtopic": "memory",
+  "concepts": [
+   "virtual-memory",
+   "address-space",
+   "fork"
+  ],
+  "level": "hard",
+  "q": "After fork, the child sets x to 2 and the parent keeps 1. Each prints x and its address; the child prints first. What do the two lines show?",
+  "code": "#include <stdio.h>\n#include <unistd.h>\n#include <sys/wait.h>\nint x = 1;\nint main(void) {\n    if (fork() == 0) x = 2;\n    else wait(NULL);\n    printf(\"%d %p\\n\", x, (void *)&x);\n    return 0;\n}",
+  "lang": "c",
+  "options": [
+   "Two different addresses, because two processes cannot use the same address",
+   "The same address and the value 2 on both lines",
+   "The same address, with 2 in the child's line and 1 in the parent's",
+   "Only one line, because the parent is still blocked in wait() when the child exits"
+  ],
+  "answer": 2,
+  "why": "Addresses a program sees are virtual. After fork both processes use the same virtual address for x, but each address space maps it to its own physical memory, so the values differ.",
+  "wrong": [
+   "Each process has its own address space, so the same virtual address can exist in both.",
+   "Equal addresses do not mean shared memory here; each process translates the address to its own page.",
+   null,
+   "wait() returns once the child exits, and then the parent prints its own line."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/vm-intro.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אחרי fork, ה-child מציב 2 ב-x וה-parent נשאר עם 1. כל אחד מדפיס את x ואת הכתובת שלו, וה-child מדפיס ראשון. מה מראות שתי השורות?",
+   "options": [
+    "שתי כתובות שונות, כי שני processes לא יכולים להשתמש באותה כתובת",
+    "אותה כתובת, והערך 2 בשתי השורות",
+    "אותה כתובת, עם 2 בשורה של ה-child ו-1 בשורה של ה-parent",
+    "רק שורה אחת, כי ה-parent עדיין חסום ב-wait() כשה-child יוצא"
+   ],
+   "why": "הכתובות שתוכנית רואה הן וירטואליות. אחרי fork שני ה-processes משתמשים באותה כתובת וירטואלית עבור x, אבל כל מרחב כתובות ממפה אותה לזיכרון פיזי משלו, ולכן הערכים שונים.",
+   "wrong": [
+    "לכל process יש מרחב כתובות משלו, ולכן אותה כתובת וירטואלית יכולה להתקיים בשניהם.",
+    "כתובות שוות לא אומרות כאן זיכרון משותף: כל process מתרגם את הכתובת ל-page משלו.",
+    null,
+    "wait() חוזרת ברגע שה-child יוצא, ואז ה-parent מדפיס את השורה שלו."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-why-paging",
+  "topic": "operating-systems",
+  "subtopic": "memory",
+  "concepts": [
+   "paging",
+   "fragmentation",
+   "virtual-memory"
+  ],
+  "level": "medium",
+  "q": "Why does the OS give memory to processes in fixed-size pages rather than as one contiguous block per process?",
+  "options": [
+   "Pages can sit in any free frames, so no process needs one large free gap",
+   "Reading memory in whole pages is faster than reading it one byte at a time",
+   "Pages let the compiler choose where in physical RAM each variable will live",
+   "Without pages a program could never use more than one megabyte of memory"
+  ],
+  "answer": 0,
+  "why": "With pages, a process's memory can be scattered across any free frames, and the page table hides that. Contiguous blocks leave holes between processes that may be too small for the next request.",
+  "wrong": [
+   null,
+   "Paging is about how memory is mapped, not a faster way to read it; each access still goes byte or word at a time.",
+   "The compiler only sees virtual addresses. The OS decides the physical frames at run time.",
+   "Contiguous allocation can hand out large blocks too; it just fragments over time."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למה מערכת ההפעלה נותנת זיכרון ל-processes ב-pages בגודל קבוע ולא כבלוק רציף אחד לכל process?",
+   "options": [
+    "pages יכולים לשבת בכל frames פנויים, כך שאף process לא צריך רווח פנוי גדול אחד",
+    "קריאת זיכרון ב-pages שלמים מהירה יותר מקריאה byte אחרי byte",
+    "pages מאפשרים ל-compiler לבחור איפה ב-RAM הפיזי כל משתנה יישב",
+    "בלי pages תוכנית לעולם לא הייתה יכולה להשתמש ביותר מ-1 MB של זיכרון"
+   ],
+   "why": "עם pages, הזיכרון של process יכול להיות מפוזר על פני frames פנויים כלשהם, וה-page table מסתיר את זה. בלוקים רציפים משאירים חורים בין processes, שעלולים להיות קטנים מדי לבקשה הבאה.",
+   "wrong": [
+    null,
+    "paging עוסק באופן שבו הזיכרון ממופה, הוא לא דרך מהירה יותר לקרוא אותו. כל גישה עדיין קוראת byte או מילה בכל פעם.",
+    "ה-compiler רואה רק כתובות וירטואליות. מערכת ההפעלה מחליטה על ה-frames הפיזיים ב-runtime.",
+    "הקצאה רציפה יכולה לתת גם בלוקים גדולים. היא פשוט סובלת מ-fragmentation עם הזמן."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-page-fault-from-disk",
+  "topic": "operating-systems",
+  "subtopic": "memory",
+  "concepts": [
+   "page-fault",
+   "paging",
+   "swap"
+  ],
+  "level": "medium",
+  "q": "Under memory pressure, the OS moved part of a program's array to disk. Later the program reads that part of the array. What happens?",
+  "options": [
+   "The program crashes with a segmentation fault",
+   "The read returns an error code, and the program has to reload the data itself",
+   "The CPU reads the value straight from the disk without bringing it into RAM",
+   "A page fault: the kernel loads the page into RAM, then the read runs again"
+  ],
+  "answer": 3,
+  "why": "The page table marks the page as not present, so the access traps into the kernel. The kernel reads the page from disk into a free frame, fixes the mapping and resumes the program at the same instruction. The program only sees a delay.",
+  "wrong": [
+   "A segfault is for addresses the program has no right to use. This page is valid, just not in RAM.",
+   "Paging is invisible to the program; a plain memory read has no error code to return.",
+   "The CPU can only work on data in RAM; the page must be loaded first.",
+   null
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "תחת לחץ זיכרון, מערכת ההפעלה העבירה חלק מה-array של תוכנית לדיסק. מאוחר יותר התוכנית קוראת את החלק הזה של ה-array. מה קורה?",
+   "options": [
+    "התוכנית קורסת עם segmentation fault",
+    "הקריאה מחזירה קוד שגיאה, והתוכנית צריכה לטעון את הנתונים מחדש בעצמה",
+    "ה-CPU קורא את הערך ישר מהדיסק בלי להביא אותו ל-RAM",
+    "page fault: ה-kernel טוען את ה-page ל-RAM, ואז הקריאה רצה שוב"
+   ],
+   "why": "ה-page table מסמן את ה-page כלא נוכח, ולכן הגישה גורמת ל-trap אל ה-kernel. ה-kernel קורא את ה-page מהדיסק ל-frame פנוי, מתקן את המיפוי וממשיך את התוכנית מאותה פקודה. התוכנית רואה רק עיכוב.",
+   "wrong": [
+    "segfault מיועד לכתובות שלתוכנית אין זכות להשתמש בהן. ה-page הזה תקין, הוא פשוט לא ב-RAM.",
+    "paging שקוף לתוכנית: לקריאה רגילה מהזיכרון אין קוד שגיאה להחזיר.",
+    "ה-CPU יכול לעבוד רק על נתונים שנמצאים ב-RAM, ולכן צריך לטעון את ה-page קודם.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-page-fault-is-normal",
+  "topic": "operating-systems",
+  "subtopic": "memory",
+  "concepts": [
+   "page-fault",
+   "segfault",
+   "demand-paging"
+  ],
+  "level": "medium",
+  "q": "A teammate sees thousands of page faults per second in a healthy service and says it must be full of memory bugs. What is the best reply?",
+  "options": [
+   "Right: every page fault is an access to an invalid address",
+   "Page faults only happen when RAM is full, so the machine needs more memory",
+   "They are normal; only a forbidden address turns into a segfault",
+   "Page faults mean a RAM chip is failing and should be replaced"
+  ],
+  "answer": 2,
+  "why": "The OS loads pages lazily: on first touch of new heap, stack or code, and for pages that were swapped out. Each of those is a page fault the kernel handles silently. Only an access to an unmapped or forbidden address turns into a crash.",
+  "wrong": [
+   "Most page faults are valid accesses to pages that just are not mapped in yet.",
+   "First-touch faults happen even with plenty of free RAM, because pages are set up on demand.",
+   null,
+   "A page fault is a normal software event, not a hardware error report."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חבר צוות רואה אלפי page faults בשנייה בשירות תקין ואומר שהוא בטח מלא bugs של זיכרון. מה התשובה הכי טובה?",
+   "options": [
+    "נכון: כל page fault הוא גישה לכתובת לא חוקית",
+    "page faults קורים רק כשה-RAM מלא, ולכן המכונה צריכה יותר זיכרון",
+    "הם נורמליים: רק כתובת אסורה הופכת ל-segfault",
+    "page faults אומרים ששבב RAM מתקלקל וצריך להחליף אותו"
+   ],
+   "why": "מערכת ההפעלה טוענת pages באופן lazy: בנגיעה הראשונה ב-heap, stack או קוד חדשים, וגם עבור pages שהועברו ל-swap. כל אחד מאלה הוא page fault שה-kernel מטפל בו בשקט. רק גישה לכתובת לא ממופה או אסורה הופכת לקריסה.",
+   "wrong": [
+    "רוב ה-page faults הם גישות תקינות ל-pages שפשוט עוד לא מופו.",
+    "faults של נגיעה ראשונה קורים גם כשיש הרבה RAM פנוי, כי pages מוקמים לפי דרישה.",
+    null,
+    "page fault הוא אירוע תוכנה רגיל, לא דיווח על תקלת חומרה."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-deep-recursion-overflow",
+  "topic": "operating-systems",
+  "subtopic": "memory",
+  "concepts": [
+   "stack",
+   "stack-overflow",
+   "recursion"
+  ],
+  "level": "easy",
+  "q": "A recursive C function, built without optimizations, has a bug: for some input it never reaches its base case. What eventually happens?",
+  "options": [
+   "It runs forever, because function calls do not use memory",
+   "The heap fills up, because each call frame is allocated with malloc",
+   "The OS keeps growing the stack into all free RAM, so the program slows down but never stops",
+   "Each call adds a stack frame; the stack hits its size limit and the program crashes"
+  ],
+  "answer": 3,
+  "why": "Every call pushes a frame holding locals and the return address. A thread's stack has a maximum size, so unbounded recursion runs past it, touches a guard area and the program is killed with a stack overflow. (An optimizing compiler may turn some recursion into a loop, which is why the build matters.)",
+  "wrong": [
+   "Each call needs a frame for its locals and return address, so memory use grows with depth.",
+   "Call frames live on the stack, not the heap; malloc is not involved.",
+   "The stack size is capped (by default often 8 MB for the main thread on Linux), so the crash comes long before RAM runs out.",
+   null
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/vm-intro.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ל-function רקורסיבית ב-C, שעברה compile בלי אופטימיזציות, יש bug: עבור קלט מסוים היא אף פעם לא מגיעה ל-base case. מה קורה בסוף?",
+   "options": [
+    "היא רצה לנצח, כי קריאות ל-functions לא משתמשות בזיכרון",
+    "ה-heap מתמלא, כי כל call frame מוקצה עם malloc",
+    "מערכת ההפעלה ממשיכה להגדיל את ה-stack לתוך כל ה-RAM הפנוי, כך שהתוכנית מאטה אבל אף פעם לא נעצרת",
+    "כל קריאה מוסיפה stack frame; ה-stack מגיע למגבלת הגודל שלו והתוכנית קורסת"
+   ],
+   "why": "כל קריאה דוחפת frame שמחזיק משתנים מקומיים ואת כתובת החזרה. ל-stack של thread יש גודל מקסימלי, ולכן רקורסיה בלי גבול עוברת אותו, נוגעת באזור ה-guard, והתוכנית נהרגת עם stack overflow. (compiler עם אופטימיזציות עשוי להפוך חלק מהרקורסיה ללולאה, ולכן אופן ה-build חשוב.)",
+   "wrong": [
+    "כל קריאה צריכה frame למשתנים המקומיים ולכתובת החזרה שלה, ולכן השימוש בזיכרון גדל עם העומק.",
+    "call frames חיים על ה-stack, לא על ה-heap. malloc לא מעורב.",
+    "גודל ה-stack מוגבל (ב-Linux ברירת המחדל ל-main thread היא לרוב 8 MB), ולכן הקריסה מגיעה הרבה לפני שה-RAM נגמר.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-large-local-array",
+  "topic": "operating-systems",
+  "subtopic": "memory",
+  "concepts": [
+   "stack",
+   "heap",
+   "stack-overflow",
+   "malloc"
+  ],
+  "level": "medium",
+  "q": "In C, a function with a local array int buf[10000000] (about 40 MB) crashes as soon as it is called, but malloc of 40 MB works. Why?",
+  "options": [
+   "Local arrays are zeroed first, and that takes so long the OS kills the program",
+   "The stack has a small default size limit, while the heap can grow far larger",
+   "The stack lives in the CPU cache, which only holds a few megabytes",
+   "An array larger than one page cannot be placed on the stack"
+  ],
+  "answer": 1,
+  "why": "A thread's stack is limited to a few megabytes by default (commonly 8 MB on Linux, 1 MB on Windows; configurable, but small). A 40 MB local overruns it at once. The heap is limited only by available memory, so large buffers belong there.",
+  "wrong": [
+   "C does not zero local arrays, and slowness would not cause a crash.",
+   null,
+   "The stack is ordinary memory in RAM; caches hold copies of any memory, stack or heap.",
+   "Stack frames can span many pages; the problem is the total stack limit, not page size."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/vm-api.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "ב-C, function עם array מקומי int buf[10000000] (בערך 40 MB) קורסת מיד כשקוראים לה, אבל malloc של 40 MB עובד. למה?",
+   "options": [
+    "arrays מקומיים מאופסים קודם, וזה לוקח כל כך הרבה זמן שמערכת ההפעלה הורגת את התוכנית",
+    "ל-stack יש מגבלת גודל ברירת מחדל קטנה, בעוד שה-heap יכול לגדול הרבה יותר",
+    "ה-stack נמצא ב-cache של ה-CPU, שמחזיק רק כמה MB",
+    "array גדול מ-page אחד לא יכול להיות ממוקם על ה-stack"
+   ],
+   "why": "ה-stack של thread מוגבל כברירת מחדל לכמה MB (לרוב 8 MB ב-Linux ו-1 MB ב-Windows; אפשר לשנות את זה, אבל הוא קטן). משתנה מקומי של 40 MB חורג ממנו מיד. ה-heap מוגבל רק בזיכרון הזמין, ולכן buffers גדולים שייכים לשם.",
+   "wrong": [
+    "C לא מאפסת arrays מקומיים, ואיטיות לא הייתה גורמת לקריסה.",
+    null,
+    "ה-stack הוא זיכרון רגיל ב-RAM. caches מחזיקים עותקים של כל זיכרון, stack או heap.",
+    "stack frames יכולים להשתרע על פני הרבה pages. הבעיה היא מגבלת ה-stack הכוללת, לא גודל ה-page."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-what-is-context-switch",
+  "topic": "operating-systems",
+  "subtopic": "context-switch",
+  "concepts": [
+   "context-switch",
+   "registers",
+   "scheduling"
+  ],
+  "level": "easy",
+  "q": "What does the OS actually do during a context switch from thread A to thread B?",
+  "options": [
+   "Saves A's registers and program counter, then loads B's saved ones",
+   "Writes all of A's memory to disk so B can use the RAM",
+   "Restarts B from the beginning of its code",
+   "Moves A to a different CPU core so that B can run on this core instead"
+  ],
+  "answer": 0,
+  "why": "The CPU only holds one execution state at a time. The kernel stores A's registers, program counter and stack pointer, then restores B's, so B continues exactly where it stopped.",
+  "wrong": [
+   null,
+   "That is swapping, which is a separate and much rarer event; A's memory stays in RAM.",
+   "B resumes from its saved program counter, not from the start.",
+   "Moving a thread to another core is a scheduling choice, not what a switch does."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מה מערכת ההפעלה עושה בפועל במהלך context switch מ-thread A ל-thread B?",
+   "options": [
+    "שומרת את ה-registers וה-program counter של A, ואז טוענת את אלה ששמורים של B",
+    "כותבת את כל הזיכרון של A לדיסק כדי ש-B יוכל להשתמש ב-RAM",
+    "מפעילה את B מחדש מתחילת הקוד שלו",
+    "מעבירה את A ל-core אחר כדי ש-B יוכל לרוץ על ה-core הזה במקומו"
+   ],
+   "why": "ה-CPU מחזיק רק מצב ריצה אחד בכל פעם. ה-kernel שומר את ה-registers, ה-program counter וה-stack pointer של A, ואז משחזר את אלה של B, כך ש-B ממשיך בדיוק מהמקום שבו הוא עצר.",
+   "wrong": [
+    null,
+    "זה swapping, אירוע נפרד ונדיר הרבה יותר. הזיכרון של A נשאר ב-RAM.",
+    "B ממשיך מה-program counter השמור שלו, לא מההתחלה.",
+    "העברת thread ל-core אחר היא החלטת תזמון, לא מה ש-switch עושה."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-context-switch-hidden-cost",
+  "topic": "operating-systems",
+  "subtopic": "context-switch",
+  "concepts": [
+   "context-switch",
+   "cache",
+   "overhead"
+  ],
+  "level": "medium",
+  "q": "Saving and loading registers takes only a few hundred instructions, yet context switches are considered expensive. What is the main hidden cost?",
+  "options": [
+   "The kernel must reload the next program from its executable file",
+   "All open files of the old task are flushed to disk",
+   "Caches hold the old task's data, so the new one starts slowly",
+   "The CPU must reset itself before running a different task"
+  ],
+  "answer": 2,
+  "why": "After a switch, the data the new task needs is often not in the caches, which are full of the previous task's data. It runs with many cache misses for a while. A switch between processes also changes the memory mapping, which adds more of these misses.",
+  "wrong": [
+   "The program is already in memory; only its saved state is restored.",
+   "A context switch does not touch files; open files stay as they are.",
+   null,
+   "No reset happens; the kernel just swaps the execution state."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שמירה וטעינה של registers לוקחות רק כמה מאות פקודות, ובכל זאת context switches נחשבים יקרים. מה העלות הנסתרת העיקרית?",
+   "options": [
+    "ה-kernel צריך לטעון מחדש את התוכנית הבאה מקובץ ההרצה שלה",
+    "כל הקבצים הפתוחים של המשימה הקודמת נכתבים לדיסק",
+    "ה-caches מחזיקים את הנתונים של המשימה הקודמת, ולכן החדשה מתחילה לאט",
+    "ה-CPU חייב לאפס את עצמו לפני שהוא מריץ משימה אחרת"
+   ],
+   "why": "אחרי switch, הנתונים שהמשימה החדשה צריכה לרוב לא נמצאים ב-caches, שמלאים בנתונים של המשימה הקודמת. היא רצה עם הרבה cache misses לזמן מה. switch בין processes גם משנה את מיפוי הזיכרון, וזה מוסיף עוד misses כאלה.",
+   "wrong": [
+    "התוכנית כבר בזיכרון. רק המצב השמור שלה משוחזר.",
+    "context switch לא נוגע בקבצים. קבצים פתוחים נשארים כמו שהם.",
+    null,
+    "שום איפוס לא קורה. ה-kernel רק מחליף את מצב הריצה."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-thread-switch-cheaper",
+  "topic": "operating-systems",
+  "subtopic": "context-switch",
+  "concepts": [
+   "context-switch",
+   "thread",
+   "process",
+   "address-space"
+  ],
+  "level": "medium",
+  "q": "Which context switch is usually cheaper, and why?",
+  "options": [
+   "Two processes: a thread switch must synchronize the threads first",
+   "Two threads of one process: the memory mapping stays the same",
+   "Same cost either way: only registers are saved in both cases",
+   "Two processes: a thread switch must also copy the shared heap"
+  ],
+  "answer": 1,
+  "why": "Threads of one process share an address space, so a switch between them leaves the memory mapping and much of the cached data valid. A process switch must also install a new address space, and the new process finds little of its data in the caches.",
+  "wrong": [
+   "A switch does not need synchronization between the threads; the kernel just saves one state and loads another.",
+   null,
+   "A process switch also changes the address space, which costs more than saving registers.",
+   "Shared memory is not copied on any switch; threads already see the same heap."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "איזה context switch בדרך כלל זול יותר, ולמה?",
+   "options": [
+    "בין שני processes: switch בין threads חייב קודם לסנכרן את ה-threads",
+    "בין שני threads של אותו process: מיפוי הזיכרון נשאר אותו דבר",
+    "אותה עלות בשני המקרים: בשניהם נשמרים רק registers",
+    "בין שני processes: switch בין threads חייב גם להעתיק את ה-heap המשותף"
+   ],
+   "why": "threads של אותו process חולקים מרחב כתובות, ולכן switch ביניהם משאיר את מיפוי הזיכרון ואת רוב הנתונים שב-cache בתוקף. switch בין processes חייב גם להתקין מרחב כתובות חדש, וה-process החדש מוצא מעט מהנתונים שלו ב-caches.",
+   "wrong": [
+    "switch לא דורש סנכרון בין ה-threads. ה-kernel רק שומר מצב אחד וטוען אחר.",
+    null,
+    "switch בין processes גם משנה את מרחב הכתובות, וזה עולה יותר משמירת registers.",
+    "זיכרון משותף לא מועתק באף switch. threads כבר רואים את אותו heap."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-too-many-threads",
+  "topic": "operating-systems",
+  "subtopic": "context-switch",
+  "concepts": [
+   "context-switch",
+   "cpu-bound",
+   "overhead",
+   "parallelism"
+  ],
+  "level": "hard",
+  "q": "A CPU-bound job on a 4-core machine is split into 2000 threads instead of 4. It finishes noticeably slower. What is the most likely reason?",
+  "options": [
+   "Only 4 run at once; the rest just add switches and cache misses",
+   "The OS runs threads strictly in creation order, so the later ones wait",
+   "Each thread receives a smaller share of RAM, so the work spills to disk",
+   "This cannot happen: more threads always means more work done in parallel"
+  ],
+  "answer": 0,
+  "why": "With 4 cores, at most 4 CPU-bound threads make progress at once. The other 1996 add context switches and push each other's data out of the caches, so more time goes to overhead and less to the work.",
+  "wrong": [
+   null,
+   "Schedulers share the CPU among ready threads by time slices, not by creation order.",
+   "RAM is not split per thread. Each extra thread costs only a stack, not a share of memory.",
+   "Parallelism is capped by the cores. Past that, extra CPU-bound threads only add overhead."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "משימה CPU-bound על מכונה עם 4 cores מפוצלת ל-2000 threads במקום ל-4. היא מסתיימת לאט יותר באופן מורגש. מה הסיבה הסבירה ביותר?",
+   "options": [
+    "רק 4 רצים בו זמנית; השאר רק מוסיפים switches ו-cache misses",
+    "מערכת ההפעלה מריצה threads בדיוק לפי סדר היצירה, ולכן המאוחרים מחכים",
+    "כל thread מקבל נתח קטן יותר של RAM, ולכן העבודה גולשת לדיסק",
+    "זה לא יכול לקרות: יותר threads תמיד אומר יותר עבודה במקביל"
+   ],
+   "why": "עם 4 cores, לכל היותר 4 threads שהם CPU-bound מתקדמים בו זמנית. 1996 האחרים מוסיפים context switches ודוחפים זה את הנתונים של זה החוצה מה-caches, ולכן יותר זמן הולך על תקורה ופחות על העבודה.",
+   "wrong": [
+    null,
+    "schedulers מחלקים את ה-CPU בין threads מוכנים לפי time slices, לא לפי סדר היצירה.",
+    "ה-RAM לא מחולק לפי threads. כל thread נוסף עולה רק stack, לא נתח מהזיכרון.",
+    "המקביליות מוגבלת במספר ה-cores. מעבר לזה, threads נוספים שהם CPU-bound רק מוסיפים תקורה."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-user-mode-no-hardware",
+  "topic": "operating-systems",
+  "subtopic": "kernel-user",
+  "concepts": [
+   "user-mode",
+   "kernel-mode",
+   "protection"
+  ],
+  "level": "easy",
+  "q": "Why can't a normal application send commands directly to the disk controller?",
+  "options": [
+   "It runs in user mode, where the CPU blocks direct device access",
+   "Disks are too slow to be controlled directly by application code",
+   "Only programs written in assembly can reach the hardware",
+   "The compiler strips out any instruction that touches hardware"
+  ],
+  "answer": 0,
+  "why": "The CPU has privilege levels. Apps run in user mode, so the hardware refuses device and privileged operations from them. They must ask the kernel through a system call, which checks permissions and protects other programs' data.",
+  "wrong": [
+   null,
+   "Speed is not the reason; the restriction is about protection.",
+   "Assembly code in user mode faces the same CPU checks; the language does not matter.",
+   "The compiler can emit such instructions; the CPU traps them at run time in user mode."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "למה אפליקציה רגילה לא יכולה לשלוח פקודות ישירות לבקר הדיסק?",
+   "options": [
+    "היא רצה ב-user mode, שבו ה-CPU חוסם גישה ישירה להתקנים",
+    "דיסקים איטיים מדי כדי שקוד של אפליקציה ישלוט בהם ישירות",
+    "רק תוכניות שנכתבו ב-assembly יכולות להגיע לחומרה",
+    "ה-compiler מסיר כל פקודה שנוגעת בחומרה"
+   ],
+   "why": "ל-CPU יש רמות הרשאה. אפליקציות רצות ב-user mode, ולכן החומרה מסרבת לבצע עבורן פעולות על התקנים ופעולות מורשות. הן חייבות לבקש מה-kernel דרך system call, שבודק הרשאות ומגן על הנתונים של תוכניות אחרות.",
+   "wrong": [
+    null,
+    "המהירות היא לא הסיבה. ההגבלה נועדה להגנה.",
+    "קוד assembly ב-user mode נתקל באותן בדיקות של ה-CPU. השפה לא משנה.",
+    "ה-compiler יכול לייצר פקודות כאלה. ה-CPU עושה להן trap ב-runtime כשהן רצות ב-user mode."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-which-needs-syscall",
+  "topic": "operating-systems",
+  "subtopic": "kernel-user",
+  "concepts": [
+   "system-call",
+   "user-mode",
+   "library-call"
+  ],
+  "level": "easy",
+  "q": "Which of these operations needs a system call?",
+  "options": [
+   "Sorting an array that is already in memory",
+   "Computing the length of a string with strlen",
+   "Adding two integers in a tight loop",
+   "Fetching 4 KB of a file from the disk"
+  ],
+  "answer": 3,
+  "why": "A file lives on a device that only the kernel may touch, so reading it requires asking the kernel. The other three work only on the process's own memory and run entirely in user mode.",
+  "wrong": [
+   "Sorting reads and writes the process's own memory, which needs no kernel help.",
+   "strlen is a library function that runs in user space; being in the C library does not make it a system call.",
+   "Arithmetic is ordinary CPU work in user mode.",
+   null
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "איזו מהפעולות האלה צריכה system call?",
+   "options": [
+    "מיון של array שכבר נמצא בזיכרון",
+    "חישוב האורך של מחרוזת עם strlen",
+    "חיבור של שני מספרים שלמים בלולאה צפופה",
+    "טעינה של 4 KB מקובץ בדיסק"
+   ],
+   "why": "קובץ נמצא על התקן שרק ה-kernel רשאי לגעת בו, ולכן קריאה שלו דורשת בקשה מה-kernel. שלוש האחרות עובדות רק על הזיכרון של ה-process עצמו ורצות כולן ב-user mode.",
+   "wrong": [
+    "מיון קורא וכותב לזיכרון של ה-process עצמו, וזה לא דורש עזרה מה-kernel.",
+    "strlen היא function של ספרייה שרצה ב-user space. העובדה שהיא בספריית C לא הופכת אותה ל-system call.",
+    "חשבון הוא עבודת CPU רגילה ב-user mode.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-what-happens-on-syscall",
+  "topic": "operating-systems",
+  "subtopic": "kernel-user",
+  "concepts": [
+   "system-call",
+   "trap",
+   "kernel-mode"
+  ],
+  "level": "medium",
+  "q": "A program calls read() on a file. Which sequence best describes what happens?",
+  "options": [
+   "The program jumps straight into the kernel's read code, like any normal function call",
+   "A trap enters kernel mode; the kernel checks, reads, and returns to user mode",
+   "The kernel copies the program into kernel memory and runs it there until read() finishes",
+   "The program switches into kernel mode and stays there for the rest of its run"
+  ],
+  "answer": 1,
+  "why": "The library places the arguments in registers and executes a trap instruction. The CPU switches to kernel mode and enters the kernel at a fixed, trusted entry point. The kernel validates the arguments, does the work, and returns to user mode at the next instruction.",
+  "wrong": [
+   "A normal call cannot raise privilege; the trap is what enters the kernel at a safe, fixed point.",
+   null,
+   "Only the request crosses over; the program itself stays in its own memory.",
+   "The CPU returns to user mode as soon as the system call is done."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "תוכנית קוראת ל-read() על קובץ. איזה רצף מתאר הכי טוב את מה שקורה?",
+   "options": [
+    "התוכנית קופצת ישר לקוד ה-read של ה-kernel, כמו בכל קריאה רגילה ל-function",
+    "trap נכנס ל-kernel mode; ה-kernel בודק, קורא, וחוזר ל-user mode",
+    "ה-kernel מעתיק את התוכנית לזיכרון ה-kernel ומריץ אותה שם עד ש-read() מסתיימת",
+    "התוכנית עוברת ל-kernel mode ונשארת בו עד סוף הריצה שלה"
+   ],
+   "why": "הספרייה שמה את הארגומנטים ב-registers ומבצעת פקודת trap. ה-CPU עובר ל-kernel mode ונכנס ל-kernel בנקודת כניסה קבועה ומהימנה. ה-kernel מאמת את הארגומנטים, עושה את העבודה, וחוזר ל-user mode בפקודה הבאה.",
+   "wrong": [
+    "קריאה רגילה לא יכולה להעלות הרשאות. ה-trap הוא מה שנכנס ל-kernel בנקודה בטוחה וקבועה.",
+    null,
+    "רק הבקשה עוברת לצד השני. התוכנית עצמה נשארת בזיכרון שלה.",
+    "ה-CPU חוזר ל-user mode ברגע שה-system call מסתיים."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-syscall-per-byte-cost",
+  "topic": "operating-systems",
+  "subtopic": "kernel-user",
+  "concepts": [
+   "system-call",
+   "overhead",
+   "buffering"
+  ],
+  "level": "medium",
+  "q": "Program A writes a 1 MB file with one write() system call per byte. Program B uses buffered fwrite, which issues a few large write() calls. Why is A much slower?",
+  "options": [
+   "The disk has to spin and write once for every single write() call",
+   "write() is limited to one byte per call, so it needs special handling",
+   "fwrite is compiled to faster machine code than write()",
+   "Each write() is a trip into the kernel, paid a million times"
+  ],
+  "answer": 3,
+  "why": "A system call is far more expensive than a normal function call: a mode switch plus the kernel's checks and bookkeeping. Buffering collects many bytes in user memory and pays that cost a few times instead of a million.",
+  "wrong": [
+   "The kernel caches writes in memory and sends them to the disk later; it is not one disk operation per call.",
+   "write() accepts any number of bytes; A simply chooses to send one at a time.",
+   "fwrite still ends in write() calls. It is faster because it makes far fewer of them.",
+   null
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "תוכנית A כותבת קובץ של 1 MB עם system call אחד של write() לכל byte. תוכנית B משתמשת ב-fwrite עם buffering, שמבצע כמה קריאות write() גדולות. למה A הרבה יותר איטית?",
+   "options": [
+    "הדיסק צריך להסתובב ולכתוב פעם אחת לכל קריאה ל-write()",
+    "write() מוגבלת ל-byte אחד לכל קריאה, ולכן היא דורשת טיפול מיוחד",
+    "fwrite עוברת compile לקוד מכונה מהיר יותר מ-write()",
+    "כל write() היא מעבר אל ה-kernel, שמשלמים עליו מיליון פעמים"
+   ],
+   "why": "system call יקר בהרבה מקריאה רגילה ל-function: מעבר mode, ועוד הבדיקות ועבודת הניהול של ה-kernel. buffering אוסף הרבה bytes בזיכרון של ה-user space ומשלם את המחיר הזה כמה פעמים במקום מיליון.",
+   "wrong": [
+    "ה-kernel שומר כתיבות בזיכרון ושולח אותן לדיסק מאוחר יותר. זו לא פעולת דיסק אחת לכל קריאה.",
+    "write() מקבלת כל מספר של bytes. A פשוט בוחרת לשלוח byte אחד בכל פעם.",
+    "גם fwrite מגיעה בסוף לקריאות write(). היא מהירה יותר כי היא מבצעת הרבה פחות מהן.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-kernel-checks-user-pointer",
+  "topic": "operating-systems",
+  "subtopic": "kernel-user",
+  "concepts": [
+   "system-call",
+   "kernel-mode",
+   "protection"
+  ],
+  "level": "medium",
+  "q": "A buggy program passes an invalid buffer pointer to read(). What does a correct kernel do?",
+  "options": [
+   "Write the data anyway, since kernel mode may access any address",
+   "Ignore the pointer and silently drop the data",
+   "Crash the whole machine, because the kernel touched a bad address",
+   "Check the address and fail the call with an error"
+  ],
+  "answer": 3,
+  "why": "The kernel never trusts values coming from user mode. It checks that the buffer is memory the process is allowed to write, and if not the call fails with an error (EFAULT on Linux). The program is not given a way to make the kernel write over memory it does not own.",
+  "wrong": [
+   "Writing blindly would let a program use the kernel to overwrite memory it does not own.",
+   "The program is told the call failed; silently dropping data would hide the bug.",
+   "Validating user pointers exists so a bad argument cannot take the system down.",
+   null
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "תוכנית עם bug מעבירה ל-read() pointer לא תקין ל-buffer. מה kernel תקין עושה?",
+   "options": [
+    "כותב את הנתונים בכל זאת, כי ב-kernel mode מותר לגשת לכל כתובת",
+    "מתעלם מה-pointer וזורק את הנתונים בשקט",
+    "מקריס את כל המכונה, כי ה-kernel נגע בכתובת לא תקינה",
+    "בודק את הכתובת ומכשיל את הקריאה עם שגיאה"
+   ],
+   "why": "ה-kernel אף פעם לא סומך על ערכים שמגיעים מ-user mode. הוא בודק שה-buffer הוא זיכרון שה-process רשאי לכתוב אליו, ואם לא, הקריאה נכשלת עם שגיאה (EFAULT ב-Linux). לתוכנית אין דרך לגרום ל-kernel לכתוב על זיכרון שלא שייך לה.",
+   "wrong": [
+    "כתיבה עיוורת הייתה מאפשרת לתוכנית להשתמש ב-kernel כדי לדרוס זיכרון שלא שייך לה.",
+    "התוכנית מקבלת הודעה שהקריאה נכשלה. זריקת הנתונים בשקט הייתה מסתירה את ה-bug.",
+    "בדיקת pointers מ-user mode קיימת בדיוק כדי שארגומנט שגוי לא יוכל להפיל את המערכת.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-preemption-infinite-loop",
+  "topic": "operating-systems",
+  "subtopic": "scheduling",
+  "concepts": [
+   "preemptive-scheduling",
+   "timer-interrupt",
+   "time-slice"
+  ],
+  "level": "easy",
+  "q": "A program on a modern desktop OS enters an infinite loop that does no I/O. Other apps stay responsive. What makes this possible?",
+  "options": [
+   "The looping program gives up the CPU on its own at each loop iteration",
+   "A timer interrupt hands the CPU back to the kernel",
+   "The OS detects infinite loops and terminates them",
+   "Every program gets its own dedicated CPU core"
+  ],
+  "answer": 1,
+  "why": "The scheduler is preemptive. A hardware timer interrupts the CPU at regular intervals and enters the kernel, which can then switch to another thread whether or not the looping program cooperates.",
+  "wrong": [
+   "A plain loop never yields. Relying on that is cooperative scheduling, where this loop would freeze others.",
+   null,
+   "The OS cannot tell an infinite loop from a long computation, so it does not try.",
+   "There are usually far more runnable programs than cores; they share them through time slices."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "תוכנית על מערכת הפעלה מודרנית של מחשב שולחני נכנסת ללולאה אינסופית שלא עושה שום I/O. שאר האפליקציות ממשיכות להגיב. מה מאפשר את זה?",
+   "options": [
+    "התוכנית שבלולאה מוותרת על ה-CPU מעצמה בכל איטרציה",
+    "timer interrupt מחזיר את ה-CPU ל-kernel",
+    "מערכת ההפעלה מזהה לולאות אינסופיות ומסיימת אותן",
+    "כל תוכנית מקבלת core ייעודי משלה"
+   ],
+   "why": "ה-scheduler הוא preemptive. טיימר בחומרה מפריע ל-CPU במרווחים קבועים ונכנס ל-kernel, שיכול אז לעבור ל-thread אחר בין אם התוכנית שבלולאה משתפת פעולה ובין אם לא.",
+   "wrong": [
+    "לולאה רגילה אף פעם לא עושה yield. הסתמכות על זה היא cooperative scheduling, שבו הלולאה הזו הייתה מקפיאה את האחרים.",
+    null,
+    "מערכת ההפעלה לא יכולה להבחין בין לולאה אינסופית לחישוב ארוך, ולכן היא לא מנסה.",
+    "בדרך כלל יש הרבה יותר תוכניות שמוכנות לרוץ מאשר cores. הן חולקות אותם באמצעות time slices."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-cooperative-risk",
+  "topic": "operating-systems",
+  "subtopic": "scheduling",
+  "concepts": [
+   "cooperative-scheduling",
+   "preemptive-scheduling",
+   "responsiveness"
+  ],
+  "level": "easy",
+  "q": "In a cooperative system, each task runs until it gives the CPU back by itself. What is the main risk?",
+  "options": [
+   "One task that never yields can freeze every other task",
+   "A task can be interrupted between any two instructions",
+   "Tasks switch far more often than in a preemptive system",
+   "Each task needs its own copy of the kernel"
+  ],
+  "answer": 0,
+  "why": "Nothing forces a switch in a cooperative system. If one task loops or blocks without yielding, no other task gets the CPU. Preemptive schedulers fix this with timer interrupts.",
+  "wrong": [
+   null,
+   "That describes preemption. In a cooperative system a task is only switched where it chooses to yield.",
+   "It usually switches less, since switches only happen when a task yields.",
+   "The scheduling style does not change how many kernels there are."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "במערכת cooperative, כל משימה רצה עד שהיא מחזירה את ה-CPU מעצמה. מה הסיכון העיקרי?",
+   "options": [
+    "משימה אחת שאף פעם לא עושה yield יכולה להקפיא את כל שאר המשימות",
+    "משימה יכולה להיקטע בין כל שתי פקודות",
+    "משימות מתחלפות הרבה יותר מאשר במערכת preemptive",
+    "כל משימה צריכה עותק משלה של ה-kernel"
+   ],
+   "why": "במערכת cooperative שום דבר לא מכריח החלפה. אם משימה אחת נכנסת ללולאה או נחסמת בלי לעשות yield, אף משימה אחרת לא מקבלת את ה-CPU. schedulers מסוג preemptive פותרים את זה עם timer interrupts.",
+   "wrong": [
+    null,
+    "זה מתאר preemption. במערכת cooperative משימה מוחלפת רק במקום שבו היא בוחרת לעשות yield.",
+    "בדרך כלל יש בה פחות החלפות, כי החלפות קורות רק כשמשימה עושה yield.",
+    "סגנון התזמון לא משנה כמה kernels יש."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-round-robin-slice-size",
+  "topic": "operating-systems",
+  "subtopic": "scheduling",
+  "concepts": [
+   "round-robin",
+   "time-slice",
+   "context-switch",
+   "responsiveness"
+  ],
+  "level": "hard",
+  "q": "A round robin scheduler can use a very short time slice (microseconds) or a very long one (seconds). What goes wrong at each extreme?",
+  "options": [
+   "Short: tasks starve. Long: the CPU sits idle between slices",
+   "Short: interactive apps lag behind. Long: too much time goes to context switches",
+   "Short: CPU time goes to switching. Long: it acts like first come first served",
+   "Nothing: slice size changes fairness but not overall performance"
+  ],
+  "answer": 2,
+  "why": "Every slice ends in a context switch, so tiny slices spend much of the CPU on switching. Huge slices mean a task may wait seconds for its turn, which is first come first served in practice and makes interactive apps feel frozen.",
+  "wrong": [
+   "Round robin gives every task a turn, so none starves, and a long slice does not leave the CPU idle.",
+   "That is reversed: short slices are the costly ones, long slices are the laggy ones.",
+   null,
+   "Switch overhead and waiting time both depend directly on slice size."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "scheduler מסוג round robin יכול להשתמש ב-time slice קצר מאוד (מיקרו-שניות) או ארוך מאוד (שניות). מה משתבש בכל קצה?",
+   "options": [
+    "קצר: משימות סובלות מ-starvation. ארוך: ה-CPU עומד בטל בין slices",
+    "קצר: אפליקציות אינטראקטיביות מגיבות באיטיות. ארוך: יותר מדי זמן הולך על context switches",
+    "קצר: זמן CPU הולך על החלפות. ארוך: זה מתנהג כמו first come first served",
+    "שום דבר: גודל ה-slice משנה את ההוגנות אבל לא את הביצועים הכוללים"
+   ],
+   "why": "כל slice מסתיים ב-context switch, ולכן slices זעירים מבזבזים חלק גדול מה-CPU על החלפות. slices ענקיים אומרים שמשימה עשויה לחכות שניות לתור שלה, שזה בפועל first come first served, ואפליקציות אינטראקטיביות מרגישות קפואות.",
+   "wrong": [
+    "round robin נותן תור לכל משימה, ולכן אף אחת לא סובלת מ-starvation, ו-slice ארוך לא משאיר את ה-CPU בטל.",
+    "זה הפוך: slices קצרים הם היקרים, ו-slices ארוכים הם אלה שגורמים לאיטיות בתגובה.",
+    null,
+    "תקורת ההחלפות וזמן ההמתנה תלויים שניהם ישירות בגודל ה-slice."
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-priority-starvation",
+  "topic": "operating-systems",
+  "subtopic": "scheduling",
+  "concepts": [
+   "starvation",
+   "priority-scheduling",
+   "aging"
+  ],
+  "level": "medium",
+  "q": "A strict priority scheduler always runs the highest-priority ready job. High-priority jobs keep arriving, so a low-priority job never runs. What is this, and what is a common fix?",
+  "options": [
+   "Deadlock; kill one of the high-priority jobs",
+   "Starvation; give the low-priority job a longer time slice when it runs",
+   "Thrashing; add more RAM",
+   "Starvation; raise a job's priority the longer it waits"
+  ],
+  "answer": 3,
+  "why": "A job that is ready but never chosen is starving. Aging fixes it: the longer a job waits, the higher its priority grows, until it is eventually picked.",
+  "wrong": [
+   "Deadlock is tasks waiting for each other. Here the job is ready and simply never picked.",
+   "A longer slice does not help a job that never gets picked in the first place.",
+   "Thrashing is about memory and paging, not about which job gets the CPU.",
+   null
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-mlfq.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "scheduler עם עדיפויות קשיחות תמיד מריץ את המשימה המוכנה בעלת העדיפות הגבוהה ביותר. משימות בעדיפות גבוהה ממשיכות להגיע, ולכן משימה בעדיפות נמוכה אף פעם לא רצה. מה זה, ומה תיקון נפוץ?",
+   "options": [
+    "deadlock; להרוג את אחת המשימות בעדיפות גבוהה",
+    "starvation; לתת למשימה בעדיפות נמוכה time slice ארוך יותר כשהיא רצה",
+    "thrashing; להוסיף עוד RAM",
+    "starvation; להעלות את העדיפות של משימה ככל שהיא מחכה יותר זמן"
+   ],
+   "why": "משימה שמוכנה לרוץ אבל אף פעם לא נבחרת סובלת מ-starvation. aging פותר את זה: ככל שמשימה מחכה יותר, העדיפות שלה עולה, עד שבסוף היא נבחרת.",
+   "wrong": [
+    "deadlock הוא מצב שבו משימות מחכות זו לזו. כאן המשימה מוכנה ופשוט אף פעם לא נבחרת.",
+    "slice ארוך יותר לא עוזר למשימה שמלכתחילה אף פעם לא נבחרת.",
+    "thrashing קשור לזיכרון ול-paging, לא לשאלה איזו משימה מקבלת את ה-CPU.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "operating-systems-favor-io-bound",
+  "topic": "operating-systems",
+  "subtopic": "scheduling",
+  "concepts": [
+   "io-bound",
+   "cpu-bound",
+   "responsiveness"
+  ],
+  "level": "easy",
+  "q": "A text editor (mostly waiting for keystrokes) and a video encoder (always computing) share one core. Why does the scheduler run the editor first whenever it becomes ready?",
+  "options": [
+   "The editor needs more total CPU time than the encoder over a session",
+   "Its bursts are short, so it feels instant and barely delays the encoder",
+   "The encoder finishes sooner overall if it is interrupted more often",
+   "I/O-bound programs cannot be preempted, so the scheduler must run them first"
+  ],
+  "answer": 1,
+  "why": "An I/O-bound task runs briefly and then blocks again. Letting it run right away makes typing feel instant and costs the CPU-bound encoder only a tiny slice. Making it wait behind the encoder would add visible lag for almost no gain.",
+  "wrong": [
+   "The editor uses very little CPU in total; it is mostly blocked waiting for input.",
+   null,
+   "Extra interruptions add switches, which slightly slow the encoder.",
+   "Any thread can be preempted; the editor goes first because its bursts are short."
+  ],
+  "ref": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-mlfq.pdf",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "עורך טקסט (שרוב הזמן מחכה להקשות) ו-video encoder (שכל הזמן מחשב) חולקים core אחד. למה ה-scheduler מריץ את העורך ראשון בכל פעם שהוא נעשה מוכן?",
+   "options": [
+    "העורך צריך יותר זמן CPU כולל מה-encoder לאורך session",
+    "ה-bursts שלו קצרים, ולכן הוא מרגיש מיידי וכמעט לא מעכב את ה-encoder",
+    "ה-encoder מסיים מוקדם יותר בסך הכול אם קוטעים אותו לעתים קרובות יותר",
+    "אי אפשר לעשות preemption לתוכניות I/O-bound, ולכן ה-scheduler חייב להריץ אותן ראשונות"
+   ],
+   "why": "משימה שהיא I/O-bound רצה לזמן קצר ואז נחסמת שוב. אם נותנים לה לרוץ מיד, ההקלדה מרגישה מיידית, וזה עולה ל-encoder שהוא CPU-bound רק slice זעיר. אם היא תחכה מאחורי ה-encoder, יתווסף עיכוב מורגש כמעט בלי שום רווח.",
+   "wrong": [
+    "העורך משתמש במעט מאוד CPU בסך הכול: רוב הזמן הוא חסום ומחכה לקלט.",
+    null,
+    "קטיעות נוספות מוסיפות החלפות, וזה מאט מעט את ה-encoder.",
+    "אפשר לעשות preemption לכל thread. העורך הולך ראשון כי ה-bursts שלו קצרים."
+   ]
+  }
+ }
+]

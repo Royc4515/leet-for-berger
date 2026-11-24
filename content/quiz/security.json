@@ -1,0 +1,690 @@
+[
+ {
+  "id": "security-login-bypass-comment",
+  "topic": "security",
+  "subtopic": "injection",
+  "concepts": [
+   "sql-injection",
+   "string-concatenation",
+   "sql-comment"
+  ],
+  "level": "easy",
+  "q": "A login check builds its query with an f-string. An attacker types admin' -- as the user name and any password. What does this print?",
+  "code": "import sqlite3\ndb = sqlite3.connect(\":memory:\")\ndb.execute(\"CREATE TABLE users (name TEXT, pw TEXT)\")\ndb.execute(\"INSERT INTO users VALUES ('admin', 's3cret')\")\nname, pw = \"admin' --\", \"wrong\"\nsql = f\"SELECT name FROM users WHERE name = '{name}' AND pw = '{pw}'\"\nprint(db.execute(sql).fetchall())",
+  "lang": "python",
+  "options": [
+   "[]: the password is wrong, so no row matches",
+   "[('admin',)]",
+   "An error: the extra quote breaks the SQL",
+   "[]: the whole input is searched for as a literal name"
+  ],
+  "answer": 1,
+  "why": "The quote closes the name string and -- starts a SQL comment, so the password check is cut off. The query becomes WHERE name = 'admin', and the attacker is in without the password. The input was run as part of the SQL code.",
+  "wrong": [
+   "The AND pw = ... part is inside the comment, so the password is never checked.",
+   null,
+   "The typed quote closes the name's string literal, and -- comments out the rest, so the SQL is valid.",
+   "That is what a parameterized query would do. Pasted into the string, the input changes the query itself."
+  ],
+  "ref": "https://owasp.org/www-community/attacks/SQL_Injection",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "בדיקת התחברות בונה את ה-query שלה עם f-string. תוקף מקליד admin' -- בתור שם משתמש וסיסמה כלשהי. מה יודפס?",
+   "options": [
+    "[]: הסיסמה שגויה, ולכן אף row לא מתאימה",
+    "[('admin',)]",
+    "שגיאה: הגרש הנוסף שובר את ה-SQL",
+    "[]: מחפשים את כל הקלט כשם מילולי"
+   ],
+   "why": "הגרש סוגר את מחרוזת השם, והסימן -- פותח הערת SQL, כך שבדיקת הסיסמה נחתכת. ה-query הופך ל-WHERE name = 'admin', והתוקף נכנס בלי הסיסמה. הקלט רץ כחלק מקוד ה-SQL.",
+   "wrong": [
+    "החלק AND pw = ... נמצא בתוך ההערה, ולכן הסיסמה אף פעם לא נבדקת.",
+    null,
+    "הגרש שהוקלד סוגר את ה-string literal של השם, והסימן -- הופך את כל השאר להערה, כך שה-SQL תקין.",
+    "זה מה ש-parameterized query היה עושה. כשהקלט מודבק לתוך המחרוזת, הוא משנה את ה-query עצמו."
+   ]
+  }
+ },
+ {
+  "id": "security-why-placeholders-work",
+  "topic": "security",
+  "subtopic": "injection",
+  "concepts": [
+   "sql-injection",
+   "parameterized-query",
+   "data-vs-code"
+  ],
+  "level": "easy",
+  "q": "With the f-string version, this input returned every user. With the ? placeholder, rows is empty. Why?",
+  "code": "name = \"x' OR '1'='1\"\n# unsafe version: f\"SELECT name FROM users WHERE name = '{name}'\"\nrows = db.execute(\n    \"SELECT name FROM users WHERE name = ?\",\n    (name,),\n).fetchall()",
+  "lang": "python",
+  "options": [
+   "The placeholder strips quotes and the word OR from the value first",
+   "SQLite refuses to run queries whose values contain SQL keywords",
+   "It only looks empty; OR '1'='1' still matches every row",
+   "The query is parsed first; the value is bound later as plain data"
+  ],
+  "answer": 3,
+  "why": "With a parameter, the SQL text is compiled with ? as a slot, and the value is bound into it as data. The value can never change the query's structure, so the database looks for a user literally named x' OR '1'='1 and finds none.",
+  "wrong": [
+   "Nothing is removed or rewritten. The value is compared exactly as typed.",
+   "Values may contain any text, including SQL words. They are never parsed as SQL.",
+   "The OR sits inside a bound value, so it is just characters in a name, not a condition.",
+   null
+  ],
+  "ref": "https://cheatsheetseries.owasp.org/cheatsheets/Query_Parameterization_Cheat_Sheet.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "בגרסה עם ה-f-string, הקלט הזה החזיר את כל המשתמשים. עם ה-placeholder ?, rows ריק. למה?",
+   "options": [
+    "ה-placeholder מסיר קודם מהערך את הגרשים ואת המילה OR",
+    "SQLite מסרב להריץ queries שהערכים שלהם מכילים מילות מפתח של SQL",
+    "זה רק נראה ריק: OR '1'='1' עדיין מתאים לכל row",
+    "ה-query מנותח קודם, והערך נקשר אחר כך כנתון רגיל"
+   ],
+   "why": "עם פרמטר, טקסט ה-SQL עובר compile כש-? הוא משבצת, והערך נקשר אליה כנתון. הערך אף פעם לא יכול לשנות את המבנה של ה-query, ולכן מסד הנתונים מחפש משתמש ששמו הוא מילולית x' OR '1'='1 ולא מוצא כזה.",
+   "wrong": [
+    "שום דבר לא מוסר או נכתב מחדש. הערך מושווה בדיוק כפי שהוקלד.",
+    "ערכים יכולים להכיל כל טקסט, כולל מילים של SQL. הם אף פעם לא מנותחים כ-SQL.",
+    "ה-OR יושב בתוך ערך שנקשר, ולכן הוא רק תווים בתוך שם, לא תנאי.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "security-hand-escaping-misses-number",
+  "topic": "security",
+  "subtopic": "injection",
+  "concepts": [
+   "sql-injection",
+   "escaping",
+   "parameterized-query"
+  ],
+  "level": "medium",
+  "q": "A teammate escapes quotes by hand instead of using parameters. Both arguments come from the request as strings. Is this query safe?",
+  "code": "def find_orders(user_id, status):\n    status = status.replace(\"'\", \"''\")  # escape quotes by hand\n    sql = (\"SELECT id FROM orders WHERE status = '\" + status +\n           \"' AND user_id = \" + user_id)\n    return db.execute(sql).fetchall()",
+  "lang": "python",
+  "options": [
+   "No: user_id is not quoted, so 0 OR 1=1 injects without any quote",
+   "Yes: doubling every quote makes any string safe to concatenate",
+   "Yes, if the form only lets users type digits in the id field",
+   "No: '' is not valid SQL, so any status that contains a quote fails"
+  ],
+  "answer": 0,
+  "why": "Escaping only protects text inside quotes. user_id is pasted in as a bare number, so 0 OR 1=1 needs no quote and turns the filter into one that matches every order. Hand escaping must be right in every spot of every query; parameters do not depend on that.",
+  "wrong": [
+   null,
+   "It covers quoted strings only. A value pasted where SQL expects a number needs no quote to inject.",
+   "An attacker can send the request directly and skip the form. Only checks on the server count.",
+   "Two quotes in a row is the standard way to write one quote inside a SQL string, so such statuses work."
+  ],
+  "ref": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "חבר צוות עושה escape לגרשים ידנית במקום להשתמש בפרמטרים. שני הארגומנטים מגיעים מה-request כמחרוזות. האם ה-query הזה בטוח?",
+   "options": [
+    "לא: user_id לא נמצא בתוך גרשים, ולכן 0 OR 1=1 מזריק בלי שום גרש",
+    "כן: הכפלת כל גרש הופכת כל מחרוזת לבטוחה לשרשור",
+    "כן, אם הטופס מאפשר להקליד רק ספרות בשדה ה-id",
+    "לא: '' הוא לא SQL תקין, ולכן כל status שמכיל גרש נכשל"
+   ],
+   "why": "escaping מגן רק על טקסט שבתוך גרשים. user_id מודבק כמספר חשוף, ולכן 0 OR 1=1 לא צריך גרש והופך את הסינון לכזה שמתאים לכל הזמנה. escaping ידני חייב להיות נכון בכל מקום בכל query, ופרמטרים לא תלויים בזה.",
+   "wrong": [
+    null,
+    "זה מכסה רק מחרוזות שבתוך גרשים. ערך שמודבק במקום שבו SQL מצפה למספר לא צריך גרש כדי להזריק.",
+    "תוקף יכול לשלוח את ה-request ישירות ולדלג על הטופס. רק בדיקות בשרת נחשבות.",
+    "שני גרשים ברצף הם הדרך הסטנדרטית לכתוב גרש אחד בתוך מחרוזת SQL, ולכן ערכי status כאלה עובדים."
+   ]
+  }
+ },
+ {
+  "id": "security-stored-vs-reflected",
+  "topic": "security",
+  "subtopic": "xss",
+  "concepts": [
+   "xss",
+   "stored-xss",
+   "reflected-xss"
+  ],
+  "level": "easy",
+  "q": "A forum saves a post that contains a script and shows it to everyone who opens the thread. A search page copies the q parameter from the link into its results. Which is which?",
+  "options": [
+   "The forum is reflected XSS; the search page is stored XSS",
+   "Both are SQL injection, since the input reaches the server",
+   "The forum is stored XSS; the search page is reflected XSS",
+   "Only the forum is XSS; a victim would have to type the script in"
+  ],
+  "answer": 2,
+  "why": "Stored XSS is saved on the server and served to every visitor of that page. Reflected XSS is not saved: the payload rides in a link or request and is echoed straight back, so the attacker gets victims to open a crafted link. Either way, the script runs in the victim's browser.",
+  "wrong": [
+   "Reversed. Stored means saved and served to everyone; reflected means echoed back from the request.",
+   "SQL injection changes database queries. Here the input changes the HTML that another person's browser runs.",
+   null,
+   "The attacker builds the link and sends it to victims. Opening it is enough for the echoed script to run."
+  ],
+  "ref": "https://owasp.org/www-community/attacks/xss/",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "פורום שומר פוסט שמכיל script ומציג אותו לכל מי שפותח את השרשור. דף חיפוש מעתיק את הפרמטר q מהקישור לתוך התוצאות. מה זה מה?",
+   "options": [
+    "הפורום הוא reflected XSS, ודף החיפוש הוא stored XSS",
+    "שניהם SQL injection, כי הקלט מגיע לשרת",
+    "הפורום הוא stored XSS, ודף החיפוש הוא reflected XSS",
+    "רק הפורום הוא XSS, כי הקורבן היה צריך להקליד את ה-script בעצמו"
+   ],
+   "why": "stored XSS נשמר בשרת ומוגש לכל מי שמבקר בדף. reflected XSS לא נשמר: ה-payload עובר בקישור או ב-request וחוזר מיד בתשובה, ולכן התוקף גורם לקורבנות לפתוח קישור שהוא בנה. בשני המקרים ה-script רץ בדפדפן של הקורבן.",
+   "wrong": [
+    "הפוך. stored פירושו שנשמר ומוגש לכולם, ו-reflected פירושו שחוזר מתוך ה-request.",
+    "SQL injection משנה queries של מסד הנתונים. כאן הקלט משנה את ה-HTML שהדפדפן של אדם אחר מריץ.",
+    null,
+    "התוקף בונה את הקישור ושולח אותו לקורבנות. מספיק לפתוח אותו כדי שה-script שחוזר ירוץ."
+   ]
+  }
+ },
+ {
+  "id": "security-output-encoding",
+  "topic": "security",
+  "subtopic": "xss",
+  "concepts": [
+   "xss",
+   "output-encoding",
+   "blocklist"
+  ],
+  "level": "medium",
+  "q": "Comments are stored exactly as typed and inserted into the page as HTML. One comment contains <img src=x onerror=...>. Which fix stops comments from running as code in readers' browsers?",
+  "options": [
+   "Reject comments that contain <script> and keep rendering the rest as HTML",
+   "Encode each comment for HTML when rendering, so < shows as text",
+   "Serve the site over HTTPS so the comment cannot be changed",
+   "Store comments Base64 encoded and decode them before display"
+  ],
+  "answer": 1,
+  "why": "Output encoding turns characters like < and > into entities such as &lt; and &gt;, so the browser shows them as text instead of parsing tags and attributes. It is applied where the data is placed into the page, which is where the danger is.",
+  "wrong": [
+   "Blocklists miss other routes, such as this very img tag with an onerror handler.",
+   null,
+   "HTTPS protects data in transit. The malicious comment is delivered faithfully, and it still runs.",
+   "Decoding restores the original markup, so the page receives the same HTML as before."
+  ],
+  "ref": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "תגובות נשמרות בדיוק כפי שהוקלדו ומוכנסות לדף כ-HTML. אחת התגובות מכילה <img src=x onerror=...>. איזה תיקון מונע מתגובות לרוץ כקוד בדפדפנים של הקוראים?",
+   "options": [
+    "לדחות תגובות שמכילות <script> ולהמשיך להציג את השאר כ-HTML",
+    "לעשות encoding ל-HTML לכל תגובה בזמן ההצגה, כך ש-< יוצג כטקסט",
+    "להגיש את האתר מעל HTTPS כדי שאי אפשר יהיה לשנות את התגובה",
+    "לשמור תגובות ב-encoding של Base64 ולפענח אותן לפני ההצגה"
+   ],
+   "why": "output encoding הופך תווים כמו < ו-> ל-entities כמו &lt; ו-&gt;, כך שהדפדפן מציג אותם כטקסט במקום לנתח תגיות ומאפיינים. מפעילים אותו במקום שבו הנתונים מוכנסים לדף, כי שם נמצאת הסכנה.",
+   "wrong": [
+    "רשימות חסימה מפספסות דרכים אחרות, כמו תגית ה-img הזו בדיוק עם handler של onerror.",
+    null,
+    "HTTPS מגן על נתונים בזמן המעבר. התגובה הזדונית נמסרת בדיוק כמו שהיא, ועדיין רצה.",
+    "הפענוח מחזיר את ה-markup המקורי, ולכן הדף מקבל את אותו HTML כמו קודם."
+   ]
+  }
+ },
+ {
+  "id": "security-innerhtml-event-handler",
+  "topic": "security",
+  "subtopic": "xss",
+  "concepts": [
+   "dom-xss",
+   "innerhtml",
+   "textcontent",
+   "blocklist"
+  ],
+  "level": "hard",
+  "q": "An attacker sends a link where name is <img src=x onerror=stealCookies()>. What happens when the victim opens it, and what fixes it?",
+  "code": "// name comes from the link, e.g. ?name=Dana\nconst name = new URLSearchParams(location.search).get(\"name\");\nconst box = document.getElementById(\"greeting\");\nif (name) {\n  box.innerHTML = \"Hello, \" + name;\n}",
+  "lang": "javascript",
+  "options": [
+   "The onerror code runs; assign box.textContent instead of innerHTML",
+   "Nothing runs: browsers never run scripts added through innerHTML",
+   "Nothing runs, since the value comes from the site's own URL",
+   "The code runs; refuse names that contain <script> before assigning"
+  ],
+  "answer": 0,
+  "why": "innerHTML parses the string as HTML. The img fails to load, so its onerror handler runs in the victim's session. textContent inserts the value as plain text, so the same input just shows up as characters.",
+  "wrong": [
+   null,
+   "Only script tags inserted this way are skipped. Event handlers such as onerror on other tags still run.",
+   "The attacker wrote that URL. Anything in the link is user input, even though the domain is yours.",
+   "This payload has no script tag at all. Blocklists keep missing forms like this; inserting text avoids parsing."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "תוקף שולח קישור שבו name הוא <img src=x onerror=stealCookies()>. מה יקרה כשהקורבן פותח אותו, ומה מתקן את זה?",
+   "options": [
+    "הקוד של onerror רץ. צריך להשתמש ב-box.textContent במקום ב-innerHTML",
+    "שום דבר לא רץ: דפדפנים אף פעם לא מריצים scripts שנוספו דרך innerHTML",
+    "שום דבר לא רץ, כי הערך מגיע מה-URL של האתר עצמו",
+    "הקוד רץ. צריך לסרב לשמות שמכילים <script> לפני ההשמה"
+   ],
+   "why": "innerHTML מנתח את המחרוזת כ-HTML. ה-img לא נטען, ולכן ה-handler של onerror רץ ב-session של הקורבן. textContent מכניס את הערך כטקסט רגיל, כך שאותו קלט פשוט מוצג כתווים.",
+   "wrong": [
+    null,
+    "רק תגיות script שמוכנסות כך לא רצות. event handlers כמו onerror על תגיות אחרות עדיין רצים.",
+    "התוקף הוא שכתב את ה-URL הזה. כל מה שבקישור הוא קלט משתמש, גם אם הדומיין הוא של האתר.",
+    "ב-payload הזה אין בכלל תגית script. רשימות חסימה ממשיכות לפספס צורות כאלה, והכנסת טקסט נמנעת מניתוח."
+   ]
+  }
+ },
+ {
+  "id": "security-base64-is-not-encryption",
+  "topic": "security",
+  "subtopic": "passwords",
+  "concepts": [
+   "encoding",
+   "encryption",
+   "hashing",
+   "base64"
+  ],
+  "level": "easy",
+  "q": "An app stores passwords like this and calls them encrypted. What does this show about how safe the stored passwords are?",
+  "code": "import base64\n# how the app \"protects\" a password before saving it\nstored = base64.b64encode(b\"hunter2\").decode()\nprint(stored)\nprint(base64.b64decode(stored).decode())",
+  "lang": "python",
+  "options": [
+   "They are safe: Base64 is one-way, like a hash, so nobody can undo it",
+   "They are safe unless someone steals the key used to encode them",
+   "They are mostly safe, since attackers rarely recognize Base64 text",
+   "Anyone who reads the database gets every password back"
+  ],
+  "answer": 3,
+  "why": "Base64 only rewrites bytes as printable characters so they can travel as text. Decoding needs no secret, so anyone who reads the table gets every password back. It is encoding, not encryption and not hashing.",
+  "wrong": [
+   "Base64 is fully reversible by design; the last line decodes it.",
+   "Base64 has no key. The same input always encodes and decodes the same way for everyone.",
+   "Base64 is easy to recognize, and hiding the method is not protection.",
+   null
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Glossary/Base64",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אפליקציה שומרת סיסמאות כך וקוראת לזה הצפנה. מה זה מראה על מידת הבטיחות של הסיסמאות השמורות?",
+   "options": [
+    "הן בטוחות: Base64 הוא חד-כיווני, כמו hash, ואף אחד לא יכול לבטל אותו",
+    "הן בטוחות, אלא אם מישהו גונב את המפתח ששימש ל-encoding",
+    "הן בטוחות ברובן, כי תוקפים כמעט אף פעם לא מזהים טקסט של Base64",
+    "כל מי שקורא את מסד הנתונים מקבל בחזרה את כל הסיסמאות"
+   ],
+   "why": "Base64 רק כותב מחדש bytes כתווים שאפשר להדפיס, כדי שיוכלו לעבור כטקסט. הפענוח לא דורש שום סוד, ולכן כל מי שקורא את ה-table מקבל בחזרה את כל הסיסמאות. זה encoding, לא encryption וגם לא hashing.",
+   "wrong": [
+    "Base64 הפיך לגמרי מעצם התכנון שלו, והשורה האחרונה מפענחת אותו.",
+    "ל-Base64 אין מפתח. אותו קלט תמיד עובר encoding ופענוח באותה דרך, אצל כולם.",
+    "קל לזהות Base64, והסתרת השיטה היא לא הגנה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "security-emailed-password",
+  "topic": "security",
+  "subtopic": "passwords",
+  "concepts": [
+   "plain-text-passwords",
+   "hashing",
+   "encryption"
+  ],
+  "level": "easy",
+  "q": "On a site's forgot-password page, you get an email that contains your current password. What does this tell you about how the site stores passwords?",
+  "options": [
+   "Nothing bad: the email goes only to the address on the account",
+   "They are hashed, and the site reverses the hash to email it to you",
+   "In plain text or reversibly, so a breach exposes them all",
+   "They are salted, and the salt lets the site recover them"
+  ],
+  "answer": 2,
+  "why": "A site that hashes passwords cannot know your current one; it can only check a guess against the hash. Sending it back means it is stored in plain text or encrypted with a key the server holds, so whoever takes the database (and key) gets every password. Good sites send a reset link.",
+  "wrong": [
+   "Email is often kept forever, and the real problem is that the server can read passwords at all.",
+   "A hash is one-way. No one can turn it back into the password, the site included.",
+   null,
+   "A salt is random data added before hashing. It makes hashes unique; it does not undo them."
+  ],
+  "ref": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "בדף שכחתי-סיסמה של אתר, מגיע מייל שמכיל את הסיסמה הנוכחית. מה זה אומר על האופן שבו האתר שומר סיסמאות?",
+   "options": [
+    "שום דבר רע: המייל נשלח רק לכתובת שרשומה בחשבון",
+    "הן עוברות hashing, והאתר הופך את ה-hash כדי לשלוח אותה במייל",
+    "כטקסט גלוי או בצורה הפיכה, כך שפריצה חושפת את כולן",
+    "יש להן salt, וה-salt מאפשר לאתר לשחזר אותן"
+   ],
+   "why": "אתר שעושה hashing לסיסמאות לא יכול לדעת מה הסיסמה הנוכחית, הוא רק יכול לבדוק ניחוש מול ה-hash. שליחה שלה בחזרה אומרת שהיא שמורה כטקסט גלוי או מוצפנת עם מפתח שנמצא בשרת, כך שמי שלוקח את מסד הנתונים (ואת המפתח) מקבל את כל הסיסמאות. אתרים טובים שולחים קישור לאיפוס.",
+   "wrong": [
+    "מיילים נשמרים לרוב לנצח, והבעיה האמיתית היא שהשרת יכול לקרוא סיסמאות בכלל.",
+    "hash הוא חד-כיווני. אף אחד לא יכול להפוך אותו בחזרה לסיסמה, כולל האתר.",
+    null,
+    "salt הוא נתון אקראי שמוסיפים לפני ה-hashing. הוא הופך כל hash לייחודי, הוא לא מבטל אותו."
+   ]
+  }
+ },
+ {
+  "id": "security-salt-purpose",
+  "topic": "security",
+  "subtopic": "passwords",
+  "concepts": [
+   "salt",
+   "rainbow-table",
+   "hashing"
+  ],
+  "level": "medium",
+  "q": "Two users pick the same password. A site moves from plain SHA-256 to SHA-256 with a random salt per user, stored next to each hash. What does the salt buy?",
+  "options": [
+   "Equal passwords get different hashes; precomputed tables stop working",
+   "Nothing, since an attacker who steals the hashes steals the salts too",
+   "Each guess takes much longer to check, so brute force gets slow",
+   "Nothing more than one shared salt for all users, which is simpler"
+  ],
+  "answer": 0,
+  "why": "Each salt makes the hashed input unique, so equal passwords no longer share a hash and tables of hashes precomputed for common passwords are useless. Salts need not be secret. They do not slow down a single guess; that is the job of a slow hash.",
+  "wrong": [
+   null,
+   "Salts work even when public: the attacker must attack each hash separately instead of all at once.",
+   "Adding a salt costs almost nothing per guess. Slowness comes from the algorithm, such as bcrypt or Argon2id.",
+   "With one shared salt, equal passwords share a hash again, and one table built for that salt cracks everyone."
+  ],
+  "ref": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "שני משתמשים בוחרים אותה סיסמה. אתר עובר מ-SHA-256 רגיל ל-SHA-256 עם salt אקראי לכל משתמש, שנשמר ליד כל hash. מה ה-salt נותן?",
+   "options": [
+    "לסיסמאות זהות יש hashes שונים, וטבלאות שחושבו מראש מפסיקות לעבוד",
+    "כלום, כי תוקף שגונב את ה-hashes גונב גם את ה-salts",
+    "בדיקה של כל ניחוש לוקחת הרבה יותר זמן, ולכן brute force נהיה איטי",
+    "כלום מעבר ל-salt אחד משותף לכל המשתמשים, שהוא פשוט יותר"
+   ],
+   "why": "כל salt הופך את הקלט ל-hash לייחודי, כך שלסיסמאות זהות כבר אין hash משותף, וטבלאות של hashes שחושבו מראש לסיסמאות נפוצות חסרות תועלת. salts לא חייבים להיות סודיים. הם לא מאטים ניחוש בודד, זה התפקיד של hash איטי.",
+   "wrong": [
+    null,
+    "salts עובדים גם כשהם גלויים: התוקף צריך לתקוף כל hash בנפרד במקום את כולם בבת אחת.",
+    "הוספת salt כמעט לא עולה כלום לכל ניחוש. האיטיות מגיעה מהאלגוריתם, כמו bcrypt או Argon2id.",
+    "עם salt משותף אחד, לסיסמאות זהות שוב יש אותו hash, וטבלה אחת שנבנתה ל-salt הזה פורצת את כולם."
+   ]
+  }
+ },
+ {
+  "id": "security-fast-hash-is-weak",
+  "topic": "security",
+  "subtopic": "passwords",
+  "concepts": [
+   "slow-hash",
+   "brute-force",
+   "salt"
+  ],
+  "level": "medium",
+  "q": "A leaked database stores passwords as SHA-256 with a unique salt each. Why is this still considered weak, and what is the fix?",
+  "options": [
+   "SHA-256 is broken and easy to reverse; switch to SHA-512",
+   "SHA-256 is fast, so guesses are cheap; use a slow hash like bcrypt",
+   "Nothing is weak: salted SHA-256 cannot be cracked",
+   "Salts are public, so each hash can be reversed; encrypt them instead"
+  ],
+  "answer": 1,
+  "why": "SHA-256 is designed to be fast, so a GPU can test billions of guesses per second against each salted hash, and weak passwords fall quickly. Password hashes such as Argon2id, bcrypt or scrypt are slow by design, with a tunable cost, so every guess is expensive.",
+  "wrong": [
+   "SHA-256 is not broken; the problem is speed. SHA-512 is just as fast to guess against.",
+   null,
+   "Salting stops precomputed tables, but common passwords still fall to fast guessing, one hash at a time.",
+   "Hashes are not reversed; attackers hash guesses and compare. Salts are allowed to be public."
+  ],
+  "ref": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "מסד נתונים שדלף שומר סיסמאות כ-SHA-256 עם salt ייחודי לכל אחת. למה זה עדיין נחשב חלש, ומה התיקון?",
+   "options": [
+    "SHA-256 שבור וקל להפוך אותו, צריך לעבור ל-SHA-512",
+    "SHA-256 מהיר, ולכן ניחושים זולים. צריך hash איטי כמו bcrypt",
+    "שום דבר לא חלש: אי אפשר לפרוץ SHA-256 עם salt",
+    "ה-salts גלויים, ולכן אפשר להפוך כל hash. צריך להצפין אותם במקום"
+   ],
+   "why": "SHA-256 תוכנן להיות מהיר, ולכן GPU יכול לבדוק מיליארדי ניחושים בשנייה מול כל hash עם salt, וסיסמאות חלשות נופלות מהר. hashes לסיסמאות כמו Argon2id, bcrypt או scrypt איטיים מעצם התכנון, עם עלות שאפשר לכוון, כך שכל ניחוש יקר.",
+   "wrong": [
+    "SHA-256 לא שבור, הבעיה היא המהירות. גם מול SHA-512 מנחשים באותה מהירות.",
+    null,
+    "salt עוצר טבלאות שחושבו מראש, אבל סיסמאות נפוצות עדיין נופלות בניחוש מהיר, hash אחרי hash.",
+    "לא הופכים hashes: תוקפים מחשבים hash לניחושים ומשווים. מותר ל-salts להיות גלויים."
+   ]
+  }
+ },
+ {
+  "id": "security-authn-vs-authz",
+  "topic": "security",
+  "subtopic": "auth",
+  "concepts": [
+   "authentication",
+   "authorization"
+  ],
+  "level": "easy",
+  "q": "An employee signs in with a password and a code from their phone, then opens the payroll page and is refused. Which check refused them?",
+  "options": [
+   "Authentication: the system could not confirm who they are",
+   "Authentication, which covers who you are and what you may do",
+   "Neither: the UI should have hidden the link, so this is a bug",
+   "Authorization: they are known but may not open payroll"
+  ],
+  "answer": 3,
+  "why": "Authentication answers who you are, and it succeeded with the password and the code. Authorization answers what this identity may do. It is a separate check, and it ran when the payroll page was requested and found no permission.",
+  "wrong": [
+   "Their identity was confirmed at sign-in with two factors. The refusal came later, for one page.",
+   "They are two separate checks. Passing the first says nothing about permissions.",
+   "Hiding the link is cosmetic. Refusing on the server is exactly how access should be enforced.",
+   null
+  ],
+  "ref": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "עובד נכנס עם סיסמה וקוד מהטלפון, ואז פותח את דף השכר ומקבל סירוב. איזו בדיקה סירבה לו?",
+   "options": [
+    "authentication: המערכת לא הצליחה לאמת מי הוא",
+    "authentication, שמכסה גם מי המשתמש וגם מה מותר לו לעשות",
+    "אף אחת: הממשק היה צריך להסתיר את הקישור, אז זה bug",
+    "authorization: יודעים מי הוא, אבל אסור לו לפתוח את דף השכר"
+   ],
+   "why": "authentication עונה על השאלה מי המשתמש, והיא הצליחה עם הסיסמה והקוד. authorization עונה על השאלה מה מותר לזהות הזו לעשות. זו בדיקה נפרדת, והיא רצה כשביקשו את דף השכר ולא מצאה הרשאה.",
+   "wrong": [
+    "הזהות שלו אומתה בכניסה עם שני גורמים. הסירוב הגיע מאוחר יותר, לדף אחד.",
+    "אלה שתי בדיקות נפרדות. מעבר של הראשונה לא אומר כלום על הרשאות.",
+    "הסתרת הקישור היא קוסמטית. סירוב בשרת הוא בדיוק הדרך שבה צריך לאכוף גישה.",
+    null
+   ]
+  }
+ },
+ {
+  "id": "security-401-vs-403",
+  "topic": "security",
+  "subtopic": "auth",
+  "concepts": [
+   "http-401",
+   "http-403",
+   "authentication",
+   "authorization"
+  ],
+  "level": "medium",
+  "q": "An API gets two requests for /admin/reports: one with no token, and one with a valid token that belongs to a regular user. Which status codes fit?",
+  "options": [
+   "401 for the missing token, 403 for the regular user",
+   "403 for the missing token, 401 for the regular user",
+   "401 for both, since neither may see the reports",
+   "403 for both, since neither may see the reports"
+  ],
+  "answer": 0,
+  "why": "401 means the server does not know who you are: credentials are missing or invalid, so authenticate and try again. 403 means it knows who you are and you are not allowed; signing in again will not help.",
+  "wrong": [
+   null,
+   "Reversed. A missing token is failed authentication (401); a known user without rights gets 403.",
+   "The regular user is authenticated. Signing in again would not change the answer, so 403 fits.",
+   "With no token, the server has no identity to judge yet. 401 tells the client to authenticate."
+  ],
+  "ref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/403",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "API מקבל שני requests ל-/admin/reports: אחד בלי token, ואחד עם token תקין ששייך למשתמש רגיל. אילו status codes מתאימים?",
+   "options": [
+    "401 ל-token החסר, 403 למשתמש הרגיל",
+    "403 ל-token החסר, 401 למשתמש הרגיל",
+    "401 לשניהם, כי לאף אחד מהם אסור לראות את הדוחות",
+    "403 לשניהם, כי לאף אחד מהם אסור לראות את הדוחות"
+   ],
+   "why": "401 אומר שהשרת לא יודע מי פונה: ה-credentials חסרים או לא תקינים, אז צריך לעשות authentication ולנסות שוב. 403 אומר שהשרת יודע מי פונה ושאסור לו, והתחברות מחדש לא תעזור.",
+   "wrong": [
+    null,
+    "הפוך. token חסר הוא authentication שנכשל (401), ומשתמש מוכר בלי הרשאות מקבל 403.",
+    "המשתמש הרגיל עבר authentication. התחברות מחדש לא תשנה את התשובה, ולכן 403 מתאים.",
+    "בלי token, לשרת עוד אין זהות לשפוט. 401 אומר ל-client לעשות authentication."
+   ]
+  }
+ },
+ {
+  "id": "security-idor-server-check",
+  "topic": "security",
+  "subtopic": "auth",
+  "concepts": [
+   "authorization",
+   "idor",
+   "server-side-check"
+  ],
+  "level": "medium",
+  "q": "The app shows each user links to their own invoices only. What is wrong with this endpoint?",
+  "code": "// requireLogin rejects requests without a valid session\napp.get(\"/api/invoices/:id\", requireLogin, async (req, res) => {\n  const invoice = await db.invoices.findById(req.params.id);\n  if (!invoice) return res.status(404).end();\n  res.json(invoice);\n});",
+  "lang": "javascript",
+  "options": [
+   "Nothing: users can only reach invoices that the UI links them to",
+   "Nothing: requireLogin already makes sure the user is allowed",
+   "Any signed-in user can change the id and read others' invoices",
+   "The id belongs in a POST body, where users cannot change it"
+  ],
+  "answer": 2,
+  "why": "requireLogin checks who the user is, not whether this invoice is theirs. Anyone signed in can call the API with another id. The server must check ownership on every request, for example by comparing the invoice's owner with the current user.",
+  "wrong": [
+   "Users can send any request they like with curl or dev tools. Hiding links is not access control.",
+   "Being signed in is authentication. Access to one specific invoice is a separate authorization check.",
+   null,
+   "Request bodies are as easy to edit as URLs. The server must check ownership either way."
+  ],
+  "ref": "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "האפליקציה מציגה לכל משתמש קישורים רק לחשבוניות שלו. מה הבעיה ב-endpoint הזה?",
+   "options": [
+    "כלום: משתמשים יכולים להגיע רק לחשבוניות שהממשק מקשר אליהן",
+    "כלום: requireLogin כבר מוודא שלמשתמש מותר",
+    "כל משתמש מחובר יכול לשנות את ה-id ולקרוא חשבוניות של אחרים",
+    "ה-id צריך להיות בגוף של POST, שם משתמשים לא יכולים לשנות אותו"
+   ],
+   "why": "requireLogin בודק מי המשתמש, לא אם החשבונית הזו שלו. כל מי שמחובר יכול לקרוא ל-API עם id אחר. השרת חייב לבדוק בעלות בכל request, למשל להשוות בין הבעלים של החשבונית לבין המשתמש הנוכחי.",
+   "wrong": [
+    "משתמשים יכולים לשלוח כל request שירצו עם curl או עם dev tools. הסתרת קישורים היא לא בקרת גישה.",
+    "להיות מחובר זה authentication. גישה לחשבונית מסוימת היא בדיקת authorization נפרדת.",
+    null,
+    "קל לערוך גוף של request בדיוק כמו URL. בכל מקרה השרת חייב לבדוק בעלות."
+   ]
+  }
+ },
+ {
+  "id": "security-client-sent-total",
+  "topic": "security",
+  "subtopic": "trust",
+  "concepts": [
+   "never-trust-client",
+   "server-side-validation"
+  ],
+  "level": "easy",
+  "q": "A shop's page adds up the cart in JavaScript and sends {items, total} to the server, which charges the card for total. What is the problem?",
+  "options": [
+   "Nothing, as long as the JavaScript is minified so users cannot read the code",
+   "Users can edit the request; the server must compute the price itself",
+   "Only a risk on public Wi-Fi, which HTTPS already solves",
+   "The page should also send a checksum of the total so the server can verify it"
+  ],
+  "answer": 1,
+  "why": "Everything the browser sends is under the user's control: they can change the total in dev tools or send the request from a script. The server should take only item ids and quantities, look up the prices itself and compute the total.",
+  "wrong": [
+   "Minified code is still readable, and the user does not need to read it to edit the request it sends.",
+   null,
+   "HTTPS stops others on the network from changing traffic. The user at the end of the connection still can.",
+   "The user can compute a matching checksum for a fake total too; anything the client computes can be forged."
+  ],
+  "ref": "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "הדף של חנות מסכם את העגלה ב-JavaScript ושולח {items, total} לשרת, שמחייב את הכרטיס לפי total. מה הבעיה?",
+   "options": [
+    "כלום, כל עוד ה-JavaScript עובר minify כך שמשתמשים לא יכולים לקרוא את הקוד",
+    "משתמשים יכולים לערוך את ה-request, והשרת חייב לחשב את המחיר בעצמו",
+    "זה סיכון רק ב-Wi-Fi ציבורי, ו-HTTPS כבר פותר אותו",
+    "הדף צריך לשלוח גם checksum של הסכום כדי שהשרת יוכל לאמת אותו"
+   ],
+   "why": "כל מה שהדפדפן שולח נמצא בשליטת המשתמש: אפשר לשנות את הסכום ב-dev tools או לשלוח את ה-request מ-script. השרת צריך לקבל רק ids של פריטים וכמויות, לחפש את המחירים בעצמו ולחשב את הסכום.",
+   "wrong": [
+    "קוד שעבר minify עדיין קריא, והמשתמש לא צריך לקרוא אותו כדי לערוך את ה-request שהוא שולח.",
+    null,
+    "HTTPS מונע מאחרים ברשת לשנות את התעבורה. המשתמש שבקצה החיבור עדיין יכול.",
+    "המשתמש יכול לחשב checksum מתאים גם לסכום מזויף: כל מה שה-client מחשב אפשר לזייף."
+   ]
+  }
+ },
+ {
+  "id": "security-least-privilege-db",
+  "topic": "security",
+  "subtopic": "trust",
+  "concepts": [
+   "least-privilege",
+   "sql-injection",
+   "defense-in-depth"
+  ],
+  "level": "medium",
+  "q": "A web app connects to its database with an admin account that can drop tables and read every schema. A SQL injection is found in search. Why would least privilege have mattered?",
+  "options": [
+   "It would not: once there is an injection, account rights make no difference",
+   "It would have prevented the injection itself",
+   "It does not matter if the admin password is long and kept secret",
+   "A narrow account limits what the bug can reach, and it cannot drop tables"
+  ],
+  "answer": 3,
+  "why": "Injected SQL runs with the app's database rights. If the account can only read and write the tables the app uses, the attacker cannot drop tables or read other schemas. Least privilege does not fix the bug; it limits the damage until the bug is fixed.",
+  "wrong": [
+   "Injected SQL runs with the account's permissions, so fewer permissions mean less data and fewer actions in reach.",
+   "Parameterized queries prevent injection. Least privilege only limits what a successful one can do.",
+   "The attacker never needs the password; the injected SQL rides on the app's own open connection.",
+   null
+  ],
+  "ref": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+  "source": "original",
+  "status": "reviewed",
+  "he": {
+   "q": "אפליקציית web מתחברת למסד הנתונים שלה עם חשבון admin שיכול למחוק tables ולקרוא כל schema. מתגלה SQL injection בחיפוש. למה least privilege היה משנה?",
+   "options": [
+    "הוא לא היה משנה: ברגע שיש injection, להרשאות של החשבון אין משמעות",
+    "הוא היה מונע את ה-injection עצמו",
+    "זה לא משנה אם הסיסמה של ה-admin ארוכה ונשמרת בסוד",
+    "חשבון מצומצם מגביל את מה שה-bug יכול להשיג, והוא לא יכול למחוק tables"
+   ],
+   "why": "SQL שהוזרק רץ עם ההרשאות של האפליקציה במסד הנתונים. אם החשבון יכול רק לקרוא ולכתוב ב-tables שהאפליקציה משתמשת בהן, התוקף לא יכול למחוק tables או לקרוא schemas אחרים. least privilege לא מתקן את ה-bug, הוא מגביל את הנזק עד שה-bug מתוקן.",
+   "wrong": [
+    "SQL שהוזרק רץ עם ההרשאות של החשבון, ולכן פחות הרשאות פירושן פחות נתונים ופחות פעולות בהישג יד.",
+    "parameterized queries מונעים injection. least privilege רק מגביל מה injection מוצלח יכול לעשות.",
+    "התוקף אף פעם לא צריך את הסיסמה: ה-SQL שהוזרק עובר על החיבור הפתוח של האפליקציה עצמה.",
+    null
+   ]
+  }
+ }
+]
