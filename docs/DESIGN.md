@@ -109,22 +109,22 @@ Helpers in `src/js/ui/dom.js` build these with `h()` and text nodes only (never 
 
 ## Map rules
 
-- Four levels, each a hash: all topics (`#/map`), one topic and its subtopics (`#/map/<topic>`), one subtopic and its problems (`#/map/<topic>/<subtopic>`), one problem picked (`.../<problem>`). A breadcrumb above the canvas names the level; Esc and Back go up one.
-- Going in, the new level grows out of what you picked; going out, the level above settles back around it. One motion, transform and opacity, 360 ms; none under reduced motion.
-- All topics: tiers read left to right (columns); on a phone, top to bottom (bands of two districts). Never a shrunk desktop map. A district shows its name, "solved/total" and one hex per problem. Path problems carry a thin outline.
-- One topic: its subtopics in learning order, numbered, on a winding road (left to right, then back), one hex per problem. A hex is a shortcut to its problem. On a phone the road stays visible: it is the reading order.
-- One subtopic: its problems as named hex tiles with difficulty and the Path tag; the picked one is lit and the panel shows its card with Open.
+- **One continuous map** (owner's request): a single world you zoom into, never screens that replace each other. Tiers read left to right; each topic is a district; inside it each subtopic is a named row of hexes, flowing in learning order like a paragraph; each problem is a hex. A camera moves over it: scroll or pinch to zoom at the pointer, drag to move, the + / - / Show all buttons (bottom right, like any map), or + - 0 on the keyboard.
+- **Names appear as you get closer**, at a constant 12 px: topic names and tiers on the whole map, subtopic names from about 1.75x, problem names inside their hexes from 5x, where a hex becomes a tile (a tinted face, its status as the rim). A name that would not fit or would overlap another is left out, as on a street map. Line widths stay the same on screen at every zoom.
+- **Clicking flies one step closer**: a topic, then a subtopic, then a problem, along a smooth zoom-and-pan path (it rises a little for long hops). Each step is a hash (`#/map`, `#/map/<topic>`, `#/map/<topic>/<subtopic>`, `.../<problem>`); the breadcrumb names it; Esc and Back fly out one. Flown into a topic, the rest of the map stays visible, quieter.
+- The map opens with all of it in view where it reads (a laptop); on a phone it opens at reading zoom on your next topic, and you drag across the tiers. The canvas owns the gestures on it (`touch-action: none`); the page scrolls around it.
+- Path problems carry a thin outline. A picked problem has an amber rim and its card in the panel with Open.
 - **Locked** = dashed fog, the word "locked", and a one-sentence reason in the panel ("Opens after Two Pointers (1 of 2 solved). You can still practice it now."). Locked is advice; everything still opens.
 - **You are here**: the district and the subtopic holding your next problem carry a single pulsing ring on that hex (static under reduced motion); the panel defaults to your next topic.
 - Pointing at or focusing a district lights its whole prerequisite chain in amber and its dependants in a dashed line, and the panel follows. On a phone only the selected district's roads show.
-- Every district and subtopic block is a focusable control with a full accessible name; arrows move by geometry; Enter zooms in. Tiles are links.
+- One kind of thing is focusable at a time, so buttons never nest: the topics on the whole map, a topic's subtopics, then that topic's problems. Each has a full accessible name; arrows move by geometry; Enter flies closer; the panel lists what the hexes show, as links.
 - Map / List show the same model; List is the screen-reader route.
 
 ## Tour rules
 
 - Every page explains itself the first time it opens (Problems, Map, Path, Daily, Companies, a company, Modes, a problem, Interview, Battle), and the mentor's panel on its first open. The first tour a device sees opens with a one-step welcome. Each is shown once per device and replayable: "Guide for this page" in the footer and the palette, "How it works" on a setup page, the mentor's "?" button. Content lives in `src/js/data/tours.js`; `tourForRoute` maps a route to its tour.
 - Short and simple: at most 4 steps, a title of 24 characters and one line of 80; the same voice as the rest of the site (`validateTour` enforces it).
-- A step points at one real element: the spotlight rings it in amber and the scrim dims the rest. The card goes below, above or beside it and never covers it; on a phone it is a sheet on the edge away from the target. Steps without a target are centred.
+- A step points at one real element: the spotlight rings it in amber and the scrim dims the rest. The card goes below, above or beside it and never covers it; on a phone it is a sheet on the edge away from the target, and a tall target (the map) scrolls clear of it when both fit. Steps without a target are centred.
 - A native modal `<dialog>`: focus stays in the card and starts on Next; Esc and Skip close it; arrow keys move between steps; every close marks the tour seen. Clicking the scrim does nothing, so a stray tap cannot end an explanation.
 - Never during a session (lockdown), never over another dialog, never in place of content: the site works the same with every tour skipped.
 
@@ -135,7 +135,7 @@ Helpers in `src/js/ui/dom.js` build these with `h()` and text nodes only (never 
 - **Gliders**: one highlight slides to the active item (segmented controls, the header nav, the phone tab bar) with a small spring, instead of jumping (`glide` in `ui/motion.js`).
 - **Spotlight**: a soft light follows the mouse over cards (`installSpotlight`, one passive listener, one style write per frame, mouse and pen only); cards lift 2 to 3 px with a spring.
 - **Scroll**: cards and sections rise into place as they scroll in, driven by the scroll itself (`animation-timeline: view()`, no JS); never table rows.
-- **Map**: districts lift and hexes swell under the pointer; a zoom grows the new level out of what you picked; on a topic the road draws itself from the first subtopic to the last while blocks rise and hexes pop; subtopic tiles rise in order.
+- **Map**: the camera flies (van Wijk and Nuij's smooth zoom and pan, 320 to 1100 ms by distance, ease in and out); names fade in as they fit; hexes swell under the pointer; tiers rise in order on first load. The world is one SVG whose camera group carries the transform (strokes non-scaling); nothing is rebuilt between levels, and a frame restyles almost nothing.
 - **The verdict**: 15 case hexes resolve left to right (35 ms stagger, 260 ms each); the verdict word rises. Accepted sends a burst of green hexes from the verdict (a bigger green and amber burst on a first solve); a failed submit gives the word a short shake.
 - **Daily**: the 16-week calendar fills in as a wave from the top left; the streak chip ignites once when today's first solve lights it.
 - No marquees, rotators, looping shimmers, parallax or scroll-jacking; the only loop is the next problem's pulse ring.

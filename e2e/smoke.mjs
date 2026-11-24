@@ -76,6 +76,28 @@ const expectText = async (sel, re, timeout = 15000) => {
 };
 // A route change cross-fades (View Transitions); hit-testing by coordinates waits for the live page.
 const settled = (p = page) => p.waitForFunction(() => !document.documentElement.dataset.transition, null, { timeout: 5000 });
+/** The map's camera has come to rest (no flight, drag or zoom in progress); then reads `fn` in the page. */
+const mapAt = async (p, fn, arg) => {
+  await p.waitForFunction(
+    () => {
+      const c = document.querySelector('.map-canvas[data-lod]');
+      // The view has taken the address (hashchange lands a task after the hash changes) and rests.
+      return c && c.dataset.at === (location.hash.startsWith('#/map') ? location.hash : c.dataset.at) && !c.classList.contains('is-moving');
+    },
+    null,
+    { timeout: 8000 },
+  );
+  // Names fade in on the next frame.
+  await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  return p.evaluate(fn, arg);
+};
+/** Whether an element's box sits inside the map canvas (1 px of rounding allowed). */
+const inCanvas = (p, sel) =>
+  p.evaluate((s) => {
+    const c = document.querySelector('.map-canvas').getBoundingClientRect();
+    const r = document.querySelector(s).getBoundingClientRect();
+    return r.left >= c.left - 1 && r.top >= c.top - 1 && r.right <= c.right + 1 && r.bottom <= c.bottom + 1;
+  }, sel);
 const expectDialog = (p, re) =>
   p.waitForFunction((src) => new RegExp(src).test(document.querySelector('dialog.modal')?.textContent ?? ''), re.source, { timeout: 5000 });
 const setCode = (code) => page.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
@@ -1693,27 +1715,32 @@ try {
     if (await page.locator('.monaco-editor').count()) throw new Error('editor left behind after leaving the workspace');
   });
 
-  await check('Problem Map: 26 districts, then zoom into a topic, a subtopic and a problem; Esc and Back go up; deep links land; lenses and List view', async () => {
+  await check('Problem Map: one continuous map; Enter and clicks fly to a topic, a subtopic and a problem as names appear; wheel zooms at the pointer, drag moves; Esc and Back fly out; deep links land; lenses and List view', async () => {
     await page.goto(`${BASE}#/map`);
     await page.waitForSelector('.map-svg .district');
-    const shape = await page.evaluate(() => ({
+    const shape = await mapAt(page, () => ({
       districts: document.querySelectorAll('.map-svg .district').length,
       hexes: document.querySelectorAll('.map-svg .hx').length,
       tabbable: [...document.querySelectorAll('.map-svg .district')].filter((d) => d.getAttribute('tabindex') === '0').length,
-      named: [...document.querySelectorAll('.map-svg .district')].every((d) => d.getAttribute('role') === 'button' && /solved.*Enter zooms in/.test(d.getAttribute('aria-label') ?? '')),
+      named: [...document.querySelectorAll('.map-svg .district')].every((d) => d.getAttribute('role') === 'button' && /solved.*Enter goes closer/.test(d.getAttribute('aria-label') ?? '')),
+      nested: document.querySelectorAll('.map-svg [role="button"] [role="button"]').length,
       preview: document.querySelectorAll('.map-svg .district.is-preview').length,
       panel: document.querySelector('.map-brief .brief-title')?.textContent,
       lit: document.querySelectorAll('.map-svg .hx.solved, .map-svg .hx.assisted').length,
+      topicNames: document.querySelectorAll('.map-label.is-district.is-on').length,
+      subtopicNames: document.querySelectorAll('.map-label.is-block.is-on').length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     }));
     const published = await page.evaluate(async () => (await import('/src/js/problems/index.js')).availableEntries().length);
-    // A level change zooms (360 ms); act on the new level once it has settled, as a person would.
-    const zoomed = () => page.waitForFunction(() => !(document.querySelector('.map-stage')?.getAnimations?.().length ?? 0));
-    if (shape.districts !== 26 || shape.hexes !== published || shape.tabbable !== 1 || !shape.named || shape.preview !== 1 || !shape.panel || !shape.lit || shape.overflow > 0) {
+    if (shape.districts !== 26 || shape.hexes !== published || shape.tabbable !== 1 || !shape.named || shape.nested || shape.preview !== 1 || !shape.panel || !shape.lit || shape.overflow > 0) {
       throw new Error(`map shape: ${JSON.stringify({ ...shape, published })}`);
     }
+    // The whole map fits on a laptop screen, every topic named, no subtopic names yet.
+    if (shape.topicNames !== 26 || shape.subtopicNames || !(await inCanvas(page, '.map-cam'))) throw new Error(`overview: ${JSON.stringify(shape)}`);
+    // One world the whole way down: the same SVG node from the overview to a problem and back.
+    const worldNode = await page.evaluateHandle(() => document.querySelector('.map-svg'));
     await shot('23-map');
-    // Keyboard: arrows move between districts and the panel follows; Enter zooms into the topic.
+    // Keyboard: arrows move between districts and the panel follows; Enter flies into the topic.
     await page.focus('.map-svg .district[tabindex="0"]');
     const before = await page.evaluate(() => document.activeElement.dataset.id);
     await page.keyboard.press('ArrowRight');
@@ -1723,57 +1750,93 @@ try {
     await page.waitForFunction((t) => document.querySelector('.map-brief .brief-title')?.textContent === t, movedTitle);
     await page.keyboard.press('Enter');
     await page.waitForFunction((id) => location.hash === `#/map/${id}`, moved);
-    await page.waitForSelector('.map-svg.map-topic .district');
-    await zoomed();
-    const topicLevel = await page.evaluate(() => ({
-      blocks: document.querySelectorAll('.map-topic .district').length,
+    const topicLevel = await mapAt(page, (id) => ({
+      level: document.querySelector('.map-canvas').dataset.level,
+      selected: document.querySelector('.district.is-selected')?.dataset.id,
+      blocks: document.querySelectorAll(`.district[data-id="${id}"] .block[role="button"]`).length,
       listed: document.querySelectorAll('.map-brief .brief-concepts li').length,
       crumbs: [...document.querySelectorAll('.map-crumbs li')].map((l) => l.textContent),
       focus: document.activeElement?.classList.contains('block'),
-      roads: document.querySelectorAll('.map-topic .road').length,
-    }));
-    if (!topicLevel.blocks || topicLevel.blocks !== topicLevel.listed || topicLevel.crumbs.length !== 2 || topicLevel.crumbs[1] !== movedTitle || !topicLevel.focus || topicLevel.roads !== topicLevel.blocks - 1) {
+      names: document.querySelectorAll('.map-label.is-block.is-on').length,
+    }), moved);
+    if (topicLevel.level !== '1' || topicLevel.selected !== moved || !topicLevel.blocks || topicLevel.blocks !== topicLevel.listed || topicLevel.crumbs.length !== 2 || topicLevel.crumbs[1] !== movedTitle || !topicLevel.focus || topicLevel.names < topicLevel.blocks) {
       throw new Error(`topic level: ${JSON.stringify(topicLevel)}`);
     }
-    // Enter on a subtopic zooms in again: its problems as tiles, as many as the block's hexes.
-    const block = await page.evaluate(() => ({ id: document.activeElement.dataset.id, hexes: document.activeElement.querySelectorAll('.hx').length }));
+    if (!(await inCanvas(page, `.district[data-id="${moved}"] .land`))) throw new Error('the topic did not fly into view');
+    // Enter on a subtopic flies closer: its problems' names show inside their hexes.
+    const block = await page.evaluate(() => ({ key: document.activeElement.dataset.key, hexes: document.activeElement.querySelectorAll('.hx').length }));
+    const concept = block.key.split('/')[1];
     await page.keyboard.press('Enter');
-    await page.waitForFunction(([t, c]) => location.hash === `#/map/${t}/${c}`, [moved, block.id]);
-    await page.waitForSelector('.map-tile');
-    const tiles = await page.locator('.map-tile').count();
-    if (tiles !== block.hexes) throw new Error(`subtopic ${block.id}: ${tiles} tiles for ${block.hexes} hexes`);
-    // A tile picks the problem: its card with one click to open it.
-    const firstTile = await page.evaluate(() => ({ key: document.querySelector('.map-tile').dataset.key, title: document.querySelector('.map-tile .tile-title').textContent }));
-    await zoomed();
-    await page.click('.map-tile');
-    await page.waitForFunction(([t, c, p]) => location.hash === `#/map/${t}/${c}/${p}`, [moved, block.id, firstTile.key]);
-    await page.waitForFunction((t) => document.querySelector('.map-brief .brief-title')?.textContent === t, firstTile.title);
-    if (!(await page.locator(`.map-brief a.brief-cta[href="#/problem/${firstTile.key}"]`).count())) throw new Error('the problem card has no way to open the problem');
-    if ((await page.locator('.map-tile[aria-current="true"]').count()) !== 1) throw new Error('the picked tile is not marked current');
-    // Esc goes up one level at a time and puts focus back on what you came from; Back returns.
+    await page.waitForFunction(([t, c]) => location.hash === `#/map/${t}/${c}`, [moved, concept]);
+    const conceptLevel = await mapAt(page, () => ({
+      level: document.querySelector('.map-canvas').dataset.level,
+      lod: document.querySelector('.map-canvas').dataset.lod,
+      names: document.querySelectorAll('.map-label.is-problem.is-on').length,
+      listed: document.querySelectorAll('.map-brief .brief-problems li').length,
+    }));
+    if (conceptLevel.level !== '2' || conceptLevel.lod !== '2' || conceptLevel.names < block.hexes || conceptLevel.listed !== block.hexes) throw new Error(`subtopic level: ${JSON.stringify({ ...conceptLevel, block })}`);
+    // A click on a hex picks the problem: its card, with one click to open it.
+    const pick = await page.evaluate((key) => document.querySelector(`.block[data-key="${key}"] .hx`).dataset.pid, block.key);
+    const pickTitle = await page.evaluate(async (pid) => (await import('/src/js/problems/index.js')).catalogEntry(pid).title, pick);
+    await page.click(`.hx[data-pid="${pick}"]`);
+    await page.waitForFunction(([t, c, p]) => location.hash === `#/map/${t}/${c}/${p}`, [moved, concept, pick]);
+    await page.waitForFunction((t) => document.querySelector('.map-brief .brief-title')?.textContent === t, pickTitle);
+    if (!(await page.locator(`.map-brief a.brief-cta[href="#/problem/${pick}"]`).count())) throw new Error('the problem card has no way to open the problem');
+    if ((await page.locator(`.hx.is-selected[data-pid="${pick}"][aria-current="true"]`).count()) !== 1) throw new Error('the picked hex is not marked current');
+    // Esc flies out one level at a time; Back returns.
     await page.keyboard.press('Escape');
-    await page.waitForFunction(([t, c]) => location.hash === `#/map/${t}/${c}`, [moved, block.id]);
+    await page.waitForFunction(([t, c]) => location.hash === `#/map/${t}/${c}`, [moved, concept]);
     await page.keyboard.press('Escape');
     await page.waitForFunction((t) => location.hash === `#/map/${t}`, moved);
-    await page.waitForSelector('.map-svg.map-topic .district');
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => location.hash === '#/map');
-    await page.waitForSelector('.map-svg:not(.map-topic) .district');
+    if ((await mapAt(page, () => document.querySelector('.map-canvas').dataset.level)) !== '0') throw new Error('Esc did not fly back to the whole map');
+    if (!(await page.evaluate((n) => n === document.querySelector('.map-svg') && n.isConnected, worldNode))) throw new Error('the map was rebuilt between levels: it must be one continuous world');
     await page.goBack();
     await page.waitForFunction((t) => location.hash === `#/map/${t}`, moved);
-    await page.waitForSelector('.map-svg.map-topic .district');
-    // Deep link: a locked topic opens at its level and the panel says why in one sentence.
+    await mapAt(page, () => null);
+    // The wheel zooms towards the pointer: what is under it stays under it, and grows.
+    await page.goto(`${BASE}#/map`);
+    await page.waitForSelector('.map-svg .district');
+    await mapAt(page, () => null);
+    const hexAt = (pid) => page.evaluate((p) => {
+      const r = document.querySelector(`.hx[data-pid="${p}"]`).getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width };
+    }, pid);
+    const probe = await page.evaluate(() => document.querySelector('.district[data-id="graphs"] .hx').dataset.pid);
+    const h0 = await hexAt(probe);
+    await page.mouse.move(h0.x, h0.y);
+    await page.mouse.wheel(0, -360);
+    await mapAt(page, () => null);
+    const h1 = await hexAt(probe);
+    if (Math.hypot(h1.x - h0.x, h1.y - h0.y) > 3 || h1.w < h0.w * 1.5) throw new Error(`wheel zoom did not hold the point under the pointer: ${JSON.stringify({ h0, h1 })}`);
+    // Dragging moves the map with the pointer, and a drag is not a click.
+    await page.mouse.move(h1.x + 3, h1.y + 3);
+    await page.mouse.down();
+    await page.mouse.move(h1.x - 60, h1.y - 30, { steps: 6 });
+    await page.mouse.move(h1.x - 117, h1.y - 57, { steps: 6 });
+    await page.mouse.up();
+    await mapAt(page, () => null);
+    const h2 = await hexAt(probe);
+    if (Math.abs(h2.x - (h1.x - 120)) > 3 || Math.abs(h2.y - (h1.y - 60)) > 3) throw new Error(`drag did not move the map with the pointer: ${JSON.stringify({ h1, h2 })}`);
+    if (await page.evaluate(() => location.hash !== '#/map')) throw new Error('a drag counted as a click');
+    // Show all brings the whole map back.
+    await page.click('.map-ctl[aria-label="Show all"]');
+    await mapAt(page, () => null);
+    if (!(await inCanvas(page, '.map-cam'))) throw new Error('Show all did not fit the whole map');
+    // Deep link: a locked topic opens flown in and the panel says why in one sentence.
     await page.goto(`${BASE}#/map/union-find`);
-    await page.waitForSelector('.map-svg.map-topic .district.st-locked');
+    await page.waitForSelector('.map-canvas[data-level="1"] .district.is-selected.st-locked[data-id="union-find"]');
     await expectText('.map-brief .brief-state', /Opens after Graphs \(\d of 2 solved\)/);
     if (!(await page.locator('.map-brief a.brief-cta[href^="#/problem/"]').count())) throw new Error('locked topic has no way to start anyway');
     // An old or mistyped link lands on the deepest level that exists.
     await page.goto(`${BASE}#/map/graphs/not-a-subtopic/x`);
     await page.waitForFunction(() => location.hash === '#/map/graphs');
-    await page.waitForSelector('.map-svg.map-topic .district');
+    await page.waitForSelector('.map-canvas[data-level="1"] .district.is-selected[data-id="graphs"]');
     // Overview: hovering a district lights its prerequisite chain.
     await page.goto(`${BASE}#/map`);
     await page.waitForSelector('.map-svg .district[data-id="union-find"]');
+    await mapAt(page, () => null);
     await page.hover('.map-svg .district[data-id="union-find"] .land');
     const chain = await page.locator('.map-svg .road.is-hover').count();
     if (chain < 3) throw new Error(`expected the prerequisite chain to light (got ${chain} roads)`);
@@ -1792,7 +1855,7 @@ try {
     await page.waitForSelector('.map-svg');
   });
 
-  await check('Problem Map at 390: bands of two districts, then the drill-down with taps, no sideways scroll, the problem card in view', async () => {
+  await check('Problem Map at 390: opens readable on your next topic, taps fly closer down to a problem, the zoom buttons work, no sideways scroll, the problem card in view', async () => {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
     const phone = await ctx.newPage();
     phone.on('console', (m) => m.type() === 'error' && errors.push(`console (390 map): ${m.text()}`));
@@ -1802,29 +1865,45 @@ try {
       window.LFB_SUPABASE_URL = '';
     });
     await phone.goto(`${BASE}#/map`);
-    await phone.waitForSelector('.map-svg.is-narrow .district');
+    await phone.waitForSelector('.map-svg .district');
     const overflow = () => phone.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    const m = await phone.evaluate(() => ({
+    const m = await mapAt(phone, () => ({
       districts: document.querySelectorAll('.map-svg .district').length,
-      width: document.querySelector('.map-svg').getBoundingClientRect().width,
+      width: document.querySelector('.map-canvas').getBoundingClientRect().width,
+      names: document.querySelectorAll('.map-label.is-district.is-on').length,
+      k: Number(document.querySelector('.map-labels-pan').style.getPropertyValue('--k')),
     }));
-    if ((await overflow()) > 0 || m.districts !== 26 || m.width > 390) throw new Error(`390 map: ${JSON.stringify(m)}`);
-    await phone.tap('.map-svg .district[data-id="stack"] .land');
-    await phone.waitForFunction(() => location.hash === '#/map/stack');
-    await phone.waitForSelector('.map-svg.map-topic.is-narrow .district');
+    if ((await overflow()) > 0 || m.districts !== 26 || m.width > 390 || m.names < 3 || m.k < 0.55) throw new Error(`390 map: ${JSON.stringify(m)}`);
+    // Tap a topic that is fully on screen.
+    const target = await phone.evaluate(() => {
+      const c = document.querySelector('.map-canvas').getBoundingClientRect();
+      const ctl = document.querySelector('.map-controls').getBoundingClientRect();
+      const ok = (r) => r.left >= c.left && r.right <= c.right && r.top >= c.top && r.bottom <= c.bottom && !(r.right > ctl.left && r.bottom > ctl.top);
+      return [...document.querySelectorAll('.district')].find((d) => ok(d.querySelector('.land').getBoundingClientRect()))?.dataset.id;
+    });
+    if (!target) throw new Error('no topic fully on screen at 390');
+    await phone.tap(`.district[data-id="${target}"] .land`);
+    await phone.waitForFunction((t) => location.hash === `#/map/${t}`, target);
+    await mapAt(phone, () => null);
     if ((await overflow()) > 0) throw new Error('topic level scrolls sideways at 390');
-    await phone.waitForFunction(() => !(document.querySelector('.map-stage')?.getAnimations?.().length ?? 0));
     if (shotsDir) await phone.screenshot({ path: `${shotsDir}/390-map.png` });
-    await phone.tap('.map-topic .district .land');
-    await phone.waitForSelector('.map-tile');
-    await phone.tap('.map-tile');
-    await phone.waitForSelector('.map-tile[aria-current="true"]');
+    await phone.tap(`.district[data-id="${target}"] .block .hx`);
+    await phone.waitForFunction((t) => location.hash.startsWith(`#/map/${t}/`) && location.hash.split('/').length === 4, target);
+    await mapAt(phone, () => null);
+    await phone.tap('.block.is-selected .hx');
+    await phone.waitForSelector('.hx.is-selected[aria-current="true"]');
     await phone.waitForFunction(() => {
       const r = document.querySelector('.map-brief .brief-cta').getBoundingClientRect();
       return r.top >= 0 && r.bottom <= innerHeight;
     });
-    if ((await overflow()) > 0) throw new Error('subtopic level scrolls sideways at 390');
+    if ((await overflow()) > 0) throw new Error('problem level scrolls sideways at 390');
     if (shotsDir) await phone.screenshot({ path: `${shotsDir}/390-map-problem.png` });
+    // The zoom buttons work without a pinch.
+    const k0 = await phone.evaluate(() => Number(document.querySelector('.map-labels-pan').style.getPropertyValue('--k')));
+    await phone.tap('.map-ctl[aria-label="Zoom out"]');
+    await mapAt(phone, () => null);
+    const k1 = await phone.evaluate(() => Number(document.querySelector('.map-labels-pan').style.getPropertyValue('--k')));
+    if (!(k1 < k0)) throw new Error(`Zoom out did not zoom out (${k0} -> ${k1})`);
     await ctx.close();
   });
 
@@ -1864,7 +1943,7 @@ try {
     if (combo.role !== 'combobox' || !combo.active || combo.listbox !== 'listbox') throw new Error(`palette ARIA: ${JSON.stringify(combo)}`);
     await page.keyboard.press('Enter');
     await page.waitForFunction(() => location.hash === '#/map/two-pointers');
-    await page.waitForSelector('.map-svg.map-topic .district');
+    await page.waitForSelector('.map-canvas[data-level="1"] .district.is-selected[data-id="two-pointers"]');
     await expectText('.map-crumbs [aria-current]', /^Two Pointers$/);
     await page.click('#palette-trigger');
     await page.waitForSelector('dialog.palette[open]');
