@@ -16,7 +16,7 @@ file and license. Statements, tests, hints and references are written for this p
 Adapted files carry the same license as their source: files marked `doocs/leetcode` are
 available under CC BY-SA 4.0 (changes: renamed to this project's signatures, adjusted to its
 output rules, comments rewritten). Files marked `walkccc/LeetCode` keep the MIT notice of
-Peng-Yu Chen (Copyright (c) 2022). This does not change the license of the rest of the project.
+Peng-Yu Chen (Copyright (c) 2022). The rest of the project is under the MIT License (`LICENSE`).
 
 ## walkccc/LeetCode license text
 
