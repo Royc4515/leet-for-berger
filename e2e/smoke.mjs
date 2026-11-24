@@ -541,6 +541,16 @@ try {
     if (!(allCount > hiringCount)) throw new Error(`"All" should show more cards than "Hiring in Israel" (${allCount} vs ${hiringCount})`);
     // Only under "All" does the Israel level tell cards apart, so only there is it a line on the card.
     await expectText('.company-card[data-israel="major"] .company-card-level', /Major in Israel/);
+    // "Jobs in Israel" (owner's request): the companies whose page links to their job search in
+    // Israel, with a line saying what the list is; the other views hide that line.
+    await page.click('.segmented-btn:has-text("Jobs in Israel")');
+    const jobs = await page.evaluate(async () => {
+      const sets = await (await fetch('/src/js/data/company-sets.json')).json();
+      return { cards: document.querySelectorAll('.company-card').length, want: sets.companies.filter((c) => c.careersIL).length, note: !document.querySelector('.company-jobs-note')?.hidden };
+    });
+    if (!jobs.want || jobs.cards !== jobs.want || !jobs.note) throw new Error(`Jobs in Israel view: ${JSON.stringify(jobs)}`);
+    await page.click('.segmented-btn:has-text("All")');
+    if (await page.locator('.company-jobs-note').isVisible()) throw new Error('the Jobs in Israel line shows outside its view');
     // Logos (owner's request): the first screenful decodes, decorative (alt ""), and a company
     // without a logo keeps its monogram on the same light tile.
     await page.waitForFunction(() => [...document.querySelectorAll('.company-card .company-mark img')].slice(0, 12).every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 });

@@ -41,10 +41,13 @@ test('companies that do not hire in Israel sort below present ones whatever thei
   assert.ok(ranked.findIndex((c) => c.name === 'Uber') > ranked.findIndex((c) => c.name === 'Zeta'));
 });
 
-test('filters: hiring is major + present, top is major only, all keeps everyone', () => {
+test('filters: hiring is major + present, jobs has an Israel job search, top is major only, all keeps everyone', () => {
   const ranked = rankCompanies(companies, hiring);
   assert.equal(DEFAULT_ISRAEL_FILTER, 'hiring');
-  assert.deepEqual(ISRAEL_FILTERS.map((f) => f.id), ['hiring', 'top', 'all']);
+  assert.deepEqual(ISRAEL_FILTERS.map((f) => f.id), ['hiring', 'jobs', 'top', 'all']);
+  const withJobs = ranked.map((c) => (['Google', 'Okta'].includes(c.name) ? { ...c, careersIL: `https://example.com/${c.slug}?country=Israel` } : c));
+  assert.deepEqual(names(filterRanked(withJobs, { filter: 'jobs' })), ['Google', 'Okta']);
+  assert.deepEqual(names(filterRanked(withJobs, { filter: 'jobs', query: 'goo' })), ['Google']);
   assert.deepEqual(names(filterRanked(ranked, { filter: 'hiring' })), ['Nvidia', 'Google', 'Microsoft', 'Wix', 'Okta', 'Snap', 'Zeta']);
   assert.deepEqual(names(filterRanked(ranked, { filter: 'top' })), ['Nvidia', 'Google', 'Microsoft', 'Wix']);
   assert.equal(filterRanked(ranked, { filter: 'all' }).length, ranked.length);

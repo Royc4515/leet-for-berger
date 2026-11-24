@@ -104,12 +104,15 @@ export function renderCompanies(root, { store }) {
   const filters = { query: '', filter: DEFAULT_ISRAEL_FILTER };
   const grid = h('div.company-grid');
   const count = h('p.hint-text.company-count', { role: 'status' });
+  // What "Jobs in Israel" means, said where the list is: a link, checked once, not a live count.
+  const jobsNote = h('p.hint-text.company-jobs-note', { hidden: true }, 'Companies whose page links straight to their own job search in Israel. Open roles change daily: the search shows what is open now.');
   let data = null;
 
   function renderGrid() {
     const state = store.get();
     const list = filterRanked(data.ranked, filters);
     count.textContent = `${list.length} ${list.length === 1 ? 'company' : 'companies'}`;
+    jobsNote.hidden = filters.filter !== 'jobs';
     if (!list.length) {
       mount(grid, h('p.empty', {}, 'No companies match.'));
       return;
@@ -165,13 +168,17 @@ export function renderCompanies(root, { store }) {
         h(
           'div.filters',
           {},
-          israelFilterControl(filters.filter, (id) => {
-            filters.filter = id;
-            renderGrid();
-          }),
+          Object.assign(
+            israelFilterControl(filters.filter, (id) => {
+              filters.filter = id;
+              renderGrid();
+            }),
+            { className: 'segmented company-scope' },
+          ),
           search,
         ),
         count,
+        jobsNote,
         grid,
         h('p.hint-text.company-source', {}, 'Company tags are crowdsourced from public datasets (content/SOURCES.md). Treat them as a trend, not a promise. Israel hiring labels: content/israel-hiring.md.'),
         siteFooter({ note: TRADEMARK_NOTE }),
