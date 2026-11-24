@@ -20,6 +20,9 @@
 - **Arista Networks and Meesho have logos** (189 of 193): Meesho's app icon and the A of Arista's wordmark (its full wordmark is too wide to read in a tile), both from Wikimedia Commons, since their sites turn away scripts.
 - Tests: 2 more unit tests (every company name gives its slug; aliases point to logos), and e2e checks for chip logos and the map spotlight (lens, lit count, panel header, Back).
 
+### Fixed (daily quiz leaderboard)
+- **A daily play that never reached the board is sent later.** The first play of the day was sent only from the results screen, so a player who played signed out, before the leaderboard shipped, or through a failed send stayed off the board for that day. The first play's choices and time are now kept on the device, and the board sends them once when the server has no play for that day. A replay still never counts.
+
 ### Changed (CI speed)
 - **CI skips the native program builder tests when nothing they read changed.** `tests/programs.test.js` took about 7 of the unit tests' 7 minutes; it now runs in its own step only when the `solutions` paths change (problems, engine, verifier, package files, ci.yml), so a UI, content or docs PR saves those minutes. `tests/ci.test.js` checks that every module the test imports is in that pattern.
   Since the affected-test selection above, the selection decides when it runs (it picks it for every file it reaches); it keeps its own step.
