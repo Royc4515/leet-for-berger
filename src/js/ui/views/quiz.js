@@ -16,6 +16,7 @@ import { shareButton, shareIcon } from '../share.js';
 import { SITE_URL } from '../../config.js';
 import { services } from '../../auth/services.js';
 import { createQuizBoard } from '../../auth/quiz-board.js';
+import { dailyQuizNeedsSignIn, SIGN_IN_NOTE } from '../quiz-card.js';
 import { loadQuizProgress, saveQuizProgress, recordSession, masteredIds, topicProgress, dailyQuizStreak } from '../../state/quiz-progress.js';
 import { dayKey } from '../../state/progress.js';
 import { msUntilNextDaily, formatCountdown } from '../../data/daily.js';
@@ -501,7 +502,7 @@ export function renderQuizHub(root) {
     const dailyCard = h(
       'section.quiz-daily',
       { 'aria-labelledby': 'quiz-daily-title' },
-      h('div.quiz-daily-copy', {}, h('span.eyebrow', {}, `Quiz No. ${dailyQuizNumber(today)}`), h('h2#quiz-daily-title', {}, 'Daily quiz'), h('p.hint-text', {}, todayResult ? `Done today: ${todayResult.correct} / ${todayResult.total}. A new one in ${formatCountdown(msUntilNextDaily(new Date()))}.` : `${DAILY_QUIZ_SIZE} questions from ${DAILY_QUIZ_SIZE} topics, the same for everyone today.`)),
+      h('div.quiz-daily-copy', {}, h('span.eyebrow', {}, `Quiz No. ${dailyQuizNumber(today)}`), h('h2#quiz-daily-title', {}, 'Daily quiz'), h('p.hint-text', {}, todayResult ? `Done today: ${todayResult.correct} / ${todayResult.total}. A new one in ${formatCountdown(msUntilNextDaily(new Date()))}.` : `${DAILY_QUIZ_SIZE} questions from ${DAILY_QUIZ_SIZE} topics, the same for everyone today.`), !todayResult && dailyQuizNeedsSignIn() ? h('p.quiz-signin-note', {}, SIGN_IN_NOTE) : null),
       h('div.quiz-daily-side', {}, quizStreak ? h('span.quiz-streak', {}, `${quizStreak}-day quiz streak`) : null, h(`a.btn${todayResult ? '.btn-secondary' : '.btn-primary'}`, { href: '#/quiz/daily' }, todayResult ? 'See today\'s result' : 'Play today\'s quiz'), h('a.btn.btn-ghost', { href: '#/quiz/board' }, 'Leaderboard'), shareButton({ compact: true, name: "Share today's daily quiz", get: (l) => quizDailyShare({ number: dailyQuizNumber(today), size: DAILY_QUIZ_SIZE, lang: l }) })),
     );
 

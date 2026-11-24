@@ -5,7 +5,7 @@
  * config: a refresh on any route still serves index.html.
  */
 import { createStore, stats, dayKey } from './state/progress.js';
-import { createAccount } from './auth/account.js';
+import { createAccount, restoreReturnRoute } from './auth/account.js';
 import { mountAccountMenu } from './ui/account-menu.js';
 import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
 import { services } from './auth/services.js';
@@ -230,6 +230,8 @@ store.subscribe(renderStreak);
 renderStreak();
 installSpotlight();
 window.addEventListener('hashchange', route);
+// After a Google or GitHub sign-in, back to the page it started from (auth/account.js).
+restoreReturnRoute();
 route();
 
 // Accounts are optional and inert without a Supabase project in config.js (ADR 0006).

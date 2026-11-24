@@ -40,6 +40,38 @@ export function shouldStartAuthEagerly({ storageKeys, search, projectRef }) {
   return storageKeys.some((k) => k === prefix || k.startsWith(`${prefix}.`));
 }
 
+/** sessionStorage key: the hash route a sign-in started from, for this tab only. */
+const RETURN_KEY = 'lfb:return-to';
+
+/**
+ * The route to reopen when the sign-in provider sends the user back. The provider returns to the
+ * site root (the redirect URL carries no hash route), so the route saved when sign-in started is
+ * used, but only on that return (OAuth code or error in the URL) and only if it is a hash route.
+ * @param {{ search: string, saved: string|null }} opts
+ * @returns {string|null}
+ */
+export function returnRoute({ search, saved }) {
+  const q = new URLSearchParams(search);
+  if (!q.has('code') && !q.has('error_description')) return null;
+  return typeof saved === 'string' && saved.startsWith('#/') ? saved : null;
+}
+
+/**
+ * Back to the page a sign-in started from. Called once at startup, before the first route, so the
+ * right view renders directly instead of the dashboard first.
+ */
+export function restoreReturnRoute() {
+  let back = null;
+  try {
+    back = returnRoute({ search: location.search, saved: sessionStorage.getItem(RETURN_KEY) });
+    if (back) sessionStorage.removeItem(RETURN_KEY);
+  } catch {
+    return;
+  }
+  // Keeps ?code=: supabase-js still has to read it, then removes it itself.
+  if (back && back !== location.hash) history.replaceState(history.state, '', location.pathname + location.search + back);
+}
+
 /** localStorage keys, or [] when storage is blocked (private window, site data off). */
 function storedKeys() {
   try {
@@ -145,7 +177,13 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
     async signIn(provider) {
       await start();
       if (!client) return;
-      // Back to this exact page (path and hash route) after the provider's consent screen.
+      // Back to this page after the provider's consent screen: the path through redirectTo, the
+      // hash route through this tab's sessionStorage (restoreReturnRoute at startup).
+      try {
+        sessionStorage.setItem(RETURN_KEY, location.hash || '#/');
+      } catch {
+        // Storage blocked: the user lands on the home page instead, still signed in.
+      }
       const { error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo: location.href.split('#')[0] } });
       if (error) set({ error: error.message });
     },
