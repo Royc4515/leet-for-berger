@@ -70,3 +70,29 @@ export const AUTH = {
 2. Solve a problem; the header shows **Progress synced**.
 3. **Table Editor > user_state** in Supabase has one row, yours.
 4. Sign in on another browser: the solve is there.
+
+## 7. Daily quiz leaderboard
+
+The daily quiz board and the synced quiz streak need one table and one Edge Function. About five
+minutes, after the steps above.
+
+1. **SQL Editor > New query**: paste `deploy/supabase/migrations/20261124_quiz_daily_results.sql`
+   and **Run**. It creates `quiz_daily_results` with row level security (players read only their
+   own rows; only the function writes).
+2. Deploy the function from `deploy/supabase`, with JWT verification off so signed-out visitors
+   can read the board (the function checks the session itself before it records a play):
+
+   ```
+   npx supabase login
+   npx supabase functions deploy daily-quiz --use-api --no-verify-jwt --project-ref <your project ref>
+   ```
+
+   It reads the `SITE_URL` secret (already set for GitHub sync; otherwise add it under
+   **Edge Functions > Secrets** as `https://royc4515.github.io/leet-for-berger/`).
+3. Verify: open the site signed in, play today's daily quiz, and the board under the result shows
+   your name. **Table Editor > quiz_daily_results** has your row. Play it again: the board says
+   only the first play counts, and the table still has one row.
+
+After any change to the question bank, `node scripts/content/build-quiz.mjs` rebuilds
+`deploy/supabase/functions/daily-quiz/bank.js`; deploy the function again so the server's
+answers match the site.

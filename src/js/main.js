@@ -37,6 +37,7 @@ const routes = [
   [/^#\/modes$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderModesHub(root); }, 'modes', 'Modes'],
   [/^#\/interview$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderInterview(root, { store }); }, 'modes', 'Interview'],
   [/^#\/quiz$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizHub(root); }, 'modes', 'Quiz'],
+  [/^#\/quiz\/board$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizBoard(root); }, 'modes', 'Leaderboard'],
   [/^#\/quiz\/daily$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderDailyQuiz(root); }, 'modes', 'Daily quiz'],
   [/^#\/battle$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderBattle(root, { store }); }, 'modes', '1v1 Battle'],
 ];

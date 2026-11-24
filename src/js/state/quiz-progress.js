@@ -12,7 +12,7 @@ export { QUIZ_STORAGE_KEY };
 
 /**
  * @typedef {{ seen: number, correct: number, last: boolean }} QuestionStat
- * @typedef {{ correct: number, total: number }} DailyResult
+ * @typedef {{ correct: number, total: number, results?: boolean[] }} DailyResult
  * @typedef {{ questions: Record<string, QuestionStat>, daily: Record<string, DailyResult>, best: Record<string, number> }} QuizProgress
  */
 
@@ -33,7 +33,9 @@ export function normalizeQuizProgress(raw) {
     if (s && Number.isFinite(s.seen) && Number.isFinite(s.correct)) out.questions[id] = { seen: s.seen, correct: s.correct, last: Boolean(s.last) };
   }
   for (const [day, d] of Object.entries(raw.daily ?? {})) {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(day) && d && Number.isFinite(d.correct) && Number.isFinite(d.total)) out.daily[day] = { correct: d.correct, total: d.total };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !d || !Number.isFinite(d.correct) || !Number.isFinite(d.total)) continue;
+    out.daily[day] = { correct: d.correct, total: d.total };
+    if (Array.isArray(d.results) && d.results.every((r) => typeof r === 'boolean')) out.daily[day].results = d.results;
   }
   for (const [mode, v] of Object.entries(raw.best ?? {})) if (Number.isFinite(v)) out.best[mode] = v;
   return out;
@@ -54,7 +56,8 @@ export function recordSession(p, session) {
   }
   const score = session.answers.filter((a) => a.correct).length;
   const daily = { ...p.daily };
-  if (session.daily && !daily[session.daily]) daily[session.daily] = { correct: score, total: session.answers.length };
+  // The squares in order, so the share text can be rebuilt when the player comes back later.
+  if (session.daily && !daily[session.daily]) daily[session.daily] = { correct: score, total: session.answers.length, results: session.answers.map((a) => a.correct) };
   const best = { ...p.best };
   // Daily is not a mode with a leaderboard of one; only free play sets a best.
   if (!session.daily) best[session.mode] = Math.max(best[session.mode] ?? 0, score);

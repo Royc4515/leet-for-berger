@@ -200,6 +200,21 @@ create table github_links (
   updated_at       timestamptz not null default now()
 );
 
+-- Daily quiz results (leaderboard and synced quiz streak). Written only by the daily-quiz Edge
+-- Function (service role), which scores the player's choices itself, so a client cannot post a
+-- score it did not earn. Players read their own rows; the public board comes from the function.
+create table quiz_daily_results (
+  user_id       uuid not null references auth.users on delete cascade,
+  day           date not null,
+  correct       smallint not null check (correct between 0 and 5),
+  total         smallint not null check (total between 1 and 5),
+  ms            integer not null check (ms >= 0),
+  answers       jsonb not null,
+  submitted_at  timestamptz not null default now(),
+  primary key (user_id, day)
+);
+create index quiz_daily_results_day_idx on quiz_daily_results (day);
+
 create table solves (
   user_id            uuid not null references profiles on delete cascade,
   problem_slug       text not null references problem_content,
@@ -230,6 +245,7 @@ alter table submissions enable row level security;
 alter table solves enable row level security;
 alter table user_state enable row level security;
 alter table github_links enable row level security;
+alter table quiz_daily_results enable row level security;
 
 -- Catalog and content are public to read; only the sync job (service role) writes them.
 create policy read_all on topics for select using (true);
@@ -255,6 +271,7 @@ create policy own_submissions on submissions for select using (user_id = auth.ui
 create policy own_solves on solves for select using (user_id = auth.uid());
 create policy own_state on user_state for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy own_github_link on github_links for select using (user_id = auth.uid());
+create policy own_read on quiz_daily_results for select using (user_id = auth.uid());
 
 -- "Reveal Solution": the only client path to a solution. Marks the problem assisted, then returns
 -- the code. security definer so it can read the solutions table that clients cannot.
