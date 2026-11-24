@@ -22,6 +22,7 @@ import { dayKey } from '../../state/progress.js';
 import { msUntilNextDaily, formatCountdown } from '../../data/daily.js';
 import { revealDelta } from '../../data/scroll-reveal.js';
 import { reducedMotion } from '../motion.js';
+import { normalizeNickname } from '../../data/profile.js';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
@@ -337,8 +338,8 @@ function boardBlock({ day, lang, submit = null, onBoard = () => {} }) {
       {
         onSubmit: (e) => {
           e.preventDefault();
-          const name = input.value.trim().replace(/\s+/g, ' ');
-          if (name && ([...name].length < 2 || [...name].length > 24)) {
+          const { name, ok } = normalizeNickname(input.value);
+          if (!ok) {
             toast(t.nameInvalid, 'error');
             input.focus();
             return;

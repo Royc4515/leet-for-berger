@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added (profile page, owner's request)
+- **A profile page, `#/me`** ("Profile and settings" in the account panel, or Profile in the command palette): who is signed in with the sync status and Sign out; your numbers (solved, coding streak, accuracy, quiz streak, submissions, daily quizzes, the last interview and race) with links to the calendar, the map and the quiz; the name you show on the daily quiz leaderboard, editable with the board's own rule; the quiz language and "Show the page guides again"; GitHub sync, the same controls as the panel; and your data. Signed out, it shows this browser's progress, how to sign in, and a "Delete progress on this device" button with a confirm. Signed in, it says how to have the account deleted (the Privacy Policy's address).
+- **It says plainly that quiz progress is not in the account yet**: it stays in the browser and signing out removes it. The Sign out confirm said "Your progress stays in your account"; it now names what stays and what goes.
+
+### Fixed
+- **"Guide for this page" no longer shows on pages without a guide** (the daily quiz, its leaderboard, the profile, not-found pages), where the button did nothing.
+
 ### Fixed (signed-in header on a phone, owner's report)
 - **Signed in, the page title in a phone's header shrank to one letter** ("P" for Problems at 390 px, nothing at 320 px): the full name and "Progress synced" took 163 px of the header. On a phone the account control is now a round badge with the initials and a dot for the sync status (green synced, amber syncing, red failed), 44 px wide; the title shows in full down to 320 px. The panel it opens starts with who is signed in, their email and the sync status. The name stays the button's accessible name. Wider screens are unchanged (`userInitials` in `auth/account.js`, unit-tested).
 

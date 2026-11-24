@@ -3,6 +3,7 @@
  * deployable to GitHub Pages as-is and keeps Claude Code edits easy to review.
  */
 import { glide } from './motion.js';
+import { tourForRoute } from '../data/tour-routes.js';
 
 /**
  * Hyperscript-style element factory. Children that are strings become text nodes,
@@ -257,8 +258,11 @@ export function siteFooter({ note = '' } = {}) {
       h('a', { href: '#/map' }, 'Map'),
       h('a', { href: '#/daily' }, 'Daily'),
       h('a', { href: '#/path' }, 'Path'),
-      // main.js owns tours (they outlive a view); the footer only asks for one.
-      h('button.site-links-tour', { type: 'button', 'aria-haspopup': 'dialog', onClick: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) }, 'Guide for this page'),
+      // main.js owns tours (they outlive a view); the footer only asks for one, and only on a page
+      // that has one (the profile, the daily quiz and its leaderboard do not: the button did nothing).
+      tourForRoute(globalThis.location?.hash ?? '')
+        ? h('button.site-links-tour', { type: 'button', 'aria-haspopup': 'dialog', onClick: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) }, 'Guide for this page')
+        : null,
       h('a', { href: 'privacy.html' }, 'Privacy Policy'),
     ),
     note ? h('p.site-links-note', {}, note) : null,
