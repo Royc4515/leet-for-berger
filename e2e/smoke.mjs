@@ -1604,10 +1604,17 @@ try {
     // Board nickname: a signed-in player sees the name the board shows, changes it, and the board reloads with it.
     let nick = null;
     const nameCalls = [];
+    const submits = [];
     await acct.route('https://example.supabase.co/functions/v1/daily-quiz/**', async (r) => {
       const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type' };
       if (r.request().method() === 'OPTIONS') return r.fulfill({ status: 204, headers: cors });
       const url = new URL(r.request().url());
+      if (url.pathname.endsWith('/submit')) {
+        const body = JSON.parse(r.request().postData());
+        submits.push(body);
+        const shown = nick ?? 'Ada';
+        return r.fulfill({ contentType: 'application/json', headers: cors, body: JSON.stringify({ correct: 4, total: 5, results: [true, true, true, true, false], recorded: true, board: { day: body.day, week: { start: body.day, end: body.day }, players: 1, daily: [{ rank: 1, name: shown, correct: 4, total: 5, ms: body.ms, you: true }], weekly: [], me: { streak: 1, played: true, name: shown, custom: Boolean(nick) } } }) });
+      }
       if (url.pathname.endsWith('/name')) {
         const name = JSON.parse(r.request().postData()).name.trim();
         nameCalls.push(name);
@@ -1616,10 +1623,24 @@ try {
       }
       const day = url.searchParams.get('day');
       const shown = nick ?? 'Ada';
+      if (!submits.length) return r.fulfill({ contentType: 'application/json', headers: cors, body: JSON.stringify({ day, week: { start: day, end: day }, players: 0, daily: [], weekly: [], me: { streak: 0, played: false, name: shown, custom: Boolean(nick) } }) });
       return r.fulfill({ contentType: 'application/json', headers: cors, body: JSON.stringify({ day, week: { start: day, end: day }, players: 1, daily: [{ rank: 1, name: shown, correct: 4, total: 5, ms: 60000, you: true }], weekly: [], me: { streak: 2, played: true, name: shown, custom: Boolean(nick) } }) });
     });
-    await acct.evaluate(() => localStorage.setItem('lfb:quiz-lang', 'en'));
+    // Today was played on this device before the server had it (signed out, or before an update):
+    // the board, seeing the server has no play, sends the stored first play once.
+    const PLAY = { answers: [{ id: 'q1', choice: 1 }, { id: 'q2', choice: 0 }], ms: 61000 };
+    await acct.evaluate((play) => {
+      localStorage.setItem('lfb:quiz-lang', 'en');
+      const d = new Date();
+      const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      localStorage.setItem('lfb:quiz:v1', JSON.stringify({ questions: {}, best: {}, daily: { [day]: { correct: 4, total: 5, results: [true, true, true, true, false], play } } }));
+    }, PLAY);
     await acct.goto(`${BASE}#/quiz/board`);
+    await acct.waitForSelector('.quiz-board-row.is-you');
+    if (submits.length !== 1 || JSON.stringify(submits[0].answers) !== JSON.stringify(PLAY.answers) || submits[0].ms !== PLAY.ms) throw new Error(`stored play not sent once: ${JSON.stringify(submits)}`);
+    await acct.reload();
+    await acct.waitForSelector('.quiz-board-row.is-you');
+    if (submits.length !== 1) throw new Error('a play the server already has was sent again');
     await acct.waitForSelector('.quiz-board-me:has-text("On the board as Ada")');
     await acct.click('.quiz-board-rename');
     await acct.waitForFunction(() => document.activeElement?.id === 'quiz-name');

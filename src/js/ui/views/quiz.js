@@ -281,8 +281,9 @@ async function shareResult(text, lang) {
 }
 
 /**
- * Today's and this week's leaderboard. With `submit`, the player's first play of the day is
- * sent first (choices only; the server scores them) and the board comes back with the answer.
+ * Today's and this week's leaderboard. With `submit` (the stored first play of the day), a
+ * signed-in player's play is sent when the server does not have it yet: right after playing, or
+ * later after signing in or a failed send (choices only; the server scores them).
  * @param {{ day: string, lang: 'en'|'he', submit?: { answers: { id: string, choice: number }[], ms: number }|null, onBoard?: (board: any, mine: any) => void }} opts
  * @returns {HTMLElement|null} null when accounts are not configured
  */
@@ -389,7 +390,8 @@ function boardBlock({ day, lang, submit = null, onBoard = () => {} }) {
           ),
     );
   };
-  const go = submit && signedIn() ? client.submit({ day, ...submit }).then((mine) => [mine.board, mine]) : client.board(day).then((board) => [board, null]);
+  const send = () => client.submit({ day, ...submit }).then((mine) => [mine.board, mine]);
+  const go = client.board(day).then((board) => (submit && signedIn() && board.me && !board.me.played ? send() : [board, null]));
   go.then(
     ([board, mine]) => {
       draw(board, mine);
@@ -583,10 +585,12 @@ export function renderDailyQuiz(root) {
           onDone: (finished) => {
             const before = loadQuizProgress();
             const first = !before.daily[today];
-            saveQuizProgress(recordSession(before, finished));
+            const play = { answers: authoredChoices(finished), ms: Math.max(0, (finished.endedAt ?? Date.now()) - finished.startedAt) };
+            saveQuizProgress(recordSession(before, finished, play));
             const results = finished.answers.map((a) => a.correct);
-            // Only the first play of the day goes to the server; a replay is practice.
-            const submit = first ? { answers: authoredChoices(finished), ms: Math.max(0, (finished.endedAt ?? Date.now()) - finished.startedAt) } : null;
+            // Only the first play of the day goes to the server; a replay is practice, but it still
+            // delivers the stored first play if the server never got it.
+            const submit = first ? play : (before.daily[today]?.play ?? null);
             stop = renderResults(root, { session: finished, lang, daily: { number, first, day: today, results, submit, streak: dailyQuizStreak(loadQuizProgress(), new Date()) }, onAgain: begin, onRetryMissed: null, onBack: () => (location.hash = '#/quiz') });
           },
           onQuit: () => (location.hash = '#/quiz'),
@@ -624,7 +628,7 @@ export function renderDailyQuiz(root) {
             h('a.btn.btn-ghost', { href: '#/quiz' }, 'More quizzes'),
           ),
         ),
-        boardBlock({ day: today, lang, onBoard: (board) => { const me = board.daily.find((r) => r.you); boardRank = me ? { rank: me.rank, players: board.players } : null; boardStreak = board.me?.streak ?? null; } }),
+        boardBlock({ day: today, lang, submit: done.play ?? null, onBoard: (board) => { const me = board.daily.find((r) => r.you); boardRank = me ? { rank: me.rank, players: board.players } : null; boardStreak = board.me?.streak ?? null; } }),
         siteFooter(),
       ),
     );
@@ -652,7 +656,7 @@ export function renderQuizBoard(root) {
       {},
       h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, `Daily quiz No. ${dailyQuizNumber(today)}`), h('h1', {}, 'Leaderboard'), h('p.page-sub', {}, 'Scores are checked on the server, and only your first play of the day counts. Ties go to the faster player. Weeks run Sunday to Saturday.'))),
       h('div.quiz-actions.quiz-board-cta', {}, h(`a.btn${done ? '.btn-secondary' : '.btn-primary'}`, { href: '#/quiz/daily' }, done ? "See today's result" : "Play today's quiz"), h('a.btn.btn-ghost', { href: '#/quiz' }, 'More quizzes')),
-      boardBlock({ day: today, lang }),
+      boardBlock({ day: today, lang, submit: done?.play ?? null }),
       siteFooter(),
     ),
   );

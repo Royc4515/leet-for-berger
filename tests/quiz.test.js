@@ -345,6 +345,18 @@ test('the daily result keeps its squares, and old records without them still loa
   assert.equal(normalizeQuizProgress({ daily: { '2026-11-23': { correct: 3, total: 5, results: ['x'] } } }).daily['2026-11-23'].results, undefined);
 });
 
+test('the first daily play is kept for the leaderboard, and a replay never replaces it', () => {
+  const day = '2026-11-24';
+  const play = { answers: [{ id: 'a', choice: 2 }, { id: 'b', choice: 0 }], ms: 61000 };
+  const first = recordSession(emptyQuizProgress(), { mode: 'practice', daily: day, answers: [{ id: 'a', correct: true }, { id: 'b', correct: false }] }, play);
+  assert.deepEqual(first.daily[day].play, play);
+  const replay = recordSession(first, { mode: 'practice', daily: day, answers: [{ id: 'a', correct: true }, { id: 'b', correct: true }] }, { answers: [{ id: 'a', choice: 2 }, { id: 'b', choice: 1 }], ms: 5000 });
+  assert.deepEqual(replay.daily[day].play, play, 'the server must get the first play, not a replay');
+  assert.deepEqual(normalizeQuizProgress(JSON.parse(JSON.stringify(replay))).daily[day].play, play, 'survives storage');
+  const bad = normalizeQuizProgress({ daily: { [day]: { correct: 1, total: 2, play: { answers: [{ id: 'a', choice: 'x' }], ms: 5 } } } });
+  assert.equal(bad.daily[day].play, undefined);
+});
+
 test('board client: reads the board signed out, submits choices with the session, surfaces errors', async () => {
   const calls = [];
   let token = null;
