@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed (daily quiz leaderboard)
+- **A daily play that never reached the board is sent later.** The first play of the day was sent only from the results screen, so a player who played signed out, before the leaderboard shipped, or through a failed send stayed off the board for that day. The first play's choices and time are now kept on the device, and the board sends them once when the server has no play for that day. A replay still never counts.
+
 ### Changed (CI speed)
 - **CI skips the native program builder tests when nothing they read changed.** `tests/programs.test.js` took about 7 of the unit tests' 7 minutes; it now runs in its own step only when the `solutions` paths change (problems, engine, verifier, package files, ci.yml), so a UI, content or docs PR saves those minutes. `tests/ci.test.js` checks that every module the test imports is in that pattern.
 
