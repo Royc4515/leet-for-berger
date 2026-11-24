@@ -26,7 +26,7 @@ test('one page per address, each with a title, a description and an image', () =
 });
 
 test('every address a share button can send has its page', () => {
-  const want = [SHARE_PAGES.path, SHARE_PAGES.daily, SHARE_PAGES.interview, SHARE_PAGES.battle];
+  const want = [SHARE_PAGES.path, SHARE_PAGES.daily, SHARE_PAGES.interview, SHARE_PAGES.battle, SHARE_PAGES.quiz, SHARE_PAGES.quizDaily, SHARE_PAGES.quizBoard];
   for (const p of data.problems) {
     want.push(SHARE_PAGES.problem(p.id));
     const at = data.placed[p.id];

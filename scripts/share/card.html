@@ -52,6 +52,18 @@
   .race .bar i { display: block; height: 100%; border-radius: 20px; background: var(--accent); }
   .race .bar.them i { background: var(--text-2); }
   .race .who { font-size: 22px; color: var(--text-2); margin-bottom: 8px; }
+  .opts { display: grid; gap: 14px; width: 380px; }
+  .opts div { display: flex; align-items: center; gap: 16px; height: 62px; padding: 0 18px; border-radius: 14px; background: var(--panel-2); box-shadow: inset 0 0 0 2px var(--border); }
+  .opts b { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; font-family: var(--mono); font-size: 20px; background: var(--panel-3); color: var(--text-2); }
+  .opts i { flex: 1; height: 12px; border-radius: 6px; background: var(--panel-3); }
+  .opts .ok { box-shadow: inset 0 0 0 2px var(--ok); }
+  .opts .ok b { background: var(--ok); color: var(--bg); }
+  .squares { display: flex; gap: 14px; }
+  .squares i { width: 64px; height: 64px; border-radius: 12px; background: var(--ok); }
+  .squares i.miss { background: var(--hard); }
+  .podium { display: flex; align-items: flex-end; gap: 14px; }
+  .podium div { width: 110px; border-radius: 14px 14px 0 0; background: var(--panel-3); display: grid; place-items: start center; padding-top: 14px; font-family: var(--display); font-weight: 700; font-size: 44px; color: var(--text-2); }
+  .podium .first { background: var(--accent); color: var(--bg); }
 </style>
 </head>
 <body>
@@ -87,6 +99,10 @@
     path: (c) => el('div', 'tiers', ...Array.from({ length: c.tiers }, (_, t) => el('div', 'col', ...hexes(t + 1, (i) => (t === 0 || (t === 1 && i === 0) ? 'lit' : ''))))),
     daily: () => comb(hexes(7, (i) => (i < 4 ? 'lit' : i === 6 ? 'open' : '')), 7),
     interview: () => { const r = el('div', 'ring'); r.append(el('span', '', '45:00')); return r; },
+    quiz: () => el('div', 'opts', ...['A', 'B', 'C', 'D'].map((l, i) => el('div', i === 2 ? 'ok' : '', el('b', '', l), Object.assign(el('i'), { style: `max-width: ${[78, 60, 88, 52][i]}%` })))),
+    // The squares a finished daily quiz shares: one per question.
+    'quiz-daily': (c) => el('div', 'squares', ...Array.from({ length: c.size }, (_, i) => el('i', i === 3 ? 'miss' : ''))),
+    'quiz-board': () => el('div', 'podium', ...[['2', 170], ['1', 240, 'first'], ['3', 120]].map(([n, h, cls]) => Object.assign(el('div', cls ?? '', n), { style: `height: ${h}px` }))),
     battle: () => el('div', 'race', el('div', '', el('div', 'who', 'You'), el('div', 'bar', Object.assign(el('i'), { style: 'width: 80%' }))), el('div', '', el('div', 'who', 'Bot'), el('div', 'bar them', Object.assign(el('i'), { style: 'width: 55%' })))),
   };
   /** Draws one card; resolves when its images have loaded. */

@@ -553,14 +553,25 @@ kbd,
     padding-bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px));
   }
 
+  /* scrollIntoView and focus scrolling stop above the tab bar, not under it. */
+  html {
+    scroll-padding-bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px) + var(--s-3));
+  }
+
+  /* A quiz question gets the whole screen, as a problem does; its HUD has Leave / End. */
   body.has-workspace .tab-bar,
-  body.lockdown .tab-bar {
+  body.lockdown .tab-bar,
+  body.quiz-playing .tab-bar {
     display: none;
   }
 
   body.has-workspace,
   body.lockdown {
     padding-bottom: 0;
+  }
+
+  body.quiz-playing {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .page {
@@ -4035,15 +4046,58 @@ body.lockdown .toast-host {
     padding: var(--s-3);
   }
 
+  /* Phone: the daily quiz leads (owner's request: it needs no editor, so it is the thing to do on
+     a phone) and the coding daily shrinks to a strip of its name and button. Emphasis swaps with
+     them: the DOM keeps one primary button for the desktop, so here the quiz button takes the
+     primary look and Solve the secondary one. */
   .dashboard-page .today-daily {
     order: 2;
-    gap: var(--s-2);
+    display: block;
     margin-bottom: var(--s-3);
-    padding: var(--s-4);
+    padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3);
+  }
+
+  .dashboard-page .today-daily-copy {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0 var(--s-3);
+  }
+
+  .dashboard-page .today-daily .today-kicker {
+    grid-column: 1;
+  }
+
+  /* The date is in the page head already; the strip keeps the daily's number on one line. */
+  .dashboard-page .today-daily .today-kicker > :not(.daily-no) {
+    display: none;
   }
 
   .dashboard-page .today-daily .today-main {
-    font-size: var(--fs-xl);
+    grid-column: 1;
+    overflow: hidden;
+    font-size: var(--fs-md);
+    letter-spacing: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .dashboard-page .today-daily .today-meta,
+  .dashboard-page .today-daily .today-actions .btn-ghost {
+    display: none;
+  }
+
+  .dashboard-page .today-daily .today-actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin: 0;
+  }
+
+  .dashboard-page .today-daily .today-cta {
+    padding: 0 var(--s-3);
+    background: var(--panel-3);
+    color: var(--text);
+    border-color: var(--border-strong);
+    font-size: var(--fs-sm);
   }
 
   .dashboard-page > .dashboard-controls {
@@ -4055,33 +4109,44 @@ body.lockdown .toast-host {
     order: 4;
   }
 
+  /* Compact enough that the problem list still starts on the first screen (e2e checks it). */
   .dashboard-page .today-quiz {
-    order: 2;
-    margin-bottom: var(--s-3);
-    padding: var(--s-3) var(--s-4);
-  }
-
-  /* One line on a phone: the problem list must still start on the first screen. */
-  .dashboard-page .today-quiz {
-    flex-wrap: nowrap;
-    gap: var(--s-3);
-    margin-bottom: var(--s-1-5);
-    padding: var(--s-1) var(--s-3);
-  }
-
-  .dashboard-page .today-daily:has(+ .today-quiz) {
+    order: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-2) var(--s-3);
     margin-bottom: var(--s-2);
-    padding-block: var(--s-3);
+    padding: var(--s-3) var(--s-4) var(--s-4);
   }
 
-  .dashboard-page .today-quiz .hint-text,
-  .dashboard-page .today-quiz-title,
-  .dashboard-page .today-quiz .quiz-squares {
+  .dashboard-page .today-quiz .hint-text {
     display: none;
   }
 
   .dashboard-page .today-quiz-copy {
+    grid-column: 1 / -1;
+    gap: 0;
+  }
+
+  .dashboard-page .today-quiz-title {
+    font-size: var(--fs-lg);
+  }
+
+  .dashboard-page .today-quiz-side {
+    grid-column: 1 / -1;
+    flex-wrap: nowrap;
+  }
+
+  .dashboard-page .today-quiz.is-done .today-quiz-side {
+    grid-column: 2;
+  }
+
+  .dashboard-page .today-quiz-cta {
     flex: 1 1 auto;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: transparent;
   }
 
   .dashboard-page .today-weak {
@@ -5257,9 +5322,12 @@ body.resizing-y * {
 }
 
 @media (pointer: coarse) {
-  /* Under 16 px, mobile Safari zooms the page on focus and leaves it zoomed. */
+  /* Under 16 px, mobile Safari zooms the page on focus and leaves it zoomed. The textarea forms
+     are named too: textarea.custom-input sets a smaller mono size with more weight than a class. */
   .custom-input,
   .mentor-input,
+  textarea.custom-input,
+  textarea.mentor-input,
   .quiz-name-input,
   .search,
   .palette-input {
@@ -6990,6 +7058,25 @@ body.resizing-y * {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Phone: the quiz leads (owner's request: no editor needed), and takes the primary look from
+     the exam room, which keeps the one primary button of the desktop layout in the DOM. */
+  .mode-grid .mode-quiz {
+    order: -1;
+    border-color: var(--accent-line);
+  }
+
+  .mode-quiz .mode-actions .btn {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: transparent;
+  }
+
+  .mode-exam .mode-actions .btn-primary {
+    background: var(--panel-3);
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+
   .mode-card {
     grid-template-rows: 110px auto;
   }
@@ -7676,6 +7763,14 @@ body.resizing-y * {
   font-size: var(--fs-sm);
 }
 
+@media (pointer: coarse) {
+  .quiz-ref {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
 .quiz-lang {
   margin-bottom: var(--s-5);
 }
@@ -7742,6 +7837,11 @@ body.resizing-y * {
   justify-content: center;
   gap: var(--s-2);
   margin-top: var(--s-3);
+}
+
+/* The shared share button is a small one; in a row of full-size actions it matches them. */
+.quiz-actions .share-btn {
+  height: var(--ctl-md);
 }
 
 .quiz-breakdown,
@@ -7813,9 +7913,6 @@ body.resizing-y * {
   height: 28px;
 }
 
-.quiz-share-btn {
-  margin-top: var(--s-2);
-}
 
 .quiz-board {
   margin-bottom: var(--s-6);
@@ -7943,6 +8040,71 @@ body.resizing-y * {
   .quiz-next {
     flex: 1 1 auto;
     justify-self: stretch;
+  }
+
+  /* Play on a phone: the question sits right under the header, and the HUD stays slim because it
+     is sticky and every pixel it takes is one the question does not get. */
+  .quiz-play {
+    padding-top: var(--s-2);
+  }
+
+  .quiz-hud {
+    gap: var(--s-1-5);
+    padding: var(--s-2) 0;
+    margin-bottom: var(--s-3);
+  }
+
+  /* Next stays under the thumb while a long explanation is read; the fade keeps the text it
+     passes over from showing through around it. */
+  .quiz-next {
+    position: sticky;
+    bottom: calc(var(--s-3) + env(safe-area-inset-bottom, 0px));
+    z-index: 1;
+    margin-top: var(--s-2);
+    box-shadow: 0 var(--s-3) 0 var(--s-1) var(--panel), 0 calc(-1 * var(--s-3)) var(--s-4) var(--s-1) var(--panel);
+  }
+
+  /* Results: the main action across the card, the others two to a row. */
+  .quiz-result-card .quiz-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .quiz-result-card .quiz-actions > :first-child,
+  .quiz-result-card .quiz-actions > :last-child:nth-child(even) {
+    grid-column: 1 / -1;
+  }
+
+  .quiz-result-card .quiz-actions .btn {
+    width: 100%;
+    height: auto;
+    min-height: var(--ctl-lg);
+    padding-block: var(--s-2);
+    white-space: normal;
+    line-height: var(--lh-snug);
+  }
+
+  /* Hub: Play today's quiz across the card, the leaderboard and share under it. */
+  .quiz-daily {
+    margin-bottom: var(--s-5);
+    padding: var(--s-4);
+  }
+
+  .quiz-daily-side {
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--s-2);
+  }
+
+  .quiz-daily-side > :not(.btn-ghost):not(.share-btn) {
+    grid-column: 1 / -1;
+  }
+
+  .quiz-daily-side > .btn-primary,
+  .quiz-daily-side > .btn-secondary {
+    height: var(--ctl-lg);
   }
 
   .quiz-topic-scores li {
