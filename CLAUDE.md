@@ -61,6 +61,7 @@ src/js/data/map-layout.js  Problem Map model: topic and subtopic states, lock re
 src/js/data/map-world.js   the continuous map: one world layout, camera maths (fit, zoom at a point, clamp, smooth flight), zoom levels, label placement (ADR 0010 amendment 2)
 src/js/data/problem-topics.js taxonomy topic per shipped problem (-> problem-topics.json, build-meta.mjs)
 src/js/data/palette-search.js command palette ranking
+src/js/data/profile.js     profile numbers and the leaderboard nickname rule (shared with the quiz board)
 src/js/data/share.js       what each share button sends (spoiler-free texts and links); ui/share.js = the button (share sheet or copy)
 src/js/data/tours.js       guided tour content (one per page + welcome + mentor), validateTour; tour-routes.js = route to tour (startup); tour-layout.js = card and spotlight placement (pure)
 src/js/data/company-loader.js fetch loaders for company-sets.json, problem-topics.json, company-logos.json (which companies have a logo, bleed, brand colour) and company-pages.json (which companies have a page: chips link there); each company in the sets carries its careers link (content/company-careers.json, scripts/content/check-careers.mjs)
@@ -74,7 +75,7 @@ deploy/supabase/functions/ Edge Functions: github-sync, daily-quiz (scores the d
 deploy/piston/             VM kit: Piston image, runtime packages, gate, compose, setup.sh, smoke.mjs, dev/
 db/schema.sql              PostgreSQL schema (ADR 0002); scripts/db/ = git -> database sync + checks
 src/js/ui/                 dom helpers, editor (Monaco + fallback), ts-compiler (Monaco's TS service), resizer, results console, motion.js (durations, View Transitions, glide, spotlight, burst, shake), palette.js (Ctrl+K), daily-card.js, tour.js (guided tour overlay)
-src/js/ui/views/           dashboard, map, daily, workspace, path, companies, modes (hub, interview, battle), quiz (hub, play, results, daily quiz)
+src/js/ui/views/           dashboard, map, daily, workspace, path, companies, modes (hub, interview, battle), quiz (hub, play, results, daily quiz), profile (#/me: account, numbers, settings)
 scripts/design/            capture-screens.mjs (before/after shots), perf-map.mjs (ADR 0010), social-preview.mjs
 tests/                     node --test unit tests + solutions.test.js (8-language verifier)
 e2e/smoke.mjs              Playwright smoke test

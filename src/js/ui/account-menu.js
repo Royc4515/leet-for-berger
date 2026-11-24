@@ -148,6 +148,7 @@ export function mountAccountMenu(host, account, github = null) {
         h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => account.signIn('github') }, 'Continue with GitHub'),
         h('p.hint-text', {}, 'Signing in syncs your progress across devices. ', h('a', { href: 'privacy.html' }, 'Privacy Policy')),
         s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null,
+        h('a.btn.btn-ghost.btn-sm.account-profile-link', { href: '#/me' }, 'Profile and settings'),
       );
       const toggle = h('button.btn.btn-ghost.btn-sm.account-toggle', { type: 'button', 'aria-controls': MENU_ID, 'aria-expanded': String(open) }, 'Sign in');
       // Opening the menu is the intent to sign in: start loading supabase-js now (a no-op once loaded).
@@ -168,7 +169,15 @@ export function mountAccountMenu(host, account, github = null) {
       s.user.name && s.user.email ? h('span.hint-text', {}, s.user.email) : null,
       syncLabel ? h(`span.account-me-sync${s.sync === 'error' ? '.bad' : ''}`, {}, syncLabel) : null,
     );
-    const panel = h('div.account-menu', { hidden: !open, id: MENU_ID }, me, ghSection(), s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null, h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: confirmSignOut }, 'Sign out'));
+    const panel = h(
+      'div.account-menu',
+      { hidden: !open, id: MENU_ID },
+      me,
+      ghSection(),
+      s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null,
+      h('a.btn.btn-ghost.btn-sm.account-profile-link', { href: '#/me' }, 'Profile and settings'),
+      h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: confirmSignOut }, 'Sign out'),
+    );
     // The name stays in the button for its accessible name; on a phone it is visually hidden
     // behind the initials badge, which is decoration.
     const toggle = h(
@@ -238,7 +247,14 @@ export function mountAccountMenu(host, account, github = null) {
 }
 
 /** GitHub sync controls in the signed-in menu (ADR 0007); nothing when sync is not set up. */
-function githubSection(github, { closeMenu = () => {} } = {}) {
+/**
+ * GitHub sync controls: the connect wizard, or the linked repository with auto-sync and Disconnect.
+ * Shared by the account panel and the profile page.
+ * @param {any} github createGitHubSync() result, or null
+ * @param {{ closeMenu?: () => void }} [opts]
+ * @returns {HTMLElement|null} null when GitHub sync is not set up on this site
+ */
+export function githubSection(github, { closeMenu = () => {} } = {}) {
   if (!github?.available) return null;
   const link = github.get();
   const title = h('div.account-section-title', {}, 'GitHub sync');

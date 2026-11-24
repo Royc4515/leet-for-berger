@@ -7176,6 +7176,173 @@ body.resizing-y * {
 }
 
 /* =========================================================================
+   Profile (#/me): the account, the numbers and the settings, one card each
+   ========================================================================= */
+.profile-page {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.profile-page > .page-head {
+  margin-bottom: 0;
+}
+
+.profile-id,
+.profile-section {
+  padding: var(--s-5);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.profile-id {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-4);
+  border-color: var(--border-strong);
+}
+
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--panel-3);
+  color: var(--text);
+  font-family: var(--display);
+  font-size: var(--fs-xl);
+  font-weight: 650;
+}
+
+.profile-avatar.is-guest {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+
+.profile-avatar.is-guest::before {
+  content: '';
+  width: 22px;
+  height: 25px;
+  clip-path: var(--hex);
+  background: var(--accent);
+}
+
+.profile-id-copy {
+  display: grid;
+  gap: var(--s-half);
+  min-width: 0;
+}
+
+.profile-name {
+  font-family: var(--display);
+  font-size: var(--fs-xl);
+  overflow-wrap: anywhere;
+}
+
+.profile-id-copy .hint-text {
+  margin: 0;
+}
+
+.profile-sync {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.profile-sync.ok {
+  color: var(--ok);
+}
+
+.profile-sync.bad {
+  color: var(--bad);
+}
+
+.profile-id-actions,
+.profile-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.profile-section {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.profile-section-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--fs-lg);
+}
+
+.profile-section .hint-text {
+  margin: 0;
+}
+
+.profile-stats {
+  margin: 0;
+}
+
+.profile-facts {
+  display: grid;
+  gap: var(--s-1);
+  margin: 0;
+  padding-inline-start: var(--s-4);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.profile-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+}
+
+.profile-field,
+.profile-form {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.profile-field + .profile-field {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--border);
+}
+
+.profile-field .segmented {
+  justify-self: start;
+}
+
+.profile-delete {
+  color: var(--bad);
+}
+
+@media (max-width: 640px) {
+  .profile-id,
+  .profile-section {
+    padding: var(--s-4);
+  }
+
+  /* Phone: the avatar and the name on one row, the buttons across under them. */
+  .profile-id {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .profile-id-actions {
+    grid-column: 1 / -1;
+  }
+
+  .profile-id-actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+/* =========================================================================
    Account menu
    ========================================================================= */
 .account-host {
