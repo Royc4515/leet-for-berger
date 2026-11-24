@@ -34,9 +34,10 @@ const CODE_LANGUAGES = 'Python, JavaScript, TypeScript, Java, C++, C, C# or Go';
  * @param {(concept: string) => string} d.conceptTitle
  * @param {{ slug: string, name: string, onSite: number, israel: string, logo: string|null, letters: string, bleed?: boolean, color?: string|null }[]} d.companies
  * @param {{ total: number, tiers: number }} d.path
+ * @param {{ topics: number, questions: number, daily: number }} d.quiz
  * @returns {SharePage[]}
  */
-export function sharePages({ problems, placed, topics, conceptTitle, companies, path }) {
+export function sharePages({ problems, placed, topics, conceptTitle, companies, path, quiz }) {
   const out = [];
   const topicOf = new Map(topics.map((t) => [t.id, t]));
   const problemPage = new Map();
@@ -131,6 +132,25 @@ export function sharePages({ problems, placed, topics, conceptTitle, companies, 
     sub: 'Interviews and online assessments · a score out of 100',
   });
   single(SHARE_PAGES.battle, '#/battle', 'Battle', 'Race a bot on the same problem: the first to pass all 15 tests wins.', { kind: 'battle', eyebrow: 'Battle', title: 'Race a bot', sub: 'Same problem · first to pass 15 tests wins' });
+  single(SHARE_PAGES.quiz, '#/quiz', 'Interview quiz', `${quiz.questions} multiple-choice questions on what interviews test: OOP, data structures, databases, concurrency and more. In English or Hebrew, built for a phone.`, {
+    kind: 'quiz',
+    eyebrow: 'Quiz',
+    title: 'Five spare minutes',
+    sub: `${quiz.topics} topics · English or Hebrew`,
+  });
+  single(SHARE_PAGES.quizDaily, '#/quiz/daily', 'Daily quiz', `${quiz.daily} questions a day, the same for everyone. Share your squares, climb the leaderboard, keep your streak.`, {
+    kind: 'quiz-daily',
+    eyebrow: 'Daily quiz',
+    title: `${quiz.daily} questions a day`,
+    sub: 'The same for everyone · a new one at midnight',
+    size: quiz.daily,
+  });
+  single(SHARE_PAGES.quizBoard, '#/quiz/board', 'Daily quiz leaderboard', 'Who scored best on the daily quiz today and this week. Only the first play counts, ties go to the faster player.', {
+    kind: 'quiz-board',
+    eyebrow: 'Daily quiz',
+    title: 'Leaderboard',
+    sub: 'Today and this week · first play counts',
+  });
   return out;
 }
 

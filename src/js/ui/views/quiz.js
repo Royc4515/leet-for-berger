@@ -11,11 +11,16 @@ import { QUIZ_INDEX } from '../../data/quiz-index.js';
 import { loadQuizTopics } from '../../data/quiz-loader.js';
 import { QUIZ_MODES, DAILY_QUIZ_SIZE, dailyQuizNumber, quizMode, pickIds, buildQuiz, startDailyQuiz, dailyQuizIds, topicsFor, currentQuestion, answerQuestion, showNext, endQuiz, isOver, timeLeft, quizSummary, authoredChoices } from '../../modes/quiz.js';
 import { shareText } from '../../data/quiz-share.js';
+import { shareUrl, SHARE_PAGES, quizShare, quizResultShare, quizDailyShare, quizBoardShare } from '../../data/share.js';
+import { shareButton, shareIcon } from '../share.js';
+import { SITE_URL } from '../../config.js';
 import { services } from '../../auth/services.js';
 import { createQuizBoard } from '../../auth/quiz-board.js';
 import { loadQuizProgress, saveQuizProgress, recordSession, masteredIds, topicProgress, dailyQuizStreak } from '../../state/quiz-progress.js';
 import { dayKey } from '../../state/progress.js';
 import { msUntilNextDaily, formatCountdown } from '../../data/daily.js';
+import { revealDelta } from '../../data/scroll-reveal.js';
+import { reducedMotion } from '../motion.js';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
@@ -257,8 +262,8 @@ const signedIn = () => services.account?.get?.().status === 'signed-in';
 /** "1:05" from milliseconds, for the board's time column. */
 const mmss = (ms) => clock(Math.max(1000, ms));
 
-/** Where a shared result points: the daily quiz on this site. */
-const dailyUrl = () => `${location.origin}${location.pathname}#/quiz/daily`;
+/** Where a shared result points: the daily quiz's preview page, which forwards to the quiz. */
+const dailyUrl = () => shareUrl(SHARE_PAGES.quizDaily, SITE_URL);
 
 /**
  * Shares text through the phone's share sheet, or copies it where there is none.
@@ -406,11 +411,13 @@ function boardBlock({ day, lang, submit = null, onBoard = () => {} }) {
  * The share button for a finished daily quiz; it reads the rank when the board has answered.
  * @param {{ number: number, results: boolean[], streak: () => number, rank: () => ({ rank: number, players: number }|null), lang: 'en'|'he' }} p
  */
-function shareButton({ number, results, streak, rank, lang }) {
+function dailyResultButton({ number, results, streak, rank, lang }) {
+  // The main action once the daily quiz is played: the squares are what brings friends in.
   return h(
-    'button.btn.btn-secondary.quiz-share-btn',
+    'button.btn.btn-primary.quiz-share-btn',
     { type: 'button', onClick: () => shareResult(shareText({ number, results, streak: streak(), rank: rank()?.rank ?? null, players: rank()?.players ?? null, lang, url: dailyUrl() }), lang) },
-    T[lang].share,
+    shareIcon(),
+    h('span', {}, T[lang].share),
   );
 }
 
@@ -489,7 +496,7 @@ export function renderQuizHub(root) {
       'section.quiz-daily',
       { 'aria-labelledby': 'quiz-daily-title' },
       h('div.quiz-daily-copy', {}, h('span.eyebrow', {}, `Quiz No. ${dailyQuizNumber(today)}`), h('h2#quiz-daily-title', {}, 'Daily quiz'), h('p.hint-text', {}, todayResult ? `Done today: ${todayResult.correct} / ${todayResult.total}. A new one in ${formatCountdown(msUntilNextDaily(new Date()))}.` : `${DAILY_QUIZ_SIZE} questions from ${DAILY_QUIZ_SIZE} topics, the same for everyone today.`)),
-      h('div.quiz-daily-side', {}, quizStreak ? h('span.quiz-streak', {}, `${quizStreak}-day quiz streak`) : null, h(`a.btn${todayResult ? '.btn-secondary' : '.btn-primary'}`, { href: '#/quiz/daily' }, todayResult ? 'See today\'s result' : 'Play today\'s quiz'), h('a.btn.btn-ghost', { href: '#/quiz/board' }, 'Leaderboard')),
+      h('div.quiz-daily-side', {}, quizStreak ? h('span.quiz-streak', {}, `${quizStreak}-day quiz streak`) : null, h(`a.btn${todayResult ? '.btn-secondary' : '.btn-primary'}`, { href: '#/quiz/daily' }, todayResult ? 'See today\'s result' : 'Play today\'s quiz'), h('a.btn.btn-ghost', { href: '#/quiz/board' }, 'Leaderboard'), shareButton({ compact: true, name: "Share today's daily quiz", get: (l) => quizDailyShare({ number: dailyQuizNumber(today), size: DAILY_QUIZ_SIZE, lang: l }) })),
     );
 
     mount(
@@ -497,9 +504,14 @@ export function renderQuizHub(root) {
       h(
         'div.page.quiz-page',
         {},
-        h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, 'Five spare minutes'), h('h1', {}, 'Quiz'), guideBtn(), h('p.page-sub', {}, 'Multiple-choice questions on the ideas student and first-job interviews test: OOP, data structures, databases, concurrency, networking and more. No editor needed, so it works on a phone. In English or Hebrew.'))),
-        h('div.quiz-field.quiz-lang', {}, h('span.quiz-label', {}, 'Language'), langPicker, h('p.hint-text', {}, 'Hebrew keeps technical terms in English, as interviewers say them.')),
+        h(
+          'header.page-head',
+          {},
+          h('div', {}, h('span.eyebrow', {}, 'Five spare minutes'), h('h1', {}, 'Quiz'), guideBtn(), h('p.page-sub', {}, 'Multiple-choice questions on the ideas student and first-job interviews test: OOP, data structures, databases, concurrency, networking and more. No editor needed, so it works on a phone. In English or Hebrew.')),
+          h('div.page-head-actions', {}, shareButton({ name: 'Share the quiz', get: (l) => quizShare({ lang: l }) })),
+        ),
         dailyCard,
+        h('div.quiz-field.quiz-lang', {}, h('span.quiz-label', {}, 'Language'), langPicker, h('p.hint-text', {}, 'Hebrew keeps technical terms in English, as interviewers say them.')),
         h(
           'section.quiz-setup',
           { 'aria-labelledby': 'quiz-setup-title' },
@@ -623,8 +635,8 @@ export function renderDailyQuiz(root) {
           h(
             'div.quiz-actions',
             {},
-            done.results ? shareButton({ number, results: done.results, streak: () => boardStreak ?? dailyQuizStreak(loadQuizProgress(), new Date()), rank: () => boardRank, lang }) : null,
-            h('button.btn.btn-secondary', { type: 'button', onClick: begin }, 'Play it again'),
+            done.results ? dailyResultButton({ number, results: done.results, streak: () => boardStreak ?? dailyQuizStreak(loadQuizProgress(), new Date()), rank: () => boardRank, lang }) : null,
+            h(`button.btn${done.results ? '.btn-secondary' : '.btn-primary'}`, { type: 'button', onClick: begin }, 'Play it again'),
             h('a.btn.btn-ghost', { href: '#/quiz' }, 'More quizzes'),
           ),
         ),
@@ -648,15 +660,24 @@ export function renderDailyQuiz(root) {
 export function renderQuizBoard(root) {
   const lang = loadLang();
   const today = dayKey(new Date());
+  const number = dailyQuizNumber(today);
   const done = loadQuizProgress().daily[today];
+  // Filled in when the board answers, so a share names the sharer's place on it.
+  let mine = null;
+  let players = null;
   mount(
     root,
     h(
       'div.page.page-narrow.quiz-page',
       {},
-      h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, `Daily quiz No. ${dailyQuizNumber(today)}`), h('h1', {}, 'Leaderboard'), h('p.page-sub', {}, 'Scores are checked on the server, and only your first play of the day counts. Ties go to the faster player. Weeks run Sunday to Saturday.'))),
+      h(
+        'header.page-head',
+        {},
+        h('div', {}, h('span.eyebrow', {}, `Daily quiz No. ${number}`), h('h1', {}, 'Leaderboard'), h('p.page-sub', {}, 'Scores are checked on the server, and only your first play of the day counts. Ties go to the faster player. Weeks run Sunday to Saturday.')),
+        h('div.page-head-actions', {}, shareButton({ name: 'Share the leaderboard', get: (l) => quizBoardShare({ number, rank: mine?.rank ?? null, players, size: DAILY_QUIZ_SIZE, lang: l }) })),
+      ),
       h('div.quiz-actions.quiz-board-cta', {}, h(`a.btn${done ? '.btn-secondary' : '.btn-primary'}`, { href: '#/quiz/daily' }, done ? "See today's result" : "Play today's quiz"), h('a.btn.btn-ghost', { href: '#/quiz' }, 'More quizzes')),
-      boardBlock({ day: today, lang, submit: done?.play ?? null }),
+      boardBlock({ day: today, lang, submit: done?.play ?? null, onBoard: (board) => { mine = board.daily.find((r) => r.you) ?? null; players = board.players ?? null; } }),
       siteFooter(),
     ),
   );
@@ -768,7 +789,22 @@ function renderPlay(root, { session, lang, title = '', onDone, onQuit }) {
     live.textContent = correct ? t.correct : `${t.notQuite(LETTERS[q.answer])} ${q.options[q.answer]}`;
     drawHud();
     nextBtn.focus({ preventScroll: true });
-    nextBtn.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+    revealFeedback();
+  }
+
+  /**
+   * Brings the verdict, the explanation and Next into view. scrollIntoView cannot: it does not
+   * know the sticky HUD above or a bottom bar, so on a phone Next landed under the tab bar.
+   */
+  function revealFeedback() {
+    const fb = body.querySelector('.quiz-feedback');
+    if (!fb) return;
+    const hud = root.querySelector('.quiz-hud')?.getBoundingClientRect();
+    const tab = document.querySelector('.tab-bar');
+    const tabTop = tab && tab.getClientRects().length ? tab.getBoundingClientRect().top : window.innerHeight;
+    const r = fb.getBoundingClientRect();
+    const dy = revealDelta({ top: r.top, bottom: r.bottom, viewTop: (hud?.bottom ?? 0) + 8, viewBottom: Math.min(window.innerHeight, tabTop) - 12 });
+    if (dy) window.scrollBy({ top: dy, behavior: reducedMotion() ? 'auto' : 'smooth' });
   }
 
   function next() {
@@ -776,7 +812,9 @@ function renderPlay(root, { session, lang, title = '', onDone, onQuit }) {
     if (isOver(s, Date.now())) return finish();
     s = showNext(s, Date.now());
     drawQuestion();
-    root.querySelector('.quiz-hud')?.scrollIntoView?.({ block: 'nearest' });
+    // A new question starts at the top. Scrolling to the HUD did nothing: a sticky element is
+    // always "in view", so the next question could start hidden under it.
+    window.scrollTo(0, 0);
   }
 
   const onKey = (e) => {
@@ -796,6 +834,7 @@ function renderPlay(root, { session, lang, title = '', onDone, onQuit }) {
   function cleanup() {
     clearInterval(timer);
     document.removeEventListener('keydown', onKey);
+    document.body.classList.remove('quiz-playing');
   }
 
   if (!s.questions.length) {
@@ -820,6 +859,9 @@ function renderPlay(root, { session, lang, title = '', onDone, onQuit }) {
     ),
   );
   document.addEventListener('keydown', onKey);
+  // On a phone the bottom tab bar steps aside while a question is on screen (app.css), as it does
+  // in a problem: the HUD has Leave / End.
+  document.body.classList.add('quiz-playing');
   if (s.deadline != null) {
     timer = setInterval(() => {
       if (isOver(s, Date.now()) && !revealed) return finish();
@@ -865,16 +907,17 @@ function renderResults(root, { session, lang, prevBest = 0, daily = null, onAgai
         h('span.eyebrow', {}, daily ? t.dailyTitle(daily.number) : t.results(t.modes[mode.id])),
         h('h1#quiz-result-title', { tabindex: '-1' }, headline),
         h('p.quiz-big', { dir: 'ltr' }, session.mode === 'survival' ? `${sum.correct}` : `${sum.correct} / ${sum.total}`),
+        daily ? h('ol.quiz-squares.quiz-squares-lg', { 'aria-hidden': 'true' }, daily.results.map((ok) => h(`li.quiz-square${ok ? '.is-correct' : '.is-wrong'}`))) : null,
         h('ul.quiz-result-facts', {}, lines.map((l) => h('li', {}, l))),
         h(
           'div.quiz-actions',
           {},
-          h('button.btn.btn-primary', { type: 'button', onClick: onAgain }, daily ? t.playItAgain : t.playAgain),
+          daily ? dailyResultButton({ number: daily.number, results: daily.results, streak: () => boardStreak ?? daily.streak, rank: () => boardRank, lang }) : null,
+          h(`button.btn${daily ? '.btn-secondary' : '.btn-primary'}`, { type: 'button', onClick: onAgain }, daily ? t.playItAgain : t.playAgain),
           onRetryMissed && sum.missed.length ? h('button.btn.btn-secondary', { type: 'button', onClick: () => onRetryMissed(sum.missed.map((q) => q.id)) }, t.retryMissed(sum.missed.length)) : null,
           h('button.btn.btn-ghost', { type: 'button', onClick: onBack }, daily ? t.moreQuizzes : t.changeSetup),
+          daily ? null : shareButton({ name: 'Share your quiz score', get: (l) => quizResultShare({ mode: session.mode, correct: sum.correct, total: sum.total, topic: session.topics.length === 1 ? topicTitle(session.topics[0], l) : null, lang: l }) }),
         ),
-        daily ? h('ol.quiz-squares.quiz-squares-lg', { 'aria-hidden': 'true' }, daily.results.map((ok) => h(`li.quiz-square${ok ? '.is-correct' : '.is-wrong'}`))) : null,
-        daily ? shareButton({ number: daily.number, results: daily.results, streak: () => boardStreak ?? daily.streak, rank: () => boardRank, lang }) : null,
       ),
       daily
         ? boardBlock({

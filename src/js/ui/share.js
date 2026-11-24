@@ -18,8 +18,9 @@ const svgEl = (tag, attrs) => {
 /**
  * The share mark: three connected nodes, read as "share" on Android and the web (owner's pick
  * over a tray arrow, which also reads as "download"). Decorative: the button's name says what it does.
+ * @returns {SVGSVGElement}
  */
-function shareIcon() {
+export function shareIcon() {
   const svg = svgEl('svg', { viewBox: '0 0 16 16', width: '16', height: '16', 'aria-hidden': 'true', class: 'share-icon' });
   const line = { fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5' };
   svg.append(

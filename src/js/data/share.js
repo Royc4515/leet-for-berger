@@ -27,7 +27,7 @@ export function shareUrl(page, siteUrl) {
 
 /**
  * Preview page paths, one per shareable thing (the deploy builds one file for each).
- * @type {{ problem: (id: string) => string, company: (slug: string) => string, map: (level: { topic: string, concept?: string|null, problem?: string|null }) => string, path: string, daily: string, interview: string, battle: string }}
+ * @type {{ problem: (id: string) => string, company: (slug: string) => string, map: (level: { topic: string, concept?: string|null, problem?: string|null }) => string, path: string, daily: string, interview: string, battle: string, quiz: string, quizDaily: string, quizBoard: string }}
  */
 export const SHARE_PAGES = {
   problem: (id) => `s/problem/${id}.html`,
@@ -37,6 +37,9 @@ export const SHARE_PAGES = {
   daily: 's/daily.html',
   interview: 's/interview.html',
   battle: 's/battle.html',
+  quiz: 's/quiz.html',
+  quizDaily: 's/quiz-daily.html',
+  quizBoard: 's/quiz-board.html',
 };
 
 const HE_LEVEL = { Easy: 'קלה', Medium: 'בינונית', Hard: 'קשה' };
@@ -168,6 +171,77 @@ export function battleShare({ won, bot, title, lang = 'en' }) {
       ? `Beat ${bot} in a race on ${title}. Race me?`
       : `Raced ${bot} on ${title}, and ${bot} got there first. Rematch soon.`;
   return { title: he ? `מרוץ · ${SITE_NAME}` : `Battle · ${SITE_NAME}`, text, page: SHARE_PAGES.battle, hash: '#/battle' };
+}
+
+/**
+ * The quiz, to try: an invitation from the quiz hub.
+ * @param {{ lang?: 'en'|'he' }} [p]
+ * @returns {SharePayload}
+ */
+export function quizShare({ lang = 'en' } = {}) {
+  const he = lang === 'he';
+  return {
+    title: he ? `חידון ראיונות · ${SITE_NAME}` : `Interview quiz · ${SITE_NAME}`,
+    text: he
+      ? 'חידונים אמריקאיים על מה ששואלים בראיונות: OOP, מבני נתונים, מסדי נתונים, מקביליות ועוד. בעברית או באנגלית, חמש דקות מהטלפון.'
+      : 'Multiple-choice quizzes on what interviews test: OOP, data structures, databases, concurrency and more. In English or Hebrew, five minutes on a phone.',
+    page: SHARE_PAGES.quiz,
+    hash: '#/quiz',
+  };
+}
+
+const QUIZ_MODE_NAME = { en: { practice: 'Practice', sprint: 'Sprint', survival: 'Survival' }, he: { practice: 'תרגול', sprint: 'ספרינט', survival: 'הישרדות' } };
+
+/**
+ * A finished free-play quiz: the mode, the score and, for a one-topic round, the topic. Never a
+ * question or an answer.
+ * @param {{ mode: string, correct: number, total: number, topic?: string|null, lang?: 'en'|'he' }} p
+ * @returns {SharePayload}
+ */
+export function quizResultShare({ mode, correct, total, topic = null, lang = 'en' }) {
+  const he = lang === 'he';
+  const name = QUIZ_MODE_NAME[he ? 'he' : 'en'][mode] ?? QUIZ_MODE_NAME[he ? 'he' : 'en'].practice;
+  const on = topic ? (he ? ` בנושא ${topic}` : ` on ${topic}`) : '';
+  let text;
+  if (mode === 'survival') {
+    text = he ? `חידון הישרדות${on}: ${correct} תשובות נכונות לפני הטעות השלישית. מי מגיע רחוק יותר?` : `Survival quiz${on}: ${correct} right before the third miss. Can you go further?`;
+  } else {
+    text = he ? `חידון ${name}${on}: ${correct}/${total} נכונות. מי עושה יותר?` : `${name} quiz${on}: ${correct}/${total} correct. Think you can beat it?`;
+  }
+  return { title: he ? `חידון ראיונות · ${SITE_NAME}` : `Interview quiz · ${SITE_NAME}`, text, page: SHARE_PAGES.quiz, hash: '#/quiz' };
+}
+
+/**
+ * Today's daily quiz, to play: an invitation, before or without a result. A finished daily quiz
+ * shares its squares instead (data/quiz-share.js), with the same link.
+ * @param {{ number: number, size?: number, lang?: 'en'|'he' }} p
+ * @returns {SharePayload}
+ */
+export function quizDailyShare({ number, size = 5, lang = 'en' }) {
+  const he = lang === 'he';
+  return {
+    title: he ? `חידון יומי #${number} · ${SITE_NAME}` : `Daily quiz #${number} · ${SITE_NAME}`,
+    text: he ? `חידון יומי #${number}: ${size} שאלות, אותן שאלות לכולם היום. מה איתך?` : `Daily quiz #${number}: ${size} questions, the same for everyone today. How many can you get?`,
+    page: SHARE_PAGES.quizDaily,
+    hash: '#/quiz/daily',
+  };
+}
+
+/**
+ * The daily quiz leaderboard: the sharer's place on it today when they have one, else the board.
+ * @param {{ number: number, rank?: number|null, players?: number|null, size?: number, lang?: 'en'|'he' }} p
+ * @returns {SharePayload}
+ */
+export function quizBoardShare({ number, rank = null, players = null, size = 5, lang = 'en' }) {
+  const he = lang === 'he';
+  let text;
+  if (rank && players) {
+    text = he ? `מקום ${rank} מתוך ${players} בטבלת המובילים של חידון יומי #${number}. מי עוקף אותי?` : `#${rank} of ${players} on the daily quiz #${number} leaderboard. Think you can beat it?`;
+  } else {
+    const played = players ? (he ? `: ${players} שיחקו היום` : `: ${players} played today`) : '';
+    text = he ? `טבלת המובילים של חידון יומי #${number}${played}. אותן ${size} שאלות לכולם, ורק המשחק הראשון נספר. מצטרפים?` : `Daily quiz #${number} leaderboard${played}. The same ${size} questions for everyone, only the first play counts. Join in?`;
+  }
+  return { title: he ? `טבלת המובילים · ${SITE_NAME}` : `Quiz leaderboard · ${SITE_NAME}`, text, page: SHARE_PAGES.quizBoard, hash: '#/quiz/board' };
 }
 
 /**

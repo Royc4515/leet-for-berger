@@ -1314,6 +1314,52 @@ try {
     await page.setViewportSize({ width: 1440, height: 900 });
   });
 
+  await check('quiz on a phone: the tab bar steps aside, the feedback and Next scroll into view after each answer, and each question starts below the sticky HUD', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    const qp = await ctx.newPage();
+    qp.on('console', (m) => m.type() === 'error' && errors.push(`console (phone quiz): ${m.text()}`));
+    qp.on('pageerror', (e) => errors.push(`pageerror (phone quiz): ${e.message}`));
+    await qp.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await qp.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+      localStorage.setItem('lfb:quiz-lang', 'en');
+    });
+    await qp.goto(`${BASE}#/quiz/daily`);
+    for (let i = 0; i < 5; i++) {
+      await qp.waitForSelector('.quiz-option:not(:disabled)');
+      const fresh = await qp.evaluate(() => ({
+        tab: getComputedStyle(document.querySelector('.tab-bar')).display,
+        q: document.querySelector('.quiz-q').getBoundingClientRect().top,
+        hud: document.querySelector('.quiz-hud').getBoundingClientRect().bottom,
+      }));
+      if (fresh.tab !== 'none') throw new Error(`question ${i + 1}: tab bar shown during play (${fresh.tab})`);
+      if (fresh.q < fresh.hud) throw new Error(`question ${i + 1} starts under the sticky HUD: ${JSON.stringify(fresh)}`);
+      await qp.tap('.quiz-option >> nth=0');
+      // The reveal scrolls smoothly: wait for it to land, then check nothing covers Next.
+      const landed = await qp
+        .waitForFunction(() => {
+          const n = document.querySelector('.quiz-next')?.getBoundingClientRect();
+          const v = document.querySelector('.quiz-verdict')?.getBoundingClientRect();
+          const hud = document.querySelector('.quiz-hud').getBoundingClientRect();
+          return n && v && n.top >= hud.bottom && n.bottom <= innerHeight && v.top >= hud.bottom - 1;
+        }, null, { timeout: 4000 })
+        .then(() => true, () => false);
+      const at = await qp.evaluate(() => {
+        const n = document.querySelector('.quiz-next').getBoundingClientRect();
+        const hit = document.elementFromPoint(n.left + n.width / 2, n.top + n.height / 2);
+        return { next: [Math.round(n.top), Math.round(n.bottom)], verdict: Math.round(document.querySelector('.quiz-verdict').getBoundingClientRect().top), hud: Math.round(document.querySelector('.quiz-hud').getBoundingClientRect().bottom), vh: innerHeight, hitsNext: Boolean(hit?.closest('.quiz-next')) };
+      });
+      if (!landed || !at.hitsNext) throw new Error(`answer ${i + 1}: feedback or Next not in view on a phone: ${JSON.stringify(at)}`);
+      await qp.tap('.quiz-next');
+    }
+    await qp.waitForSelector('.quiz-results');
+    const after = await qp.evaluate(() => ({ tab: getComputedStyle(document.querySelector('.tab-bar')).display, playing: document.body.classList.contains('quiz-playing') }));
+    if (after.tab === 'none' || after.playing) throw new Error(`tab bar not back after the quiz: ${JSON.stringify(after)}`);
+    if (shotsDir) await qp.screenshot({ path: `${shotsDir}/390-quiz-daily-results.png` });
+    await ctx.close();
+  });
+
   await check('touch: every control on the browse and setup screens is at least 44px tall, and chips and tags look different', async () => {
     // hasTouch makes (pointer: coarse) match, which is what promotes the --ctl-* tokens to 44 px.
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
@@ -2102,6 +2148,12 @@ try {
     const score = Number(res.big.split(' / ')[0]);
     if (res.missed !== 10 - score || Object.keys(res.saved.questions ?? {}).length !== 10 || res.saved.best?.practice !== score) throw new Error(`results: ${JSON.stringify({ ...res, saved: Object.keys(res.saved) })}`);
     await shot('28-quiz-results');
+    // A free-play score shares the mode, the topic and the score, never a question.
+    await stubShare();
+    await page.click('.quiz-results .share-btn');
+    await page.waitForFunction(() => window.__shared);
+    const scoreShare = await page.evaluate(() => window.__shared);
+    if (!/^Practice quiz on OOP: \d+\/10 correct\. Think you can beat it\?\nhttps:\/\/\S+\/s\/quiz\.html$/.test(scoreShare)) throw new Error(`quiz score share: ${JSON.stringify(scoreShare)}`);
   });
 
   await check('quiz in Hebrew: language toggle persists, right-to-left text, Hebrew counter, code stays left-to-right', async () => {
@@ -2159,7 +2211,8 @@ try {
     await page.click('.quiz-share-btn');
     await page.waitForFunction(() => window.__shared);
     const shared = await page.evaluate(() => window.__shared);
-    if (!/^Daily quiz #\d+ · \d\/5\n[🟩🟥]{5}\n/u.test(shared) || !shared.includes('#/quiz/daily')) throw new Error(`share text: ${JSON.stringify(shared)}`);
+    // The link is the daily quiz's preview page, so chats show its own card (scripts/share/pages.mjs).
+    if (!/^Daily quiz #\d+ · \d\/5\n[🟩🟥]{5}\n/u.test(shared) || !/https:\/\/\S+\/s\/quiz-daily\.html$/.test(shared)) throw new Error(`share text: ${JSON.stringify(shared)}`);
     // The Problems page promotes the quiz: done today, so squares and a leaderboard link.
     await page.goto(`${BASE}#/`);
     await page.waitForSelector('.today-quiz');
@@ -2466,7 +2519,7 @@ try {
     await ctx.close();
   });
 
-  await check('share buttons: a problem, a company, a map place, the learning path and the daily each copy their own text and link', async () => {
+  await check('share buttons: a problem, a company, a map place, the learning path, the daily, the quiz, the daily quiz and its leaderboard each copy their own text and link', async () => {
     const cases = [
       // Links go to each thing's preview page on the public site (built on deploy), which forwards to it.
       ['#/problem/pair-sum-target', '.problem-title-row .share-btn', /^Can you solve Pair Sum Target\? An Easy one, judged on 15 tests right in the browser\.$/, '/s/problem/pair-sum-target.html'],
@@ -2474,6 +2527,9 @@ try {
       ['#/map/graphs', '.map-brief .brief-title-row .share-btn', /^Graphs, \d+ problems: explore it on the Leet-For-Berger map of interview topics\.$/, '/s/map/graphs.html'],
       ['#/path', '.page-head-actions .share-btn', /learning path/, '/s/path.html'],
       ['#/daily', '.daily-page .page-head .share-btn', /^Daily challenge #\d+: .+\. (Solved\. |Solved, \d+ days in a row\. )?Same problem for everyone today, can you\?$/, '/s/daily.html'],
+      ['#/quiz', '.quiz-page > .page-head .share-btn', /^Multiple-choice quizzes on what interviews test/, '/s/quiz.html'],
+      ['#/quiz', '.quiz-daily .share-btn', /^Daily quiz #\d+: 5 questions, the same for everyone today\. How many can you get\?$/, '/s/quiz-daily.html'],
+      ['#/quiz/board', '.quiz-page > .page-head .share-btn', /^Daily quiz #\d+ leaderboard\. The same 5 questions for everyone, only the first play counts\. Join in\?$/, '/s/quiz-board.html'],
     ];
     for (const [hash, selector, text, link] of cases) {
       await page.goto(`${BASE}${hash}`);

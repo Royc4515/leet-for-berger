@@ -3,7 +3,7 @@
 // item's preview page. Spoiler-free: names, levels and counts, never code, test cases or an answer.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { shareUrl, shareLanguage, SHARE_PAGES, problemShare, solveShare, companyShare, mapShare, pathShare, dailyShare, interviewShare, battleShare, SITE_NAME } from '../src/js/data/share.js';
+import { shareUrl, shareLanguage, SHARE_PAGES, problemShare, solveShare, companyShare, mapShare, pathShare, dailyShare, interviewShare, battleShare, quizShare, quizResultShare, quizDailyShare, quizBoardShare, SITE_NAME } from '../src/js/data/share.js';
 
 const SITE = 'https://example.org/leet-for-berger/';
 const all = (lang) => [
@@ -19,6 +19,14 @@ const all = (lang) => [
   interviewShare({ score: 82, band: 'Strong', solved: 2, total: 3, lang }),
   battleShare({ won: true, bot: 'Ada', title: 'Pair Sum Target', lang }),
   battleShare({ won: false, bot: 'Ada', title: 'Pair Sum Target', lang }),
+  quizShare({ lang }),
+  quizResultShare({ mode: 'practice', correct: 8, total: 10, lang }),
+  quizResultShare({ mode: 'sprint', correct: 6, total: 10, topic: 'OOP', lang }),
+  quizResultShare({ mode: 'survival', correct: 14, total: 17, lang }),
+  quizDailyShare({ number: 30, lang }),
+  quizBoardShare({ number: 30, lang }),
+  quizBoardShare({ number: 30, players: 12, lang }),
+  quizBoardShare({ number: 30, rank: 3, players: 12, lang }),
 ];
 
 test('a shared link opens the item\'s preview page on the public site', () => {
@@ -77,4 +85,23 @@ test('the reader\'s language: their quiz choice, else their browser, Hebrew or E
   assert.equal(shareLanguage({ languages: ['iw'] }), 'he');
   assert.equal(shareLanguage({ languages: ['fr-FR'] }), 'en');
   assert.equal(shareLanguage({ stored: 'xx', languages: [] }), 'en');
+});
+
+test('quiz shares: the hub, a free-play score, the daily quiz and the leaderboard, each with its own preview page', () => {
+  assert.equal(quizShare().page, 's/quiz.html');
+  assert.equal(quizShare().hash, '#/quiz');
+  assert.equal(quizResultShare({ mode: 'practice', correct: 8, total: 10 }).text, 'Practice quiz: 8/10 correct. Think you can beat it?');
+  assert.equal(quizResultShare({ mode: 'sprint', correct: 6, total: 10, topic: 'OOP' }).text, 'Sprint quiz on OOP: 6/10 correct. Think you can beat it?');
+  assert.equal(quizResultShare({ mode: 'survival', correct: 14, total: 17 }).text, 'Survival quiz: 14 right before the third miss. Can you go further?');
+  assert.equal(quizResultShare({ mode: 'practice', correct: 9, total: 10, topic: 'מבני נתונים', lang: 'he' }).text, 'חידון תרגול בנושא מבני נתונים: 9/10 נכונות. מי עושה יותר?');
+  const daily = quizDailyShare({ number: 30 });
+  assert.equal(daily.page, 's/quiz-daily.html');
+  assert.equal(daily.hash, '#/quiz/daily');
+  assert.equal(daily.text, 'Daily quiz #30: 5 questions, the same for everyone today. How many can you get?');
+  const board = quizBoardShare({ number: 30, rank: 3, players: 12 });
+  assert.equal(board.page, 's/quiz-board.html');
+  assert.equal(board.hash, '#/quiz/board');
+  assert.equal(board.text, '#3 of 12 on the daily quiz #30 leaderboard. Think you can beat it?');
+  assert.equal(quizBoardShare({ number: 30, players: 12 }).text, 'Daily quiz #30 leaderboard: 12 played today. The same 5 questions for everyone, only the first play counts. Join in?');
+  assert.equal(quizBoardShare({ number: 30, rank: 3, players: 12, lang: 'he' }).text, 'מקום 3 מתוך 12 בטבלת המובילים של חידון יומי #30. מי עוקף אותי?');
 });

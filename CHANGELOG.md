@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed (mobile pass, owner's request: on a phone the daily quiz leads)
+- **The daily quiz leads on a phone.** On the Problems page it is the first card, with the main button ("Play today's quiz"); the coding daily becomes a one-line strip with its name and Solve. On Modes the quiz card comes first and takes the main button. On the quiz page the daily quiz card sits right under the title, with Play across the card and the leaderboard and share under it. The desktop layout is unchanged. The first problem on the Problems page now starts higher on a phone than before (744 px instead of 786 px down a 390 x 844 screen).
+- **Daily quiz results put Share first**: the squares sit with the score, Share result is the main button, Play it again and More quizzes follow. The buttons no longer sit at different heights. On a phone results buttons fill the card, two to a row, and long labels wrap instead of overflowing.
+
+### Fixed (quiz scrolling on a phone)
+- **Next was hidden under the bottom tab bar after every answer.** The page scrolled Next to the very bottom of the screen, under the tab bar. While a question is on screen the tab bar now steps aside (as it does in a problem; Leave / End are in the quiz header), and after an answer the page scrolls just enough to show the verdict, the explanation and Next, never past the verdict and never under the sticky quiz header (`data/scroll-reveal.js`, unit-tested). On a phone Next also stays pinned at the bottom while a long explanation is read.
+- **The next question could start hidden under the sticky quiz header.** Moving on scrolled to the header, which does nothing for a sticky element; each question now starts at the top. The quiz header is slimmer on a phone.
+- On a phone, anything scrolled into view (`scrollIntoView`, focus) now stops above the tab bar instead of under it.
+- "Read more" under a quiz answer is a 44 px touch target, and the custom test input in a problem is 16 px on touch screens, so iPhone Safari no longer zooms the page when it is focused.
+
+### Added (share the quiz and the leaderboard, owner's request)
+- **Share buttons on the quiz page, the daily quiz card, a free-play score and the leaderboard page**: "Practice quiz on OOP: 8/10 correct. Think you can beat it?", "Daily quiz #30: 5 questions, the same for everyone today. How many can you get?", "#3 of 12 on the daily quiz #30 leaderboard. Think you can beat it?" (the place once the board has answered), in English or Hebrew.
+- **Each with its own link preview**, like every other share: `s/quiz.html`, `s/quiz-daily.html` and `s/quiz-board.html`, with their own images (answer options, the five squares, a podium). The daily quiz result share (the squares) now links to the daily quiz preview page too, instead of the bare site address that showed the site's general card.
+
 ### Added (share buttons and link previews, owner's request)
 - **Share buttons wherever there is something to send**: a problem (the icon at the end of its title), an Accepted verdict, a company page, a place on the map (topic, subtopic or problem), the learning path, the daily challenge, an interview or mock OA report and a race result. On a phone the share sheet opens; elsewhere the text and link are copied and a toast says so. Not shown inside an interview or a battle in progress. The icon is three connected nodes.
 - **A text written for each button, in the reader's language** (Hebrew or English: the quiz language they chose, else the browser's): "Can you solve Pair Sum Target? An Easy one, judged on 15 tests right in the browser.", "Just solved Pair Sum Target (Easy) in Python 3: 15 of 15 tests passed. Your turn.", "Interviewing at Google? Its 54 most asked problems, ready to practise in the browser.", and so on. Spoiler-free by rule: names, levels and counts, never code, test cases or an answer.
