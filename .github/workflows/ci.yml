@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Run everything by hand (Actions tab), whatever changed.
+  workflow_dispatch:
 
 # A new push to the same PR cancels the run it replaces; every push to main keeps its run.
 concurrency:
@@ -12,13 +14,16 @@ concurrency:
 
 jobs:
   # What a change touches decides what runs, on a PR and on main alike (a push to main is compared
-  # with the commit main pointed to before it). Each pattern lists the files that can change that
+  # with the commit main pointed to before it). Unit tests are picked one by one: a test runs when
+  # a changed file is among the files it reaches (imports, files it reads, and so on down;
+  # scripts/ci/deps.mjs, owner's request). Each pattern below lists the files that can change that
   # check's outcome; when in doubt a path belongs in the pattern, not out of it.
   # ci.yml is in every pattern: a PR that edits a job must run that job before it merges.
   changes:
     runs-on: ubuntu-latest
     outputs:
-      code: ${{ steps.diff.outputs.code }}
+      tests: ${{ steps.diff.outputs.tests }}
+      e2e: ${{ steps.diff.outputs.e2e }}
       solutions: ${{ steps.diff.outputs.solutions }}
       db: ${{ steps.diff.outputs.db }}
       python: ${{ steps.diff.outputs.python }}
@@ -26,9 +31,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - id: diff
         run: |
-          all() { for k in code solutions db python; do echo "$k=true" >> "$GITHUB_OUTPUT"; done; exit 0; }
+          all() {
+            for k in e2e solutions db python; do echo "$k=true" >> "$GITHUB_OUTPUT"; done
+            echo "tests=$(ls tests/*.test.js | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then all; fi
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             # The PR checkout is a merge commit: its first parent is the base branch tip.
             files=$(git diff --name-only HEAD^1 HEAD)
@@ -41,8 +54,8 @@ jobs:
           fi
           echo "$files"
           has() { if echo "$files" | grep -qE "$1"; then echo "$2=true"; else echo "$2=false"; fi >> "$GITHUB_OUTPUT"; }
-          # Anything but docs and Markdown: unit tests and the browser smoke test.
-          has '^(src/|e2e/|tests/|scripts/|db/|content/|deploy/|index\.html|privacy\.html|package(-lock)?\.json|\.github/workflows/ci\.yml)' code
+          # The unit tests that reach a changed file, and whether the site (or its smoke test) changed.
+          echo "$files" | node scripts/ci/affected.mjs > /dev/null
           # Shipped solutions and what judges them: the per-language verifier.
           has '^(src/js/problems/|src/js/engine/|scripts/verify/|tests/(solutions|typescript|growth-solutions|programs)\.test\.js|package(-lock)?\.json|\.github/workflows/ci\.yml)' solutions
           # Schema and the git -> database sync, which reads the problem files.
@@ -52,11 +65,11 @@ jobs:
           # Python steps should also touch one of these paths or ci.yml to run them.
           has '^(src/js/engine/|src/js/problems/|package(-lock)?\.json|\.github/workflows/ci\.yml)' python
 
-  # Unit tests, signature checks, database checks and the browser smoke test. Solutions are
-  # verified per language in the `verify` jobs below (VERIFY_LANGUAGES=none skips them here).
+  # The affected unit tests, database checks and the browser smoke test. Solutions are verified
+  # per language in the `verify` jobs below (VERIFY_LANGUAGES=none skips them here).
   test:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.tests != '' || needs.changes.outputs.e2e == 'true' || needs.changes.outputs.db == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -66,25 +79,41 @@ jobs:
           node-version: 22
       - run: npm ci --no-audit --no-fund
       # tests/programs.test.js builds every problem's native program twice (about 7 minutes, most of
-      # the unit test time) and reads only what the `solutions` pattern lists, so it runs with them.
-      - name: Unit tests
-        run: node --test $(ls tests/*.test.js | grep -v '^tests/programs\.test\.js$')
+      # the unit test time): it has its own step below, run when the selection picks it.
+      - name: Unit tests that reach the change
+        if: needs.changes.outputs.tests != ''
+        run: |
+          tests=$(echo "${{ needs.changes.outputs.tests }}" | tr ' ' '\n' | grep -v '^tests/programs\.test\.js$' || true)
+          if [ -n "$tests" ]; then node --test $tests; else echo "Only the native program builder tests reach this change."; fi
         env:
           VERIFY_LANGUAGES: none
       - name: Native program builder tests
-        if: needs.changes.outputs.solutions == 'true'
+        if: contains(needs.changes.outputs.tests, 'tests/programs.test.js')
         run: node --test tests/programs.test.js
       - name: Database schema and git -> database sync checks
         if: needs.changes.outputs.db == 'true'
         run: |
           ls /usr/lib/postgresql/*/bin/initdb >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq postgresql)
           bash scripts/db/check-schema.sh
-      - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+      # The runner image has Google Chrome: use it rather than spend minutes downloading Chromium
+      # and its system packages; download only where it is missing.
+      - name: Browser for the smoke test
+        id: browser
+        if: needs.changes.outputs.e2e == 'true'
+        run: |
+          if command -v google-chrome >/dev/null; then
+            google-chrome --version
+            echo "channel=chrome" >> "$GITHUB_OUTPUT"
+          else
+            npx playwright install --with-deps chromium
+          fi
       - name: E2E smoke test (Monaco, workers, Pyodide, zero console errors)
+        if: needs.changes.outputs.e2e == 'true'
         run: node e2e/smoke.mjs --shots=e2e-shots ${{ needs.changes.outputs.python == 'true' && ' ' || '--no-python' }}
+        env:
+          PW_CHANNEL: ${{ steps.browser.outputs.channel }}
       - name: Upload screenshots
-        if: always()
+        if: always() && needs.changes.outputs.e2e == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: e2e-screenshots

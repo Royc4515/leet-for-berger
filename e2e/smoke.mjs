@@ -503,6 +503,10 @@ try {
     await page.click('details.about-problem > summary');
     await page.waitForSelector('.problem-context .company-tag', { timeout: 15000 });
     await expectText('.problem-context .context-label', /Asked at \d+ compan/);
+    // A company with a logo shows it in front of its name, and a chip opens the company's page.
+    if (!(await page.locator('.problem-context .company-tag .mini-logo img').count())) throw new Error('no company chip shows a logo');
+    const chipHref = await page.locator('.problem-context a.company-tag').first().getAttribute('href');
+    if (!/^#\/companies\/[\w-]+$/.test(chipHref ?? '')) throw new Error(`company chip link: ${chipHref}`);
     if (!(await page.locator('.complexity-body').isHidden())) throw new Error('complexity should be hidden before a solve');
     await page.click('.problem-context button:has-text("Show")');
     await expectText('.complexity-body', /Best known for LeetCode \d+: O\(/);
@@ -537,6 +541,16 @@ try {
     if (!(allCount > hiringCount)) throw new Error(`"All" should show more cards than "Hiring in Israel" (${allCount} vs ${hiringCount})`);
     // Only under "All" does the Israel level tell cards apart, so only there is it a line on the card.
     await expectText('.company-card[data-israel="major"] .company-card-level', /Major in Israel/);
+    // "Jobs in Israel" (owner's request): the companies whose page links to their job search in
+    // Israel, with a line saying what the list is; the other views hide that line.
+    await page.click('.segmented-btn:has-text("Jobs in Israel")');
+    const jobs = await page.evaluate(async () => {
+      const sets = await (await fetch('/src/js/data/company-sets.json')).json();
+      return { cards: document.querySelectorAll('.company-card').length, want: sets.companies.filter((c) => c.careersIL).length, note: !document.querySelector('.company-jobs-note')?.hidden };
+    });
+    if (!jobs.want || jobs.cards !== jobs.want || !jobs.note) throw new Error(`Jobs in Israel view: ${JSON.stringify(jobs)}`);
+    await page.click('.segmented-btn:has-text("All")');
+    if (await page.locator('.company-jobs-note').isVisible()) throw new Error('the Jobs in Israel line shows outside its view');
     // Logos (owner's request): the first screenful decodes, decorative (alt ""), and a company
     // without a logo keeps its monogram on the same light tile.
     await page.waitForFunction(() => [...document.querySelectorAll('.company-card .company-mark img')].slice(0, 12).every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 });
@@ -556,6 +570,15 @@ try {
     await expectText('.page-head h1', /Wix/);
     // The company page: its logo, large, and a faint glow in the brand's colour when it has one.
     if (!(await page.locator('.company-head .company-mark.is-tile.lg img').count())) throw new Error('the company page has no logo tile');
+    // Its jobs in Israel, or else its careers site (owner's request): an outside link, in a new
+    // tab, that says so.
+    const careers = await page.evaluate(async () => {
+      const a = document.querySelector('.company-head a.company-careers');
+      const wix = (await (await fetch('/src/js/data/company-sets.json')).json()).companies.find((c) => c.slug === 'wix');
+      return a && { href: a.getAttribute('href'), target: a.target, rel: a.rel, label: a.getAttribute('aria-label'), want: wix.careersIL ?? wix.careers, israel: Boolean(wix.careersIL) };
+    });
+    const label = careers?.israel ? /Wix jobs in Israel \(opens in a new tab\)/ : /Wix careers site \(opens in a new tab\)/;
+    if (!careers || careers.href !== careers.want || !careers.href.startsWith('https://') || careers.target !== '_blank' || !/noopener/.test(careers.rel) || !label.test(careers.label)) throw new Error(`careers link: ${JSON.stringify(careers)}`);
     await expectText('.page-head .page-sub', /can be practiced here/);
     // Filters are chips; "On the site only" is a toggle chip (off by default on a desktop).
     if ((await page.getAttribute('#on-site-only', 'aria-pressed')) !== 'false') throw new Error('on-site filter should start off at 1440px');
@@ -1918,6 +1941,26 @@ try {
     await page.selectOption('.map-company', 'google');
     const inCompany = await page.locator('.map-svg .hx.in-company').count();
     if (!inCompany || inCompany >= published) throw new Error(`company lens highlighted ${inCompany} of ${published}`);
+    // A logo in a problem card's "Asked at" row lights that company up and flies out to frame it;
+    // Back returns to the problem.
+    await page.click('.map-lens .segmented-btn:has-text("Status")');
+    const card = '#/map/linked-list/cache-design/recent-cache';
+    await page.goto(`${BASE}${card}`);
+    await page.waitForSelector('.map-brief .brief-faces .brief-face img', { timeout: 15000 });
+    const face = page.locator('.map-brief .brief-face').first();
+    const faceName = await face.getAttribute('title');
+    const lit = Number((await face.getAttribute('aria-label')).match(/(\d+) problems?/)?.[1]);
+    await face.hover();
+    await expectText('.map-brief .brief-asked-text', new RegExp(`Light up ${faceName}'s`));
+    await face.click();
+    await page.waitForFunction(() => location.hash === '#/map');
+    await page.waitForFunction((n) => document.querySelector('.map-brief .brief-company strong')?.textContent === n, faceName);
+    const spot = await page.evaluate(() => ({ lens: document.querySelector('.map-canvas').dataset.lens, pressed: document.querySelector('.map-lens .segmented-btn[data-value="company"]').getAttribute('aria-pressed'), lit: document.querySelectorAll('.map-svg .hx.in-company').length }));
+    if (spot.lens !== 'company' || spot.pressed !== 'true' || spot.lit !== lit) throw new Error(`spotlight: ${JSON.stringify({ ...spot, want: lit })}`);
+    await mapAt(page, () => null);
+    if (!(await page.locator('.map-brief .brief-company a[href^="#/companies/"]').count())) throw new Error('the lit company has no link to its set');
+    await page.goBack();
+    await page.waitForFunction((h) => location.hash === h, card);
     // List view: the accessible alternative holds every problem as a link.
     await page.click('.map-view-toggle .segmented-btn:has-text("List")');
     await page.waitForSelector('.map-list');

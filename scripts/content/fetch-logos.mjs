@@ -23,11 +23,13 @@
  * `simple-icons`, `apple-touch`...) is tried before the others, for a site whose own icon is wrong
  * (a framework's default icon in its manifest, a mascot instead of the logo); `none` keeps the
  * monogram when no source is good; a path under
- * content/logo-sources/ is an official file saved by hand (a logo the site only inlines).
+ * content/logo-sources/ is an official file saved by hand (a logo the site only inlines, or the
+ * mark of a wordmark too wide to read in a tile, cut from the official file).
  *
  * A logo drawn in white for a dark page is recoloured in the tile's ink, so it shows on the plate.
  *
  * Usage: npm i --no-save sharp@0.34.4 && node scripts/content/fetch-logos.mjs [--only=slug,slug]
+ *        node scripts/content/fetch-logos.mjs --manifest-only   (rewrite the manifest, no fetching)
  * Runs by hand when companies change; the site only reads its output.
  */
 import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
@@ -49,12 +51,29 @@ const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v =
 const only = args.only ? new Set(args.only.split(',')) : null;
 const reportPath = args.report ? pathToFileURL(args.report) : pathToFileURL(`${tmpdir()}/logos-report.html`);
 
+const manifestOnly = Boolean(args['manifest-only']);
 let sharp;
-try {
-  sharp = (await import('sharp')).default;
-} catch {
-  console.error('This script needs sharp: npm i --no-save sharp@0.34.4');
-  process.exit(1);
+if (!manifestOnly) {
+  try {
+    sharp = (await import('sharp')).default;
+  } catch {
+    console.error('This script needs sharp: npm i --no-save sharp@0.34.4');
+    process.exit(1);
+  }
+}
+
+/** Same as slugifyCompany in src/js/data/company-loader.js (company-sets.json's slugs). */
+const slugify = (name) => String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+/** The manifest: logos, and the other names a company with a logo goes by (problem data uses them). */
+async function writeManifest(logos) {
+  const sorted = Object.fromEntries(Object.entries(logos).sort(([a], [b]) => a.localeCompare(b)));
+  const aliases = {};
+  for (const c of sets.companies) for (const a of c.aliases ?? []) if (sorted[c.slug] && slugify(a.name) !== c.slug) aliases[slugify(a.name)] = c.slug;
+  await writeFile(
+    MANIFEST,
+    `${JSON.stringify({ _doc: 'Company logos in src/brand/companies/<slug>.webp (scripts/content/fetch-logos.mjs). bleed: an app-icon square drawn edge to edge; color: the brand colour, for the company page. aliases: another name a company goes by -> its slug. A company missing here keeps its monogram.', logos: sorted, aliases: Object.fromEntries(Object.entries(aliases).sort(([a], [b]) => a.localeCompare(b))) }, null, 1)}\n`,
+  );
 }
 
 async function get(url, { type = 'buffer', timeout = 12000 } = {}) {
@@ -190,7 +209,7 @@ async function finish(pick) {
 }
 
 const { domains, overrides = {} } = JSON.parse(await readFile(new URL('content/company-domains.json', ROOT), 'utf8'));
-const simpleData = (await get(`${SIMPLE_ICONS}/data/simple-icons.json`, { type: 'text' })) ?? { body: '[]' };
+const simpleData = (manifestOnly ? null : await get(`${SIMPLE_ICONS}/data/simple-icons.json`, { type: 'text' })) ?? { body: '[]' };
 const simpleList = JSON.parse(simpleData.body);
 const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 const simpleBy = new Map(simpleList.map((i) => [norm(i.title), { slug: i.slug ?? norm(i.title), hex: i.hex }]));
@@ -198,6 +217,11 @@ const sets = JSON.parse(await readFile(new URL('src/js/data/company-sets.json', 
 const names = new Map(sets.companies.map((c) => [c.slug, c.name]));
 
 const previous = JSON.parse(await readFile(MANIFEST, 'utf8').catch(() => '{"logos":{}}'));
+if (manifestOnly) {
+  await writeManifest(previous.logos);
+  console.log('manifest rewritten');
+  process.exit(0);
+}
 const logos = only ? { ...previous.logos } : {};
 const report = [];
 await mkdir(OUT_DIR, { recursive: true });
@@ -233,11 +257,7 @@ async function work() {
 }
 await Promise.all(Array.from({ length: 6 }, work));
 
-const sorted = Object.fromEntries(Object.entries(logos).sort(([a], [b]) => a.localeCompare(b)));
-await writeFile(
-  MANIFEST,
-  `${JSON.stringify({ _doc: 'Company logos in src/brand/companies/<slug>.webp (scripts/content/fetch-logos.mjs). bleed: an app-icon square drawn edge to edge; color: the brand colour, for the company page. A company missing here keeps its monogram.', logos: sorted }, null, 1)}\n`,
-);
+await writeManifest(logos);
 
 report.sort((a, b) => a.slug.localeCompare(b.slug));
 const rows = report

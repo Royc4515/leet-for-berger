@@ -47,6 +47,14 @@ export function israelBadgeEl(level) {
 
 const isSolvedIn = (state) => (id) => state.problems[id]?.status === 'solved';
 
+/** The company page's outside link: jobs in Israel when the company has that search, else its careers site. */
+function careersLink(company) {
+  const href = company.careersIL ?? company.careers;
+  if (!href) return null;
+  const [text, label] = company.careersIL ? ['Jobs in Israel', 'jobs in Israel'] : ['Careers site', 'careers site'];
+  return h('a.btn.btn-secondary.btn-sm.company-careers', { href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': `${company.name} ${label} (opens in a new tab)` }, text, h('span.company-careers-arrow', { 'aria-hidden': 'true' }, '↗'));
+}
+
 /** Names identify which companies asked a problem; no logos ship (docs/research/DESIGN_DIRECTIONS.md). */
 const TRADEMARK_NOTE = 'Company names and logos are trademarks of their owners, used here only to say which companies asked a problem. No affiliation or endorsement.';
 const ISRAEL_LINE = {
@@ -96,12 +104,15 @@ export function renderCompanies(root, { store }) {
   const filters = { query: '', filter: DEFAULT_ISRAEL_FILTER };
   const grid = h('div.company-grid');
   const count = h('p.hint-text.company-count', { role: 'status' });
+  // What "Jobs in Israel" means, said where the list is: a link, checked once, not a live count.
+  const jobsNote = h('p.hint-text.company-jobs-note', { hidden: true }, 'Companies whose page links straight to their own job search in Israel. Open roles change daily: the search shows what is open now.');
   let data = null;
 
   function renderGrid() {
     const state = store.get();
     const list = filterRanked(data.ranked, filters);
     count.textContent = `${list.length} ${list.length === 1 ? 'company' : 'companies'}`;
+    jobsNote.hidden = filters.filter !== 'jobs';
     if (!list.length) {
       mount(grid, h('p.empty', {}, 'No companies match.'));
       return;
@@ -157,13 +168,17 @@ export function renderCompanies(root, { store }) {
         h(
           'div.filters',
           {},
-          israelFilterControl(filters.filter, (id) => {
-            filters.filter = id;
-            renderGrid();
-          }),
+          Object.assign(
+            israelFilterControl(filters.filter, (id) => {
+              filters.filter = id;
+              renderGrid();
+            }),
+            { className: 'segmented company-scope' },
+          ),
           search,
         ),
         count,
+        jobsNote,
         grid,
         h('p.hint-text.company-source', {}, 'Company tags are crowdsourced from public datasets (content/SOURCES.md). Treat them as a trend, not a promise. Israel hiring labels: content/israel-hiring.md.'),
         siteFooter({ note: TRADEMARK_NOTE }),
@@ -394,7 +409,14 @@ export function renderCompany(root, { store, slug }) {
             summary,
             headProgress,
           ),
-          israelBadgeEl(company.israel),
+          h(
+            'div.company-head-side',
+            {},
+            israelBadgeEl(company.israel),
+            // Its job search filtered to Israel where it has one (owner's request), else its careers
+            // site (content/company-careers.json, checked by check-careers.mjs).
+            careersLink(company),
+          ),
         ),
         facts,
         asks,

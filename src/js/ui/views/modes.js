@@ -260,7 +260,8 @@ function renderInterviewSetup(root, { store }) {
     keepSelectedOutsideFilter: true,
     scope: {
       label: 'Show companies',
-      options: ISRAEL_FILTERS.map((f) => ({ value: f.id, label: f.label })),
+      // "Jobs in Israel" is for finding where to apply (the Companies page), not for picking practice.
+      options: ISRAEL_FILTERS.filter((f) => f.id !== 'jobs').map((f) => ({ value: f.id, label: f.label })),
       value: DEFAULT_ISRAEL_FILTER,
     },
     search: { placeholder: 'Search companies', ariaLabel: 'Search companies' },
