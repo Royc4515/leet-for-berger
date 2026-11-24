@@ -83,7 +83,7 @@ export function mountAccountMenu(host, account, github = null) {
     close({ returnFocus: true });
     const ok = await confirmDialog({
       title: 'Sign out?',
-      body: 'Solved problems and streaks stay in your account. Everything is removed from this device, including quiz progress.',
+      body: 'Your progress stays in your account and is removed from this device.',
       confirmLabel: 'Sign out',
       danger: true,
     });

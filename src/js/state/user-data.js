@@ -16,6 +16,13 @@ import { DRAFT_PREFIX } from './drafts.js';
  */
 export const QUIZ_STORAGE_KEY = 'lfb:quiz:v1';
 
+/**
+ * Window event sent when quiz progress is saved (state/quiz-progress.js); account sync listens
+ * (auth/account.js). Named here for the same reason as the key: the listener loads at startup.
+ * detail.source: 'local' for a play on this device, 'sync' for a merge the sync wrote itself.
+ */
+export const QUIZ_SAVED_EVENT = 'quiz:saved';
+
 /** localStorage key holding the most recent Interview and Battle results shown on the Modes hub. */
 export const LAST_SESSIONS_KEY = 'lfb:last-sessions:v1';
 

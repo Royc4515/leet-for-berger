@@ -61,3 +61,18 @@ The keys that belong to a user are listed once in `state/user-data.js` (progress
 and language preferences are about the device and stay. `tests/user-data.test.js` scans the source
 for `lfb:` keys so a new store cannot be forgotten. The sign-in merge is unchanged: guest progress
 made before sign-in still merges into the account. The UI asks for confirmation before signing out.
+
+## Amendment: quiz progress joins the record (2026-11-24)
+
+Quiz progress (`state/quiz-progress.js`: questions answered, best per mode, daily results with the
+first play's choices) was kept per browser, so signing out deleted it and a second device started
+at zero. It now rides in the same `user_state` row under `quiz`; no schema change, the column is
+JSON. The sync controller takes `extras`: parts kept outside the store, each with an async read,
+merge and write, synced in the same read-merge-write as progress. The quiz extra lives in
+`auth/account.js` and imports its module on the first sync, so the quiz stays out of the startup
+graph (ADR 0008). Merge (`mergeQuizProgress`, pure): per question the larger counts, per mode the
+better best, and a day both copies played keeps the account's, the play that reached the server
+first, as the leaderboard counts it. Saving quiz progress sends a `quiz:saved` window event; a
+local save schedules a sync (`touch()`), the sync's own write is marked `source: 'sync'` and does
+not. Top-level keys a client does not know are carried through on save, so an older open tab
+cannot wipe a part a newer version syncs. The Privacy Policy lists the quiz data.

@@ -5,7 +5,17 @@
  */
 import { authConfig } from '../config.js';
 import { createSyncController } from './sync-controller.js';
-import { clearUserData } from '../state/user-data.js';
+import { clearUserData, QUIZ_SAVED_EVENT } from '../state/user-data.js';
+
+// Quiz progress rides in the account record next to problem progress (owner's request). Its module
+// loads on the first sync, not at page start (ADR 0008: the quiz stays out of the startup graph).
+const quizModule = () => import('../state/quiz-progress.js');
+const QUIZ_EXTRA = {
+  key: 'quiz',
+  read: async () => (await quizModule()).loadQuizProgress(),
+  merge: async (local, remote) => (await quizModule()).mergeQuizProgress(local, remote),
+  write: async (value) => (await quizModule()).saveQuizProgress(value, { source: 'sync' }),
+};
 
 // don't touch / pinned like every CDN dependency (CLAUDE.md invariant 8); upgrading is a deliberate task.
 const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm';
@@ -155,6 +165,11 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
         },
       },
       onStatus: (s, detail) => set({ sync: s, error: s === 'error' ? `Sync failed: ${detail}` : null }),
+      extras: [QUIZ_EXTRA],
+    });
+    // A quiz played on this device syncs like a solve; the sync's own merge writes do not.
+    globalThis.addEventListener?.(QUIZ_SAVED_EVENT, (e) => {
+      if (e.detail?.source !== 'sync') sync?.touch();
     });
     apply = (session) => {
       const u = session?.user ?? null;

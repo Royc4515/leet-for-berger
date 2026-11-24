@@ -121,9 +121,7 @@ export function renderProfile(root, { store }) {
         interview ? h('li', {}, interview.text) : null,
         battle ? h('li', {}, battle.text) : null,
       ),
-      // Quiz progress is not part of the account yet (state/quiz-progress.js), and signing out
-      // clears it from the device with the rest: say so where the numbers are.
-      signedIn ? h('p.hint-text', {}, 'Solved problems and streaks sync to your account. Quiz progress stays in this browser, and signing out removes it.') : null,
+      signedIn ? h('p.hint-text', {}, 'Problems, streaks and quiz progress sync to your account, so they are the same on every device.') : null,
       h('div.profile-links', {}, h('a.btn.btn-ghost.btn-sm', { href: '#/daily' }, 'Calendar'), h('a.btn.btn-ghost.btn-sm', { href: '#/map' }, 'Map'), h('a.btn.btn-ghost.btn-sm', { href: '#/quiz' }, 'Quiz topics')),
     );
   }
@@ -247,7 +245,7 @@ export function renderProfile(root, { store }) {
       return section(
         'data',
         'Your data',
-        h('p.hint-text', {}, 'Signing out removes your progress from this device; solved problems and streaks stay in your account.'),
+        h('p.hint-text', {}, 'Signing out removes your progress from this device; it stays in your account, quiz included.'),
         h('p.hint-text', {}, 'To delete your account and everything in it, email ', h('a', { href: 'mailto:LeetForBerger@gmail.com' }, 'LeetForBerger@gmail.com'), ' from the address you signed in with. ', h('a', { href: 'privacy.html' }, 'Privacy Policy')),
       );
     }
@@ -260,7 +258,7 @@ export function renderProfile(root, { store }) {
   }
 
   async function signOut() {
-    const ok = await confirmDialog({ title: 'Sign out?', body: 'Solved problems and streaks stay in your account. Everything is removed from this device, including quiz progress.', confirmLabel: 'Sign out', danger: true });
+    const ok = await confirmDialog({ title: 'Sign out?', body: 'Your progress stays in your account and is removed from this device.', confirmLabel: 'Sign out', danger: true });
     if (!ok || (await account.signOut())) return;
     if (!account.get().user) return;
     const anyway = await confirmDialog({ title: 'Sign out without saving?', body: 'Your latest progress could not be saved to your account. Signing out now removes it from this device.', confirmLabel: 'Sign out anyway', danger: true });
