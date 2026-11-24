@@ -8,12 +8,14 @@
 /** @typedef {'major'|'present'|'none'} IsraelLevel */
 /**
  * A company-sets company plus its Israel fields. `aliases` lists the other spellings merged into it.
- * @typedef {import('./company-sets.js').CompanySet & { israel: IsraelLevel, tier: number, rankIL?: number, aliases: { name: string, slug: string }[] }} RankedCompany
+ * @typedef {import('./company-sets.js').CompanySet & { israel: IsraelLevel, tier: number, rankIL?: number, aliases: { name: string, slug: string }[], careers?: string, careersIL?: string }} RankedCompany
  */
 
 /** Filter options of the company lists, in display order. */
 export const ISRAEL_FILTERS = [
   { id: 'hiring', label: 'Hiring in Israel' },
+  // Companies whose page links straight to their job search in Israel (`careersIL`, owner's request).
+  { id: 'jobs', label: 'Jobs in Israel' },
   { id: 'top', label: 'Top in Israel' },
   { id: 'all', label: 'All' },
 ];
@@ -40,6 +42,7 @@ export function filterRanked(ranked, { filter = DEFAULT_ISRAEL_FILTER, query = '
   const q = query.trim().toLowerCase();
   return ranked.filter((c) => {
     if (filter === 'top' && c.israel !== 'major') return false;
+    if (filter === 'jobs' && !c.careersIL) return false;
     if (filter === 'hiring' && c.israel === 'none') return false;
     return !q || [c.name, ...c.aliases.map((a) => a.name)].some((n) => n.toLowerCase().includes(q));
   });
