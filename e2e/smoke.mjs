@@ -503,8 +503,10 @@ try {
     await page.click('details.about-problem > summary');
     await page.waitForSelector('.problem-context .company-tag', { timeout: 15000 });
     await expectText('.problem-context .context-label', /Asked at \d+ compan/);
-    // A company with a logo shows it in front of its name.
+    // A company with a logo shows it in front of its name, and a chip opens the company's page.
     if (!(await page.locator('.problem-context .company-tag .mini-logo img').count())) throw new Error('no company chip shows a logo');
+    const chipHref = await page.locator('.problem-context a.company-tag').first().getAttribute('href');
+    if (!/^#\/companies\/[\w-]+$/.test(chipHref ?? '')) throw new Error(`company chip link: ${chipHref}`);
     if (!(await page.locator('.complexity-body').isHidden())) throw new Error('complexity should be hidden before a solve');
     await page.click('.problem-context button:has-text("Show")');
     await expectText('.complexity-body', /Best known for LeetCode \d+: O\(/);
@@ -558,6 +560,12 @@ try {
     await expectText('.page-head h1', /Wix/);
     // The company page: its logo, large, and a faint glow in the brand's colour when it has one.
     if (!(await page.locator('.company-head .company-mark.is-tile.lg img').count())) throw new Error('the company page has no logo tile');
+    // Its careers site (owner's request): an outside link, in a new tab, that says so.
+    const careers = await page.evaluate(() => {
+      const a = document.querySelector('.company-head a.company-careers');
+      return a && { href: a.getAttribute('href'), target: a.target, rel: a.rel, label: a.getAttribute('aria-label') };
+    });
+    if (!careers || !careers.href.startsWith('https://') || careers.target !== '_blank' || !/noopener/.test(careers.rel) || !/Wix careers site \(opens in a new tab\)/.test(careers.label)) throw new Error(`careers link: ${JSON.stringify(careers)}`);
     await expectText('.page-head .page-sub', /can be practiced here/);
     // Filters are chips; "On the site only" is a toggle chip (off by default on a desktop).
     if ((await page.getAttribute('#on-site-only', 'aria-pressed')) !== 'false') throw new Error('on-site filter should start off at 1440px');

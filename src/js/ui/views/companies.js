@@ -394,7 +394,13 @@ export function renderCompany(root, { store, slug }) {
             summary,
             headProgress,
           ),
-          israelBadgeEl(company.israel),
+          h(
+            'div.company-head-side',
+            {},
+            israelBadgeEl(company.israel),
+            // Its own careers site (content/company-careers.json, checked by check-careers.mjs).
+            company.careers ? h('a.btn.btn-secondary.btn-sm.company-careers', { href: company.careers, target: '_blank', rel: 'noopener noreferrer', 'aria-label': `${company.name} careers site (opens in a new tab)` }, 'Careers site', h('span.company-careers-arrow', { 'aria-hidden': 'true' }, '↗')) : null,
+          ),
         ),
         facts,
         asks,

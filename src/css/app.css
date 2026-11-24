@@ -1118,6 +1118,19 @@ body.lockdown .app-header {
   white-space: nowrap;
 }
 
+/* A company chip that opens the company's page (problem page, "Asked at"). */
+a.company-tag {
+  text-decoration: none;
+  transition:
+    background-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+
+a.company-tag:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
 .tag-muted {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--border-strong);
@@ -5936,6 +5949,27 @@ body.resizing-y * {
   align-self: flex-start;
 }
 
+/* The header's right side: the Israel badge and the company's careers site, stacked. */
+.company-head-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  align-self: flex-start;
+  gap: var(--s-3);
+}
+
+.company-head-side .il-badge {
+  align-self: auto;
+}
+
+.company-careers {
+  gap: var(--s-1-5);
+}
+
+.company-careers-arrow {
+  color: var(--muted);
+}
+
 @media (max-width: 760px) {
   .company-facts {
     grid-template-columns: minmax(0, 1fr);
@@ -5943,6 +5977,13 @@ body.resizing-y * {
 
   .company-head {
     gap: var(--s-3);
+  }
+
+  /* Below the name on a phone: badge and careers link side by side. */
+  .company-head-side {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   .company-head .company-mark.lg {

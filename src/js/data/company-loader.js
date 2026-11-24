@@ -52,6 +52,33 @@ export function loadCompanyLogos() {
   return loadLogoManifest().then((d) => d?.logos ?? null);
 }
 
+let pagesPromise = null;
+
+/**
+ * Which companies have a page (company-pages.json: slugs and alias slugs), fetched once.
+ * @returns {Promise<{ slugs: string[], aliases: Record<string, string> }|null>}
+ */
+export function loadCompanyPages() {
+  pagesPromise ??= fetch(new URL('./company-pages.json', import.meta.url))
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null);
+  return pagesPromise;
+}
+
+/**
+ * The slug of a company's page (#/companies/<slug>) from its name, through an alias where the
+ * sets merged one (Snap is Snapchat); null when it has no page.
+ * @param {{ slugs: string[], aliases: Record<string, string> }|null} pages
+ * @param {string} name
+ * @returns {string|null}
+ */
+export function companyPageSlug(pages, name) {
+  if (!pages) return null;
+  const slug = slugifyCompany(name);
+  const target = pages.aliases?.[slug] ?? slug;
+  return pages.slugs.includes(target) ? target : null;
+}
+
 /**
  * A company's slug from its name, the way company-sets.json makes them ("J.P. Morgan" ->
  * "j-p-morgan", "monday.com" -> "monday-com").
