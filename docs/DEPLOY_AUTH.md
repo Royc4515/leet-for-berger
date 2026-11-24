@@ -98,4 +98,6 @@ minutes, after the steps above.
 
 After any change to the question bank, `node scripts/content/build-quiz.mjs` rebuilds
 `deploy/supabase/functions/daily-quiz/bank.js`; deploy the function again so the server's
-answers match the site.
+answers match the site. New questions join the daily quiz two days after that build
+(`content/quiz/daily-pool.json`), so the function only has to be deployed before then; a change
+to an existing question's answer must be deployed with the site.

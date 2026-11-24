@@ -67,7 +67,8 @@ function shuffled(list, rand) {
  */
 export function dailyIds(day) {
   const rand = mulberry32(hashString(`quiz:${day}`));
-  const sorted = QUIZ_ROWS.map(([id, topic]) => ({ id, topic })).sort((a, b) => (a.id < b.id ? -1 : 1));
+  // Only questions in the daily pool by `day` (their `since` day), as in the browser.
+  const sorted = QUIZ_ROWS.filter((r) => r[4] <= day).map(([id, topic]) => ({ id, topic })).sort((a, b) => (a.id < b.id ? -1 : 1));
   const topics = shuffled([...new Set(sorted.map((q) => q.topic))].sort(), rand);
   const picks = [];
   for (const t of topics) {

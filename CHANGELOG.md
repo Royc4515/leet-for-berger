@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed (daily quiz)
+- **Adding questions never changes a daily quiz already shown.** Each question has the day it joins the daily quiz (`content/quiz/daily-pool.json`): the 526 current ones from the first day, and a question added later from two days after the build that adds it, past tomorrow in every time zone. Browser and server pick from the questions whose day has come. Deleting a question that is in the pool is refused by the build, because it would change past days; edit it instead.
+
 ### Added (company links, owner's request)
 - **A "Jobs in Israel" view on the company list**: the 38 companies whose page links straight to their job search in Israel, with a line saying the search shows what is open now (the site checks the links, not live openings). The four views take two rows on a phone. The mock OA company picker keeps its three.
 - **Jobs in Israel** (38 of the 57 companies that hire engineers in Israel): their page's button opens the company's own job search filtered to Israel (Google, Apple, Amazon, Microsoft, Meta, NVIDIA, Intel and others), or, for a company that only filters by city, its main Israeli office. Each address was loaded and showed Israel jobs, or is the link the company's own careers pages use. The other 19 keep "Careers site": no Israel filter could be verified (Check Point, Wiz, Fiverr, Dell, Akamai, Bloomberg, J.P. Morgan and others), or its Israel search lists no jobs today (SAP, Palantir, Yandex), or only one city of several could be filtered (Mobileye). `content/company-careers.json` (`israel`), rechecked by `check-careers.mjs`.
