@@ -82,13 +82,13 @@ test('applyCareers adds the careers site and, where there is one, the Israel sea
   assert.deepEqual(out.companies, [{ slug: 'a', careers: 'https://a.com/careers', careersIL: 'https://a.com/jobs?country=Israel' }, { slug: 'b', careers: 'https://b.com/jobs' }, { slug: 'c' }]);
 });
 
-test('Israel job searches: only for companies that hire engineers in Israel, https, no fragment', () => {
+// A search may keep its filter after the # (Taboola's does), so only the scheme is checked.
+test('Israel job searches: only for companies that hire engineers in Israel, https', () => {
   const inIsrael = new Set(sets.companies.filter((c) => c.israel === 'major' || c.israel === 'present').map((c) => c.slug));
   for (const [slug, url] of Object.entries(careers.israel)) {
     assert.ok(inIsrael.has(slug), `${slug} has an Israel search but no Israeli engineering hiring on record`);
     const u = new URL(url);
     assert.equal(u.protocol, 'https:', slug);
-    assert.equal(u.hash, '', `${slug} keeps a fragment`);
   }
 });
 
