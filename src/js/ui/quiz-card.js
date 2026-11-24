@@ -10,7 +10,7 @@ import { dayKey } from '../state/progress.js';
 import { services } from '../auth/services.js';
 
 /** Said next to every Play button of the daily quiz while signed out, so the sign-in step is no surprise. */
-export const SIGN_IN_NOTE = 'Sign in to play. Your score goes on the leaderboard.';
+export const SIGN_IN_NOTE = 'Sign in to play.';
 
 /**
  * Whether today's daily quiz would ask this visitor to sign in first. False while a stored session
