@@ -57,7 +57,7 @@ Every inventory item maps to a step. The plan is incomplete while any item has n
 
 Ideas from the brief's idea pool that research or the decision ruled out (never a screen or state):
 
-- Pan and zoom, semantic zoom and a minimap on the map: 26 districts fit one screen and the panel is the zoom.
+- Pan and zoom and a minimap on the map: 26 districts fit one screen. (Semantic zoom by level was added later at the owner's request: ADR 0010, amendment.)
 - A physics or force layout, a canvas renderer, Cytoscape or any graph library.
 - Company logos (letters, not logos: `docs/research/DESIGN_DIRECTIONS.md`).
 - Sound.

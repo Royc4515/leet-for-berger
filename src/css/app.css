@@ -50,7 +50,7 @@
   --text-2: #cbc2b5;
   --muted: #a1988a;
 
-  /* Lamp: progress you made and the next thing to do; also focus */
+  /* Lamp: the next thing to do, the primary action, where you are; also focus. Never a status. */
   --accent: #f3a93c;
   --accent-hover: #ffbc58;
   --accent-ink: #1d1203;
@@ -72,16 +72,20 @@
   --info: #86b8ff;
   --info-soft: rgba(134, 184, 255, 0.12);
 
-  /* Difficulty: word + pips, colour only reinforces */
-  --easy: #5fc98f;
+  /* Difficulty: word + pips, colour only reinforces. Teal and rose, so it never reads as a status. */
+  --easy: #3ec5b4;
   --medium: #e4b955;
-  --hard: #f07163;
+  --hard: #ff6b94;
 
-  /* Map hexes */
+  /* Problem status, everywhere a problem appears: green solved, a green ring solved with help,
+     coral tried and not solved yet, grey not started (the owner asked for success and failure
+     at a glance). */
   --hex-new: #2d2a24;
   --hex-locked: #1f1d19;
-  --hex-solved: var(--accent);
-  --hex-assisted: var(--accent-dim);
+  --hex-solved: var(--ok);
+  --hex-assisted: var(--ok);
+  --hex-tried: #d9634f;
+  --solved-soft: rgba(95, 201, 143, 0.16);
   --road: #4b453b;
   --road-lit: #7d7261;
 
@@ -1197,30 +1201,35 @@ body.lockdown .app-header {
 }
 
 .s-solved {
-  color: var(--accent);
+  color: var(--ok);
 }
 
 .s-solved .status-dot,
 .hexmark.solved {
-  background: var(--accent);
+  background: var(--hex-solved);
 }
 
 .s-assisted .status-dot,
 .hexmark.assisted {
-  background: var(--accent-dim);
+  background: radial-gradient(circle, var(--bg) 36%, var(--hex-assisted) 38%);
 }
 
 .s-assisted {
-  color: var(--text-2);
+  color: var(--ok);
 }
 
 .s-attempted .status-dot,
 .hexmark.attempted {
-  background: radial-gradient(circle, var(--bg) 38%, var(--accent) 40%);
+  background: var(--hex-tried);
 }
 
 .s-attempted {
-  color: var(--text-2);
+  color: var(--bad);
+}
+
+/* Legend only: the amber ring the map puts on your next problem. */
+.hexmark.next {
+  background: radial-gradient(circle, var(--bg) 36%, var(--accent) 38%);
 }
 
 /* ---------- Form controls ---------- */
@@ -1415,7 +1424,7 @@ textarea.mentor-input {
 .progress-fill {
   display: block;
   height: 100%;
-  background: var(--accent);
+  background: var(--ok);
   border-radius: var(--r-pill);
   transform-origin: left;
   animation: grow var(--t-slow) var(--ease) both;
@@ -1453,7 +1462,7 @@ textarea.mentor-input {
 
 .company-mark.is-mono {
   background:
-    linear-gradient(to top, var(--accent-soft) var(--fill, 0%), transparent var(--fill, 0%)),
+    linear-gradient(to top, var(--solved-soft) var(--fill, 0%), transparent var(--fill, 0%)),
     linear-gradient(160deg, var(--panel-hover), var(--panel-3));
   color: var(--text);
 }
@@ -1880,39 +1889,549 @@ body.lockdown .toast-host {
 .map-canvas {
   position: relative;
   min-width: 0;
-  padding: var(--s-4);
+  height: clamp(420px, 68vh, 780px);
   background:
     radial-gradient(ellipse 70% 60% at 20% 10%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 70%),
     var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   overflow: hidden;
+  cursor: grab;
+  /* The map owns every gesture on it: one finger drags, two pinch. The page scrolls around it. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
+.map-canvas.is-dragging {
+  cursor: grabbing;
+}
+
+/* A phone keeps room around the map: for the page to scroll, the panel to peek, a tour card. */
+@media (max-width: 640px) {
+  .map-canvas {
+    height: clamp(360px, 58vh, 560px);
+  }
+}
+
+/* One world, moved by a camera: screen = world * k + (x, y) (ui/views/map.js setCam). The SVG
+   fills the canvas; the camera is the transform of its one group. */
 .map-svg {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
-  height: auto;
-  overflow: visible;
+  height: 100%;
 }
 
-.band-label {
-  fill: var(--muted);
-  font-family: var(--mono);
+/* Names float over the world at a constant size and fade in as you get closer. */
+.map-labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.map-labels-pan {
+  --k: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+.map-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: var(--room, none);
+  overflow: hidden;
+  color: var(--text-2);
   font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transform: translate(calc(var(--wx) * var(--k) * 1px), calc(var(--wy) * var(--k) * 1px)) translateY(-50%);
+  transition: opacity var(--t-base) var(--ease);
+}
+
+.map-label.is-on {
+  opacity: 1;
+}
+
+/* Measures label widths for the layout (ui/views/map.js textWidth); never seen. */
+.map-label.map-ruler {
+  max-width: none;
+  visibility: hidden;
+  opacity: 1;
+}
+
+.map-rulers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+}
+
+.map-label.is-tier {
+  color: var(--muted);
+  font-family: var(--mono);
   font-weight: 600;
   letter-spacing: var(--track-label);
+  text-align: center;
+  text-transform: uppercase;
+  white-space: normal;
+  transform: translate(calc(var(--wx) * var(--k) * 1px), calc(var(--wy) * var(--k) * 1px)) translateX(-50%);
 }
 
-.band-num {
-  fill: var(--accent);
+.map-label.map-ruler.is-tier,
+.map-label.map-ruler.is-problem {
+  display: block;
+  width: auto;
+  white-space: nowrap;
+}
+
+.ml-num {
+  color: var(--accent);
+}
+
+.map-label.is-district {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  color: var(--text);
+  font-family: var(--display);
+  font-weight: 650;
+}
+
+.map-label.is-district .ml-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.map-label.is-district .ml-count,
+.map-label.is-count {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.map-label.is-district[data-state='locked'] {
+  color: var(--muted);
+}
+
+.map-label.is-district[data-state='mastered'] .ml-count {
+  color: var(--ok);
+}
+
+.map-label.is-block {
+  font-weight: 500;
+}
+
+.map-label.is-block[data-state='done'] {
+  color: var(--ok);
+}
+
+/* A problem's name sits inside its hex once the hex is big enough to hold it. */
+.map-label.is-problem {
+  display: -webkit-box;
+  width: calc(var(--k) * 11px);
+  color: var(--text);
+  font-weight: 600;
+  white-space: normal;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  transform: translate(calc(var(--wx) * var(--k) * 1px), calc(var(--wy) * var(--k) * 1px)) translate(-50%, -50%);
+}
+
+/* Zoom buttons, bottom right, like any map. */
+.map-controls {
+  position: absolute;
+  right: var(--s-3);
+  bottom: var(--s-3);
+  z-index: 2;
+  display: grid;
+  overflow: hidden;
+  background: var(--panel-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-1);
+}
+
+.map-ctl {
+  display: grid;
+  place-items: center;
+  width: var(--ctl-md);
+  height: var(--ctl-md);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font-size: var(--fs-lg);
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+.map-ctl + .map-ctl {
+  border-top: 1px solid var(--border);
+}
+
+.map-ctl:hover {
+  background: var(--panel-hover);
+  color: var(--accent);
+}
+
+.map-ctl:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+/* Where you are on the map: breadcrumb above the canvas. */
+.map-main {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.map-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-4);
+  min-height: var(--ctl-md);
+}
+
+.map-crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+
+.map-crumbs li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--muted);
+}
+
+.map-crumbs li + li::before {
+  content: '\203A';
+  color: var(--muted);
+}
+
+.map-crumbs a {
+  color: var(--text-2);
+  text-decoration: none;
+  border-radius: var(--r-tag);
+}
+
+.map-crumbs a:hover {
+  color: var(--accent);
+}
+
+.map-crumbs [aria-current] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.map-crumb-hint {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+
+/* Scrolled to after a zoom: land below the sticky header, not under it. */
+.map-crumbs,
+.map-brief {
+  scroll-margin-top: calc(var(--header-h) + var(--s-3));
+}
+
+/* No Esc key on a touch screen: the breadcrumb is the way back up. */
+@media (pointer: coarse) {
+  .map-crumb-hint {
+    display: none;
+  }
+}
+
+/* =========================================================================
+   Motion pass (owner's request: smooth and impressive everywhere).
+   Transform and opacity only, so the compositor runs it; every animation is
+   off under prefers-reduced-motion (the block at the end of this file).
+   ========================================================================= */
+
+/* Page to page: the old page fades back, the new one rises in. The header and the phone tab bar
+   are their own transition groups, so they stay perfectly still (main.js, ui/motion.js). */
+.app-header {
+  view-transition-name: app-header;
+}
+
+.tab-bar {
+  view-transition-name: tab-bar;
+}
+
+::view-transition-group(app-header),
+::view-transition-group(tab-bar) {
+  animation: none;
+}
+
+::view-transition-old(root) {
+  animation: vt-out var(--t-fast) var(--ease) both;
+}
+
+::view-transition-new(root) {
+  animation: vt-in var(--t-base) var(--ease) both;
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: scale(0.992);
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Glider: one highlight slides to the active item (ui/motion.js glide). */
+.segmented,
+.nav {
+  position: relative;
+}
+
+/* Hidden (not transparent) until it is first placed, then it only ever slides. */
+.glider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.glider-ready > .glider {
+  transition: transform var(--t-base) var(--ease-spring), width var(--t-base) var(--ease-spring), height var(--t-base) var(--ease-spring);
+}
+
+.segmented > .glider {
+  border-radius: calc(var(--r-sm) - 3px);
+  background: var(--panel-3);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.segmented-btn {
+  position: relative;
+  z-index: 1;
+}
+
+.segmented.has-glider .segmented-btn[aria-pressed='true'] {
+  background: transparent;
+  box-shadow: none;
+}
+
+.nav > .glider {
+  border-radius: var(--r-sm);
+  background: var(--panel-3);
+}
+
+.nav > .glider::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -11px;
+  width: 8px;
+  height: 9px;
+  margin-left: -4px;
+  background: var(--accent);
+  clip-path: var(--hex);
+}
+
+.nav a {
+  z-index: 1;
+}
+
+.nav.has-glider a[aria-current='page'] {
+  background: transparent;
+}
+
+.nav.has-glider a[aria-current='page']::after {
+  display: none;
+}
+
+/* The phone tab bar: the glider is a short amber line over the active tab. */
+.tab-bar > .glider {
+  height: 2px !important;
+  background: transparent;
+}
+
+.tab-bar > .glider::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 28px;
+  height: 2px;
+  margin-left: -14px;
+  border-radius: 0 0 var(--r-tag) var(--r-tag);
+  background: var(--accent);
+}
+
+.tab-bar.has-glider a[aria-current='page']::before {
+  display: none;
+}
+
+/* Spotlight: a soft light follows the mouse over cards (ui/motion.js installSpotlight). */
+.today-card,
+.mode-card,
+.company-card,
+.stat-cell,
+.daily-fact,
+.company-fact {
+  position: relative;
+}
+
+.today-card::after,
+.mode-card::after,
+.company-card::after,
+.stat-cell::after,
+.daily-fact::after,
+.company-fact::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--text) 7%, transparent), transparent 62%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-base) var(--ease);
+}
+
+.is-spot::after {
+  opacity: 1;
+}
+
+.company-card.is-spot,
+.mode-card.is-spot {
+  border-color: var(--border-control);
+}
+
+/* Cards lift towards the pointer and settle back with a little spring. */
+.mode-card {
+  transition: transform var(--t-base) var(--ease-spring), border-color var(--t-fast) var(--ease);
+}
+
+.mode-card:hover {
+  transform: translateY(-3px);
+}
+
+.company-card:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  transition: background-color var(--t-fast) var(--ease), box-shadow var(--t-base) var(--ease), transform var(--t-fast) var(--ease);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* Burst: small hexes fly out of an Accepted verdict (ui/motion.js burst). */
+.burst {
+  position: fixed;
+  z-index: 60;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.burst-hex {
+  position: absolute;
+  top: 0;
+  left: 0;
+  clip-path: var(--hex);
+  will-change: transform, opacity;
+}
+
+/* Map: hexes swell under the pointer (a little less once they carry names). */
+.map-svg .hx {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: fill var(--t-base) var(--ease), stroke var(--t-base) var(--ease), opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease-spring);
+}
+
+.map-svg .hx:hover {
+  transform: scale(1.3);
+}
+
+.map-canvas[data-lod='2'] .map-svg .hx:hover {
+  transform: scale(1.06);
+}
+
+/* Daily calendar: the 16 weeks fill in as a wave from the top left. */
+.cal-day {
+  animation: cal-in var(--t-slow) var(--ease) backwards;
+  animation-delay: calc(var(--d, 0) * var(--t-stagger) / 2);
+}
+
+@keyframes cal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+/* Scroll: cards and sections rise into place as they scroll in, driven by the scroll itself (no
+   JS, no observer). Not table rows: 225 scroll timelines cost more per frame than they give.
+   Anything already on screen at load is complete; browsers without scroll-driven animations
+   simply show everything. */
+@supports (animation-timeline: view()) {
+  .company-card,
+  .path-tier,
+  .mode-card,
+  .map-list-topic,
+  .past-list > li,
+  .daily-fact {
+    animation: scroll-rise linear backwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+}
+
+@keyframes scroll-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+
+/* The world, in world units. Every line is a non-scaling stroke: its width and dashes are screen
+   pixels, so lines stay as thin at a problem as on the whole map. */
+.band {
+  fill: color-mix(in srgb, var(--text) 2%, transparent);
 }
 
 .road {
+  vector-effect: non-scaling-stroke;
   fill: none;
   stroke: var(--road);
-  stroke-width: 1.4;
-  stroke-dasharray: 2 5;
+  stroke-width: 1.4px;
+  stroke-dasharray: 2px 5px;
   stroke-linecap: round;
   transition: stroke var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
 }
@@ -1925,53 +2444,46 @@ body.lockdown .toast-host {
 .road.is-chain,
 .road.is-hover {
   stroke: var(--accent);
-  stroke-width: 2;
+  stroke-width: 2px;
   stroke-dasharray: none;
 }
 
 .road.is-chain-out,
 .road.is-hover-out {
   stroke: var(--text-2);
-  stroke-width: 1.6;
-  stroke-dasharray: 4 4;
-}
-
-.map-svg.is-narrow .road {
-  opacity: 0;
-}
-
-.map-svg.is-narrow .road.is-chain,
-.map-svg.is-narrow .road.is-chain-out,
-.map-svg.is-narrow .road.is-hover {
-  opacity: 1;
+  stroke-width: 1.6px;
+  stroke-dasharray: 4px 4px;
 }
 
 .district {
   cursor: pointer;
   outline: none;
+  transition: opacity var(--t-base) var(--ease);
 }
 
 .land {
+  vector-effect: non-scaling-stroke;
   fill: var(--panel-2);
   stroke: var(--border-strong);
-  stroke-width: 1;
+  stroke-width: 1px;
   transition: fill var(--t-fast) var(--ease), stroke var(--t-fast) var(--ease);
 }
 
-.district:hover .land {
+.map-canvas[data-level='0'] .district:hover .land {
   fill: var(--panel-3);
   stroke: var(--border-control);
 }
 
-.district[aria-pressed='true'] .land {
+.district.is-preview .land,
+.district.is-selected .land {
   fill: var(--panel-3);
   stroke: var(--accent);
-  stroke-width: 1.5;
+  stroke-width: 1.5px;
 }
 
 .district:focus-visible .land {
   stroke: var(--focus);
-  stroke-width: 2.5;
+  stroke-width: 2.5px;
 }
 
 .district.is-chain-member .land,
@@ -1979,37 +2491,54 @@ body.lockdown .toast-host {
   stroke: var(--accent-line);
 }
 
-.d-name {
-  fill: var(--text);
-  font-family: var(--display);
-  font-size: var(--fs-sm);
-  font-weight: 650;
-}
-
-.d-count {
-  fill: var(--muted);
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
-  font-variant-numeric: tabular-nums;
-}
-
-.st-mastered .d-count {
-  fill: var(--accent);
+/* Flown into a topic, the rest of the map stays in view, quieter. */
+.map-canvas:not([data-level='0']) .district:not(.is-selected) {
+  opacity: 0.42;
 }
 
 .st-locked .land {
   fill: var(--panel);
-  stroke-dasharray: 3 4;
+  stroke-dasharray: 3px 4px;
 }
 
-.st-locked .d-name {
-  fill: var(--muted);
+/* A subtopic: its name strip and row of hexes; outlined once you can read it. */
+.block {
+  outline: none;
+  transition: opacity var(--t-base) var(--ease);
 }
 
+.block-land {
+  vector-effect: non-scaling-stroke;
+  fill: transparent;
+  stroke: none;
+  transition: fill var(--t-fast) var(--ease), stroke var(--t-fast) var(--ease);
+}
+
+.map-canvas:not([data-lod='0']) .block:hover .block-land {
+  fill: color-mix(in srgb, var(--text) 4%, transparent);
+}
+
+.block.is-selected .block-land {
+  fill: color-mix(in srgb, var(--accent) 7%, transparent);
+  stroke: var(--accent-line);
+  stroke-width: 1.5px;
+}
+
+.block:focus-visible .block-land {
+  stroke: var(--focus);
+  stroke-width: 2.5px;
+}
+
+.map-canvas[data-level='2'] .district.is-selected .block:not(.is-selected),
+.map-canvas[data-level='3'] .district.is-selected .block:not(.is-selected) {
+  opacity: 0.6;
+}
 
 .hx {
+  vector-effect: non-scaling-stroke;
   fill: var(--hex-new);
-  transition: fill var(--t-base) var(--ease), opacity var(--t-fast) var(--ease);
+  cursor: pointer;
+  outline: none;
 }
 
 .st-locked .hx {
@@ -2018,7 +2547,7 @@ body.lockdown .toast-host {
 
 .hx.is-path {
   stroke: var(--border-control);
-  stroke-width: 0.8;
+  stroke-width: 0.8px;
 }
 
 .hx.solved {
@@ -2027,26 +2556,75 @@ body.lockdown .toast-host {
 }
 
 .hx.assisted {
-  fill: var(--hex-assisted);
-  stroke: none;
+  fill: var(--bg);
+  stroke: var(--hex-assisted);
+  stroke-width: 1.8px;
 }
 
 .hx.attempted {
-  fill: var(--bg);
-  stroke: var(--accent);
-  stroke-width: 1.6;
+  fill: var(--hex-tried);
+  stroke: none;
 }
 
 .hx.is-next {
   fill: var(--accent-soft);
   stroke: var(--accent);
-  stroke-width: 1.8;
+  stroke-width: 1.8px;
+}
+
+.hx:focus-visible,
+.hx.is-selected {
+  stroke: var(--accent);
+  stroke-width: 1.6px;
+}
+
+.hx:focus-visible {
+  stroke: var(--focus);
+}
+
+/* Close enough to read names, a hex becomes a tile: a tinted face, its status as the rim. */
+.map-canvas[data-lod='2'] .hx {
+  fill: var(--panel-3);
+  stroke: var(--border-control);
+  stroke-width: 1.2px;
+}
+
+.map-canvas[data-lod='2'] .hx.solved {
+  fill: color-mix(in srgb, var(--hex-solved) 24%, var(--panel-2));
+  stroke: var(--hex-solved);
+}
+
+.map-canvas[data-lod='2'] .hx.assisted {
+  fill: color-mix(in srgb, var(--hex-assisted) 12%, var(--panel-2));
+  stroke: var(--hex-assisted);
+  stroke-dasharray: 5px 4px;
+}
+
+.map-canvas[data-lod='2'] .hx.attempted {
+  fill: color-mix(in srgb, var(--hex-tried) 24%, var(--panel-2));
+  stroke: var(--hex-tried);
+}
+
+.map-canvas[data-lod='2'] .hx.is-next {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+
+.map-canvas[data-lod='2'] .hx.is-selected,
+.map-canvas[data-lod='2'] .hx:focus-visible {
+  stroke: var(--accent);
+  stroke-width: 3px;
+}
+
+.map-canvas[data-lod='2'] .hx:focus-visible {
+  stroke: var(--focus);
 }
 
 .next-ring {
+  vector-effect: non-scaling-stroke;
   fill: none;
   stroke: var(--accent);
-  stroke-width: 1.5;
+  stroke-width: 1.5px;
   transform-box: fill-box;
   transform-origin: center;
   animation: next-pulse var(--t-pulse) var(--ease-in-out) infinite;
@@ -2066,39 +2644,55 @@ body.lockdown .toast-host {
 }
 
 /* Lenses */
-.map-svg[data-lens='difficulty'] .hx {
+.map-canvas[data-lens='difficulty'] .hx {
   stroke: none;
 }
 
-.map-svg[data-lens='difficulty'] .hx.d-easy {
+.map-canvas[data-lens='difficulty'] .hx.d-easy {
   fill: color-mix(in srgb, var(--easy) 70%, var(--panel-2));
 }
 
-.map-svg[data-lens='difficulty'] .hx.d-medium {
+.map-canvas[data-lens='difficulty'] .hx.d-medium {
   fill: color-mix(in srgb, var(--medium) 70%, var(--panel-2));
 }
 
-.map-svg[data-lens='difficulty'] .hx.d-hard {
+.map-canvas[data-lens='difficulty'] .hx.d-hard {
   fill: color-mix(in srgb, var(--hard) 70%, var(--panel-2));
 }
 
-.map-svg[data-lens='difficulty'] .hx.solved,
-.map-svg[data-lens='difficulty'] .hx.assisted {
+.map-canvas[data-lens='difficulty'] .hx.solved,
+.map-canvas[data-lens='difficulty'] .hx.assisted {
   stroke: var(--text);
-  stroke-width: 1.6;
+  stroke-width: 1.6px;
 }
 
-.map-svg.has-company .hx:not(.in-company) {
+.map-canvas[data-lens='difficulty'][data-lod='2'] .hx.d-easy {
+  fill: color-mix(in srgb, var(--easy) 30%, var(--panel-2));
+}
+
+.map-canvas[data-lens='difficulty'][data-lod='2'] .hx.d-medium {
+  fill: color-mix(in srgb, var(--medium) 30%, var(--panel-2));
+}
+
+.map-canvas[data-lens='difficulty'][data-lod='2'] .hx.d-hard {
+  fill: color-mix(in srgb, var(--hard) 30%, var(--panel-2));
+}
+
+.map-canvas.has-company .hx:not(.in-company) {
   opacity: 0.18;
 }
 
-.map-svg.has-company .hx.in-company:not(.solved):not(.assisted) {
+.map-canvas.has-company .hx.in-company:not(.solved):not(.assisted) {
   fill: var(--text-2);
+}
+
+.map-canvas.has-company[data-lod='2'] .hx.in-company:not(.solved):not(.assisted) {
+  fill: color-mix(in srgb, var(--text-2) 30%, var(--panel-2));
 }
 
 /* Entry: tiers rise in order, once. Transform and opacity only. */
 .map-svg.is-entering .district {
-  animation: district-in var(--t-slow) var(--ease) both;
+  animation: district-in var(--t-slow) var(--ease) backwards;
   animation-delay: calc(var(--i) * var(--t-stagger) * 2);
 }
 
@@ -2160,6 +2754,20 @@ body.lockdown .toast-host {
   margin: 0;
 }
 
+/* A long problem title wraps inside its button instead of widening the panel. */
+.map-brief {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.map-brief .btn-block {
+  height: auto;
+  min-height: var(--ctl-md);
+  padding-block: var(--s-2);
+  line-height: var(--lh-snug);
+  white-space: normal;
+  text-align: center;
+}
+
 .brief-title {
   font-size: var(--fs-2xl);
 }
@@ -2184,7 +2792,7 @@ body.lockdown .toast-host {
 }
 
 .brief-state.is-mastered strong {
-  color: var(--accent);
+  color: var(--ok);
 }
 
 .brief-links {
@@ -2225,7 +2833,7 @@ body.lockdown .toast-host {
 }
 
 .hexmark.t-mastered {
-  background: var(--accent);
+  background: var(--hex-solved);
 }
 
 .hexmark.t-started {
@@ -2242,6 +2850,43 @@ body.lockdown .toast-host {
   padding: 0;
   list-style: none;
   border-top: 1px solid var(--border);
+}
+
+.brief-concepts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+
+.brief-concepts .brief-row {
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+}
+
+.brief-count {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.brief-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  font-size: var(--fs-sm);
+}
+
+.brief-meta .status-word {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  color: var(--text-2);
+}
+
+.brief-asked {
+  margin: 0;
 }
 
 .brief-row {
@@ -2640,7 +3285,7 @@ body.lockdown .toast-host {
 }
 
 .week-day.is-active .week-hex {
-  background: var(--accent);
+  background: var(--hex-solved);
 }
 
 .week-day.is-today:not(.is-active) .week-hex {
@@ -2921,11 +3566,11 @@ body.lockdown .toast-host {
 }
 
 .cal-day.is-active {
-  background: var(--accent-dim);
+  background: color-mix(in srgb, var(--hex-solved) 55%, var(--panel));
 }
 
 .cal-day.is-active.is-daily {
-  background: var(--accent);
+  background: var(--hex-solved);
 }
 
 .cal-day.is-today {
@@ -2933,7 +3578,7 @@ body.lockdown .toast-host {
 }
 
 .cal-day.is-today.is-active {
-  background: var(--accent);
+  background: var(--hex-solved);
 }
 
 .cal-day.is-future {
@@ -4541,7 +5186,7 @@ body.resizing-y * {
 
 .path-tier.is-done .route-node,
 .path-tier.is-done .route-node::after {
-  background: var(--accent);
+  background: var(--ok);
 }
 
 .path-tier.is-current .route-node {
@@ -4683,15 +5328,15 @@ body.resizing-y * {
 }
 
 .strip-hex.solved {
-  background: var(--accent);
+  background: var(--hex-solved);
 }
 
 .strip-hex.assisted {
-  background: var(--accent-dim);
+  background: radial-gradient(circle, var(--panel) 34%, var(--hex-assisted) 36%);
 }
 
 .strip-hex.attempted {
-  background: radial-gradient(circle, var(--panel) 34%, var(--accent) 36%);
+  background: var(--hex-tried);
 }
 
 .path-topic-body {
@@ -6222,6 +6867,7 @@ body.resizing-y * {
   .btn-link,
   .site-links a,
   .site-links-tour,
+  .map-crumbs a,
   .path-prereqs a,
   .problem-crumb a,
   .legal a:not(.btn) {

@@ -9,8 +9,8 @@
  * and every way of closing marks the tour as seen (state/tours.js).
  */
 import { h } from './dom.js';
-import { TOURS } from '../data/tours.js';
-import { placeCard, spotRect } from '../data/tour-layout.js';
+import { TOURS, WELCOME, WELCOME_ALIASES } from '../data/tours.js';
+import { placeCard, spotRect, sheetScroll } from '../data/tour-layout.js';
 import { loadSeen, saveSeen, markSeen, hasSeen } from '../state/tours.js';
 
 let active = null;
@@ -44,18 +44,36 @@ export function tourDue(id) {
   return !document.querySelector('dialog[open]');
 }
 
+/** The welcome step has not been shown on this device yet (the first tour carries it). */
+const welcomeDue = () => {
+  const seen = loadSeen();
+  return ![WELCOME, ...WELCOME_ALIASES].some((id) => hasSeen(seen, id));
+};
+
+/** Every required target is on screen: views load data after they mount, a tour waits for it. */
+const targetsReady = (tour) => tour.steps.every((s) => s.optional || !s.target || findTarget(s.target));
+
 /**
- * Starts a tour after the view has painted, if it is due. Views call this on mount and keep the
- * returned function in their cleanup, so leaving the page cancels a pending start or closes it.
+ * Starts a tour once the view has painted and its targets are on screen, if it is due. The caller
+ * keeps the returned function in its cleanup, so leaving the page cancels a pending start or
+ * closes the tour. Gives up waiting after `wait` ms and starts anyway (missing targets centre).
  * @param {string} id
- * @param {{ delay?: number }} [opts]
+ * @param {{ delay?: number, wait?: number }} [opts]
  * @returns {() => void}
  */
-export function startTourIfDue(id, { delay = 350 } = {}) {
+export function startTourIfDue(id, { delay = 350, wait = 4000 } = {}) {
   let close = () => {};
-  const timer = setTimeout(() => {
-    if (tourDue(id)) close = startTour(id);
-  }, delay);
+  let timer = 0;
+  const started = Date.now();
+  const attempt = () => {
+    if (!tourDue(id)) return;
+    if (!targetsReady(TOURS[id]) && Date.now() - started < wait) {
+      timer = setTimeout(attempt, 120);
+      return;
+    }
+    close = startTour(id, { withWelcome: welcomeDue() });
+  };
+  timer = setTimeout(attempt, delay);
   return () => {
     clearTimeout(timer);
     close();
@@ -65,15 +83,16 @@ export function startTourIfDue(id, { delay = 350 } = {}) {
 /**
  * Opens a tour now, whether or not it was seen (replay buttons call this).
  * @param {string} id
- * @param {{ onClose?: (reason: 'done'|'skipped'|'closed') => void }} [opts]
+ * @param {{ onClose?: (reason: 'done'|'skipped'|'closed') => void, withWelcome?: boolean }} [opts]
+ *   withWelcome: open with the one-step welcome (the first tour a device sees)
  * @returns {() => void} closes the tour if it is still open
  */
-export function startTour(id, { onClose } = {}) {
+export function startTour(id, { onClose, withWelcome = false } = {}) {
   const tour = TOURS[id];
   if (!tour) return () => {};
   active?.close('closed');
 
-  const steps = tour.steps.filter((s) => !s.optional || findTarget(s.target));
+  const steps = [...(withWelcome ? TOURS[WELCOME].steps : []), ...tour.steps].filter((s) => !s.optional || findTarget(s.target));
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   let index = 0;
   let target = null;
@@ -141,6 +160,11 @@ export function startTour(id, { onClose } = {}) {
     void card.offsetWidth; // restart the entrance animation for the new step
     card.classList.add('is-entering');
     layout();
+    // A phone's sheet must not cover the target when there is room for both: scroll to make it.
+    if (target) {
+      const dy = sheetScroll({ target: target.getBoundingClientRect(), card: { width: card.offsetWidth, height: card.offsetHeight }, viewport: { width: document.documentElement.clientWidth, height: innerHeight } });
+      if (dy) scrollBy({ top: dy, behavior: 'instant' });
+    }
     // Views animate in and fonts swap: place again once things have settled.
     clearTimeout(settle);
     settle = setTimeout(queue, 260);
@@ -150,7 +174,8 @@ export function startTour(id, { onClose } = {}) {
   function close(reason = 'closed') {
     if (active?.dialog !== dialog) return;
     active = null;
-    saveSeen(markSeen(loadSeen(), id));
+    const seen = markSeen(loadSeen(), id);
+    saveSeen(withWelcome ? markSeen(seen, WELCOME) : seen);
     clearTimeout(settle);
     if (frame) cancelAnimationFrame(frame);
     removeEventListener('resize', queue);

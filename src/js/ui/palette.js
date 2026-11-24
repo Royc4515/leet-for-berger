@@ -23,8 +23,8 @@ const PAGES = [
   { kind: 'page', id: 'quiz', label: 'Quiz', href: '#/quiz', keywords: 'multiple choice questions oop design patterns trivia phone' },
   { kind: 'page', id: 'daily-quiz', label: 'Daily quiz', href: '#/quiz/daily', keywords: 'today multiple choice questions' },
   { kind: 'page', id: 'modes', label: 'Modes', href: '#/modes', keywords: 'practice' },
-  // An action, not a page: main.js starts the tour where you are.
-  { kind: 'action', id: 'site-tour', label: 'Site tour', keywords: 'guide help walkthrough onboarding how', run: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'site' })) },
+  // An action, not a page: main.js replays the guide of the page you are on.
+  { kind: 'action', id: 'page-guide', label: 'Guide for this page', keywords: 'tour help walkthrough onboarding how explain', run: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) },
 ];
 
 const KIND_LABEL = { page: 'Page', action: 'Guide', problem: 'Problem', topic: 'Topic', company: 'Company' };

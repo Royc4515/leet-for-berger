@@ -52,6 +52,26 @@ export function placeCard({ target, card, viewport, gap = TOUR_GAP, margin = TOU
 }
 
 /**
+ * On a phone the card is a sheet on one edge. A target short enough to sit beside the sheet but
+ * under it right now (a tall target scrolled to the centre, like the map) gets the scroll that
+ * clears it; a target taller than the room left is shown as it is.
+ * @param {{ target: Rect|null, card: { width: number, height: number }, viewport: { width: number, height: number }, gap?: number, margin?: number, pad?: number }} opts
+ * @returns {number} px to scroll the page by (positive scrolls down), 0 when nothing is needed
+ */
+export function sheetScroll({ target, card, viewport, gap = TOUR_GAP, margin = TOUR_MARGIN, pad = 6 }) {
+  if (!target || viewport.width >= SHEET_WIDTH) return 0;
+  if (target.height + 2 * pad + card.height + margin + gap > viewport.height) return 0;
+  // The same edge placeCard picks: the one away from the target's centre.
+  if (target.top + target.height / 2 > viewport.height / 2) {
+    const clear = margin + card.height + gap + pad;
+    return target.top < clear ? target.top - clear : 0;
+  }
+  const limit = viewport.height - margin - card.height - gap - pad;
+  const bottom = target.top + target.height;
+  return bottom > limit ? bottom - limit : 0;
+}
+
+/**
  * The spotlight: the target padded a little, cut to the viewport.
  * @param {Rect} target
  * @param {{ width: number, height: number }} viewport

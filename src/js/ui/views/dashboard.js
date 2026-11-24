@@ -148,6 +148,9 @@ export function renderDashboard(root, { store }) {
     return filters.difficulty !== 'All' || filters.topic !== 'all' || filters.query.trim() !== '';
   }
 
+  // Bumped by every render and by cleanup: a fill still streaming rows for an old render stops.
+  let fillToken = 0;
+
   function renderRows() {
     const state = store.get();
     const q = filters.query.trim().toLowerCase();
@@ -186,9 +189,7 @@ export function renderDashboard(root, { store }) {
 
     tableWrap.hidden = false;
     emptyHost.hidden = true;
-    mount(
-      tableBody,
-      rows.map((p) => {
+    const row = (p) => {
         const prog = state.problems[p.id];
         const status = prog?.status === 'solved' ? (prog.revealed ? 'assisted' : 'solved') : prog ? 'attempted' : 'todo';
         const isAvailable = p.status === 'available';
@@ -201,8 +202,27 @@ export function renderDashboard(root, { store }) {
           h('td.cell-diff', {}, difficulty(p.difficulty)),
           h('td.cell-topics', {}, p.topics.map((t) => h('span.tag', {}, topicLabel(t)))),
         );
-      }),
-    );
+      };
+    // The first screenful now, the rest in small chunks between frames: building all 225 rows at
+    // once blocked the main thread through a page change. aria-busy says the list is still filling.
+    const token = ++fillToken;
+    const FIRST = 40;
+    const CHUNK = 60;
+    mount(tableBody, rows.slice(0, FIRST).map(row));
+    if (rows.length <= FIRST) {
+      tableBody.removeAttribute('aria-busy');
+      return;
+    }
+    tableBody.setAttribute('aria-busy', 'true');
+    let at = FIRST;
+    const fill = () => {
+      if (token !== fillToken) return;
+      tableBody.append(...rows.slice(at, at + CHUNK).map(row));
+      at += CHUNK;
+      if (at < rows.length) setTimeout(fill, 0);
+      else tableBody.removeAttribute('aria-busy');
+    };
+    setTimeout(fill, 0);
   }
 
   const diffGroup = chipGroup({
@@ -334,6 +354,7 @@ export function renderDashboard(root, { store }) {
   });
   return () => {
     disposed = true;
+    fillToken++;
     stopCount();
     unsub();
   };

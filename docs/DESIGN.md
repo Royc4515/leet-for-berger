@@ -1,6 +1,6 @@
 # Design system: Atlas
 
-Direction (stage F6, `docs/research/DESIGN_DIRECTIONS.md`): **a territory you light up.** The curriculum is a map of 26 topics in six tiers; every problem is a hex; solving one lights it. The hex is the unit everywhere: on the map, as the status mark in lists, as a day in the daily calendar, as a test case in the verdict, as the company mark and the logo. The ground is warm graphite; there is one lamp colour, amber, and it means **light**: what you have solved and the next thing to do.
+Direction (stage F6, `docs/research/DESIGN_DIRECTIONS.md`): **a territory you light up.** The curriculum is a map of 26 topics in six tiers; every problem is a hex; solving one lights it. The hex is the unit everywhere: on the map, as the status mark in lists, as a day in the daily calendar, as a test case in the verdict, as the company mark and the logo. The ground is warm graphite. Status is told by plain colours (the owner asked for success and failure at a glance): **green** solved, a **green ring** solved with help, **coral** tried and not solved yet, **grey** not started. There is one lamp colour, **amber**, and it only ever means **what to do now**: your next problem, the primary action, where you are.
 
 Everything lives in [`src/css/app.css`](../src/css/app.css): tokens in `:root` at the top, component rules below, view rules last. Component rules never use a literal colour, font size, radius, shadow or duration; `tests/design-tokens.test.js` enforces contrast, the type floor and token use.
 
@@ -34,14 +34,25 @@ Replaces the F5 "quiet instrument" system (`docs/DESIGN_PLAN.md`, kept for histo
 
 | Token | Value | Meaning |
 |---|---|---|
-| `--accent` | `#f3a93c` | Solved (lit hexes, progress fills), the primary action, the current position |
+| `--accent` | `#f3a93c` | The next problem (its ring), the primary action, the current position, the streak. Never a status. |
 | `--accent-hover`, `--accent-ink`, `--accent-soft`, `--accent-line`, `--accent-glow`, `--accent-dim` | | Hover, ink on amber, tints, the assisted (solved with help) hex |
 | `--focus` | `#ffc874` | Keyboard focus ring, everywhere |
 | `--ok`, `--bad`, `--warn`, `--info` (+ `-soft`) | green, red, yellow, blue | Test results, errors, warnings, informational marks (the IL mark). Never decoration. |
 | `--bad-solid` / `--bad-ink` | `#c63a2c` / white | Danger buttons (5.1:1) |
 | `--easy`, `--medium`, `--hard` | green, gold, red | Difficulty, always with pips and the word |
 
-Selection is shown by an outline and a check mark, not by amber fill alone; amber fill means "lit".
+Selection is shown by an outline and a check mark, not by amber fill alone.
+
+### Status
+
+| Token | Value | Means |
+|---|---|---|
+| `--hex-solved` | `--ok` (green) | Solved: hexes, progress fills, a day you solved something, a company's fill |
+| `--hex-assisted` | green, drawn as a ring | Solved with help (after Reveal) |
+| `--hex-tried` | `#d9634f` (coral) | Tried and not solved yet |
+| `--hex-new` | `#2d2a24` | Not started |
+
+Difficulty moved off the status colours so the two never read alike: `--easy` teal `#3ec5b4`, `--medium` gold, `--hard` rose `#ff6b94`, always with pips and the word.
 
 ### Type
 
@@ -82,7 +93,7 @@ Easing: `--ease` (out, default), `--ease-in-out` (things that move across the sc
 | Segmented | One of several views | Rectangular track; Map / List, Status / Difficulty / Company, Hiring / Top / All. |
 | Tag | Static label | 4 px radius, no border; `tag-muted` outlined, `tag-live` green, `tag-lamp` amber. Never clickable. |
 | Difficulty | Easy / Medium / Hard | Three pips (1, 2 or 3 filled) + the word in the semantic colour. Reads without colour. |
-| Status hex | A problem's state | Hex mark: grey (not started), ring (tried), amber (solved), dim amber (solved with help). Always paired with a word or an accessible name. |
+| Status hex | A problem's state | Hex mark: grey (not started), coral (tried), green (solved), green ring (solved with help); an amber ring marks your next problem. Always paired with a word or an accessible name. |
 | Company mark | Identifies a company | Hex tile with a two-letter monogram in the display face; a blue dot for major Israeli presence; an outline ring for tier-1 companies. No logos (DESIGN_DIRECTIONS.md). |
 | Card | Groups content or is one link | Whole card is one `<a>` or `<button>` when clickable. No card in a card. |
 | Table / list row | Lists of problems | Status first column, title link stretched over the row (`.row-link`), 48 px rows; stacked two-line rows under 640 px. |
@@ -98,30 +109,36 @@ Helpers in `src/js/ui/dom.js` build these with `h()` and text nodes only (never 
 
 ## Map rules
 
-- Tiers read left to right (columns); on a phone, top to bottom (bands of two districts). Never a shrunk desktop map.
-- A district shows its name, "solved/total" and one hex per problem. Path problems carry a thin outline.
+- **One continuous map** (owner's request): a single world you zoom into, never screens that replace each other. Tiers read left to right; each topic is a district; inside it each subtopic is a named row of hexes, flowing in learning order like a paragraph; each problem is a hex. A camera moves over it: scroll or pinch to zoom at the pointer, drag to move, the + / - / Show all buttons (bottom right, like any map), or + - 0 on the keyboard.
+- **Names appear as you get closer**, at a constant 12 px: topic names and tiers on the whole map, subtopic names from about 1.75x, problem names inside their hexes from 5x, where a hex becomes a tile (a tinted face, its status as the rim). A name that would not fit or would overlap another is left out, as on a street map. Line widths stay the same on screen at every zoom.
+- **Clicking flies one step closer**: a topic, then a subtopic, then a problem, along a smooth zoom-and-pan path (it rises a little for long hops). Each step is a hash (`#/map`, `#/map/<topic>`, `#/map/<topic>/<subtopic>`, `.../<problem>`); the breadcrumb names it; Esc and Back fly out one. Flown into a topic, the rest of the map stays visible, quieter.
+- The map opens with all of it in view where it reads (a laptop); on a phone it opens at reading zoom on your next topic, and you drag across the tiers. The canvas owns the gestures on it (`touch-action: none`); the page scrolls around it.
+- Path problems carry a thin outline. A picked problem has an amber rim and its card in the panel with Open.
 - **Locked** = dashed fog, the word "locked", and a one-sentence reason in the panel ("Opens after Two Pointers (1 of 2 solved). You can still practice it now."). Locked is advice; everything still opens.
-- **You are here**: the district holding the learning path's next problem is selected on arrival, and that hex carries a single pulsing ring (static under reduced motion).
-- Pointing at or focusing a district lights its whole prerequisite chain in amber and its dependants in a dashed line. On a phone only the selected district's roads show.
-- The panel is the zoom: no pan, no zoom, no minimap.
-- Every district is a focusable control with a full accessible name; arrows move by geometry; Enter selects and updates the hash (`#/map/<topic>`) without re-routing.
+- **You are here**: the district and the subtopic holding your next problem carry a single pulsing ring on that hex (static under reduced motion); the panel defaults to your next topic.
+- Pointing at or focusing a district lights its whole prerequisite chain in amber and its dependants in a dashed line, and the panel follows. On a phone only the selected district's roads show.
+- One kind of thing is focusable at a time, so buttons never nest: the topics on the whole map, a topic's subtopics, then that topic's problems. Each has a full accessible name; arrows move by geometry; Enter flies closer; the panel lists what the hexes show, as links.
 - Map / List show the same model; List is the screen-reader route.
 
 ## Tour rules
 
-- One site tour (first visit to any browse page) and one guide per mode (Interview, Battle, Mentor), each shown once per device and replayable: the footer and the palette for the site tour, "How it works" on a setup page, the mentor's "?" button. Content lives in `src/js/data/tours.js`.
+- Every page explains itself the first time it opens (Problems, Map, Path, Daily, Companies, a company, Modes, a problem, Interview, Battle), and the mentor's panel on its first open. The first tour a device sees opens with a one-step welcome. Each is shown once per device and replayable: "Guide for this page" in the footer and the palette, "How it works" on a setup page, the mentor's "?" button. Content lives in `src/js/data/tours.js`; `tourForRoute` maps a route to its tour.
 - Short and simple: at most 4 steps, a title of 24 characters and one line of 80; the same voice as the rest of the site (`validateTour` enforces it).
-- A step points at one real element: the spotlight rings it in amber and the scrim dims the rest. The card goes below, above or beside it and never covers it; on a phone it is a sheet on the edge away from the target. Steps without a target are centred.
+- A step points at one real element: the spotlight rings it in amber and the scrim dims the rest. The card goes below, above or beside it and never covers it; on a phone it is a sheet on the edge away from the target, and a tall target (the map) scrolls clear of it when both fit. Steps without a target are centred.
 - A native modal `<dialog>`: focus stays in the card and starts on Next; Esc and Skip close it; arrow keys move between steps; every close marks the tour seen. Clicking the scrim does nothing, so a stray tap cannot end an explanation.
 - Never during a session (lockdown), never over another dialog, never in place of content: the site works the same with every tour skipped.
 
 ## Motion rules
 
-- One orchestrated moment per screen at most; everything else is a 90 to 220 ms state change.
-- Animate `transform` and `opacity` only. No animation loop runs while the user types.
-- The verdict: 15 case hexes resolve left to right (35 ms stagger, 260 ms each); the verdict word rises (180 ms). Failures get no extra motion.
-- Milestones (first solve, a topic opening) play once, never on every Accepted.
-- No marquees, rotators, looping shimmers, parallax or scroll-jacking.
+- The owner asked for motion that impresses and stays perfectly smooth. Every effect animates `transform` and `opacity` (the compositor runs them), costs nothing while idle, and no animation loop runs while the user types. Measured with `scripts/design` style traces: interactions hold a median 17 ms frame at 1x and 4x CPU throttling.
+- **Pages**: a View Transition cross-fades page to page (old page fades back 140 ms, new one rises 220 ms); the header and the phone tab bar are their own groups and stay still. A slow-loading view shows its skeleton only after 160 ms.
+- **Gliders**: one highlight slides to the active item (segmented controls, the header nav, the phone tab bar) with a small spring, instead of jumping (`glide` in `ui/motion.js`).
+- **Spotlight**: a soft light follows the mouse over cards (`installSpotlight`, one passive listener, one style write per frame, mouse and pen only); cards lift 2 to 3 px with a spring.
+- **Scroll**: cards and sections rise into place as they scroll in, driven by the scroll itself (`animation-timeline: view()`, no JS); never table rows.
+- **Map**: the camera flies (van Wijk and Nuij's smooth zoom and pan, 320 to 1100 ms by distance, ease in and out); names fade in as they fit; hexes swell under the pointer; tiers rise in order on first load. The world is one SVG whose camera group carries the transform (strokes non-scaling); nothing is rebuilt between levels, and a frame restyles almost nothing.
+- **The verdict**: 15 case hexes resolve left to right (35 ms stagger, 260 ms each); the verdict word rises. Accepted sends a burst of green hexes from the verdict (a bigger green and amber burst on a first solve); a failed submit gives the word a short shake.
+- **Daily**: the 16-week calendar fills in as a wave from the top left; the streak chip ignites once when today's first solve lights it.
+- No marquees, rotators, looping shimmers, parallax or scroll-jacking; the only loop is the next problem's pulse ring.
 - `prefers-reduced-motion: reduce` makes every animation and transition effectively instant; nothing is skipped, only not moved. The e2e suite runs a reduced-motion pass.
 
 ## Accessibility rules
@@ -141,7 +158,7 @@ Short, direct, from the user's side ("Opens after Two Pointers", not "prerequisi
 
 1. Every browse page opens the same way: an eyebrow with a fact, the title, one line of context, at most one row of controls on the right.
 2. One primary button per screen.
-3. Amber means lit (solved, progress), the primary action, or the current position. Status uses green, red and neutral words.
+3. Status is green (solved), coral (tried), grey (not started), with a word. Amber means the next thing to do, the primary action or the current position, never a status.
 4. Filters are chips, exclusive scopes are segmented, long option lists use the shared picker; a native `<select>` only in dense toolbars (language, company lens).
 5. Every page ends with the shared footer, except the workspace and sessions.
 6. New colours, sizes, radii, shadows and durations come from tokens.

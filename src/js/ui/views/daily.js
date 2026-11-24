@@ -66,7 +66,8 @@ export function renderDaily(root, { store }) {
               : `${SHORT.format(parseDay(d.day))}: ${d.active ? 'solved something' : 'no solve'}${title ? `. Daily: ${title}, ${d.dailySolved ? 'solved' : 'not solved yet'}` : ''}`;
             return h(
               `span.cal-day${d.active ? '.is-active' : ''}${d.dailySolved ? '.is-daily' : ''}${d.today ? '.is-today' : ''}${d.future ? '.is-future' : ''}`,
-              { role: 'gridcell', title: label },
+              // --d: the cell's diagonal, so the calendar fills in as a wave from the top left.
+              { role: 'gridcell', title: label, style: { '--d': String(weeks.indexOf(w) + row) } },
               h('span.sr-only', {}, label),
             );
           }),

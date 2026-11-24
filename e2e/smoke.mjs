@@ -11,6 +11,7 @@ import { mkdir } from 'node:fs/promises';
 import { startServer } from '../scripts/serve.mjs';
 import { startFakeRunner } from './fake-runner.mjs';
 import { loadProblem } from '../src/js/problems/index.js';
+import { TOURS } from '../src/js/data/tours.js';
 
 const args = new Set(process.argv.slice(2));
 const skipPython = args.has('--no-python');
@@ -40,8 +41,9 @@ await page.addInitScript(() => {
 });
 // Guided tours (data/tours.js) open on a first visit. Every context except the fresh-visit step and
 // the tour steps starts with them seen, so a tour never covers what a step is testing.
-const SEEN_TOURS = () => localStorage.setItem('lfb:tours:v1', JSON.stringify({ site: '2026-01-01', interview: '2026-01-01', battle: '2026-01-01', mentor: '2026-01-01' }));
-await page.addInitScript(SEEN_TOURS);
+const ALL_TOURS_SEEN = JSON.stringify(Object.fromEntries(Object.keys(TOURS).map((id) => [id, '2026-01-01'])));
+const SEEN_TOURS = (seen) => localStorage.setItem('lfb:tours:v1', seen);
+await page.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
 // Problem modules load one at a time, when a problem opens (ADR 0008); count what the page fetched.
 const PROBLEM_MODULE = /\/problems\/[^/]+\/problem\.js(\?|$)/;
 const problemModules = [];
@@ -72,6 +74,30 @@ async function check(name, fn) {
 const expectText = async (sel, re, timeout = 15000) => {
   await page.waitForFunction(([s, src]) => new RegExp(src).test(document.querySelector(s)?.textContent ?? ''), [sel, re.source], { timeout });
 };
+// A route change cross-fades (View Transitions); hit-testing by coordinates waits for the live page.
+const settled = (p = page) => p.waitForFunction(() => !document.documentElement.dataset.transition, null, { timeout: 5000 });
+/** The map's camera has come to rest (no flight, drag or zoom in progress); then reads `fn` in the page. */
+const mapAt = async (p, fn, arg) => {
+  await p.waitForFunction(
+    () => {
+      const c = document.querySelector('.map-canvas[data-lod]');
+      // The view has taken the address (hashchange lands a task after the hash changes) and rests.
+      return c && c.dataset.at === (location.hash.startsWith('#/map') ? location.hash : c.dataset.at) && !c.classList.contains('is-moving');
+    },
+    null,
+    { timeout: 8000 },
+  );
+  // Names fade in on the next frame.
+  await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  return p.evaluate(fn, arg);
+};
+/** Whether an element's box sits inside the map canvas (1 px of rounding allowed). */
+const inCanvas = (p, sel) =>
+  p.evaluate((s) => {
+    const c = document.querySelector('.map-canvas').getBoundingClientRect();
+    const r = document.querySelector(s).getBoundingClientRect();
+    return r.left >= c.left - 1 && r.top >= c.top - 1 && r.right <= c.right + 1 && r.bottom <= c.bottom + 1;
+  }, sel);
 const expectDialog = (p, re) =>
   p.waitForFunction((src) => new RegExp(src).test(document.querySelector('dialog.modal')?.textContent ?? ''), re.source, { timeout: 5000 });
 const setCode = (code) => page.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), code);
@@ -132,6 +158,9 @@ try {
     await shot('01-dashboard');
 
     // Topic disclosure, result count, empty state with Clear filters restoring the full list.
+    // The list streams in after the first screenful (aria-busy while it fills).
+    const filled = () => page.waitForSelector('.dashboard-table tbody:not([aria-busy])');
+    await filled();
     const totalRows = await page.locator('.dashboard-table tbody tr').count();
     await page.click('.topic-toggle');
     await page.waitForSelector('#dashboard-topics:not([hidden])');
@@ -147,6 +176,7 @@ try {
     if (!(await page.evaluate(() => document.querySelector('.topic-toggle').classList.contains('is-active')))) {
       throw new Error('topic toggle missing .is-active when a topic is chosen');
     }
+    await filled();
     const graphRows = await page.locator('.dashboard-table tbody tr').count();
     if (!(graphRows > 0 && graphRows < totalRows)) throw new Error(`Graphs filter did not narrow rows (${graphRows} vs ${totalRows})`);
     await page.focus('#dashboard-topics .chip:has-text("Graphs")');
@@ -163,6 +193,7 @@ try {
     if (await page.evaluate(() => document.querySelector('.topic-toggle').classList.contains('is-active'))) {
       throw new Error('Clear filters did not remove .is-active from topic toggle');
     }
+    await filled();
     const restoredRows = await page.locator('.dashboard-table tbody tr').count();
     if (restoredRows !== totalRows) throw new Error(`Clear filters restored ${restoredRows} rows, expected ${totalRows}`);
     if ((await page.evaluate(() => document.activeElement?.matches('input.dashboard-search'))) !== true) {
@@ -220,6 +251,9 @@ try {
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/);
     await expectText('.result-head', /15 \/ 15/);
+    // The Accepted burst: hexes fly from the verdict, then clean themselves up.
+    await page.waitForSelector('.burst .burst-hex', { state: 'attached', timeout: 3000 });
+    await page.waitForSelector('.burst', { state: 'detached', timeout: 5000 });
     await shot('03-accepted');
   });
 
@@ -370,7 +404,7 @@ try {
     remote.on('console', (m) => m.type() === 'error' && errors.push(`console (remote page, step ${step}): ${m.text()}`));
     remote.on('pageerror', (e) => errors.push(`pageerror (remote page, step ${step}): ${e.message}`));
     try {
-      await remote.addInitScript(SEEN_TOURS);
+      await remote.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
       await remote.addInitScript((url) => {
         window.LFB_REMOTE_RUNNER_URL = url;
         window.LFB_SUPABASE_URL = '';
@@ -814,7 +848,7 @@ try {
     const clockPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     clockPage.on('console', (m) => m.type() === 'error' && errors.push(`console (clock page): ${m.text()}`));
     clockPage.on('pageerror', (e) => errors.push(`pageerror (clock page): ${e.message}`));
-    await clockPage.addInitScript(SEEN_TOURS);
+    await clockPage.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
     await clockPage.addInitScript(() => {
       window.LFB_SUPABASE_URL = '';
       window.LFB_SUPABASE_ANON_KEY = '';
@@ -1069,6 +1103,7 @@ try {
     ]) {
       await page.goto(`${BASE}${setup.url}`);
       await page.waitForSelector(setup.wait, { timeout: 30000 });
+      await settled();
       const checkBar = await page.evaluate((label) => {
         const btn = [...document.querySelectorAll('.setup-bar button')].find((b) => b.textContent.trim() === label);
         const tab = document.querySelector('.tab-bar');
@@ -1230,7 +1265,7 @@ try {
     await touch.route('**/@supabase/supabase-js@*/+esm', (r) =>
       r.fulfill({ contentType: 'text/javascript', body: 'export function createClient() { return { auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({}) } }; }' }),
     );
-    await touch.addInitScript(SEEN_TOURS);
+    await touch.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
     await touch.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = 'https://example.supabase.co';
@@ -1274,6 +1309,7 @@ try {
       const bad = await undersized();
       if (bad.length) throw new Error(`${sc.url} has touch targets under 44px:\n  ${bad.join('\n  ')}`);
       if (sc.startButton) {
+        await settled(touch);
         const startCheck = await touch.evaluate((label) => {
           const btn = [...document.querySelectorAll('.setup-bar button')].find((b) => b.textContent.trim() === label);
           const tab = document.querySelector('.tab-bar');
@@ -1338,7 +1374,7 @@ try {
   // Its own page: the blocked CDN request is logged as a failed resource, which is the point here.
   await check('without Monaco, TypeScript reports honestly that it needs the editor and nothing crashes', async () => {
     const offline = await browser.newPage();
-    await offline.addInitScript(SEEN_TOURS);
+    await offline.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
     await offline.addInitScript(() => {
       window.LFB_SUPABASE_URL = '';
       window.LFB_SUPABASE_ANON_KEY = '';
@@ -1401,7 +1437,7 @@ try {
       }
       return r.fulfill({ contentType: 'application/json', headers: cors, body: linked ? '{"linked":true,"repo":"ada/practice","autoSync":true}' : '{"linked":false,"githubUser":true}' });
     });
-    await acct.addInitScript(SEEN_TOURS);
+    await acct.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
     await acct.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = 'https://example.supabase.co';
@@ -1681,41 +1717,128 @@ try {
     if (await page.locator('.monaco-editor').count()) throw new Error('editor left behind after leaving the workspace');
   });
 
-  await check('Problem Map: 26 districts and every problem as a hex, arrows move between districts, Enter selects and deep-links, the panel explains locks, List view mirrors it', async () => {
+  await check('Problem Map: one continuous map; Enter and clicks fly to a topic, a subtopic and a problem as names appear; wheel zooms at the pointer, drag moves; Esc and Back fly out; deep links land; lenses and List view', async () => {
     await page.goto(`${BASE}#/map`);
     await page.waitForSelector('.map-svg .district');
-    const shape = await page.evaluate(() => ({
+    const shape = await mapAt(page, () => ({
       districts: document.querySelectorAll('.map-svg .district').length,
       hexes: document.querySelectorAll('.map-svg .hx').length,
       tabbable: [...document.querySelectorAll('.map-svg .district')].filter((d) => d.getAttribute('tabindex') === '0').length,
-      named: [...document.querySelectorAll('.map-svg .district')].every((d) => d.getAttribute('role') === 'button' && /solved/.test(d.getAttribute('aria-label') ?? '')),
-      selected: document.querySelectorAll('.map-svg .district[aria-pressed="true"]').length,
+      named: [...document.querySelectorAll('.map-svg .district')].every((d) => d.getAttribute('role') === 'button' && /solved.*Enter goes closer/.test(d.getAttribute('aria-label') ?? '')),
+      nested: document.querySelectorAll('.map-svg [role="button"] [role="button"]').length,
+      preview: document.querySelectorAll('.map-svg .district.is-preview').length,
       panel: document.querySelector('.map-brief .brief-title')?.textContent,
       lit: document.querySelectorAll('.map-svg .hx.solved, .map-svg .hx.assisted').length,
+      topicNames: document.querySelectorAll('.map-label.is-district.is-on').length,
+      subtopicNames: document.querySelectorAll('.map-label.is-block.is-on').length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     }));
     const published = await page.evaluate(async () => (await import('/src/js/problems/index.js')).availableEntries().length);
-    if (shape.districts !== 26 || shape.hexes !== published || shape.tabbable !== 1 || !shape.named || shape.selected !== 1 || !shape.panel || !shape.lit || shape.overflow > 0) {
+    if (shape.districts !== 26 || shape.hexes !== published || shape.tabbable !== 1 || !shape.named || shape.nested || shape.preview !== 1 || !shape.panel || !shape.lit || shape.overflow > 0) {
       throw new Error(`map shape: ${JSON.stringify({ ...shape, published })}`);
     }
+    // The whole map fits on a laptop screen, every topic named, no subtopic names yet.
+    if (shape.topicNames !== 26 || shape.subtopicNames || !(await inCanvas(page, '.map-cam'))) throw new Error(`overview: ${JSON.stringify(shape)}`);
+    // One world the whole way down: the same SVG node from the overview to a problem and back.
+    const worldNode = await page.evaluateHandle(() => document.querySelector('.map-svg'));
     await shot('23-map');
-    // Keyboard: focus the selected district, move right, select with Enter: the hash and the panel follow.
+    // Keyboard: arrows move between districts and the panel follows; Enter flies into the topic.
     await page.focus('.map-svg .district[tabindex="0"]');
     const before = await page.evaluate(() => document.activeElement.dataset.id);
     await page.keyboard.press('ArrowRight');
     const moved = await page.evaluate(() => document.activeElement.dataset.id);
     if (!moved || moved === before) throw new Error(`ArrowRight did not move between districts (${before} -> ${moved})`);
+    const movedTitle = await page.evaluate((id) => document.querySelector(`.district[data-id="${id}"]`).getAttribute('aria-label').split('.')[0], moved);
+    await page.waitForFunction((t) => document.querySelector('.map-brief .brief-title')?.textContent === t, movedTitle);
     await page.keyboard.press('Enter');
     await page.waitForFunction((id) => location.hash === `#/map/${id}`, moved);
-    const panelTitle = await page.locator('.map-brief .brief-title').textContent();
-    const movedTitle = await page.evaluate((id) => document.querySelector(`.district[data-id="${id}"]`).getAttribute('aria-label').split('.')[0], moved);
-    if (panelTitle !== movedTitle) throw new Error(`panel shows ${panelTitle}, selected ${movedTitle}`);
-    // Deep link: a locked topic opens selected, and the panel says why it is locked in one sentence.
+    const topicLevel = await mapAt(page, (id) => ({
+      level: document.querySelector('.map-canvas').dataset.level,
+      selected: document.querySelector('.district.is-selected')?.dataset.id,
+      blocks: document.querySelectorAll(`.district[data-id="${id}"] .block[role="button"]`).length,
+      listed: document.querySelectorAll('.map-brief .brief-concepts li').length,
+      crumbs: [...document.querySelectorAll('.map-crumbs li')].map((l) => l.textContent),
+      focus: document.activeElement?.classList.contains('block'),
+      names: document.querySelectorAll('.map-label.is-block.is-on').length,
+    }), moved);
+    if (topicLevel.level !== '1' || topicLevel.selected !== moved || !topicLevel.blocks || topicLevel.blocks !== topicLevel.listed || topicLevel.crumbs.length !== 2 || topicLevel.crumbs[1] !== movedTitle || !topicLevel.focus || topicLevel.names < topicLevel.blocks) {
+      throw new Error(`topic level: ${JSON.stringify(topicLevel)}`);
+    }
+    if (!(await inCanvas(page, `.district[data-id="${moved}"] .land`))) throw new Error('the topic did not fly into view');
+    // Enter on a subtopic flies closer: its problems' names show inside their hexes.
+    const block = await page.evaluate(() => ({ key: document.activeElement.dataset.key, hexes: document.activeElement.querySelectorAll('.hx').length }));
+    const concept = block.key.split('/')[1];
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(([t, c]) => location.hash === `#/map/${t}/${c}`, [moved, concept]);
+    const conceptLevel = await mapAt(page, () => ({
+      level: document.querySelector('.map-canvas').dataset.level,
+      lod: document.querySelector('.map-canvas').dataset.lod,
+      names: document.querySelectorAll('.map-label.is-problem.is-on').length,
+      listed: document.querySelectorAll('.map-brief .brief-problems li').length,
+    }));
+    if (conceptLevel.level !== '2' || conceptLevel.lod !== '2' || conceptLevel.names < block.hexes || conceptLevel.listed !== block.hexes) throw new Error(`subtopic level: ${JSON.stringify({ ...conceptLevel, block })}`);
+    // A click on a hex picks the problem: its card, with one click to open it.
+    const pick = await page.evaluate((key) => document.querySelector(`.block[data-key="${key}"] .hx`).dataset.pid, block.key);
+    const pickTitle = await page.evaluate(async (pid) => (await import('/src/js/problems/index.js')).catalogEntry(pid).title, pick);
+    await page.click(`.hx[data-pid="${pick}"]`);
+    await page.waitForFunction(([t, c, p]) => location.hash === `#/map/${t}/${c}/${p}`, [moved, concept, pick]);
+    await page.waitForFunction((t) => document.querySelector('.map-brief .brief-title')?.textContent === t, pickTitle);
+    if (!(await page.locator(`.map-brief a.brief-cta[href="#/problem/${pick}"]`).count())) throw new Error('the problem card has no way to open the problem');
+    if ((await page.locator(`.hx.is-selected[data-pid="${pick}"][aria-current="true"]`).count()) !== 1) throw new Error('the picked hex is not marked current');
+    // Esc flies out one level at a time; Back returns.
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(([t, c]) => location.hash === `#/map/${t}/${c}`, [moved, concept]);
+    await page.keyboard.press('Escape');
+    await page.waitForFunction((t) => location.hash === `#/map/${t}`, moved);
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => location.hash === '#/map');
+    if ((await mapAt(page, () => document.querySelector('.map-canvas').dataset.level)) !== '0') throw new Error('Esc did not fly back to the whole map');
+    if (!(await page.evaluate((n) => n === document.querySelector('.map-svg') && n.isConnected, worldNode))) throw new Error('the map was rebuilt between levels: it must be one continuous world');
+    await page.goBack();
+    await page.waitForFunction((t) => location.hash === `#/map/${t}`, moved);
+    await mapAt(page, () => null);
+    // The wheel zooms towards the pointer: what is under it stays under it, and grows.
+    await page.goto(`${BASE}#/map`);
+    await page.waitForSelector('.map-svg .district');
+    await mapAt(page, () => null);
+    const hexAt = (pid) => page.evaluate((p) => {
+      const r = document.querySelector(`.hx[data-pid="${p}"]`).getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width };
+    }, pid);
+    const probe = await page.evaluate(() => document.querySelector('.district[data-id="graphs"] .hx').dataset.pid);
+    const h0 = await hexAt(probe);
+    await page.mouse.move(h0.x, h0.y);
+    await page.mouse.wheel(0, -360);
+    await mapAt(page, () => null);
+    const h1 = await hexAt(probe);
+    if (Math.hypot(h1.x - h0.x, h1.y - h0.y) > 3 || h1.w < h0.w * 1.5) throw new Error(`wheel zoom did not hold the point under the pointer: ${JSON.stringify({ h0, h1 })}`);
+    // Dragging moves the map with the pointer, and a drag is not a click.
+    await page.mouse.move(h1.x + 3, h1.y + 3);
+    await page.mouse.down();
+    await page.mouse.move(h1.x - 60, h1.y - 30, { steps: 6 });
+    await page.mouse.move(h1.x - 117, h1.y - 57, { steps: 6 });
+    await page.mouse.up();
+    await mapAt(page, () => null);
+    const h2 = await hexAt(probe);
+    if (Math.abs(h2.x - (h1.x - 120)) > 3 || Math.abs(h2.y - (h1.y - 60)) > 3) throw new Error(`drag did not move the map with the pointer: ${JSON.stringify({ h1, h2 })}`);
+    if (await page.evaluate(() => location.hash !== '#/map')) throw new Error('a drag counted as a click');
+    // Show all brings the whole map back.
+    await page.click('.map-ctl[aria-label="Show all"]');
+    await mapAt(page, () => null);
+    if (!(await inCanvas(page, '.map-cam'))) throw new Error('Show all did not fit the whole map');
+    // Deep link: a locked topic opens flown in and the panel says why in one sentence.
     await page.goto(`${BASE}#/map/union-find`);
-    await page.waitForSelector('.map-svg .district[data-id="union-find"][aria-pressed="true"]');
+    await page.waitForSelector('.map-canvas[data-level="1"] .district.is-selected.st-locked[data-id="union-find"]');
     await expectText('.map-brief .brief-state', /Opens after Graphs \(\d of 2 solved\)/);
     if (!(await page.locator('.map-brief a.brief-cta[href^="#/problem/"]').count())) throw new Error('locked topic has no way to start anyway');
-    // Hovering a district lights its prerequisite chain.
+    // An old or mistyped link lands on the deepest level that exists.
+    await page.goto(`${BASE}#/map/graphs/not-a-subtopic/x`);
+    await page.waitForFunction(() => location.hash === '#/map/graphs');
+    await page.waitForSelector('.map-canvas[data-level="1"] .district.is-selected[data-id="graphs"]');
+    // Overview: hovering a district lights its prerequisite chain.
+    await page.goto(`${BASE}#/map`);
+    await page.waitForSelector('.map-svg .district[data-id="union-find"]');
+    await mapAt(page, () => null);
     await page.hover('.map-svg .district[data-id="union-find"] .land');
     const chain = await page.locator('.map-svg .road.is-hover').count();
     if (chain < 3) throw new Error(`expected the prerequisite chain to light (got ${chain} roads)`);
@@ -1734,27 +1857,55 @@ try {
     await page.waitForSelector('.map-svg');
   });
 
-  await check('Problem Map at 390: bands of two districts, no sideways scroll, selecting scrolls to the panel', async () => {
+  await check('Problem Map at 390: opens readable on your next topic, taps fly closer down to a problem, the zoom buttons work, no sideways scroll, the problem card in view', async () => {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
     const phone = await ctx.newPage();
     phone.on('console', (m) => m.type() === 'error' && errors.push(`console (390 map): ${m.text()}`));
-    await phone.addInitScript(SEEN_TOURS);
+    await phone.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
     await phone.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = '';
     });
     await phone.goto(`${BASE}#/map`);
-    await phone.waitForSelector('.map-svg.is-narrow .district');
-    const m = await phone.evaluate(() => ({
-      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    await phone.waitForSelector('.map-svg .district');
+    const overflow = () => phone.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    const m = await mapAt(phone, () => ({
       districts: document.querySelectorAll('.map-svg .district').length,
-      width: document.querySelector('.map-svg').getBoundingClientRect().width,
+      width: document.querySelector('.map-canvas').getBoundingClientRect().width,
+      names: document.querySelectorAll('.map-label.is-district.is-on').length,
+      k: Number(document.querySelector('.map-labels-pan').style.getPropertyValue('--k')),
     }));
-    if (m.overflow > 0 || m.districts !== 26 || m.width > 390) throw new Error(`390 map: ${JSON.stringify(m)}`);
-    await phone.tap('.map-svg .district[data-id="stack"] .land');
-    await phone.waitForFunction(() => location.hash === '#/map/stack');
-    await phone.waitForFunction(() => document.querySelector('.map-brief').getBoundingClientRect().top < innerHeight);
+    if ((await overflow()) > 0 || m.districts !== 26 || m.width > 390 || m.names < 3 || m.k < 0.55) throw new Error(`390 map: ${JSON.stringify(m)}`);
+    // Tap a topic that is fully on screen.
+    const target = await phone.evaluate(() => {
+      const c = document.querySelector('.map-canvas').getBoundingClientRect();
+      const ctl = document.querySelector('.map-controls').getBoundingClientRect();
+      const ok = (r) => r.left >= c.left && r.right <= c.right && r.top >= c.top && r.bottom <= c.bottom && !(r.right > ctl.left && r.bottom > ctl.top);
+      return [...document.querySelectorAll('.district')].find((d) => ok(d.querySelector('.land').getBoundingClientRect()))?.dataset.id;
+    });
+    if (!target) throw new Error('no topic fully on screen at 390');
+    await phone.tap(`.district[data-id="${target}"] .land`);
+    await phone.waitForFunction((t) => location.hash === `#/map/${t}`, target);
+    await mapAt(phone, () => null);
+    if ((await overflow()) > 0) throw new Error('topic level scrolls sideways at 390');
     if (shotsDir) await phone.screenshot({ path: `${shotsDir}/390-map.png` });
+    await phone.tap(`.district[data-id="${target}"] .block .hx`);
+    await phone.waitForFunction((t) => location.hash.startsWith(`#/map/${t}/`) && location.hash.split('/').length === 4, target);
+    await mapAt(phone, () => null);
+    await phone.tap('.block.is-selected .hx');
+    await phone.waitForSelector('.hx.is-selected[aria-current="true"]');
+    await phone.waitForFunction(() => {
+      const r = document.querySelector('.map-brief .brief-cta').getBoundingClientRect();
+      return r.top >= 0 && r.bottom <= innerHeight;
+    });
+    if ((await overflow()) > 0) throw new Error('problem level scrolls sideways at 390');
+    if (shotsDir) await phone.screenshot({ path: `${shotsDir}/390-map-problem.png` });
+    // The zoom buttons work without a pinch.
+    const k0 = await phone.evaluate(() => Number(document.querySelector('.map-labels-pan').style.getPropertyValue('--k')));
+    await phone.tap('.map-ctl[aria-label="Zoom out"]');
+    await mapAt(phone, () => null);
+    const k1 = await phone.evaluate(() => Number(document.querySelector('.map-labels-pan').style.getPropertyValue('--k')));
+    if (!(k1 < k0)) throw new Error(`Zoom out did not zoom out (${k0} -> ${k1})`);
     await ctx.close();
   });
 
@@ -1904,7 +2055,8 @@ try {
     if (combo.role !== 'combobox' || !combo.active || combo.listbox !== 'listbox') throw new Error(`palette ARIA: ${JSON.stringify(combo)}`);
     await page.keyboard.press('Enter');
     await page.waitForFunction(() => location.hash === '#/map/two-pointers');
-    await page.waitForSelector('.map-svg .district[data-id="two-pointers"][aria-pressed="true"]');
+    await page.waitForSelector('.map-canvas[data-level="1"] .district.is-selected[data-id="two-pointers"]');
+    await expectText('.map-crumbs [aria-current]', /^Two Pointers$/);
     await page.click('#palette-trigger');
     await page.waitForSelector('dialog.palette[open]');
     await page.keyboard.press('Escape');
@@ -1912,7 +2064,7 @@ try {
     if (!(await page.evaluate(() => document.activeElement?.id === 'palette-trigger'))) throw new Error('focus did not return to the palette trigger');
   });
 
-  await check('guided tours: the site tour opens once on a first visit and replays; each mode explains itself the first time it opens', async () => {
+  await check('guided tours: every page explains itself once, the first one with a welcome; replays from the footer, the palette and How it works; the mentor on first open', async () => {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const t = await ctx.newPage();
     t.on('console', (m) => m.type() === 'error' && errors.push(`console (tours): ${m.text()}`));
@@ -1922,59 +2074,72 @@ try {
       window.LFB_SUPABASE_URL = '';
       window.LFB_SUPABASE_ANON_KEY = '';
     });
-    const open = (id) => t.waitForSelector(`dialog.tour[open][data-tour-id="${id}"]`, { timeout: 8000 });
+    const open = (id) => t.waitForSelector(`dialog.tour[open][data-tour-id="${id}"]`, { timeout: 9000 });
     const gone = () => t.waitForSelector('dialog.tour', { state: 'detached', timeout: 5000 });
     const eyebrow = () => t.textContent('.tour-eyebrow');
-    // The card is on screen and the spotlight sits on the step's target (when it has one).
-    const geometry = (sel) =>
-      t.evaluate((s) => {
+    // The card is on screen and the spotlight sits on the step's target, the card beside it.
+    const geometry = () =>
+      t.evaluate(() => {
         const c = document.querySelector('.tour-card').getBoundingClientRect();
+        const centred = document.querySelector('dialog.tour').classList.contains('is-center');
         const spot = document.querySelector('.tour-spot').getBoundingClientRect();
-        const target = s ? document.querySelector(s)?.getBoundingClientRect() : null;
-        const covers = target ? spot.left <= target.left + 1 && spot.top <= target.top + 1 && spot.right >= target.right - 1 && spot.bottom >= target.bottom - 1 : true;
-        return { onScreen: c.left >= 0 && c.top >= 0 && c.right <= innerWidth && c.bottom <= innerHeight, covers, focus: document.activeElement?.textContent };
-      }, sel);
+        const apart = !centred && spot.width > 0 && !(c.left < spot.right && spot.left < c.right && c.top < spot.bottom && spot.top < c.bottom);
+        // A target nearly as tall as the screen (the whole map, a long list) leaves no room beside it.
+        const tall = spot.height > innerHeight - c.height - 44;
+        return { onScreen: c.left >= 0 && c.top >= 0 && c.right <= innerWidth && c.bottom <= innerHeight, centred, clear: centred || apart || tall, focus: document.activeElement?.textContent };
+      });
 
     await t.goto(`${BASE}#/`);
-    await open('site');
-    if (!/Welcome · 1 of 4/.test(await eyebrow())) throw new Error(`site tour starts at: ${await eyebrow()}`);
-    const first = await geometry(null);
-    if (!first.onScreen || first.focus !== 'Next') throw new Error(`welcome step: ${JSON.stringify(first)}`);
+    await open('problems');
+    if (!/Problems · 1 of 5/.test(await eyebrow())) throw new Error(`the first tour should open with the welcome: ${await eyebrow()}`);
+    const welcome = await geometry();
+    if (!welcome.onScreen || !welcome.centred || welcome.focus !== 'Next') throw new Error(`welcome step: ${JSON.stringify(welcome)}`);
     await t.keyboard.press('ArrowRight');
-    await t.waitForFunction(() => /2 of 4/.test(document.querySelector('.tour-eyebrow')?.textContent ?? ''));
+    await t.waitForFunction(() => /2 of 5/.test(document.querySelector('.tour-eyebrow')?.textContent ?? ''));
     await t.waitForTimeout(350);
-    const mapStep = await geometry('.nav [data-nav="map"]');
-    if (!mapStep.onScreen || !mapStep.covers) throw new Error(`map step: ${JSON.stringify(mapStep)}`);
+    const daily = await geometry();
+    if (!daily.onScreen || daily.centred || !daily.clear) throw new Error(`daily step: ${JSON.stringify(daily)}`);
     await t.keyboard.press('Escape');
     await gone();
     const seen = await t.evaluate(() => JSON.parse(localStorage.getItem('lfb:tours:v1') ?? '{}'));
-    if (!seen.site) throw new Error(`Escape did not mark the site tour seen: ${JSON.stringify(seen)}`);
+    if (!seen.problems || !seen.welcome) throw new Error(`Escape did not mark the tour and the welcome seen: ${JSON.stringify(seen)}`);
     await t.reload();
     await t.waitForSelector('.problem-table tbody tr a.problem-link');
     await t.waitForTimeout(900);
-    if (await t.locator('dialog.tour').count()) throw new Error('the site tour opened again after it was seen');
-    // Replays: the footer, then the palette, walking every step to Done.
+    if (await t.locator('dialog.tour').count()) throw new Error('the Problems guide opened again after it was seen');
+    // Replays: the footer, then the palette; no welcome the second time.
     await t.click('.site-links-tour');
-    await open('site');
+    await open('problems');
+    if (!/Problems · 1 of 4/.test(await eyebrow())) throw new Error(`replay: ${await eyebrow()}`);
     for (let i = 0; i < 4; i++) await t.click('.tour-next');
     await gone();
     await t.keyboard.press('Control+k');
     await t.waitForSelector('dialog.palette[open]');
-    await t.keyboard.type('site tour');
+    await t.keyboard.type('guide for this page');
     await t.keyboard.press('Enter');
-    await open('site');
+    await open('problems');
     await t.keyboard.press('Escape');
     await gone();
 
-    // Interview: the guide opens on the first visit, every step lights its target, "How it works" replays it.
+    // Every other page opens its own guide on the first visit, and every step finds its target.
+    for (const [hash, id] of [['#/map', 'map'], ['#/path', 'path'], ['#/daily', 'daily'], ['#/companies', 'companies'], ['#/companies/wix', 'company'], ['#/modes', 'modes'], ['#/battle', 'battle']]) {
+      await t.goto(`${BASE}${hash}`);
+      await open(id);
+      for (;;) {
+        await t.waitForTimeout(300);
+        const g = await geometry();
+        if (!g.onScreen || g.centred || !g.clear) throw new Error(`${id} step ${await eyebrow()}: ${JSON.stringify(g)}`);
+        const last = (await t.textContent('.tour-next')) === 'Done';
+        await t.click('.tour-next');
+        if (last) break;
+      }
+      await gone();
+    }
+
+    // Interview: its guide, then "How it works" replays it.
     await t.goto(`${BASE}#/interview`);
     await open('interview');
-    for (const sel of ['[data-tour="oa-format"]', '[data-tour="oa-company"]', '[data-tour="oa-start"]']) {
-      await t.waitForTimeout(350);
-      const g = await geometry(sel);
-      if (!g.onScreen || !g.covers) throw new Error(`interview step ${sel}: ${JSON.stringify(g)}`);
-      await t.click('.tour-next');
-    }
+    await t.keyboard.press('Escape');
     await gone();
     await t.reload();
     await t.waitForSelector('[data-tour="oa-format"]');
@@ -1985,15 +2150,13 @@ try {
     await t.keyboard.press('Escape');
     await gone();
 
-    await t.goto(`${BASE}#/battle`);
-    await open('battle');
-    if (!/Battle · 1 of 3/.test(await eyebrow())) throw new Error(`battle guide: ${await eyebrow()}`);
-    await t.keyboard.press('Escape');
-    await gone();
-
-    // Mentor: on the first open of the panel, not the second; the panel's ? replays it.
+    // A problem: the workspace guide; then the mentor's on the first open of the panel only.
     await t.goto(`${BASE}#/problem/pair-sum-target`);
     await t.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await open('workspace');
+    if (!/Problem · 1 of 4/.test(await eyebrow())) throw new Error(`workspace guide: ${await eyebrow()}`);
+    await t.keyboard.press('Escape');
+    await gone();
     await t.click('button[data-action="mentor"]');
     await open('mentor');
     if (!/Mentor · 1 of 2/.test(await eyebrow())) throw new Error(`mentor guide: ${await eyebrow()}`);
@@ -2010,7 +2173,7 @@ try {
     await ctx.close();
   });
 
-  await check('guided tours at 390: the card is a sheet on screen, away from its target, with 44 px buttons', async () => {
+  await check('guided tours at 390: the card is a sheet on screen, clear of what it explains, with 44 px buttons', async () => {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
     const t = await ctx.newPage();
     t.on('console', (m) => m.type() === 'error' && errors.push(`console (tours 390): ${m.text()}`));
@@ -2018,20 +2181,55 @@ try {
     await t.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
     });
-    await t.goto(`${BASE}#/`);
-    await t.waitForSelector('dialog.tour[open][data-tour-id="site"]', { timeout: 8000 });
-    await t.tap('.tour-next');
-    await t.waitForFunction(() => /2 of 4/.test(document.querySelector('.tour-eyebrow')?.textContent ?? ''));
-    await t.waitForTimeout(350);
-    const m = await t.evaluate(() => {
-      const c = document.querySelector('.tour-card').getBoundingClientRect();
-      const target = document.querySelector('.tab-bar [data-nav="map"]').getBoundingClientRect();
-      const buttons = [...document.querySelectorAll('.tour-card button')].filter((b) => !b.hidden).map((b) => Math.round(b.getBoundingClientRect().height));
-      return { left: c.left, right: c.right, top: c.top, bottom: c.bottom, overlaps: c.bottom > target.top && c.top < target.bottom, buttons, sw: document.documentElement.scrollWidth };
-    });
-    if (m.left < 0 || m.right > 390 || m.top < 0 || m.bottom > 844 || m.overlaps || m.sw > 390) throw new Error(`390 tour card: ${JSON.stringify(m)}`);
-    if (m.buttons.some((hgt) => hgt < 44)) throw new Error(`tour buttons under 44 px: ${m.buttons}`);
+    await t.goto(`${BASE}#/map`);
+    await t.waitForSelector('dialog.tour[open][data-tour-id="map"]', { timeout: 9000 });
+    for (;;) {
+      await t.waitForTimeout(350);
+      const m = await t.evaluate(() => {
+        const c = document.querySelector('.tour-card').getBoundingClientRect();
+        const centred = document.querySelector('dialog.tour').classList.contains('is-center');
+        const spot = document.querySelector('.tour-spot').getBoundingClientRect();
+        const buttons = [...document.querySelectorAll('.tour-card button')].filter((b) => !b.hidden).map((b) => Math.round(b.getBoundingClientRect().height));
+        const overlap = !centred && c.left < spot.right && spot.left < c.right && c.top < spot.bottom && spot.top < c.bottom;
+        return { step: document.querySelector('.tour-eyebrow').textContent, left: c.left, right: c.right, top: c.top, bottom: c.bottom, overlap, spotH: spot.height, buttons, sw: document.documentElement.scrollWidth, last: document.querySelector('.tour-next').textContent === 'Done' };
+      });
+      // A target taller than the screen leaves no room beside it; only then may the sheet overlap it.
+      if (m.left < 0 || m.right > 390 || m.top < 0 || m.bottom > 844 || (m.overlap && m.spotH < 600) || m.sw > 390) throw new Error(`390 tour card: ${JSON.stringify(m)}`);
+      if (m.buttons.some((hgt) => hgt < 44)) throw new Error(`tour buttons under 44 px: ${m.buttons}`);
+      await t.tap('.tour-next');
+      if (m.last) break;
+    }
     await ctx.close();
+  });
+
+  await check('clarity and motion: status reads green, coral, grey; the nav highlight follows the page; cards light under the mouse', async () => {
+    await page.goto(`${BASE}#/map`);
+    await page.waitForSelector('.map-legend .hexmark.solved');
+    const colours = await page.evaluate(() => {
+      const bg = (sel) => getComputedStyle(document.querySelector(sel)).backgroundColor;
+      return { solved: bg('.map-legend .hexmark.solved'), tried: bg('.map-legend .hexmark.attempted'), fresh: bg('.map-legend .hexmark:not(.solved):not(.attempted):not(.assisted):not(.next)') };
+    });
+    if (colours.solved !== 'rgb(95, 201, 143)' || colours.tried !== 'rgb(217, 99, 79)' || colours.fresh !== 'rgb(45, 42, 36)') throw new Error(`status colours: ${JSON.stringify(colours)}`);
+    // One glider in the header nav sits on the active page and moves with it.
+    const at = () =>
+      page.evaluate(() => {
+        const g = document.querySelector('.nav > .glider').getBoundingClientRect();
+        const a = document.querySelector('.nav a[aria-current="page"]').getBoundingClientRect();
+        return Math.abs(g.left - a.left) < 2 && Math.abs(g.width - a.width) < 2;
+      });
+    await page.waitForFunction(() => document.querySelector('.nav')?.classList.contains('glider-ready'));
+    await page.waitForTimeout(350);
+    if (!(await at())) throw new Error('the nav glider is not on Map');
+    await page.click('.nav [data-nav="companies"]');
+    await page.waitForSelector('.company-card');
+    await settled();
+    await page.waitForTimeout(350);
+    if (!(await at())) throw new Error('the nav glider did not follow to Companies');
+    // The spotlight: the card under the mouse lights from the pointer's position.
+    const card = await page.locator('.company-card').first().boundingBox();
+    await page.mouse.move(card.x + 20, card.y + 12);
+    await page.mouse.move(card.x + 40, card.y + 20, { steps: 3 });
+    await page.waitForFunction(() => document.querySelector('.company-card.is-spot')?.style.getPropertyValue('--mx'));
   });
 
   await check('reduced motion: every route renders with animations effectively off and nothing left hidden', async () => {
@@ -2039,7 +2237,7 @@ try {
     const rm = await ctx.newPage();
     rm.on('console', (m) => m.type() === 'error' && errors.push(`console (reduced motion): ${m.text()}`));
     rm.on('pageerror', (e) => errors.push(`pageerror (reduced motion): ${e.message}`));
-    await rm.addInitScript(SEEN_TOURS);
+    await rm.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
     await rm.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = '';

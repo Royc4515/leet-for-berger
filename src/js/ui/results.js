@@ -6,7 +6,7 @@
  */
 import { h, mount } from './dom.js';
 import { preview } from '../engine/harness.js';
-import { reducedMotion } from './motion.js';
+import { reducedMotion, burst, shake, DUR } from './motion.js';
 
 /** Makes tab and panel ids unique across renders (one console at a time, but re-renders overlap). */
 let resultSeq = 0;
@@ -155,6 +155,14 @@ export function renderResult(el, result, { kind, argNames, elapsedMs, next = nul
   // Stagger index for the resolve animation: open cases first, then hidden, left to right.
   [...root.querySelectorAll('.case-tab, .hidden-pill')].forEach((c, i) => c.style.setProperty('--i', String(i)));
   mount(el, root);
+  // Accepted: green hexes burst from the verdict as the cases finish resolving (amber and green, and
+  // a bigger burst, on a first solve). A failed submit gives the word a short shake. Decoration only.
+  const word = root.querySelector('.verdict');
+  if (accepted) {
+    setTimeout(() => {
+      if (word.isConnected) burst(word, firstSolve ? { count: 26, colors: ['var(--ok)', 'var(--accent)', 'var(--ok)', 'var(--focus)'], spread: 150 } : { count: 14, spread: 100 });
+    }, DUR.stage);
+  } else if (verdictClass === 'bad' && kind === 'submit') shake(word);
 }
 
 /**

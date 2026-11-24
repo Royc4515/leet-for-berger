@@ -1,12 +1,15 @@
 /**
  * Problem Map model: topic states (locked, open, started, mastered), the reason a topic is
- * locked, and the deterministic layout the map view draws.
+ * locked, subtopic states, map level URLs and keyboard neighbours. The map view's world is laid out
+ * by data/map-world.js; layoutMap here still draws the social preview image.
  *
  * Locked is advice, never a wall: a locked topic still opens and its problems still run. It only
  * says what to solve first, so a first-time visitor can read "why" in one line.
  *
  * Pure: no DOM, no I/O, no Math.random. Progress is a parameter (state.problems).
  */
+
+import { conceptLabel } from './learning-path.js';
 
 /** Solved problems a prerequisite needs before the topics built on it open. */
 export const READY_SOLVES = 2;
@@ -301,4 +304,77 @@ export function neighbours(districts) {
     out.set(d.id, entry);
   }
   return out;
+}
+
+/* ---------- Map levels: topic, subtopic, problem (owner's request; drawn on one world, map-world.js) ---------- */
+
+/**
+ * @typedef {{
+ *   id: string, title: string, problems: string[], total: number, solved: number, attempted: number,
+ *   essential: string|null, next: string|null, state: 'new'|'started'|'done',
+ * }} ConceptState  essential: the learning path's pick here; next: the path pick if unsolved, else the first unsolved
+ */
+
+/**
+ * One topic's subtopics (taxonomy `concepts`) in learning order, with their problems in map order.
+ * @param {{ topic: { id: string, concepts: string[] }, placed: Record<string, Placement>, ids: string[], progress: Record<string, ProblemProgress> }} input
+ * @returns {ConceptState[]} only subtopics that hold at least one published problem
+ */
+export function conceptStates({ topic, placed, ids, progress }) {
+  const statusOf = (id) => problemStatus(progress[id]);
+  return (topic.concepts ?? [])
+    .map((c) => {
+      const problems = ids.filter((id) => placed[id]?.topic === topic.id && placed[id].concept === c);
+      const solved = problems.filter((id) => isSolvedStatus(statusOf(id))).length;
+      const attempted = problems.filter((id) => statusOf(id) === 'attempted').length;
+      const essential = problems.find((id) => placed[id].essential) ?? null;
+      const open = (id) => !isSolvedStatus(statusOf(id));
+      const next = essential && open(essential) ? essential : (problems.find(open) ?? null);
+      const state = problems.length && solved === problems.length ? 'done' : solved || attempted ? 'started' : 'new';
+      return { id: c, title: conceptLabel(c), problems, total: problems.length, solved, attempted, essential, next, state };
+    })
+    .filter((c) => c.total > 0);
+}
+
+/**
+ * @typedef {{ topic: string|null, concept: string|null, problem: string|null }} MapLevel
+ */
+
+/**
+ * Reads `#/map/<topic>/<subtopic>/<problem>`. Anything unknown, or a subtopic or problem that
+ * belongs elsewhere, falls back to the deepest valid level above it, so an old link still lands.
+ * @param {(string|undefined)[]} parts the route's captured segments
+ * @param {{ topics: { id: string, concepts?: string[] }[], placed: Record<string, Placement>, published: Set<string> }} known
+ * @returns {MapLevel}
+ */
+export function parseMapLevel(parts, { topics, placed, published }) {
+  const [t, c, p] = parts;
+  const out = { topic: null, concept: null, problem: null };
+  const topic = topics.find((x) => x.id === t);
+  if (!topic) return out;
+  out.topic = topic.id;
+  if (!c || !(topic.concepts ?? []).includes(c)) return out;
+  out.concept = c;
+  if (p && published.has(p) && placed[p]?.topic === topic.id && placed[p].concept === c) out.problem = p;
+  return out;
+}
+
+/**
+ * @param {MapLevel} level
+ * @returns {string} the level's hash
+ */
+export function mapLevelHash(level) {
+  return ['#/map', level.topic, level.topic && level.concept, level.topic && level.concept && level.problem].filter(Boolean).join('/');
+}
+
+/**
+ * The level one step up (what Esc and the breadcrumb go back to).
+ * @param {MapLevel} level
+ * @returns {MapLevel|null} null at the top
+ */
+export function parentLevel(level) {
+  if (level.problem) return { ...level, problem: null };
+  if (level.concept) return { ...level, concept: null };
+  if (level.topic) return { topic: null, concept: null, problem: null };
+  return null;
 }

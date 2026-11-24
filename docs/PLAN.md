@@ -96,7 +96,9 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Phase B: three directions prototyped and scored; **Atlas** chosen (`docs/research/DESIGN_DIRECTIONS.md`)
   - [x] Phase C: `docs/DESIGN.md` rewritten, ADR 0009 (display font), ADR 0010 (map rendering), plan and coverage matrix (`docs/F6_PLAN.md`)
   - [x] Phase D: steps 1 to 9 in `docs/F6_PLAN.md`: Map (`#/map`), Daily (`#/daily`), command palette, and every screen in the Atlas design; inventory fully ticked
-  - [x] Guided tours (owner's request): a site tour on the first visit, and a guide for each mode the first time it opens; replayable
+  - [x] Guided tours (owner's request): a short guide on every page's first visit and the mentor's first open, with a one-step welcome; replayable
+  - [x] Map drill-down (owner's request): all topics, then a topic's subtopics, then a subtopic's problems, then one problem; each level a link (ADR 0010 amendment)
+  - [x] One continuous map (owner's request): the levels become camera stops on one zoomable world, names appearing by zoom (ADR 0010 amendment 2)
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)

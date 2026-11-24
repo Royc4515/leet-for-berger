@@ -163,7 +163,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
         const p = placed?.[problem.id];
         const topic = p ? TAXONOMY.find((t) => t.id === p.topic) : null;
         if (disposed || !topic) return;
-        mount(crumb, h('a', { href: `#/map/${topic.id}` }, h('span.hexmark', { class: store.get().problems[problem.id]?.status === 'solved' ? 'solved' : 'new', 'aria-hidden': 'true' }), topic.title), p.concept ? h('span.crumb-sep', { 'aria-hidden': 'true' }, '/') : null, p.concept ? h('span', {}, conceptLabel(p.concept)) : null);
+        mount(crumb, h('a', { href: `#/map/${topic.id}` }, h('span.hexmark', { class: store.get().problems[problem.id]?.status === 'solved' ? 'solved' : 'new', 'aria-hidden': 'true' }), topic.title), p.concept ? h('span.crumb-sep', { 'aria-hidden': 'true' }, '/') : null, p.concept ? h('a', { href: `#/map/${topic.id}/${p.concept}/${problem.id}` }, conceptLabel(p.concept)) : null);
       })
       .catch(() => {});
   }
