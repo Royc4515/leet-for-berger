@@ -6,6 +6,10 @@
 - **The problem list on a phone comes 30 rows at a time**, with "Show 30 more" and how many are shown under the last row; the page was one 21,000 px scroll and is now about 4,000 px. Show more moves focus to the first new problem; a new search or filter starts from the first page again. Wider screens keep the whole table (`data/list-page.js`, unit-tested).
 - **The pinned Start bar on Battle and Interview setup is one slim row on a phone** (64 to 72 px instead of 130 to 145 px). As a card it covered the problem filters (Random, the difficulty chips, Topic) and the company scope on first load. The title and summary keep one line each; the whole choice is in the "Selected" line above it. Focus scrolling stops above the bar.
 
+### Changed (sign-in follow-ups, owner's request)
+- **Signing in brings you back to the page you started from.** Google and GitHub return to the site root, so the route is kept for the tab when sign-in starts and reopened when the provider sends the user back (`returnRoute` in `auth/account.js`, unit-tested). Signing in from the daily quiz now lands on the daily quiz, not the Problems page.
+- **The daily quiz says it needs sign-in before you press Play**: "Sign in to play." on the daily quiz card of the Problems page (on a phone too, one line, so the first problem still shows without scrolling), the quiz page and Modes. Shown only while signed out on a site with accounts; not while a returning player's session is being checked.
+
 ### Changed (daily quiz needs an account, owner's request)
 - **Signing in is needed to play the daily quiz.** Signed out, `#/quiz/daily` shows Sign in to play with Continue with Google and Continue with GitHub, a link to the leaderboard and one to the practice quizzes, which stay open to everyone. Signed in, the quiz starts at once; while a stored session is still being checked the page waits instead of flashing the gate. A day already played on this device still shows its result. A site without accounts (a fork, a local run) keeps the daily quiz open, since there is no way to sign in there (`dailyQuizAccess` in `modes/quiz.js`, unit-tested).
 

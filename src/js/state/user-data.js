@@ -5,7 +5,7 @@
  *
  * Not listed on purpose: layout and language preferences (lfb:split:*, lfb:lang, lfb:about-open,
  * lfb:map-view, lfb:tours:v1, lfb:quiz-lang) are about the device, not the account; lfb:seen-solved is a per-tab sessionStorage
- * number for the Problems page count-up. The GitHub link lives in memory only (auth/github-sync.js).
+ * number for the Problems page count-up; lfb:return-to is the per-tab route a sign-in started from. The GitHub link lives in memory only (auth/github-sync.js).
  */
 import { STORAGE_KEY as PROGRESS_KEY } from './progress.js';
 import { DRAFT_PREFIX } from './drafts.js';

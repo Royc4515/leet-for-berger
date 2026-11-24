@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { authConfig } from '../src/js/config.js';
-import { createAccount } from '../src/js/auth/account.js';
+import { createAccount, returnRoute } from '../src/js/auth/account.js';
 import { emptyState } from '../src/js/state/progress.js';
 
 const store = () => {
@@ -173,4 +173,13 @@ test('start: a failed load can be retried by the next click', async () => {
   await acc.start();
   assert.equal(n, 2);
   assert.equal(acc.get().status, 'signed-out');
+});
+
+test('returnRoute: back to the saved page only when the provider returns, and only to a hash route', () => {
+  assert.equal(returnRoute({ search: '?code=abc', saved: '#/quiz/daily' }), '#/quiz/daily');
+  assert.equal(returnRoute({ search: '?error_description=denied', saved: '#/quiz/daily' }), '#/quiz/daily', 'a refused sign-in goes back too');
+  assert.equal(returnRoute({ search: '', saved: '#/quiz/daily' }), null, 'an ordinary visit is not a return');
+  assert.equal(returnRoute({ search: '?installation_id=1&setup_action=install', saved: '#/quiz/daily' }), null, 'the GitHub App install return keeps its own route');
+  assert.equal(returnRoute({ search: '?code=abc', saved: null }), null);
+  assert.equal(returnRoute({ search: '?code=abc', saved: 'https://evil.example/' }), null, 'never a URL, only a route');
 });
