@@ -1807,6 +1807,10 @@ try {
     }
     await page.click('.page .state a:has-text("Back to problems")');
     await page.waitForSelector('.problem-table tbody tr a.problem-link');
+    // don't touch / the document keeps a module that failed to evaluate, so #/path stays broken
+    // until a reload; later checks (the share buttons) open the path again.
+    await page.reload();
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
   });
 
   await check('fast navigation dashboard, problem, back, problem leaves exactly one editor and one workspace', async () => {
@@ -2473,7 +2477,9 @@ try {
     ];
     for (const [hash, selector, text, link] of cases) {
       await page.goto(`${BASE}${hash}`);
-      await page.waitForSelector(selector, { timeout: 15000 });
+      await page.waitForSelector(selector, { timeout: 15000 }).catch((e) => {
+        throw new Error(`${hash}: no ${selector} (${e.message.split('\n')[0]})`);
+      });
       const name = await page.locator(selector).getAttribute('aria-label');
       if (!/^Share /.test(name ?? '')) throw new Error(`${hash}: share button name ${JSON.stringify(name)}`);
       await stubShare();
