@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added (company links, owner's request)
+- **Every company page links to the company's careers site** (191 of 193): a "Careers site" button in the header, opening in a new tab. Each address was found on the company's own site and checked to be a real careers page (not a 404, a login wall or its home page) by `scripts/content/check-careers.mjs`; 12 sites that turn away scripts were confirmed by a web search instead. Acquired or renamed companies link where their own site now sends people (CyberArk to Palo Alto Networks, Splunk to Cisco, Twitter to xAI). Zepto has no link: no official careers page could be confirmed. Data in `content/company-careers.json`, merged into the company sets by `build-meta.mjs`.
+- **A problem's company chips open the company's page** (when it has one). Which companies have a page comes from a 2 KB index, `src/js/data/company-pages.json`, so the problem page does not load the company sets.
+
+### Changed (CI runs only what a change affects, owner's request)
+- **Unit tests are picked one by one**: a test runs when a changed file is among the files it reaches (its imports, the files it reads, and so on down, including every problem a test loads). A map change now runs 4 unit tests instead of 280, a stylesheet change 2, a docs change none. Rules in `scripts/ci/deps.mjs` (unit-tested); a change to `package.json`, the lockfile, `ci.yml` or the selector itself still runs everything, and the Actions tab can run everything by hand.
+- **Proven, not guessed**: `scripts/ci/check-selection.mjs` runs the whole suite with every process traced and checks that each file any test actually opened or imported is predicted: 280 tests, 0 misses.
+- The browser smoke test runs only when something the site serves (or the test itself) changed, and uses the runner's own Chrome instead of downloading Chromium and its system packages (about 6 of the job's 14 minutes).
+- `npm run test:affected` runs locally what CI would run for the current branch.
+
 ### Changed (logos where companies are named, owner's request)
 - **A problem's company chips show logos** in front of the names (About this problem), and the command palette uses the same small logo.
 - **The map's problem card shows who asks it as logos**: the first five companies (Israeli first) as a row of logo tiles, then their names. Hovering a logo says what it does; pressing it **lights that company up on the map** (the Company lens) and flies out to frame where it asks, so you see its other problems at a glance; Back returns to the problem. While a company is lit, the map panel opens with its logo, its count of problems and topics, and a link to its practice set.

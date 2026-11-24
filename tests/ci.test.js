@@ -13,6 +13,8 @@ test('CI verify matrix covers every solution language plus SQL', () => {
   assert.deepEqual(matrix, [...LANGUAGES.map((l) => l.id), 'sql'].sort());
 });
 
+// It lists the top-level pages itself, so the affected-test selection (scripts/ci/deps.mjs) is
+// told: ci-deps: *.html
 test('Pages publishes every top-level HTML page', async () => {
   const { readFileSync, readdirSync } = await import('node:fs');
   const pages = readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8');
