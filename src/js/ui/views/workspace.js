@@ -179,7 +179,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       {},
       crumb,
       // Practice only: in an interview or a battle the page is locked down for the session.
-      h('div.problem-title-row', {}, h('h1.problem-title', {}, problem.title), session ? null : shareButton({ compact: true, name: 'Share this problem', get: () => problemShare(problem) })),
+      h('div.problem-title-row', {}, h('h1.problem-title', {}, problem.title), session ? null : shareButton({ compact: true, name: 'Share this problem', get: (lang) => problemShare({ ...problem, lang }) })),
       h('div.problem-tags', {}, difficulty(problem.difficulty), topicLabels.map((t) => h('span.tag', {}, t)), problem.patterns.map((p) => h('span.tag.tag-muted', {}, p))),
     ),
     aboutBlock,
@@ -529,7 +529,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
         if (title) next = { href: `#/problem/${n.id}`, title };
       }
       const languageLabel = languages.find((l) => l.id === language)?.label ?? language;
-      const share = session ? null : () => solveShare({ ...problem, language: languageLabel, firstSolve });
+      const share = session ? null : (lang) => solveShare({ ...problem, language: languageLabel, firstSolve, lang });
       renderResult(consoleBody, result, { kind, argNames: problem.argNames, elapsedMs: performance.now() - started, next, firstSolve, share });
       // After an Accepted submit the emphasis moves to "Next" (one primary on screen).
       root.classList.toggle('has-accepted', Boolean(recordsSolve && next));

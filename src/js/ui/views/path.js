@@ -131,7 +131,7 @@ export function renderPath(root, { store }) {
             'div.page-head-actions',
             {},
             h('a.btn.btn-ghost.btn-sm', { href: nextTopic ? `#/map/${nextTopic.id}` : '#/map' }, 'See it on the map'),
-            shareButton({ name: 'Share your learning path progress', get: () => pathShare(overall) }),
+            shareButton({ name: 'Share your learning path progress', get: (lang) => pathShare({ ...overall, lang }) }),
           ),
         ),
         h(

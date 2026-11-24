@@ -270,7 +270,7 @@ try {
     await page.click('.result-head .share-btn');
     await page.waitForFunction(() => window.__shared);
     const solve = await page.evaluate(() => window.__shared);
-    if (!/^(First solve|Solved): .+ in (JavaScript|Python 3|TypeScript), 15 of 15 tests passed\. Your turn\.\n.+#\/problem\/[\w-]+$/.test(solve) || /function|return/.test(solve)) throw new Error(`solve share: ${JSON.stringify(solve)}`);
+    if (!/^(Just solved|Solved) .+ \((Easy|Medium|Hard)\) in (JavaScript|Python 3|TypeScript): 15 of 15 tests passed\. Your turn\.\nhttps:\/\/.+\/s\/problem\/[\w-]+\.html$/.test(solve) || /function|return/.test(solve)) throw new Error(`solve share: ${JSON.stringify(solve)}`);
   });
 
   await check('walkthrough unlocks after the solve; submission history lists the submit with its code', async () => {
@@ -893,7 +893,7 @@ try {
     await page.click('.report-actions .share-btn');
     await page.waitForFunction(() => window.__shared);
     const scoreShare = await page.evaluate(() => window.__shared);
-    if (!/^Mock interview: \d+\/100 \(.+\), \d of 2 solved\.\n.+#\/modes$/.test(scoreShare)) throw new Error(`interview share: ${JSON.stringify(scoreShare)}`);
+    if (!/^Mock interview: \d+\/100 \(.+\), \d of 2 solved against the clock\. Think you can beat it\?\nhttps:\/\/.+\/s\/interview\.html$/.test(scoreShare)) throw new Error(`interview share: ${JSON.stringify(scoreShare)}`);
     // Reset to setup so subsequent 390px route checks capture and measure the setup screen.
     await page.click('button:has-text("New interview")');
     await page.waitForSelector('.format-grid');
@@ -2464,11 +2464,12 @@ try {
 
   await check('share buttons: a problem, a company, a map place, the learning path and the daily each copy their own text and link', async () => {
     const cases = [
-      ['#/problem/pair-sum-target', '.problem-title-row .share-btn', /^Pair Sum Target \(Easy\): solve it in the browser/, '#/problem/pair-sum-target'],
-      ['#/companies/google', '.company-head .share-btn', /Google's most asked interview problems/, '#/companies/google'],
-      ['#/map/graphs', '.map-brief .brief-title-row .share-btn', /^Graphs on the Leet-For-Berger map/, '#/map/graphs'],
-      ['#/path', '.page-head-actions .share-btn', /learning path/, '#/path'],
-      ['#/daily', '.daily-page .page-head .share-btn', /^Daily challenge #\d+: .+\. Same problem for everyone today\./, '#/daily'],
+      // Links go to each thing's preview page on the public site (built on deploy), which forwards to it.
+      ['#/problem/pair-sum-target', '.problem-title-row .share-btn', /^Can you solve Pair Sum Target\? An Easy one, judged on 15 tests right in the browser\.$/, '/s/problem/pair-sum-target.html'],
+      ['#/companies/google', '.company-head .share-btn', /^(Interviewing at Google\? Its \d+ most asked problems|Practising for Google: \d+ of its \d+ most asked)/, '/s/company/google.html'],
+      ['#/map/graphs', '.map-brief .brief-title-row .share-btn', /^Graphs, \d+ problems: explore it on the Leet-For-Berger map of interview topics\.$/, '/s/map/graphs.html'],
+      ['#/path', '.page-head-actions .share-btn', /learning path/, '/s/path.html'],
+      ['#/daily', '.daily-page .page-head .share-btn', /^Daily challenge #\d+: .+\. (Solved\. |Solved, \d+ days in a row\. )?Same problem for everyone today, can you\?$/, '/s/daily.html'],
     ];
     for (const [hash, selector, text, link] of cases) {
       await page.goto(`${BASE}${hash}`);
@@ -2480,7 +2481,7 @@ try {
       await page.waitForFunction(() => window.__shared);
       const shared = await page.evaluate(() => window.__shared);
       const [line, url] = shared.split('\n');
-      if (!text.test(line) || !url?.endsWith(link) || !url.startsWith('http')) throw new Error(`${hash}: shared ${JSON.stringify(shared)}`);
+      if (!text.test(line) || !url?.endsWith(link) || !url.startsWith('https://')) throw new Error(`${hash}: shared ${JSON.stringify(shared)}`);
     }
     await expectText('.toast', /Link copied/);
   });

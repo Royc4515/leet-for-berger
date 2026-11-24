@@ -420,7 +420,7 @@ export function renderCompany(root, { store, slug }) {
             careersLink(company),
             shareButton({
               name: `Share ${company.name}'s practice set`,
-              get: () => companyShare({ ...company, ...companyProgress(expandRows(sets, company), isSolvedIn(store.get())) }),
+              get: (lang) => companyShare({ ...company, ...companyProgress(expandRows(sets, company), isSolvedIn(store.get())), lang }),
             }),
           ),
         ),

@@ -648,7 +648,7 @@ function renderInterviewReport(root) {
           {},
           again,
           h('a.btn.btn-secondary', { href: '#/' }, 'Back to problems'),
-          shareButton({ name: 'Share your interview score', get: () => interviewShare({ score: a.score, band: a.band.label, solved: a.solved, total: a.problems.length }) }),
+          shareButton({ name: 'Share your interview score', get: (lang) => interviewShare({ score: a.score, band: a.band.label, solved: a.solved, total: a.problems.length, lang }) }),
         ),
       ),
       siteFooter(),
@@ -942,7 +942,7 @@ function startBattle(root, { store, problem, level }) {
       raceResult,
       difficulty(problem.difficulty),
       h(`span.race-outcome.${who === 'you' ? 'is-win' : 'is-loss'}`, {}, who === 'you' ? 'You won' : `${bot.name} finished first`),
-      shareButton({ name: 'Share the race result', get: () => battleShare({ won: who === 'you', bot: bot.name, title: problem.title }) }),
+      shareButton({ name: 'Share the race result', get: (lang) => battleShare({ won: who === 'you', bot: bot.name, title: problem.title, lang }) }),
     );
     toast(who === 'you' ? 'You won the race.' : `${bot.name} finished first. Keep going, finish it anyway.`, who === 'you' ? 'success' : 'warn', 5000);
   };

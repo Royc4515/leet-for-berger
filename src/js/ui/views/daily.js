@@ -89,7 +89,7 @@ export function renderDaily(root, { store }) {
           dailyFor(today)
             ? shareButton({
                 name: "Share today's daily challenge",
-                get: () => dailyShare({ number: dailyNumber(today), title: catalogEntry(dailyFor(today))?.title ?? dailyFor(today), solved: isSolved(dailyFor(today)), streak }),
+                get: (lang) => dailyShare({ number: dailyNumber(today), title: catalogEntry(dailyFor(today))?.title ?? dailyFor(today), solved: isSolved(dailyFor(today)), streak, lang }),
               })
             : null,
         ),

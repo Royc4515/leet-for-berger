@@ -16,6 +16,12 @@ export const REMOTE_RUNNER = {
 };
 
 /**
+ * Where the public site lives. Shared links point here (each to its own preview page, built on
+ * deploy by scripts/share/build-share-pages.mjs), whichever copy of the site they were shared from.
+ */
+export const SITE_URL = 'https://royc4515.github.io/leet-for-berger/';
+
+/**
  * The effective remote runner settings: `window.LFB_REMOTE_RUNNER_URL` (and
  * `window.LFB_TURNSTILE_SITE_KEY`) override this file, so a local test or a fork can point the
  * site at another Worker without editing it.

@@ -1,102 +1,187 @@
 /**
  * What a share button sends from each part of the site (owner's request): a title, a line of text
- * and the page it points to. Spoiler-free by rule: a problem's name and difficulty, a score or a
- * count, never code, test cases or an answer, so a friend who opens the link can still solve it.
+ * written for that button, and the link. Spoiler-free by rule: a problem's name and difficulty, a
+ * score or a count, never code, test cases or an answer, so a friend who opens it can still solve it.
+ *
+ * The link is the item's preview page (`page`, under s/ on the public site, built on deploy by
+ * scripts/share/build-share-pages.mjs): link previews in chats read its own title and image, then
+ * it forwards the reader to the page itself (`hash`). Previews cannot read anything after a # in
+ * an address, so the site's own routes would all show the same card.
  *
  * Pure: no DOM; ui/share.js hands the result to the share sheet or the clipboard.
  */
 
 export const SITE_NAME = 'Leet-For-Berger';
 
-/** @typedef {{ title: string, text: string, hash: string }} SharePayload */
+/** @typedef {{ title: string, text: string, page: string, hash: string }} SharePayload */
 
 /**
- * The address a shared page opens: this site, at the page's hash route.
- * @param {string} hash e.g. '#/problem/pair-sum-target'
- * @param {{ origin: string, pathname: string }} base where the site is served (location in the browser)
+ * The address a shared item opens: its preview page on the public site.
+ * @param {string} page e.g. 's/problem/pair-sum-target.html'
+ * @param {string} siteUrl the public site, ending in / (config.js SITE_URL)
  * @returns {string}
  */
-export function shareUrl(hash, base) {
-  return `${base.origin}${base.pathname}${hash}`;
+export function shareUrl(page, siteUrl) {
+  return `${siteUrl.replace(/\/?$/, '/')}${page}`;
 }
 
 /**
+ * Preview page paths, one per shareable thing (the deploy builds one file for each).
+ * @type {{ problem: (id: string) => string, company: (slug: string) => string, map: (level: { topic: string, concept?: string|null, problem?: string|null }) => string, path: string, daily: string, interview: string, battle: string }}
+ */
+export const SHARE_PAGES = {
+  problem: (id) => `s/problem/${id}.html`,
+  company: (slug) => `s/company/${slug}.html`,
+  map: ({ topic, concept = null, problem = null }) => `s/map/${[topic, concept, problem].filter(Boolean).join('/')}.html`,
+  path: 's/path.html',
+  daily: 's/daily.html',
+  interview: 's/interview.html',
+  battle: 's/battle.html',
+};
+
+const HE_LEVEL = { Easy: 'קלה', Medium: 'בינונית', Hard: 'קשה' };
+const level = (difficulty, lang) => (lang === 'he' ? HE_LEVEL[difficulty] ?? difficulty : difficulty);
+
+/**
  * A problem, to try.
- * @param {{ id: string, title: string, difficulty: string }} p
+ * @param {{ id: string, title: string, difficulty: string, lang?: 'en'|'he' }} p
  * @returns {SharePayload}
  */
-export function problemShare({ id, title, difficulty }) {
-  return { title: `${title} · ${SITE_NAME}`, text: `${title} (${difficulty}): solve it in the browser against 15 tests.`, hash: `#/problem/${id}` };
+export function problemShare({ id, title, difficulty, lang = 'en' }) {
+  const text =
+    lang === 'he'
+      ? `מצליחים לפתור את ${title}? שאלה ${level(difficulty, lang)}, נבדקת על 15 טסטים ישר בדפדפן.`
+      : `Can you solve ${title}? ${article(difficulty)} ${difficulty} one, judged on 15 tests right in the browser.`;
+  return { title: `${title} · ${SITE_NAME}`, text, page: SHARE_PAGES.problem(id), hash: `#/problem/${id}` };
 }
 
 /**
  * A solve, right after an Accepted submit: the problem and the language, never the code.
- * @param {{ id: string, title: string, difficulty: string, language: string, firstSolve?: boolean }} p
+ * @param {{ id: string, title: string, difficulty: string, language: string, firstSolve?: boolean, lang?: 'en'|'he' }} p
  * @returns {SharePayload}
  */
-export function solveShare({ id, title, difficulty, language, firstSolve = false }) {
-  return {
-    title: `Solved ${title} · ${SITE_NAME}`,
-    text: `${firstSolve ? 'First solve' : 'Solved'}: ${title} (${difficulty}) in ${language}, 15 of 15 tests passed. Your turn.`,
-    hash: `#/problem/${id}`,
-  };
+export function solveShare({ id, title, difficulty, language, firstSolve = false, lang = 'en' }) {
+  const text =
+    lang === 'he'
+      ? `${firstSolve ? 'פתרתי עכשיו' : 'פתרתי'} את ${title} (${level(difficulty, lang)}) ב-${language}: עברו 15 מתוך 15 טסטים. תורך.`
+      : `${firstSolve ? 'Just solved' : 'Solved'} ${title} (${difficulty}) in ${language}: 15 of 15 tests passed. Your turn.`;
+  return { title: lang === 'he' ? `פתרתי את ${title} · ${SITE_NAME}` : `Solved ${title} · ${SITE_NAME}`, text, page: SHARE_PAGES.problem(id), hash: `#/problem/${id}` };
 }
 
 /**
  * A company's practice set, with the sharer's progress on it when there is any.
- * @param {{ slug: string, name: string, onSite: number, solved?: number }} p
+ * @param {{ slug: string, name: string, onSite: number, solved?: number, lang?: 'en'|'he' }} p
  * @returns {SharePayload}
  */
-export function companyShare({ slug, name, onSite, solved = 0 }) {
-  const text = solved > 0 ? `${solved} of ${onSite} of ${name}'s most asked interview problems solved.` : `${name}'s most asked interview problems: ${onSite} to practise in the browser.`;
-  return { title: `${name} interview problems · ${SITE_NAME}`, text, hash: `#/companies/${slug}` };
+export function companyShare({ slug, name, onSite, solved = 0, lang = 'en' }) {
+  const he = lang === 'he';
+  const text =
+    solved > 0
+      ? he
+        ? `מתכוננים ל-${name}: פתרתי כבר ${solved} מתוך ${onSite} השאלות שהכי נשאלות שם בראיונות.`
+        : `Practising for ${name}: ${solved} of its ${onSite} most asked interview problems solved so far.`
+      : he
+        ? `יש לך ראיון ב-${name}? ${onSite} השאלות שהכי נשאלות שם, מוכנות לתרגול בדפדפן.`
+        : `Interviewing at ${name}? Its ${onSite} most asked problems, ready to practise in the browser.`;
+  return { title: he ? `שאלות ראיון של ${name} · ${SITE_NAME}` : `${name} interview problems · ${SITE_NAME}`, text, page: SHARE_PAGES.company(slug), hash: `#/companies/${slug}` };
 }
 
 /**
- * A place on the Problem Map: a topic, a subtopic or a problem.
- * @param {{ hash: string, name: string }} p
+ * A place on the Problem Map: a topic, a subtopic in it, or a problem in that.
+ * @param {{ level: { topic: string, concept?: string|null, problem?: string|null }, hash: string, name: string, where?: string|null, problems?: number|null, lang?: 'en'|'he' }} p
+ *   name: the place's own name; where: what it sits in ("Graphs" for a subtopic, "Graphs, Grid traversal" for a problem)
  * @returns {SharePayload}
  */
-export function mapShare({ hash, name }) {
-  return { title: `${name} · ${SITE_NAME} map`, text: `${name} on the ${SITE_NAME} map of interview topics.`, hash };
+export function mapShare({ level: at, hash, name, where = null, problems = null, lang = 'en' }) {
+  let text;
+  if (lang === 'he') {
+    const count = problems ? `, ${problems === 1 ? 'שאלה אחת' : `${problems} שאלות`}` : '';
+    text = where ? `${name}, בתוך ${where}${count}, במפת נושאי הראיונות של ${SITE_NAME}.` : `${name}${count}: אפשר לחקור במפת נושאי הראיונות של ${SITE_NAME}.`;
+  } else {
+    const count = problems ? `, ${problems} ${problems === 1 ? 'problem' : 'problems'}` : '';
+    text = where ? `${name}, in ${where}${count}, on the ${SITE_NAME} map of interview topics.` : `${name}${count}: explore it on the ${SITE_NAME} map of interview topics.`;
+  }
+  return { title: `${name} · ${SITE_NAME} map`, text, page: SHARE_PAGES.map(at), hash };
 }
 
 /**
  * Progress along the learning path.
- * @param {{ solved: number, total: number }} p
+ * @param {{ solved: number, total: number, lang?: 'en'|'he' }} p
  * @returns {SharePayload}
  */
-export function pathShare({ solved, total }) {
-  const text = solved > 0 ? `${solved} of ${total} problems along the ${SITE_NAME} learning path.` : `The ${SITE_NAME} learning path: ${total} problems, one per core pattern, in order.`;
-  return { title: `Learning path · ${SITE_NAME}`, text, hash: '#/path' };
+export function pathShare({ solved, total, lang = 'en' }) {
+  const he = lang === 'he';
+  const text =
+    solved > 0
+      ? he
+        ? `עברתי ${solved} מתוך ${total} במסלול הלמידה: שאלה אחת לכל דפוס מרכזי בראיונות, לפי הסדר.`
+        : `${solved} of ${total} along the learning path: one problem per core interview pattern, in order.`
+      : he
+        ? `מסלול הלמידה: ${total} שאלות, אחת לכל דפוס מרכזי בראיונות, לפי הסדר שבו הם נבנים זה על זה.`
+        : `The learning path: ${total} problems, one per core interview pattern, in the order they build on each other.`;
+  return { title: he ? `מסלול הלמידה · ${SITE_NAME}` : `Learning path · ${SITE_NAME}`, text, page: SHARE_PAGES.path, hash: '#/path' };
 }
 
 /**
  * Today's daily challenge: its number and problem, whether the sharer solved it, their streak.
- * @param {{ number: number, title: string, solved?: boolean, streak?: number }} p
+ * @param {{ number: number, title: string, solved?: boolean, streak?: number, lang?: 'en'|'he' }} p
  * @returns {SharePayload}
  */
-export function dailyShare({ number, title, solved = false, streak = 0 }) {
-  const parts = [`Daily challenge #${number}: ${title}`];
-  if (solved) parts.push('solved');
-  if (streak > 1) parts.push(`${streak}-day streak`);
-  return { title: `Daily challenge #${number} · ${SITE_NAME}`, text: `${parts.join(' · ')}. Same problem for everyone today.`, hash: '#/daily' };
+export function dailyShare({ number, title, solved = false, streak = 0, lang = 'en' }) {
+  const he = lang === 'he';
+  const done = solved ? (he ? (streak > 1 ? ` פתרתי, ${streak} ימים ברצף.` : ' פתרתי.') : streak > 1 ? ` Solved, ${streak} days in a row.` : ' Solved.') : '';
+  return {
+    title: he ? `אתגר יומי #${number} · ${SITE_NAME}` : `Daily challenge #${number} · ${SITE_NAME}`,
+    text: he ? `אתגר יומי #${number}: ${title}.${done} אותה שאלה לכולם היום, מה איתך?` : `Daily challenge #${number}: ${title}.${done} Same problem for everyone today, can you?`,
+    page: SHARE_PAGES.daily,
+    hash: '#/daily',
+  };
 }
 
 /**
  * A finished mock interview or mock OA: the score and how many were solved.
- * @param {{ score: number, band: string, solved: number, total: number }} p
+ * @param {{ score: number, band: string, solved: number, total: number, lang?: 'en'|'he' }} p
  * @returns {SharePayload}
  */
-export function interviewShare({ score, band, solved, total }) {
-  return { title: `Mock interview · ${SITE_NAME}`, text: `Mock interview: ${score}/100 (${band}), ${solved} of ${total} solved.`, hash: '#/modes' };
+export function interviewShare({ score, band, solved, total, lang = 'en' }) {
+  const he = lang === 'he';
+  return {
+    title: he ? `ראיון מדומה · ${SITE_NAME}` : `Mock interview · ${SITE_NAME}`,
+    text: he ? `ראיון מדומה: ${score}/100 (${band}), פתרתי ${solved} מתוך ${total} מול השעון. מי עושה יותר?` : `Mock interview: ${score}/100 (${band}), ${solved} of ${total} solved against the clock. Think you can beat it?`,
+    page: SHARE_PAGES.interview,
+    hash: '#/modes',
+  };
 }
 
 /**
  * A finished race against a bot.
- * @param {{ won: boolean, bot: string, title: string }} p
+ * @param {{ won: boolean, bot: string, title: string, lang?: 'en'|'he' }} p
  * @returns {SharePayload}
  */
-export function battleShare({ won, bot, title }) {
-  return { title: `Battle · ${SITE_NAME}`, text: won ? `Won a race against ${bot} on ${title}.` : `Raced ${bot} on ${title}.`, hash: '#/battle' };
+export function battleShare({ won, bot, title, lang = 'en' }) {
+  const he = lang === 'he';
+  const text = he
+    ? won
+      ? `ניצחתי את ${bot} במרוץ על ${title}. מי בא למרוץ?`
+      : `מרוץ מול ${bot} על ${title}: הפעם הבוט ניצח. בפעם הבאה.`
+    : won
+      ? `Beat ${bot} in a race on ${title}. Race me?`
+      : `Raced ${bot} on ${title}, and ${bot} got there first. Rematch soon.`;
+  return { title: he ? `מרוץ · ${SITE_NAME}` : `Battle · ${SITE_NAME}`, text, page: SHARE_PAGES.battle, hash: '#/battle' };
+}
+
+/**
+ * The language a share is written in: the reader's own (the language they chose for the quiz, or
+ * their browser's), Hebrew or English.
+ * @param {{ stored?: string|null, languages?: readonly string[] }} p
+ * @returns {'en'|'he'}
+ */
+export function shareLanguage({ stored = null, languages = [] } = {}) {
+  if (stored === 'he' || stored === 'en') return stored;
+  return /^(he|iw)\b/i.test(languages[0] ?? '') ? 'he' : 'en';
+}
+
+/** "An Easy", "A Medium", "A Hard". */
+function article(word) {
+  return /^[aeiou]/i.test(word) ? 'An' : 'A';
 }

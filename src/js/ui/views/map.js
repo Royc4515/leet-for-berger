@@ -907,8 +907,13 @@ function mountMap(root, { store, placed, path, parts }) {
   }
 
   /** A level's title with its share button: the link opens the map flown in to this place. */
-  const titleRow = (title) =>
-    h('div.brief-title-row', {}, h('h2.brief-title', {}, title), shareButton({ compact: true, name: `Share ${title} on the map`, get: () => mapShare({ hash: mapLevelHash(level), name: title }) }));
+  const titleRow = (title, { where = null, problems = null } = {}) =>
+    h(
+      'div.brief-title-row',
+      {},
+      h('h2.brief-title', {}, title),
+      shareButton({ compact: true, name: `Share ${title} on the map`, get: (lang) => mapShare({ level, hash: mapLevelHash(level), name: title, where, problems, lang }) }),
+    );
 
   function briefTopic() {
     const st = states.get(level.topic);
@@ -917,7 +922,7 @@ function mountMap(root, { store, placed, path, parts }) {
       brief,
       companyHead(),
       h('span.eyebrow', {}, `Tier ${st.tier + 1} · ${TIER_TITLES[st.tier] ?? ''}`),
-      titleRow(st.title),
+      titleRow(st.title, { problems: st.total }),
       progressBlock(st.solved, st.total),
       stateLine(st),
       topicLinks(st),
@@ -966,7 +971,7 @@ function mountMap(root, { store, placed, path, parts }) {
       brief,
       companyHead(),
       h('span.eyebrow', {}, `${st.title} · Subtopic ${i + 1} of ${cs.length}`),
-      titleRow(c.title),
+      titleRow(c.title, { where: st.title, problems: c.total }),
       progressBlock(c.solved, c.total),
       pick ? h('p.brief-state', {}, h('strong', {}, 'The path picks '), `${pick} here: start with it.`) : null,
       nextCta(c.next, c.solved || c.attempted),
@@ -987,7 +992,7 @@ function mountMap(root, { store, placed, path, parts }) {
     mount(
       brief,
       h('span.eyebrow', {}, `${st.title} · ${c.title}`),
-      titleRow(e?.title ?? pid),
+      titleRow(e?.title ?? pid, { where: `${st.title}, ${c.title}` }),
       h('div.brief-meta', {}, difficulty(e?.difficulty ?? 'Easy'), h(`span.status-word.is-${status}`, {}, h('span.hexmark', { class: status, 'aria-hidden': 'true' }), STATUS_WORD[status]), placed[pid].essential ? h('span.tag.tag-muted.path-flag', {}, 'On the learning path') : null),
       asked,
       h('a.btn.btn-primary.btn-block.brief-cta', { href: `#/problem/${pid}` }, status === 'solved' || status === 'assisted' ? 'Open it again' : status === 'attempted' ? 'Continue it' : 'Open problem'),

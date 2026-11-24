@@ -61,7 +61,7 @@ export function renderError(el, message) {
 /**
  * @param {HTMLElement} el
  * @param {ReturnType<import('../engine/harness.js').judge>} result
- * @param {{ kind: 'run'|'submit', argNames: string[], elapsedMs: number, next?: { href: string, title: string }|null, firstSolve?: boolean, share?: (() => import('../data/share.js').SharePayload)|null }} meta
+ * @param {{ kind: 'run'|'submit', argNames: string[], elapsedMs: number, next?: { href: string, title: string }|null, firstSolve?: boolean, share?: ((lang: 'en'|'he') => import('../data/share.js').SharePayload)|null }} meta
  *   next: where "Next problem" goes after an Accepted submit (practice only); share: what the
  *   "Share" button sends after an Accepted submit (practice only: the problem and the language)
  */
