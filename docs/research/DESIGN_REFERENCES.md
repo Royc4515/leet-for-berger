@@ -1,6 +1,6 @@
 # Design references (stage F6, Phase A)
 
-Research for the F6 redesign (`docs/REDESIGN_BRIEF.md`). Captured 2026-11-23 with headless Chromium (Playwright): full-page screenshots at 1440 and 390 px, a short video of the key interaction for most references, and 3 to 6 frames per video, each opened and described before it was used. Captures stay in the session scratchpad and are not committed (no third-party images in the repo). Timings come from 25 fps video and are estimates (about 40 ms precision).
+Research for the F6 redesign (`docs/archive/REDESIGN_BRIEF.md`). Captured 2026-11-23 with headless Chromium (Playwright): full-page screenshots at 1440 and 390 px, a short video of the key interaction for most references, and 3 to 6 frames per video, each opened and described before it was used. Captures stay in the session scratchpad and are not committed (no third-party images in the repo). Timings come from 25 fps video and are estimates (about 40 ms precision).
 
 **Originality rule.** These references are for principles. Nothing here copies a site's layout, illustration, icons, colours, logos or copy. Where an idea is adapted, the adaptation is ours and the source is credited below.
 

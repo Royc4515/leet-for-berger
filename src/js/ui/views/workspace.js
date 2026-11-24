@@ -37,7 +37,7 @@ import { problemShare, solveShare } from '../../data/share.js';
 const LANG_KEY = 'lfb:lang';
 /** Whether "About this problem" was left open, so following a family link keeps it open. */
 const ABOUT_KEY = 'lfb:about-open';
-/** Below this width the workspace becomes Description / Code / Results tabs (docs/DESIGN_PLAN.md Step 7). */
+/** Below this width the workspace becomes Description / Code / Results tabs (docs/archive/DESIGN_PLAN.md Step 7). */
 const PHONE_QUERY = '(max-width: 820px)';
 const WS_TABS = [
   ['description', 'Description'],
@@ -121,7 +121,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     showFamily: !session,
   });
   // Companies, complexity and family versions are context, not the task: they sit in one collapsed
-  // block under the tags so the statement comes first (docs/DESIGN_PLAN.md Step 7).
+  // block under the tags so the statement comes first (docs/archive/DESIGN_PLAN.md Step 7).
   const aboutBlock = h('details.about-problem', { open: readFlag(ABOUT_KEY) }, h('summary', {}, 'About this problem'), context.el);
   aboutBlock.addEventListener('toggle', () => writeFlag(ABOUT_KEY, aboutBlock.open));
   /** Saves one submission to the user's GitHub repository (ADR 0007); the toast says how it went. */

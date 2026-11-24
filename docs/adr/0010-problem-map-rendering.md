@@ -4,7 +4,7 @@ Status: accepted (2026-11-23)
 
 ## Context
 
-F6 adds an interactive Problem Map (`#/map`, `docs/F6_PLAN.md` step 2): 26 topics in six tiers with 34 prerequisite links, and one hex per problem (225 today, two to three times that later). It must run at 60 fps on a mid-range phone, keep main-thread tasks under 50 ms during interaction, work with a keyboard and a screen reader, and work at 390 px without sideways page scroll.
+F6 adds an interactive Problem Map (`#/map`, `docs/archive/F6_PLAN.md` step 2): 26 topics in six tiers with 34 prerequisite links, and one hex per problem (225 today, two to three times that later). It must run at 60 fps on a mid-range phone, keep main-thread tasks under 50 ms during interaction, work with a keyboard and a screen reader, and work at 390 px without sideways page scroll.
 
 Options considered:
 
