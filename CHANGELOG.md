@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed (README showcase, owner's request)
+- **README redesigned as a landing page**: a hero banner in the Atlas style (`docs/assets/banner.jpg`), a 10-second demo GIF recorded from the running app (submit, Accepted 15/15, then the Problem Map zooming in), a row of real numbers (225 problems, 8 languages, 15 tests a run, 26 topics, 193 companies, 526 quiz questions), a six-screen feature gallery, a "how a submission is judged" sequence diagram, branded badges, and collapsible sections for tests, configuration and structure. `docs/assets/social-preview.jpg` (1280x640) is ready for the repo's social preview. Screenshots are 1600 px JPEGs (the PNGs they replace are removed).
+
 ### Fixed (invariant 6, from the repo audit)
 - **Interview `analytics()` read the wall clock** for a session still running, the one reducer in `modes/interview.js` without a `now` override. It now takes `now` like the rest of the module; finished sessions (every current caller) are unchanged. Unit test: a running session's time used and speed bonus follow the `now` given.
 
