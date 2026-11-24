@@ -1,5 +1,5 @@
 {
- "_doc": "Each company's careers page, linked from its company page (owner's request). Found and checked by scripts/content/check-careers.mjs: a page on the company's own site (or the job board it links to) that answers 200 with careers in its title or heading; the address kept is the company's own, which redirects to wherever its job board lives. `blocked` lists companies whose site turns away scripts; their address was confirmed by a web search instead. `unconfirmed` lists companies with no official careers page found (no link is better than a guessed one). Slugs match src/js/data/company-sets.json; a company kept out of the logo set (domain null) has no link.",
+ "_doc": "Each company's careers page, linked from its company page (owner's request). Found and checked by scripts/content/check-careers.mjs: a page on the company's own site (or the job board it links to) that answers 200 with careers in its title or heading; the address kept is the company's own, which redirects to wherever its job board lives. `israel`, for companies that hire engineers in Israel (content/israel-hiring.json, major or present), is the job search on the same careers site filtered to Israel, where it has one; their page links there (owner's request). `blocked` lists companies whose site turns away scripts; their address was confirmed by a web search instead. `unconfirmed` lists companies with no official careers page found (no link is better than a guessed one). Slugs match src/js/data/company-sets.json; a company kept out of the logo set (domain null) has no link.",
  "checked": "2026-11",
  "careers": {
   "accenture": "https://careers.accenture.com/",
@@ -194,6 +194,7 @@
   "zs-associates": "https://www.zs.com/careers",
   "zscaler": "https://www.zscaler.com/careers"
  },
+ "israel": {},
  "blocked": [
   "arcesium",
   "citadel",

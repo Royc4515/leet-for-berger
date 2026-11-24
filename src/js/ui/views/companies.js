@@ -47,6 +47,14 @@ export function israelBadgeEl(level) {
 
 const isSolvedIn = (state) => (id) => state.problems[id]?.status === 'solved';
 
+/** The company page's outside link: jobs in Israel when the company has that search, else its careers site. */
+function careersLink(company) {
+  const href = company.careersIL ?? company.careers;
+  if (!href) return null;
+  const [text, label] = company.careersIL ? ['Jobs in Israel', 'jobs in Israel'] : ['Careers site', 'careers site'];
+  return h('a.btn.btn-secondary.btn-sm.company-careers', { href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': `${company.name} ${label} (opens in a new tab)` }, text, h('span.company-careers-arrow', { 'aria-hidden': 'true' }, '↗'));
+}
+
 /** Names identify which companies asked a problem; no logos ship (docs/research/DESIGN_DIRECTIONS.md). */
 const TRADEMARK_NOTE = 'Company names and logos are trademarks of their owners, used here only to say which companies asked a problem. No affiliation or endorsement.';
 const ISRAEL_LINE = {
@@ -398,8 +406,9 @@ export function renderCompany(root, { store, slug }) {
             'div.company-head-side',
             {},
             israelBadgeEl(company.israel),
-            // Its own careers site (content/company-careers.json, checked by check-careers.mjs).
-            company.careers ? h('a.btn.btn-secondary.btn-sm.company-careers', { href: company.careers, target: '_blank', rel: 'noopener noreferrer', 'aria-label': `${company.name} careers site (opens in a new tab)` }, 'Careers site', h('span.company-careers-arrow', { 'aria-hidden': 'true' }, '↗')) : null,
+            // Its job search filtered to Israel where it has one (owner's request), else its careers
+            // site (content/company-careers.json, checked by check-careers.mjs).
+            careersLink(company),
           ),
         ),
         facts,

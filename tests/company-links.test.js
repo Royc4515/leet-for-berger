@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { careerCandidates, isCareersPage } from '../scripts/content/careers-pick.mjs';
+import { careerCandidates, isCareersPage, applyCareers } from '../scripts/content/careers-pick.mjs';
 import { companyPageSlug, slugifyCompany } from '../src/js/data/company-loader.js';
 
 const page = (finalUrl, title, h1 = '', status = 200) => ({ status, finalUrl, html: `<html><head><title>${title}</title></head><body><h1>${h1}</h1></body></html>` });
@@ -71,7 +71,25 @@ test('careers links are https addresses with no tracking query', () => {
 });
 
 test('the company sets carry the careers links (scripts/content/build-meta.mjs was run)', () => {
-  for (const c of sets.companies) assert.equal(c.careers ?? null, careers.careers[c.slug] ?? null, c.slug);
+  for (const c of sets.companies) {
+    assert.equal(c.careers ?? null, careers.careers[c.slug] ?? null, c.slug);
+    assert.equal(c.careersIL ?? null, careers.israel[c.slug] ?? null, c.slug);
+  }
+});
+
+test('applyCareers adds the careers site and, where there is one, the Israel search', () => {
+  const out = applyCareers({ companies: [{ slug: 'a' }, { slug: 'b' }, { slug: 'c' }] }, { careers: { a: 'https://a.com/careers', b: 'https://b.com/jobs' }, israel: { a: 'https://a.com/jobs?country=Israel' } });
+  assert.deepEqual(out.companies, [{ slug: 'a', careers: 'https://a.com/careers', careersIL: 'https://a.com/jobs?country=Israel' }, { slug: 'b', careers: 'https://b.com/jobs' }, { slug: 'c' }]);
+});
+
+test('Israel job searches: only for companies that hire engineers in Israel, https, no fragment', () => {
+  const inIsrael = new Set(sets.companies.filter((c) => c.israel === 'major' || c.israel === 'present').map((c) => c.slug));
+  for (const [slug, url] of Object.entries(careers.israel)) {
+    assert.ok(inIsrael.has(slug), `${slug} has an Israel search but no Israeli engineering hiring on record`);
+    const u = new URL(url);
+    assert.equal(u.protocol, 'https:', slug);
+    assert.equal(u.hash, '', `${slug} keeps a fragment`);
+  }
 });
 
 test('the company page index lists every company and its aliases, and names map to them', () => {

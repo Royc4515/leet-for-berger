@@ -47,13 +47,17 @@ export function isCareersPage({ status, finalUrl, html }, domain = null) {
 }
 
 /**
- * Puts each company's careers link on its entry in the company sets (scripts/content/build-meta.mjs).
- * @template {{ companies: Array<{ slug: string, careers?: string }> }} T
+ * Puts each company's careers links on its entry in the company sets (scripts/content/build-meta.mjs):
+ * `careers`, its careers site, and `careersIL`, its job search filtered to Israel where it has one.
+ * @template {{ companies: Array<{ slug: string, careers?: string, careersIL?: string }> }} T
  * @param {T} sets
- * @param {{ careers: Record<string, string> }} data content/company-careers.json
- * @returns {T} the same sets, companies with a link carrying `careers`
+ * @param {{ careers: Record<string, string>, israel?: Record<string, string> }} data content/company-careers.json
+ * @returns {T} the same sets
  */
 export function applyCareers(sets, data) {
-  for (const c of sets.companies) if (data.careers[c.slug]) c.careers = data.careers[c.slug];
+  for (const c of sets.companies) {
+    if (data.careers[c.slug]) c.careers = data.careers[c.slug];
+    if (data.israel?.[c.slug]) c.careersIL = data.israel[c.slug];
+  }
   return sets;
 }

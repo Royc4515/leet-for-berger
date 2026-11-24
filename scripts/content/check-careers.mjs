@@ -11,6 +11,9 @@
  * turns away scripts is listed under `blocked` (its address was confirmed by a web search
  * instead) and reported as unchecked rather than broken.
  *
+ * The Israel job searches (`israel`) are checked too: a search page often draws its results with
+ * script, so one that answers 200 without careers words is reported for a look, not as broken.
+ *
  * Usage: node scripts/content/check-careers.mjs [--discover] [--write] [--only=slug,slug]
  * Runs by hand; the site reads the result through scripts/content/build-meta.mjs.
  */
@@ -75,6 +78,20 @@ for (const r of by('broken')) console.log(`broken  ${r.slug}: ${r.url} (${r.stat
 for (const r of by('missing')) console.log(`missing ${r.slug}${r.tried ? `\n  ${r.tried.join('\n  ')}` : ''}`);
 for (const r of by('found')) console.log(`found   ${r.slug}: ${r.url}`);
 console.log(`\n${by('ok').length} ok, ${by('found').length} found, ${by('blocked').length} blocked (search-confirmed), ${by('broken').length} broken, ${by('missing').length} missing, ${by('unconfirmed').length} unconfirmed`);
+
+// The Israel searches: a 404, an error or a redirect home is broken; a 200 is fine.
+const israel = Object.entries(data.israel ?? {}).filter(([slug]) => !only || only.has(slug));
+const ilQueue = [...israel];
+const ilResults = [];
+await Promise.all(Array.from({ length: 6 }, async () => {
+  while (ilQueue.length) {
+    const [slug, url] = ilQueue.shift();
+    const page = await fetchPage(url);
+    ilResults.push({ slug, url, status: page.status || page.error, careers: isCareersPage(page, null) });
+  }
+}));
+for (const r of ilResults.sort((a, b) => a.slug.localeCompare(b.slug))) if (r.status !== 200 || !r.careers) console.log(`israel  ${r.slug}: ${r.url} (${r.status}${r.status === 200 ? ', no careers words: check it by eye' : ''})`);
+if (israel.length) console.log(`${ilResults.filter((r) => r.status === 200).length} of ${israel.length} Israel searches answer 200`);
 
 if (args.write) {
   for (const r of by('found')) data.careers[r.slug] = r.url;

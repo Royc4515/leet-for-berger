@@ -560,12 +560,15 @@ try {
     await expectText('.page-head h1', /Wix/);
     // The company page: its logo, large, and a faint glow in the brand's colour when it has one.
     if (!(await page.locator('.company-head .company-mark.is-tile.lg img').count())) throw new Error('the company page has no logo tile');
-    // Its careers site (owner's request): an outside link, in a new tab, that says so.
-    const careers = await page.evaluate(() => {
+    // Its jobs in Israel, or else its careers site (owner's request): an outside link, in a new
+    // tab, that says so.
+    const careers = await page.evaluate(async () => {
       const a = document.querySelector('.company-head a.company-careers');
-      return a && { href: a.getAttribute('href'), target: a.target, rel: a.rel, label: a.getAttribute('aria-label') };
+      const wix = (await (await fetch('/src/js/data/company-sets.json')).json()).companies.find((c) => c.slug === 'wix');
+      return a && { href: a.getAttribute('href'), target: a.target, rel: a.rel, label: a.getAttribute('aria-label'), want: wix.careersIL ?? wix.careers, israel: Boolean(wix.careersIL) };
     });
-    if (!careers || !careers.href.startsWith('https://') || careers.target !== '_blank' || !/noopener/.test(careers.rel) || !/Wix careers site \(opens in a new tab\)/.test(careers.label)) throw new Error(`careers link: ${JSON.stringify(careers)}`);
+    const label = careers?.israel ? /Wix jobs in Israel \(opens in a new tab\)/ : /Wix careers site \(opens in a new tab\)/;
+    if (!careers || careers.href !== careers.want || !careers.href.startsWith('https://') || careers.target !== '_blank' || !/noopener/.test(careers.rel) || !label.test(careers.label)) throw new Error(`careers link: ${JSON.stringify(careers)}`);
     await expectText('.page-head .page-sub', /can be practiced here/);
     // Filters are chips; "On the site only" is a toggle chip (off by default on a desktop).
     if ((await page.getAttribute('#on-site-only', 'aria-pressed')) !== 'false') throw new Error('on-site filter should start off at 1440px');
