@@ -44,7 +44,7 @@ jobs:
           # Anything but docs and Markdown: unit tests and the browser smoke test.
           has '^(src/|e2e/|tests/|scripts/|db/|content/|deploy/|index\.html|privacy\.html|package(-lock)?\.json|\.github/workflows/ci\.yml)' code
           # Shipped solutions and what judges them: the per-language verifier.
-          has '^(src/js/problems/|src/js/engine/|scripts/verify/|tests/(solutions|typescript|growth-solutions)\.test\.js|package(-lock)?\.json|\.github/workflows/ci\.yml)' solutions
+          has '^(src/js/problems/|src/js/engine/|scripts/verify/|tests/(solutions|typescript|growth-solutions|programs)\.test\.js|package(-lock)?\.json|\.github/workflows/ci\.yml)' solutions
           # Schema and the git -> database sync, which reads the problem files.
           has '^(db/|scripts/db/|src/js/problems/|\.github/workflows/ci\.yml)' db
           # Pyodide steps of the smoke test: Python execution or problem content. A UI-only edit to
@@ -65,10 +65,15 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --no-audit --no-fund
+      # tests/programs.test.js builds every problem's native program twice (about 7 minutes, most of
+      # the unit test time) and reads only what the `solutions` pattern lists, so it runs with them.
       - name: Unit tests
-        run: npm test
+        run: node --test $(ls tests/*.test.js | grep -v '^tests/programs\.test\.js$')
         env:
           VERIFY_LANGUAGES: none
+      - name: Native program builder tests
+        if: needs.changes.outputs.solutions == 'true'
+        run: node --test tests/programs.test.js
       - name: Database schema and git -> database sync checks
         if: needs.changes.outputs.db == 'true'
         run: |
