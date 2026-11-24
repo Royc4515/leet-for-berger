@@ -2,6 +2,8 @@
  * Learning Path: the 131 essential problems by tier and topic, in prerequisite order, with
  * progress derived from solve data and a "Next up" pointer. Data: src/js/data/essential-path.json.
  */
+import { shareButton } from '../share.js';
+import { pathShare } from '../../data/share.js';
 import { h, mount, difficulty, stateBlock, loadingState, siteFooter, hexMark } from '../dom.js';
 import { catalogEntry } from '../../problems/index.js';
 import { pathProgress, conceptLabel, topicStartsOpen, TIER_SUMMARIES } from '../../data/learning-path.js';
@@ -125,7 +127,12 @@ export function renderPath(root, { store }) {
           'header.page-head',
           {},
           h('div', {}, h('span.eyebrow', {}, `${overall.total} problems · ${path.length} tiers`), h('h1', {}, 'Learning path'), h('p.page-sub', {}, 'The route through the map: one problem per subtopic, in prerequisite order. Finishing it means you have solved every core pattern once.')),
-          h('a.btn.btn-ghost.btn-sm', { href: nextTopic ? `#/map/${nextTopic.id}` : '#/map' }, 'See it on the map'),
+          h(
+            'div.page-head-actions',
+            {},
+            h('a.btn.btn-ghost.btn-sm', { href: nextTopic ? `#/map/${nextTopic.id}` : '#/map' }, 'See it on the map'),
+            shareButton({ name: 'Share your learning path progress', get: (lang) => pathShare({ ...overall, lang }) }),
+          ),
         ),
         h(
           'div.path-summary',

@@ -3,6 +3,8 @@
  * calendar that opens on this week, and the last seven dailies. Everything is computed from the
  * user's own progress and the deterministic daily pick; nothing is invented (no leaderboards).
  */
+import { shareButton } from '../share.js';
+import { dailyShare } from '../../data/share.js';
 import { h, mount, difficulty, stateBlock, loadingState, siteFooter, hexMark } from '../dom.js';
 import { catalogEntry } from '../../problems/index.js';
 import { dailyProblem, dailyCandidates } from '../../data/recommend.js';
@@ -80,7 +82,17 @@ export function renderDaily(root, { store }) {
       h(
         'div.page.daily-page',
         {},
-        h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, LONG.format(now)), h('h1', {}, 'Daily challenge'), h('p.page-sub', {}, 'One problem a day, the same for everyone, picked from the learning path. A new one at midnight, your time.'))),
+        h(
+          'header.page-head',
+          {},
+          h('div', {}, h('span.eyebrow', {}, LONG.format(now)), h('h1', {}, 'Daily challenge'), h('p.page-sub', {}, 'One problem a day, the same for everyone, picked from the learning path. A new one at midnight, your time.')),
+          dailyFor(today)
+            ? shareButton({
+                name: "Share today's daily challenge",
+                get: (lang) => dailyShare({ number: dailyNumber(today), title: catalogEntry(dailyFor(today))?.title ?? dailyFor(today), solved: isSolved(dailyFor(today)), streak, lang }),
+              })
+            : null,
+        ),
         dailyCard({ path, state, now, headingId: 'daily-today' }),
         h(
           'section.daily-facts',

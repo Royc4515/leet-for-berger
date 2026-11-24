@@ -29,6 +29,16 @@ jobs:
           cp index.html privacy.html _site/
           cp -r src _site/
           touch _site/.nojekyll
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      # A preview page and image for every shareable thing (scripts/share/build-share-pages.mjs),
+      # drawn with the runner's own Chrome.
+      - name: Share previews
+        run: node scripts/share/build-share-pages.mjs --out=_site
+        env:
+          PW_CHANNEL: chrome
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

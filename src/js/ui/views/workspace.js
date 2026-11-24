@@ -31,6 +31,8 @@ import { startTour, startTourIfDue } from '../tour.js';
 import { loadPath } from '../../data/path-loader.js';
 import { pathProgress, conceptLabel } from '../../data/learning-path.js';
 import { TOPICS as TAXONOMY } from '../../data/taxonomy.js';
+import { shareButton } from '../share.js';
+import { problemShare, solveShare } from '../../data/share.js';
 
 const LANG_KEY = 'lfb:lang';
 /** Whether "About this problem" was left open, so following a family link keeps it open. */
@@ -176,7 +178,8 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       'header.problem-head',
       {},
       crumb,
-      h('h1.problem-title', {}, problem.title),
+      // Practice only: in an interview or a battle the page is locked down for the session.
+      h('div.problem-title-row', {}, h('h1.problem-title', {}, problem.title), session ? null : shareButton({ compact: true, name: 'Share this problem', get: (lang) => problemShare({ ...problem, lang }) })),
       h('div.problem-tags', {}, difficulty(problem.difficulty), topicLabels.map((t) => h('span.tag', {}, t)), problem.patterns.map((p) => h('span.tag.tag-muted', {}, p))),
     ),
     aboutBlock,
@@ -525,7 +528,9 @@ export function renderWorkspace(root, { problem, store, session = null }) {
         const title = n ? catalogEntry(n.id)?.title : null;
         if (title) next = { href: `#/problem/${n.id}`, title };
       }
-      renderResult(consoleBody, result, { kind, argNames: problem.argNames, elapsedMs: performance.now() - started, next, firstSolve });
+      const languageLabel = languages.find((l) => l.id === language)?.label ?? language;
+      const share = session ? null : (lang) => solveShare({ ...problem, language: languageLabel, firstSolve, lang });
+      renderResult(consoleBody, result, { kind, argNames: problem.argNames, elapsedMs: performance.now() - started, next, firstSolve, share });
       // After an Accepted submit the emphasis moves to "Next" (one primary on screen).
       root.classList.toggle('has-accepted', Boolean(recordsSolve && next));
 

@@ -43,6 +43,16 @@ await page.addInitScript(() => {
 // the tour steps starts with them seen, so a tour never covers what a step is testing.
 const ALL_TOURS_SEEN = JSON.stringify(Object.fromEntries(Object.keys(TOURS).map((id) => [id, '2026-01-01'])));
 const SEEN_TOURS = (seen) => localStorage.setItem('lfb:tours:v1', seen);
+// Share buttons (ui/share.js): headless Chromium has no share sheet, so they copy; the copy is
+// caught here instead of touching the real clipboard.
+const stubShare = () =>
+  page.evaluate(() => {
+    window.__shared = null;
+    Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+    navigator.clipboard.writeText = async (t) => {
+      window.__shared = t;
+    };
+  });
 await page.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
 // Problem modules load one at a time, when a problem opens (ADR 0008); count what the page fetched.
 const PROBLEM_MODULE = /\/problems\/[^/]+\/problem\.js(\?|$)/;
@@ -255,6 +265,12 @@ try {
     await page.waitForSelector('.burst .burst-hex', { state: 'attached', timeout: 3000 });
     await page.waitForSelector('.burst', { state: 'detached', timeout: 5000 });
     await shot('03-accepted');
+    // Share the solve (owner's request): the problem and the language, never the code.
+    await stubShare();
+    await page.click('.result-head .share-btn');
+    await page.waitForFunction(() => window.__shared);
+    const solve = await page.evaluate(() => window.__shared);
+    if (!/^(Just solved|Solved) .+ \((Easy|Medium|Hard)\) in (JavaScript|Python 3|TypeScript): 15 of 15 tests passed\. Your turn\.\nhttps:\/\/.+\/s\/problem\/[\w-]+\.html$/.test(solve) || /function|return/.test(solve)) throw new Error(`solve share: ${JSON.stringify(solve)}`);
   });
 
   await check('walkthrough unlocks after the solve; submission history lists the submit with its code', async () => {
@@ -872,6 +888,12 @@ try {
       throw new Error(`report rows missing difficulty or named Review link: ${JSON.stringify(reportRows)}`);
     }
     await shot('08-report');
+    // The score can be shared: the score, its band and how many were solved, no problem content.
+    await stubShare();
+    await page.click('.report-actions .share-btn');
+    await page.waitForFunction(() => window.__shared);
+    const scoreShare = await page.evaluate(() => window.__shared);
+    if (!/^Mock interview: \d+\/100 \(.+\), \d of 2 solved against the clock\. Think you can beat it\?\nhttps:\/\/.+\/s\/interview\.html$/.test(scoreShare)) throw new Error(`interview share: ${JSON.stringify(scoreShare)}`);
     // Reset to setup so subsequent 390px route checks capture and measure the setup screen.
     await page.click('button:has-text("New interview")');
     await page.waitForSelector('.format-grid');
@@ -1785,6 +1807,10 @@ try {
     }
     await page.click('.page .state a:has-text("Back to problems")');
     await page.waitForSelector('.problem-table tbody tr a.problem-link');
+    // don't touch / the document keeps a module that failed to evaluate, so #/path stays broken
+    // until a reload; later checks (the share buttons) open the path again.
+    await page.reload();
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
   });
 
   await check('fast navigation dashboard, problem, back, problem leaves exactly one editor and one workspace', async () => {
@@ -2438,6 +2464,32 @@ try {
       if (r.running.length || r.faded) throw new Error(`${hash} under reduced motion: ${JSON.stringify(r)}`);
     }
     await ctx.close();
+  });
+
+  await check('share buttons: a problem, a company, a map place, the learning path and the daily each copy their own text and link', async () => {
+    const cases = [
+      // Links go to each thing's preview page on the public site (built on deploy), which forwards to it.
+      ['#/problem/pair-sum-target', '.problem-title-row .share-btn', /^Can you solve Pair Sum Target\? An Easy one, judged on 15 tests right in the browser\.$/, '/s/problem/pair-sum-target.html'],
+      ['#/companies/google', '.company-head .share-btn', /^(Interviewing at Google\? Its \d+ most asked problems|Practising for Google: \d+ of its \d+ most asked)/, '/s/company/google.html'],
+      ['#/map/graphs', '.map-brief .brief-title-row .share-btn', /^Graphs, \d+ problems: explore it on the Leet-For-Berger map of interview topics\.$/, '/s/map/graphs.html'],
+      ['#/path', '.page-head-actions .share-btn', /learning path/, '/s/path.html'],
+      ['#/daily', '.daily-page .page-head .share-btn', /^Daily challenge #\d+: .+\. (Solved\. |Solved, \d+ days in a row\. )?Same problem for everyone today, can you\?$/, '/s/daily.html'],
+    ];
+    for (const [hash, selector, text, link] of cases) {
+      await page.goto(`${BASE}${hash}`);
+      await page.waitForSelector(selector, { timeout: 15000 }).catch((e) => {
+        throw new Error(`${hash}: no ${selector} (${e.message.split('\n')[0]})`);
+      });
+      const name = await page.locator(selector).getAttribute('aria-label');
+      if (!/^Share /.test(name ?? '')) throw new Error(`${hash}: share button name ${JSON.stringify(name)}`);
+      await stubShare();
+      await page.click(selector);
+      await page.waitForFunction(() => window.__shared);
+      const shared = await page.evaluate(() => window.__shared);
+      const [line, url] = shared.split('\n');
+      if (!text.test(line) || !url?.endsWith(link) || !url.startsWith('https://')) throw new Error(`${hash}: shared ${JSON.stringify(shared)}`);
+    }
+    await expectText('.toast', /Link copied/);
   });
 
   await check('zero console errors across the whole session', async () => {

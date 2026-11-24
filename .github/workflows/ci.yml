@@ -99,7 +99,7 @@ jobs:
       # and its system packages; download only where it is missing.
       - name: Browser for the smoke test
         id: browser
-        if: needs.changes.outputs.e2e == 'true'
+        if: needs.changes.outputs.e2e == 'true' || contains(needs.changes.outputs.tests, 'tests/share-pages.test.js')
         run: |
           if command -v google-chrome >/dev/null; then
             google-chrome --version
@@ -110,6 +110,13 @@ jobs:
       - name: E2E smoke test (Monaco, workers, Pyodide, zero console errors)
         if: needs.changes.outputs.e2e == 'true'
         run: node e2e/smoke.mjs --shots=e2e-shots ${{ needs.changes.outputs.python == 'true' && ' ' || '--no-python' }}
+        env:
+          PW_CHANNEL: ${{ steps.browser.outputs.channel }}
+      # The preview images behind shared links are drawn on deploy: draw a sample here first, so a
+      # broken card fails the PR, not the deploy. Runs when anything the pages read changed.
+      - name: Share preview sample
+        if: contains(needs.changes.outputs.tests, 'tests/share-pages.test.js')
+        run: node scripts/share/build-share-pages.mjs --out=share-sample --sample=12
         env:
           PW_CHANNEL: ${{ steps.browser.outputs.channel }}
       - name: Upload screenshots

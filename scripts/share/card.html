@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- The image of a shared link's preview (1200 x 630), drawn by scripts/share/build-share-pages.mjs:
+     it calls render(card) for each page of scripts/share/pages.mjs and takes a screenshot.
+     Site tokens and fonts come from the site's own stylesheet. -->
+<link rel="stylesheet" href="../../src/css/app.css">
+<style>
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: var(--bg); }
+  .card {
+    position: relative; box-sizing: border-box; width: 1200px; height: 630px; padding: 64px 72px;
+    display: grid; grid-template-columns: minmax(0, 1fr) 420px; grid-template-rows: auto 1fr auto; column-gap: 48px;
+    background: radial-gradient(ellipse 70% 90% at 85% 50%, color-mix(in srgb, var(--glow, var(--accent)) 16%, transparent), transparent 70%), var(--bg);
+    color: var(--text); font-family: var(--font);
+  }
+  .brand { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: -0.01em; }
+  .brand img { width: 40px; height: 40px; }
+  .brand b { font-weight: 700; }
+  .brand span { color: var(--text-2); }
+  .copy { align-self: center; display: grid; gap: 18px; min-width: 0; }
+  .eyebrow { font-family: var(--mono); font-size: 20px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-2); }
+  h1 { margin: 0; font-family: var(--display); font-size: 84px; line-height: 0.98; letter-spacing: -0.035em; font-weight: 700; overflow-wrap: anywhere;
+       display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  h1.long { font-size: 66px; }
+  .sub { margin: 0; font-size: 28px; color: var(--text-2); display: flex; align-items: center; gap: 14px; }
+  .pips { display: inline-flex; gap: 6px; }
+  .pips i { width: 14px; height: 14px; border-radius: 50%; background: var(--panel-3); }
+  .d-easy .pips i.on { background: var(--easy); } .d-medium .pips i.on { background: var(--medium); } .d-hard .pips i.on { background: var(--hard); }
+  .art { grid-row: 2; grid-column: 2; align-self: center; justify-self: center; display: grid; place-items: center; }
+  .foot { grid-column: 1 / -1; font-family: var(--mono); font-size: 20px; color: var(--muted); letter-spacing: 0.04em; }
+  .hex { width: 60px; height: 68px; clip-path: var(--hex); background: var(--panel-3); }
+  .hex.open { background: color-mix(in srgb, var(--accent) 70%, var(--panel-3)); }
+  .hex.lit { background: var(--ok); }
+  .comb { display: grid; gap: 8px; }
+  .comb .row { display: flex; gap: 8px; }
+  .comb .row:nth-child(even) { margin-left: 34px; }
+  /* Logos are 128 px files: kept near that size so they stay sharp. */
+  .tile { width: 230px; height: 230px; border-radius: 40px; background: var(--logo-plate); box-shadow: inset 0 0 0 2px var(--logo-edge); display: grid; place-items: center; }
+  .tile img { width: 64%; height: 64%; object-fit: contain; }
+  .tile.bleed { background: transparent; box-shadow: none; }
+  .tile.bleed img { width: 100%; height: 100%; border-radius: 40px; object-fit: cover; }
+  .tile .letters { font-family: var(--display); font-weight: 700; font-size: 96px; color: var(--logo-ink); }
+  .tiers { display: flex; align-items: flex-end; gap: 10px; }
+  .tiers .hex { width: 46px; height: 52px; }
+  .tiers .col { display: grid; gap: 6px; }
+  .ring { width: 280px; height: 280px; border-radius: 50%; background: conic-gradient(var(--accent) 0 72%, var(--panel-3) 72% 100%); display: grid; place-items: center; }
+  .ring::after { content: ''; width: 236px; height: 236px; border-radius: 50%; background: var(--bg); grid-area: 1 / 1; }
+  .ring span { grid-area: 1 / 1; z-index: 1; font-family: var(--display); font-size: 64px; font-weight: 700; }
+  .race { display: grid; gap: 28px; width: 380px; }
+  .race .bar { height: 40px; border-radius: 20px; background: var(--panel-3); overflow: hidden; }
+  .race .bar i { display: block; height: 100%; border-radius: 20px; background: var(--accent); }
+  .race .bar.them i { background: var(--text-2); }
+  .race .who { font-size: 22px; color: var(--text-2); margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="brand"><img src="../../src/brand/logo.svg" alt=""><b>Leet<span>-For-</span>Berger</b></div>
+  <div class="copy"><div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="sub" id="sub"></p></div>
+  <div class="art" id="art"></div>
+  <div class="foot">royc4515.github.io/leet-for-berger</div>
+</div>
+<script>
+  const el = (tag, cls, ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids); return e; };
+  const hexes = (n, cls = () => '') => Array.from({ length: n }, (_, i) => el('div', `hex ${cls(i)}`));
+  /** Rows of hexes, offset like a honeycomb. */
+  const comb = (cells, perRow) => {
+    const rows = [];
+    for (let i = 0; i < cells.length; i += perRow) rows.push(el('div', 'row', ...cells.slice(i, i + perRow)));
+    return el('div', 'comb', ...rows);
+  };
+  const ART = {
+    // The 15 tests of every problem: 5 open, 10 hidden, as the verdict draws them.
+    problem: () => comb(hexes(15, (i) => (i < 5 ? 'open' : '')), 5),
+    topic: (c) => comb(hexes(Math.min(c.hexes, 20), (i) => (i < 3 ? 'lit' : '')), Math.min(5, Math.max(3, Math.ceil(Math.sqrt(Math.min(c.hexes, 20)))))),
+    subtopic: (c) => comb(hexes(Math.min(c.hexes, 12), (i) => (i === 0 ? 'lit' : '')), Math.min(4, Math.max(2, c.hexes))),
+    company: (c) => {
+      const tile = el('div', `tile${c.bleed ? ' bleed' : ''}`);
+      if (c.logo) {
+        const i = el('img');
+        i.src = c.logo;
+        tile.append(i);
+      } else tile.append(el('span', 'letters', c.letters));
+      return tile;
+    },
+    path: (c) => el('div', 'tiers', ...Array.from({ length: c.tiers }, (_, t) => el('div', 'col', ...hexes(t + 1, (i) => (t === 0 || (t === 1 && i === 0) ? 'lit' : ''))))),
+    daily: () => comb(hexes(7, (i) => (i < 4 ? 'lit' : i === 6 ? 'open' : '')), 7),
+    interview: () => { const r = el('div', 'ring'); r.append(el('span', '', '45:00')); return r; },
+    battle: () => el('div', 'race', el('div', '', el('div', 'who', 'You'), el('div', 'bar', Object.assign(el('i'), { style: 'width: 80%' }))), el('div', '', el('div', 'who', 'Bot'), el('div', 'bar them', Object.assign(el('i'), { style: 'width: 55%' })))),
+  };
+  /** Draws one card; resolves when its images have loaded. */
+  window.render = async (c) => {
+    const card = document.getElementById('card');
+    card.className = `card k-${c.kind}${c.difficulty ? ` d-${c.difficulty.toLowerCase()}` : ''}`;
+    card.style.setProperty('--glow', c.color || 'var(--accent)');
+    document.getElementById('eyebrow').textContent = c.eyebrow;
+    const title = document.getElementById('title');
+    title.textContent = c.title;
+    title.classList.toggle('long', c.title.length > 22);
+    const sub = document.getElementById('sub');
+    sub.replaceChildren();
+    if (c.difficulty) {
+      const n = { Easy: 1, Medium: 2, Hard: 3 }[c.difficulty] ?? 1;
+      sub.append(el('span', 'pips', ...[1, 2, 3].map((k) => el('i', k <= n ? 'on' : ''))));
+    }
+    sub.append(el('span', '', c.sub));
+    document.getElementById('art').replaceChildren((ART[c.kind] ?? (() => ''))(c));
+    await document.fonts.ready;
+    await Promise.all([...document.images].map((i) => (i.complete ? null : new Promise((r) => { i.onload = i.onerror = r; }))));
+  };
+</script>
+</body>
+</html>

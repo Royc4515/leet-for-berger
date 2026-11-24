@@ -3,6 +3,8 @@
  * (#/companies/<slug>), the problems it asks, most frequent first, one row per family.
  * Data: src/js/data/company-sets.json (built by scripts/content/build-meta.mjs), fetched on demand.
  */
+import { shareButton } from '../share.js';
+import { companyShare } from '../../data/share.js';
 import { h, mount, difficulty, chip, chipGroup, segmented, ilMark, stateBlock, loadingState, siteFooter, hexMark, companyMark } from '../dom.js';
 import { loadSets, loadProblemTopics, loadCompanyLogos, companyLogo } from '../../data/company-loader.js';
 import { TOPICS } from '../../data/taxonomy.js';
@@ -416,6 +418,10 @@ export function renderCompany(root, { store, slug }) {
             // Its job search filtered to Israel where it has one (owner's request), else its careers
             // site (content/company-careers.json, checked by check-careers.mjs).
             careersLink(company),
+            shareButton({
+              name: `Share ${company.name}'s practice set`,
+              get: (lang) => companyShare({ ...company, ...companyProgress(expandRows(sets, company), isSolvedIn(store.get())), lang }),
+            }),
           ),
         ),
         facts,
