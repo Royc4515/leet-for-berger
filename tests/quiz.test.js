@@ -6,6 +6,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { QUIZ_TOPICS, QUIZ_LANGS } from '../src/js/data/quiz-topics.js';
 import { QUIZ_INDEX } from '../src/js/data/quiz-index.js';
 import { readBank, buildOutputs, forLang } from '../scripts/content/build-quiz.mjs';
+import { shareText } from '../src/js/data/quiz-share.js';
+import { createQuizBoard } from '../src/js/auth/quiz-board.js';
 import {
   QUIZ_MODES,
   SURVIVAL_CAP,
@@ -14,6 +16,7 @@ import {
   shuffleOptions,
   pickIds,
   buildQuiz,
+  authoredChoices,
   startQuiz,
   startDailyQuiz,
   dailyQuizIds,
@@ -83,7 +86,7 @@ test('correct answers are spread over positions as authored', () => {
 test('the built index and per-language files match content/quiz', () => {
   assert.deepEqual(QUIZ_INDEX.map((e) => e.id), SOURCE.map((x) => x.id), `index is stale; ${REGEN}`);
   for (const [path, text] of buildOutputs(SOURCE)) {
-    if (path.endsWith('.js')) continue; // the index is compared above, as data
+    if (path.endsWith('quiz-index.js')) continue; // the index is compared above, as data
     assert.equal(readFileSync(path, 'utf8'), text, `${path} is stale; ${REGEN}`);
   }
 });
@@ -284,7 +287,7 @@ test('recordSession counts answers, keeps the first daily result and the best pe
 
   p = recordSession(p, { mode: 'practice', daily: '2026-11-23', answers: [ans('b-1', true)] });
   p = recordSession(p, { mode: 'practice', daily: '2026-11-23', answers: [ans('b-1', true), ans('b-2', true)] });
-  assert.deepEqual(p.daily['2026-11-23'], { correct: 1, total: 1 }, 'a replay does not overwrite the day');
+  assert.deepEqual(p.daily['2026-11-23'], { correct: 1, total: 1, results: [true] }, 'a replay does not overwrite the day');
   assert.equal(p.best.practice, 2, 'the daily does not set a best');
 });
 
@@ -306,4 +309,66 @@ test('normalizeQuizProgress survives junk', () => {
   assert.deepEqual(normalizeQuizProgress('x'), emptyQuizProgress());
   const p = normalizeQuizProgress({ questions: { ok: { seen: 1, correct: 1, last: 1 }, bad: { seen: 'x' } }, daily: { '2026-11-23': { correct: 3, total: 5 }, nope: { correct: 1, total: 1 } }, best: { sprint: 7, survival: 'x' } });
   assert.deepEqual(p, { questions: { ok: { seen: 1, correct: 1, last: true } }, daily: { '2026-11-23': { correct: 3, total: 5 } }, best: { sprint: 7 } });
+});
+
+/* ---------- daily quiz: sharing, server choices, board client ---------- */
+
+test('a played question maps shown choices back to the authored order for the server', () => {
+  const s = startQuiz({ bank: BANK, mode: 'practice', seed: 21, now: 0 });
+  let cur = s;
+  cur = answerQuestion(cur, 2, 1);
+  cur = showNext(cur, 1);
+  cur = answerQuestion(cur, cur.questions[1].answer, 2);
+  const choices = authoredChoices(cur);
+  for (const [i, c] of choices.entries()) {
+    const played = cur.questions[i];
+    const authored = BANK.find((q) => q.id === c.id);
+    assert.equal(authored.options[c.choice], played.options[cur.answers[i].choice], 'same option text');
+  }
+  assert.equal(choices[1].choice, BANK.find((q) => q.id === choices[1].id).answer, 'a right answer maps to the authored key');
+});
+
+test('share text: squares in order, no spoilers, streak and rank when known, both languages', () => {
+  const en = shareText({ number: 2, results: [true, false, true, true, true], streak: 3, rank: 4, players: 27, lang: 'en', url: 'https://site/#/quiz/daily' });
+  assert.equal(en, 'Daily quiz #2 · 4/5\n🟩🟥🟩🟩🟩\n🔥 3-day streak · 🏆 #4 of 27\nCan you beat it? https://site/#/quiz/daily');
+  const plain = shareText({ number: 1, results: [true, true], streak: 1, lang: 'en', url: 'u' });
+  assert.equal(plain, 'Daily quiz #1 · 2/2\n🟩🟩\nCan you beat it? u', 'a 1-day streak and an unknown rank stay out');
+  const he = shareText({ number: 2, results: [false], streak: 5, lang: 'he', url: 'u' });
+  assert.match(he, /^חידון יומי #2 · 0\/1\n🟥\n🔥 רצף של 5 ימים\nאפשר לנסות בעצמך: u$/);
+  assert.ok(!/[!–—]/.test(en + he));
+});
+
+test('the daily result keeps its squares, and old records without them still load', () => {
+  const p = recordSession(emptyQuizProgress(), { mode: 'practice', daily: '2026-11-24', answers: [{ id: 'a', correct: true }, { id: 'b', correct: false }] });
+  assert.deepEqual(p.daily['2026-11-24'], { correct: 1, total: 2, results: [true, false] });
+  assert.deepEqual(normalizeQuizProgress({ daily: { '2026-11-23': { correct: 3, total: 5 } } }).daily['2026-11-23'], { correct: 3, total: 5 });
+  assert.equal(normalizeQuizProgress({ daily: { '2026-11-23': { correct: 3, total: 5, results: ['x'] } } }).daily['2026-11-23'].results, undefined);
+});
+
+test('board client: reads the board signed out, submits choices with the session, surfaces errors', async () => {
+  const calls = [];
+  let token = null;
+  const account = { config: { supabaseUrl: 'https://p.supabase.co', supabaseAnonKey: 'anon', enabled: true }, accessToken: async () => token };
+  const fetchImpl = async (url, init) => {
+    calls.push({ url, init });
+    if (url.includes('/fail')) return new Response(JSON.stringify({ error: 'nope' }), { status: 500 });
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  };
+  const board = createQuizBoard({ account, fetchImpl });
+  assert.equal(board.available, true);
+  await board.board('2026-11-24');
+  assert.equal(calls[0].url, 'https://p.supabase.co/functions/v1/daily-quiz/board?day=2026-11-24');
+  assert.equal(calls[0].init.method, 'GET');
+  assert.equal(calls[0].init.headers.Authorization, undefined);
+  token = 'jwt';
+  await board.submit({ day: '2026-11-24', answers: [{ id: 'x', choice: 1 }], ms: 5 });
+  assert.equal(calls[1].init.method, 'POST');
+  assert.equal(calls[1].init.headers.Authorization, 'Bearer jwt');
+  assert.deepEqual(JSON.parse(calls[1].init.body), { day: '2026-11-24', answers: [{ id: 'x', choice: 1 }], ms: 5 });
+  await board.setName('Roy');
+  assert.equal(calls[2].url, 'https://p.supabase.co/functions/v1/daily-quiz/name');
+  assert.deepEqual(JSON.parse(calls[2].init.body), { name: 'Roy' });
+  assert.equal(createQuizBoard({ account: { ...account, config: { ...account.config, enabled: false } }, fetchImpl }).available, false);
+  const failing = createQuizBoard({ account: { ...account, config: { ...account.config, supabaseUrl: 'https://p/fail' } }, fetchImpl });
+  await assert.rejects(failing.board('2026-11-24'), /nope/);
 });

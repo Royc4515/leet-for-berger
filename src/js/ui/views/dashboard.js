@@ -8,6 +8,7 @@ import { stats } from '../../state/progress.js';
 import { weakSpots } from '../../data/recommend.js';
 import { loadPath } from '../../data/path-loader.js';
 import { dailyCard } from '../daily-card.js';
+import { quizCard } from '../quiz-card.js';
 import { countUp } from '../motion.js';
 
 const HEAD_DATE = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -68,6 +69,7 @@ export function renderDashboard(root, { store }) {
     mount(
       today,
       dailyCard({ path, state, now: new Date(), compact: true }),
+      quizCard({ now: new Date() }),
       h(
         `section.today-card.today-weak${spots.length ? '' : '.is-empty'}`,
         { 'aria-labelledby': 'weak-title' },

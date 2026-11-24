@@ -3312,6 +3312,7 @@ body.lockdown .toast-host {
 .today-row {
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  grid-template-areas: 'daily weak' 'quiz quiz';
   gap: var(--s-4);
   margin-bottom: var(--s-6);
 }
@@ -3450,6 +3451,78 @@ body.lockdown .toast-host {
 
 .today-streak span {
   color: var(--muted);
+}
+
+.today-row > .today-daily {
+  grid-area: daily;
+}
+
+.today-row > .today-weak {
+  grid-area: weak;
+}
+
+.today-row > .today-quiz {
+  grid-area: quiz;
+}
+
+.today-quiz {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-5);
+  border-color: var(--accent-line);
+}
+
+.today-quiz-copy {
+  display: grid;
+  gap: var(--s-1);
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.today-quiz-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--fs-xl);
+}
+
+.today-quiz-side {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.quiz-streak-badge {
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-pill);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+}
+
+.quiz-squares {
+  display: flex;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quiz-square {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-tag);
+  background: var(--panel-3);
+}
+
+.quiz-square.is-correct {
+  background: var(--ok);
+}
+
+.quiz-square.is-wrong {
+  background: var(--bad);
 }
 
 .today-weak {
@@ -3779,6 +3852,7 @@ body.lockdown .toast-host {
 @media (max-width: 900px) {
   .today-row {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'daily' 'quiz' 'weak';
   }
 
   .daily-facts {
@@ -3885,6 +3959,35 @@ body.lockdown .toast-host {
   .dashboard-page > .dashboard-table-wrap,
   .dashboard-page > .dashboard-empty {
     order: 4;
+  }
+
+  .dashboard-page .today-quiz {
+    order: 2;
+    margin-bottom: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+  }
+
+  /* One line on a phone: the problem list must still start on the first screen. */
+  .dashboard-page .today-quiz {
+    flex-wrap: nowrap;
+    gap: var(--s-3);
+    margin-bottom: var(--s-1-5);
+    padding: var(--s-1) var(--s-3);
+  }
+
+  .dashboard-page .today-daily:has(+ .today-quiz) {
+    margin-bottom: var(--s-2);
+    padding-block: var(--s-3);
+  }
+
+  .dashboard-page .today-quiz .hint-text,
+  .dashboard-page .today-quiz-title,
+  .dashboard-page .today-quiz .quiz-squares {
+    display: none;
+  }
+
+  .dashboard-page .today-quiz-copy {
+    flex: 1 1 auto;
   }
 
   .dashboard-page .today-weak {
@@ -5063,6 +5166,7 @@ body.resizing-y * {
   /* Under 16 px, mobile Safari zooms the page on focus and leaves it zoomed. */
   .custom-input,
   .mentor-input,
+  .quiz-name-input,
   .search,
   .palette-input {
     font-size: var(--fs-lg);
@@ -7573,6 +7677,113 @@ body.resizing-y * {
 
 .quiz-review-label {
   color: var(--muted);
+}
+
+.quiz-squares-lg .quiz-square {
+  width: 28px;
+  height: 28px;
+}
+
+.quiz-share-btn {
+  margin-top: var(--s-2);
+}
+
+.quiz-board {
+  margin-bottom: var(--s-6);
+}
+
+.quiz-board-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  margin-bottom: var(--s-3);
+}
+
+.quiz-board-me {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+}
+
+.quiz-name-form {
+  display: grid;
+  gap: var(--s-2);
+  max-width: 24rem;
+  margin-bottom: var(--s-4);
+}
+
+.quiz-name-input {
+  padding: var(--s-2) var(--s-3);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+.quiz-name-form .hint-text {
+  margin: 0;
+}
+
+.quiz-board-list {
+  display: grid;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quiz-board-row {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto 4.5rem;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+.quiz-board-row.is-you {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.quiz-board-rank,
+.quiz-board-score,
+.quiz-board-time {
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+}
+
+.quiz-board-rank {
+  color: var(--muted);
+}
+
+.quiz-board-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quiz-board-you {
+  color: var(--accent);
+  font-size: var(--fs-sm);
+}
+
+.quiz-board-time {
+  color: var(--muted);
+  text-align: end;
+}
+
+.quiz-board-join {
+  margin-top: var(--s-4);
+}
+
+.quiz-board-cta {
+  justify-content: flex-start;
+  margin-bottom: var(--s-5);
 }
 
 @media (max-width: 640px) {

@@ -21,7 +21,7 @@ import { daysBetween } from '../data/daily.js';
  * @typedef {{ id: string, topic: string, subtopic?: string, level: string, q: string, code?: string, lang?: string, options: string[], answer: number, why: string, wrong?: (string|null)[], ref?: string }} QuizQuestion
  * @typedef {{ id: string, title: { en: string, he: string } }} QuizTopic
  * @typedef {{ id: string, label: string, note: string, count: number, lives: number|null, seconds: number|null }} QuizMode
- * @typedef {QuizQuestion} PlayedQuestion
+ * @typedef {QuizQuestion & { order?: number[] }} PlayedQuestion
  * @typedef {{ id: string, choice: number, correct: boolean, ms: number }} QuizAnswer
  * @typedef {{ mode: string, topics: string[], questions: PlayedQuestion[], answers: QuizAnswer[], lives: number|null, startedAt: number, deadline: number|null, shownAt: number, endedAt: number|null, daily: string|null }} QuizSession
  */
@@ -88,7 +88,9 @@ export function shuffled(list, rand) {
  */
 export function shuffleOptions(question, rand) {
   const order = shuffled(question.options.map((_, i) => i), rand);
-  const played = { ...question, options: order.map((i) => question.options[i]), answer: order.indexOf(question.answer) };
+  // `order` maps a shown position back to the authored one: the daily-quiz server scores choices
+  // in authored order, so it never has to repeat the shuffle.
+  const played = { ...question, options: order.map((i) => question.options[i]), answer: order.indexOf(question.answer), order };
   if (Array.isArray(question.wrong)) played.wrong = order.map((i) => question.wrong[i] ?? null);
   return played;
 }
@@ -181,6 +183,16 @@ export function dailyQuizIds(index, day) {
   const rest = shuffled(sorted.filter((q) => !picks.includes(q.id)), rand);
   while (picks.length < DAILY_QUIZ_SIZE && rest.length) picks.push(rest.shift().id);
   return picks;
+}
+
+/**
+ * A finished session's choices in authored option order, for the daily-quiz server.
+ * @param {QuizSession} s
+ * @returns {{ id: string, choice: number }[]}
+ */
+export function authoredChoices(s) {
+  const byId = new Map(s.questions.map((q) => [q.id, q]));
+  return s.answers.map((a) => ({ id: a.id, choice: byId.get(a.id)?.order?.[a.choice] ?? a.choice }));
 }
 
 /**

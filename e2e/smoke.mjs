@@ -1601,6 +1601,41 @@ try {
     if (pushes.length !== 1 || pushes[0].problemId !== 'pair-sum-target' || pushes[0].assisted !== false || !pushes[0].code.includes('function')) throw new Error(`unexpected pushes: ${JSON.stringify(pushes).slice(0, 200)}`);
 
     // Sign-out asks first, closes the menu before opening the dialog, keeps everything on Cancel, and clears this user's data on confirm.
+    // Board nickname: a signed-in player sees the name the board shows, changes it, and the board reloads with it.
+    let nick = null;
+    const nameCalls = [];
+    await acct.route('https://example.supabase.co/functions/v1/daily-quiz/**', async (r) => {
+      const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type' };
+      if (r.request().method() === 'OPTIONS') return r.fulfill({ status: 204, headers: cors });
+      const url = new URL(r.request().url());
+      if (url.pathname.endsWith('/name')) {
+        const name = JSON.parse(r.request().postData()).name.trim();
+        nameCalls.push(name);
+        nick = name || null;
+        return r.fulfill({ contentType: 'application/json', headers: cors, body: JSON.stringify({ name: nick ?? 'Ada', custom: Boolean(nick) }) });
+      }
+      const day = url.searchParams.get('day');
+      const shown = nick ?? 'Ada';
+      return r.fulfill({ contentType: 'application/json', headers: cors, body: JSON.stringify({ day, week: { start: day, end: day }, players: 1, daily: [{ rank: 1, name: shown, correct: 4, total: 5, ms: 60000, you: true }], weekly: [], me: { streak: 2, played: true, name: shown, custom: Boolean(nick) } }) });
+    });
+    await acct.evaluate(() => localStorage.setItem('lfb:quiz-lang', 'en'));
+    await acct.goto(`${BASE}#/quiz/board`);
+    await acct.waitForSelector('.quiz-board-me:has-text("On the board as Ada")');
+    await acct.click('.quiz-board-rename');
+    await acct.waitForFunction(() => document.activeElement?.id === 'quiz-name');
+    await acct.fill('#quiz-name', 'x');
+    await acct.click('.quiz-name-form button[type="submit"]');
+    await acct.waitForSelector('.toast:has-text("Use 2 to 24 characters")');
+    if (nameCalls.length) throw new Error('a too-short name reached the server');
+    await acct.fill('#quiz-name', '  Ace  ');
+    await acct.click('.quiz-name-form button[type="submit"]');
+    await acct.waitForSelector('.quiz-board-me:has-text("On the board as Ace")');
+    await acct.waitForSelector('.quiz-board-row.is-you:has-text("Ace")');
+    if (shotsDir) await acct.screenshot({ path: `${shotsDir}/31-quiz-nickname.png` });
+    await acct.click('.quiz-board-rename');
+    await acct.click('.quiz-name-form button:has-text("Use my account name")');
+    await acct.waitForSelector('.quiz-board-me:has-text("On the board as Ada")');
+    if (JSON.stringify(nameCalls) !== '["Ace",""]') throw new Error(`name calls: ${JSON.stringify(nameCalls)}`);
     await acct.goto(`${BASE}#/`);
     await acct.waitForSelector('#account .account-name:has-text("Ada")');
     const stored = () => acct.evaluate(() => ({ progress: JSON.parse(localStorage.getItem('lfb:progress:v1') ?? 'null'), drafts: Object.keys(localStorage).filter((k) => k.startsWith('lfb:draft:')) }));
@@ -1945,6 +1980,8 @@ try {
 
   await check('quiz: one topic in practice mode, 10 questions with feedback, results with a review; keys 1-4 and Enter work', async () => {
     await page.evaluate(() => { localStorage.removeItem('lfb:quiz:v1'); localStorage.setItem('lfb:quiz-lang', 'en'); });
+    await page.goto(`${BASE}#/`);
+    await page.waitForSelector('.today-quiz .today-quiz-cta[href="#/quiz/daily"]');
     await page.goto(`${BASE}#/quiz`);
     await page.waitForSelector('.quiz-topic');
     const hub = await page.evaluate(() => ({ topics: document.querySelectorAll('.quiz-topic').length, primaries: document.querySelectorAll('#view .btn-primary').length, all: document.querySelector('.quiz-all')?.getAttribute('aria-pressed') }));
@@ -2021,12 +2058,81 @@ try {
     await page.waitForSelector('.quiz-results');
     await expectText('.quiz-results .eyebrow', /^Daily quiz No\. \d+$/);
     if (topics.size !== 5) throw new Error(`daily quiz topics: ${[...topics]}`);
+    // Accounts are off in this context: five squares and a share button, and no board at all.
+    const res = await page.evaluate(() => ({ squares: document.querySelectorAll('.quiz-results .quiz-squares-lg .quiz-square').length, board: Boolean(document.querySelector('.quiz-board')) }));
+    if (res.squares !== 5 || res.board) throw new Error(`daily results: ${JSON.stringify(res)}`);
+    await page.evaluate(() => {
+      window.__shared = null;
+      Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+      navigator.clipboard.writeText = async (t) => { window.__shared = t; };
+    });
+    await page.click('.quiz-share-btn');
+    await page.waitForFunction(() => window.__shared);
+    const shared = await page.evaluate(() => window.__shared);
+    if (!/^Daily quiz #\d+ · \d\/5\n[🟩🟥]{5}\n/u.test(shared) || !shared.includes('#/quiz/daily')) throw new Error(`share text: ${JSON.stringify(shared)}`);
+    // The Problems page promotes the quiz: done today, so squares and a leaderboard link.
+    await page.goto(`${BASE}#/`);
+    await page.waitForSelector('.today-quiz');
+    const card = await page.evaluate(() => ({ squares: document.querySelectorAll('.today-quiz .quiz-square').length, board: document.querySelector('.today-quiz a[href="#/quiz/board"]') !== null }));
+    if (card.squares !== 5 || !card.board) throw new Error(`problems page quiz card: ${JSON.stringify(card)}`);
     await page.goto(`${BASE}#/daily`);
     await page.waitForSelector('.daily-quiz-card');
     await expectText('.daily-quiz-card', /Done: \d \/ 5 correct\. 1-day quiz streak\./);
     await page.goto(`${BASE}#/quiz/daily`);
     await page.waitForSelector('#quiz-done-title');
     await expectText('.quiz-result-card', /Done for today/);
+  });
+
+  await check('daily quiz leaderboard with accounts on: read-only board signed out, today and this week, no submit, its own page', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const bp = await ctx.newPage();
+    bp.on('console', (m) => m.type() === 'error' && errors.push(`console (board page): ${m.text()}`));
+    bp.on('pageerror', (e) => errors.push(`pageerror (board page): ${e.message}`));
+    await bp.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = 'https://example.supabase.co';
+      window.LFB_SUPABASE_ANON_KEY = 'public-anon-key';
+      localStorage.setItem('lfb:quiz-lang', 'en');
+    });
+    await bp.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    // The daily-quiz Edge Function lives on Supabase; the smoke test serves a fixed board instead,
+    // so it never depends on the network and a missing function cannot log a CORS error.
+    const FAKE_BOARD = (day) => ({
+      day,
+      week: { start: day, end: day },
+      players: 3,
+      daily: [
+        { rank: 1, name: 'Noa Levi', correct: 5, total: 5, ms: 61000, you: false },
+        { rank: 2, name: 'Ari Cohen', correct: 4, total: 5, ms: 75000, you: false },
+        { rank: 3, name: 'Dana Mizrahi', correct: 3, total: 5, ms: 90000, you: false },
+      ],
+      weekly: [{ rank: 1, name: 'Noa Levi', correct: 14, ms: 200000, days: 3, you: false }],
+    });
+    const boardRequests = [];
+    await bp.route('**/functions/v1/daily-quiz/**', (route) => {
+      // The board call sends an apikey header, so the browser asks with a CORS preflight first.
+      if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' } });
+      const url = new URL(route.request().url());
+      boardRequests.push(`${route.request().method()} ${url.pathname}`);
+      route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(FAKE_BOARD(url.searchParams.get('day') ?? '')) });
+    });
+    await bp.goto(`${BASE}#/quiz/daily`);
+    for (let i = 0; i < 5; i++) {
+      await bp.waitForSelector('.quiz-option:not(:disabled)');
+      await bp.click('.quiz-option >> nth=0');
+      await bp.click('.quiz-next');
+    }
+    await bp.waitForSelector('.quiz-board-row');
+    const res = await bp.evaluate(() => ({ rows: document.querySelectorAll('.quiz-board-row').length, join: Boolean(document.querySelector('.quiz-board-join')), players: document.querySelector('.quiz-board-head')?.textContent }));
+    if (res.rows !== 3 || !res.join || !/3 played today/.test(res.players ?? '')) throw new Error(`board: ${JSON.stringify(res)}`);
+    if (boardRequests.some((r) => r.startsWith('POST'))) throw new Error('a signed-out player submitted to the board');
+    await bp.click('.quiz-board .segmented-btn[data-value="weekly"]');
+    await bp.waitForFunction(() => document.querySelectorAll('.quiz-board-row').length === 1 && /Noa Levi/.test(document.querySelector('.quiz-board-row').textContent));
+    if (shotsDir) await bp.screenshot({ path: `${shotsDir}/30-quiz-board.png` });
+    await bp.goto(`${BASE}#/quiz/board`);
+    await bp.waitForSelector('.quiz-board-row');
+    await bp.waitForFunction(() => /Leaderboard/.test(document.querySelector('h1')?.textContent ?? ''));
+    await ctx.close();
   });
 
   await check('quiz sprint shows a clock, survival shows three lives, and End asks before scoring', async () => {
