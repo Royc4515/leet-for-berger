@@ -70,6 +70,21 @@ test('interview session: timer, attempts, status, warning window, score band, in
   assert.equal(formatClock(65_000), '01:05');
 });
 
+test('interview analytics takes now for a running session (invariant 6)', () => {
+  const t0 = 1_700_000_000_000;
+  let s = createSession({ problemIds: ['a'], now: t0 });
+  s = recordAttempt(s, { problemId: 'a', passed: 15, total: 15, accepted: true, kind: 'submit', now: t0 + 5 * 60_000 });
+  // Still running: time used comes from the `now` given, not the wall clock.
+  const early = analytics(s, t0 + 9 * 60_000);
+  const late = analytics(s, t0 + 40 * 60_000);
+  assert.equal(early.usedMs, 9 * 60_000);
+  assert.equal(late.usedMs, 40 * 60_000);
+  assert.ok(early.score > late.score, 'a faster solve keeps more of the speed bonus');
+  // Finished: endedAt wins over any now.
+  const done = finish(s, t0 + 10 * 60_000);
+  assert.equal(analytics(done, t0 + 44 * 60_000).usedMs, 10 * 60_000);
+});
+
 test('battle bot is monotonic, seeded, and finishes', () => {
   const bot = createBot({ difficulty: 'Medium', seed: 7 });
   const again = createBot({ difficulty: 'Medium', seed: 7 });

@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed (invariant 6, from the repo audit)
+- **Interview `analytics()` read the wall clock** for a session still running, the one reducer in `modes/interview.js` without a `now` override. It now takes `now` like the rest of the module; finished sessions (every current caller) are unchanged. Unit test: a running session's time used and speed bonus follow the `now` given.
+
 ### Changed (quiz progress in the account, owner's request)
 - **Quiz progress follows you across devices and survives signing out.** For a signed-in player, the questions answered, the best score in each mode and the daily quiz results (with the first play's choices) are saved in the account with the rest of the progress, and merged with what each device has: per question the larger counts, per mode the better best, and a day played on two devices keeps the one that reached the account first, as the leaderboard does. Before, they stayed in one browser and signing out deleted them. No database change: the progress record already holds any JSON.
 - The profile and the Sign out confirm say so again ("Your progress stays in your account"), instead of the note that the quiz stays in the browser. The Privacy Policy lists the quiz data stored with an account.
