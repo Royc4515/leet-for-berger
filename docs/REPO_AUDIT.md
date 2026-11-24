@@ -77,8 +77,9 @@ npm run check        # both
 
 | Check | Result |
 |---|---|
-| `npm test` | BASELINE_UNIT |
-| `npm run test:e2e` | BASELINE_E2E |
+| `VERIFY_LANGUAGES=none node --test` (every unit test file except the native program builder) | 2282 tests: 2083 pass, 0 fail, 199 skipped (language verifier off), 1 min 54 s |
+| Full `npm test` | not finished locally: with every toolchain present it compiles every solution in 8 languages and passed the 10-minute limit; CI runs the verifier per language in parallel |
+| `npm run test:e2e` (`PW_EXECUTABLE` pointed at the preinstalled Chromium) | 66 of 66 checks pass, zero console errors, 3 min |
 | Relative links in 42 tracked markdown files (excluding problem statements) | 0 broken |
 | External links | 15 found; the 10 `github.com` repos confirmed to exist through the GitHub API (github.com itself returns 403 to this sandbox) |
 | Secret scan (`git grep` for tokens, keys, `.env` files) | nothing committed. `src/js/config.js` holds the Supabase publishable anon key, public by design (RLS guards data; `tests/account.test.js` asserts it is not a secret key) |
@@ -98,6 +99,7 @@ npm run check        # both
 | F9 | low | `CHANGELOG.md` (106 KB) has only 3 PR links; entries are grouped by topic under one huge Unreleased section. Not changing history in this pass; new entries can link PRs. |
 | F10 | info | Em dashes: only in validators that reject them (`src/js/modes/quiz.js:334`, two tests). Correct as is. |
 | F11 | info | No committed build output, no dead code found at file level, naming is consistent (kebab-case files, problem id = folder name, enforced by tests). |
+| F12 | low | `analytics()` in `src/js/modes/interview.js` reads `Date.now()` for a still-running session with no `now` override, against invariant 6. Not changed here (behavior pass, not a fix pass); one-line fix: add a `now = Date.now()` parameter. |
 
 ## Structure: keep it, with small moves
 
@@ -153,3 +155,16 @@ Everything else stays where it is.
 | delete | none | Nothing dead or generated is committed |
 
 Not planned, and why: no `.env.example`. Nothing in the repo reads a `.env` file; the site's config is public and lives in `src/js/config.js`, and server secrets are set with `wrangler secret put` and `supabase secrets set` (`docs/DEPLOY_RUNNER.md`, `docs/DEPLOY_AUTH.md`). The README will list the few environment variables the dev scripts read instead.
+
+## Outcome (phase 2 and 3)
+
+| Finding | Resolution |
+|---|---|
+| F1 | MIT `LICENSE`; `package.json` license set; exception for adapted files stated in `THIRD_PARTY_NOTICES.md` and the README |
+| F2 | README rewritten from verified facts |
+| F3 | Values proposed in the PR; applying them needs the owner (`gh repo edit`, see the PR) |
+| F4 | `ROADMAP.md` ticks updated from `PLAN.md`, with PR links |
+| F5 | Moved to `docs/archive/` with an index; rule added to `CLAUDE.md` |
+| F6, F7 | Fixed |
+| F8 | `CONTRIBUTING.md` and issue templates added |
+| F9, F12 | Left for the owner |

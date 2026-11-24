@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed (repository polish, owner's request)
+- **README rewritten**: live link, CI / deploy / license badges, screenshots taken from the running app (`docs/assets/`), features, stack, architecture diagram, annotated structure, the commands that were run to verify it, configuration, deploy pointers, known limits and author links.
+- **MIT license** (`LICENSE`, `package.json`); adapted third-party files keep their own licenses (`THIRD_PARTY_NOTICES.md`, which now also lists Bricolage Grotesque).
+- **Finished plans archived**: `DESIGN_PLAN.md`, `F6_PLAN.md` and `REDESIGN_BRIEF.md` moved to `docs/archive/` with an index; every reference updated. `CLAUDE.md` gains the rule that finished plans move there.
+- **Roadmap brought in line with `docs/PLAN.md`**: shipped items ticked with their PRs.
+- Added `CONTRIBUTING.md`, issue templates, `docs/REPO_AUDIT.md`; `.gitignore` covers `_site/`, `share-sample/` and `.wrangler/`.
+- JSDoc on the 14 exported functions that had none (comments only).
+
 ### Fixed (signed-in header on a phone, owner's report)
 - **Signed in, the page title in a phone's header shrank to one letter** ("P" for Problems at 390 px, nothing at 320 px): the full name and "Progress synced" took 163 px of the header. On a phone the account control is now a round badge with the initials and a dot for the sync status (green synced, amber syncing, red failed), 44 px wide; the title shows in full down to 320 px. The panel it opens starts with who is signed in, their email and the sync status. The name stays the button's accessible name. Wider screens are unchanged (`userInitials` in `auth/account.js`, unit-tested).
 
