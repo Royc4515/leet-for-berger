@@ -1674,6 +1674,17 @@ try {
       return { titleClipped: title.scrollWidth > title.clientWidth, titleWidth: title.getBoundingClientRect().width, account: document.querySelector('#account').getBoundingClientRect().width, badge: document.querySelector('.account-avatar')?.textContent, label: toggle.textContent.replace(document.querySelector('.account-avatar').textContent, '') };
     });
     if (phoneHead.titleClipped || phoneHead.titleWidth < 40 || phoneHead.account > 48 || phoneHead.badge !== 'A' || phoneHead.label !== 'Ada') throw new Error(`signed-in phone header: ${JSON.stringify(phoneHead)}`);
+    // The sun/moon switch leaves the narrow header (it keeps the title) for the account sheet.
+    await acct.click('#account .account-name');
+    await acct.waitForSelector('.account-menu:not([hidden]) .theme-toggle');
+    const sheetSwitch = await acct.evaluate(() => ({ header: getComputedStyle(document.getElementById('theme-toggle')).display, sheet: getComputedStyle(document.querySelector('.account-menu .theme-toggle')).display, text: document.querySelector('.account-menu .theme-toggle').textContent.trim() }));
+    if (sheetSwitch.header !== 'none' || sheetSwitch.sheet === 'none' || sheetSwitch.text !== 'Switch to light theme') throw new Error(`phone theme switch: ${JSON.stringify(sheetSwitch)}`);
+    await acct.click('.account-menu .theme-toggle');
+    await acct.waitForFunction(() => document.documentElement.dataset.theme === 'light' && document.querySelector('.account-menu .theme-toggle').textContent.trim() === 'Switch to dark theme');
+    await acct.click('.account-menu .theme-toggle');
+    await acct.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
+    await acct.keyboard.press('Escape');
+    await acct.waitForSelector('.account-menu', { state: 'hidden' });
     await acct.setViewportSize({ width: 1440, height: 900 });
     await acct.click('#account .account-name');
     // Not linked yet: the wizard offers GitHub's prefilled new-repository page, then the app install page.
@@ -2437,7 +2448,7 @@ try {
     if (!(await page.evaluate(() => document.activeElement?.id === 'palette-trigger'))) throw new Error('focus did not return to the palette trigger');
   });
 
-  await check('themes: Profile sets the light site theme before the first paint; code themes from Profile, the toolbar and the palette; Match site follows the site', async () => {
+  await check('themes: Profile sets the light site theme before the first paint; code themes from Profile, the toolbar and the palette; the header sun/moon switches in one click; Match site follows the site', async () => {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 } });
     const tp = await ctx.newPage();
     tp.on('console', (m) => m.type() === 'error' && errors.push(`console (themes): ${m.text()}`));
@@ -2517,6 +2528,14 @@ try {
     await tp.keyboard.type('Theme: Dark');
     await tp.waitForFunction(() => document.querySelector('.palette-item[aria-selected="true"] .palette-label')?.textContent === 'Theme: Dark');
     await tp.keyboard.press('Enter');
+    await tp.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
+    await editorShows('dark-berger');
+    // One click on the header's sun/moon switches light and dark; its name says what a click does.
+    if ((await tp.getAttribute('#theme-toggle', 'aria-label')) !== 'Switch to light theme') throw new Error('the header switch does not say what it does');
+    await tp.click('#theme-toggle');
+    await tp.waitForFunction(() => document.documentElement.dataset.theme === 'light' && document.getElementById('theme-toggle').getAttribute('aria-label') === 'Switch to dark theme');
+    await editorShows('berger-light');
+    await tp.click('#theme-toggle');
     await tp.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
     await editorShows('dark-berger');
     const after = { ...(await look()), ...(await editor()) };

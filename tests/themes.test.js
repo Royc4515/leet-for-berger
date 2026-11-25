@@ -10,7 +10,7 @@ import { CODE_THEMES, CODE_THEME_OPTIONS, MATCH_SITE, codeThemeFor, parseCodeThe
 const BOOT = readFileSync(new URL('../src/js/theme-boot.js', import.meta.url), 'utf8');
 
 test('the code themes, the owner\'s three first, are offered after Match site', () => {
-  assert.deepEqual(CODE_THEMES.map((t) => t.label), ['Dark Berger', 'Berger Light', 'Shuvat Light Pink', 'Midnight', 'Terminal', 'High Contrast', 'Mint Light']);
+  assert.deepEqual(CODE_THEMES.map((t) => t.label), ['Dark Berger', 'Berger Light', 'Shuvat Light Pink', 'Midnight Berger', 'Terminal Berger', 'High Contrast Berger', 'Berger Mint']);
   assert.deepEqual(CODE_THEME_OPTIONS.map((o) => o.value), [MATCH_SITE, ...CODE_THEMES.map((t) => t.id)]);
   assert.equal(new Set(CODE_THEMES.map((t) => t.id)).size, CODE_THEMES.length, 'ids are unique');
   // Match site resolves to exactly one theme per site palette.
@@ -49,13 +49,39 @@ test('monacoTheme maps every code token into Monaco\'s shape: base by scheme, ru
  * Runs theme-boot.js against a fake page.
  * @param {{ saved?: string|null, systemLight?: boolean, blocked?: boolean }} opts
  */
-function boot({ saved = null, systemLight = false, blocked = false } = {}) {
+function boot({ saved = null, systemLight = false, blocked = false, header = true } = {}) {
   const store = new Map(saved == null ? [] : [['lfb:theme', saved]]);
   const listeners = new Map();
   const media = { matches: systemLight, listeners: [], addEventListener: (_, cb) => media.listeners.push(cb) };
   const events = [];
   const meta = { content: '#100f0d' };
   const root = { dataset: {} };
+  // Just enough of a page: elements by id, the header row, and buttons with attributes and clicks.
+  const byId = new Map();
+  const made = [];
+  const element = () => {
+    const el = { attrs: {}, clicks: [], children: [], className: '' };
+    made.push(el);
+    // The one inner element the boot script looks for: the sheet button's text.
+    el.querySelector = (sel) => (sel === '.theme-toggle-text' && String(el.innerHTML).includes('theme-toggle-text') ? (el.text ??= { textContent: '' }) : null);
+    el.setAttribute = (k, v) => (el.attrs[k] = v);
+    el.addEventListener = (type, cb) => type === 'click' && el.clicks.push(cb);
+    el.click = () => el.clicks.forEach((cb) => cb());
+    el.prepend = (child) => {
+      el.children.unshift(child);
+      if (child.id) byId.set(child.id, child);
+    };
+    return el;
+  };
+  const headerRight = header ? element() : null;
+  const document = {
+    documentElement: root,
+    readyState: 'interactive',
+    getElementById: (id) => byId.get(id) ?? null,
+    querySelector: (sel) => (sel === '.header-right' ? headerRight : sel.startsWith('meta') ? meta : null),
+    querySelectorAll: (sel) => (sel === '.theme-toggle' ? made.filter((el) => el.className.split(' ').includes('theme-toggle')) : []),
+    createElement: () => element(),
+  };
   const window = {
     localStorage: {
       getItem: (k) => {
@@ -68,7 +94,7 @@ function boot({ saved = null, systemLight = false, blocked = false } = {}) {
       },
     },
     matchMedia: () => media,
-    document: { documentElement: root, querySelector: () => meta },
+    document,
     getComputedStyle: () => ({ getPropertyValue: () => (root.dataset.theme === 'light' ? ' #f5f1ea' : ' #100f0d') }),
     CustomEvent: class {
       constructor(type, init) {
@@ -81,7 +107,7 @@ function boot({ saved = null, systemLight = false, blocked = false } = {}) {
   };
   window.window = window;
   vm.runInNewContext(BOOT, window);
-  return { root, store, media, events, meta, listeners, api: window.lfbTheme };
+  return { root, store, media, events, meta, listeners, headerRight, api: window.lfbTheme };
 }
 
 test('boot: dark by default, the saved choice otherwise, System follows the device', () => {
@@ -128,6 +154,50 @@ test('boot: with storage blocked a choice still holds for the page; another tab\
   page.store.set('lfb:theme', 'light');
   page.listeners.get('storage')({ key: 'lfb:theme' });
   assert.equal(page.root.dataset.theme, 'light');
+});
+
+test('boot: the header gets one sun/moon button; a click switches light and dark and saves it', () => {
+  const page = boot({ saved: 'system', systemLight: false });
+  assert.equal(page.headerRight.children.length, 1);
+  const button = page.headerRight.children[0];
+  assert.equal(button.id, 'theme-toggle');
+  assert.equal(button.type, 'button');
+  assert.equal(button.attrs['aria-label'], 'Switch to light theme');
+  assert.equal(button.title, 'Switch to light theme');
+  assert.equal(button.attrs['aria-pressed'], undefined, 'no pressed state: it would draw the ghost button filled');
+
+  button.click();
+  assert.equal(page.root.dataset.theme, 'light');
+  assert.equal(page.store.get('lfb:theme'), 'light', 'a click is a choice, so it leaves System');
+  assert.equal(button.attrs['aria-label'], 'Switch to dark theme');
+  assert.equal(button.title, 'Switch to dark theme');
+
+  button.click();
+  assert.equal(page.root.dataset.theme, 'dark');
+  assert.equal(button.attrs['aria-label'], 'Switch to light theme');
+
+  // The button follows changes made elsewhere (Profile, the palette, the device on System).
+  page.api.set('light');
+  assert.equal(button.attrs['aria-label'], 'Switch to dark theme');
+});
+
+test('boot: lfbTheme.button({ text: true }) is the account sheet\'s switch: same click, its text says it', () => {
+  const page = boot();
+  const sheet = page.api.button({ text: true });
+  assert.ok(sheet.className.split(' ').includes('theme-toggle') && !sheet.className.includes('btn-icon'));
+  assert.equal(sheet.text.textContent, 'Switch to light theme');
+  assert.equal(sheet.attrs['aria-label'], undefined, 'its visible text is its name');
+  sheet.click();
+  assert.equal(page.root.dataset.theme, 'light');
+  assert.equal(sheet.text.textContent, 'Switch to dark theme');
+  assert.equal(page.headerRight.children[0].attrs['aria-label'], 'Switch to dark theme', 'the header button follows too');
+});
+
+test('boot: a page without a header gets no button and still themes', () => {
+  const page = boot({ header: false, saved: 'light' });
+  assert.equal(page.root.dataset.theme, 'light');
+  page.api.toggle();
+  assert.equal(page.root.dataset.theme, 'dark');
 });
 
 test('both pages load the boot script in <head>, before the stylesheet', () => {
