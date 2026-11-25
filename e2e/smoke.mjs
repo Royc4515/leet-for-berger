@@ -2209,6 +2209,10 @@ try {
       }
     }
     await page.goto(`${BASE}#/`);
+    // don't touch / a fresh document: this step loaded views/path.js, and the next steps break a view
+    // by stubbing its URL, which a module already in the page's module map would never fetch again.
+    await page.reload();
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
   });
 
   await check('unknown route shows shared .state not found block', async () => {
