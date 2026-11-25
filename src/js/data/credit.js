@@ -39,12 +39,15 @@ export function creditLinkName(link) {
  * @returns {Array<{ kind: 'link', id: string, label: string, hint: string, keywords: string, run: () => void }>}
  */
 export function authorPaletteItems(open) {
-  return AUTHOR_LINKS.map((link) => ({
+  return AUTHOR_LINKS.map((link, i) => ({
     kind: 'link',
     id: `author-${link.id}`,
-    label: link.title,
-    hint: 'Built this site',
-    keywords: `about author built by made by creator developer contact hire cv resume ${link.id}`,
+    // The portfolio is the name itself, so a search for the name ranks it first.
+    label: i === 0 ? AUTHOR_NAME : link.title,
+    hint: i === 0 ? 'Portfolio, built this site' : 'Built this site',
+    // The portfolio answers the general searches first: a match nearer the start of the keywords
+    // scores higher, and equal scores would fall back to the label, which puts GitHub first.
+    keywords: i === 0 ? 'author built by made by about creator developer contact hire cv resume portfolio' : `${link.id} profile contact author built by made by about creator developer hire cv resume`,
     run: () => open(link.href),
   }));
 }

@@ -48,7 +48,10 @@ test('palette entries open the right page and are found by author, built by, por
   for (const q of ['author', 'built by', 'roy', 'portfolio', 'hire', 'linkedin']) {
     assert.ok(searchPalette(all, q).some((i) => i.kind === 'link'), `"${q}" finds the author`);
   }
-  assert.equal(searchPalette(all, 'portfolio')[0].id, 'author-portfolio');
+  // The portfolio leads every general search; a named site leads its own.
+  for (const q of ['author', 'built by', 'about', 'hire', 'portfolio', 'roy']) assert.equal(searchPalette(all, q)[0].id, 'author-portfolio', q);
+  assert.equal(searchPalette(all, 'linkedin')[0].id, 'author-linkedin');
+  assert.equal(searchPalette(all, 'github')[0].id, 'author-github');
   // An empty palette suggests pages, not the author.
   assert.ok(!searchPalette(all, '', 2).some((i) => i.kind === 'link'));
 });

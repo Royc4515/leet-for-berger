@@ -2146,7 +2146,7 @@ try {
       assertCredit(await readCredit(page), hash);
     }
     await page.goto(`${BASE}#/problem/smallest-base-segment`);
-    await page.waitForSelector('.ws-tab, .monaco-editor, .problem-title', { timeout: 30000 });
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     if (await page.locator('.site-links-credit').count()) throw new Error('author credit shown in the editor workspace');
     await page.goto(`${BASE}privacy.html`);
     await page.waitForSelector('article.legal h1');
@@ -2173,7 +2173,7 @@ try {
     await page.click('#palette-trigger');
     await page.waitForSelector('dialog.palette[open] .palette-input');
     await page.keyboard.type('built by');
-    await page.waitForFunction(() => document.querySelector('.palette-item[aria-selected="true"] .palette-label')?.textContent === "Roy Carmelli's portfolio");
+    await page.waitForFunction(() => document.querySelector('.palette-item[aria-selected="true"] .palette-label')?.textContent === 'Roy Carmelli');
     await expectText('.palette-item[aria-selected="true"] .palette-kind', /^Author$/);
     await page.keyboard.press('Enter');
     await page.waitForSelector('dialog.palette', { state: 'detached' });
