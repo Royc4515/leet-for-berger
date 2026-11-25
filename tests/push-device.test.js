@@ -2,7 +2,7 @@
 // conversion, the browser client against a fake browser and push function, and the sign-out hook.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isAppleMobile, pushSupport, keyBytes, sameKey, formatHour, toggleHour, describeHours, pushFunctionUrl, MAX_PUSH_HOURS, hourAngle, hourAt, nearestTurn, daylight, moveHour, stepHour, suggestHour, nextReminder, describeNext } from '../src/js/data/push-device.js';
+import { isAppleMobile, pushSupport, keyBytes, sameKey, formatHour, toggleHour, describeHours, pushFunctionUrl, MAX_PUSH_HOURS, nearestTurn, daylight, moveHour, stepHour, suggestHour, nextReminder, describeNext, faceOf, clockAngle, clockPos, faceHour, nearestAt } from '../src/js/data/push-device.js';
 import { createPushClient, forgetThisDevice, SW_PATH } from '../src/js/auth/push-client.js';
 import { createAccount, LEAVE_WAIT_MS } from '../src/js/auth/account.js';
 import { authConfig } from '../src/js/config.js';
@@ -45,23 +45,37 @@ test('keyBytes: base64url to bytes, padding restored; garbage refused; sameKey c
   assert.equal(sameKey(null, raw), false);
 });
 
-test('the dial: noon at the top, 18:00 on the right, midnight at the bottom; every hour once', () => {
-  assert.deepEqual([12, 18, 0, 6, 23].map(hourAngle), [0, 90, -180, -90, 165]);
-  // A point straight above the centre is noon, to the right 18:00, below midnight, to the left 06:00.
-  assert.deepEqual([hourAt(0, -1), hourAt(1, 0), hourAt(0, 1), hourAt(-1, 0)], [12, 18, 0, 6]);
+test('the clock: a day face 06 to 17 and a night face 18 to 05, each hour once on its face', () => {
+  assert.deepEqual([6, 11, 12, 17].map(faceOf), ['day', 'day', 'day', 'day']);
+  assert.deepEqual([18, 23, 0, 5].map(faceOf), ['night', 'night', 'night', 'night']);
+  // Read clockwise from the top: 12 to 17 down the right, 06 to 11 up the left; 00 to 05 and 18 to 23 by night.
+  assert.deepEqual(Array.from({ length: 12 }, (_, p) => faceHour('day', p)), [12, 13, 14, 15, 16, 17, 6, 7, 8, 9, 10, 11]);
+  assert.deepEqual(Array.from({ length: 12 }, (_, p) => faceHour('night', p)), [0, 1, 2, 3, 4, 5, 18, 19, 20, 21, 22, 23]);
   for (let h = 0; h < 24; h++) {
-    const a = (hourAngle(h) * Math.PI) / 180;
-    assert.equal(hourAt(Math.sin(a) * 100, -Math.cos(a) * 100), h, `round trip at ${h}`);
-    // Half an hour either way still reads as this hour.
-    const b = ((hourAngle(h) + 7) * Math.PI) / 180;
-    assert.equal(hourAt(Math.sin(b), -Math.cos(b)), h);
+    const p = Math.round(clockAngle(h) / 30);
+    assert.equal(faceHour(faceOf(h), p), h, `${h} sits on its own face`);
+    // The point on the clock at that angle reads back as that position, and so does one 14 degrees off.
+    const a = (clockAngle(h) * Math.PI) / 180;
+    assert.equal(clockPos(Math.sin(a) * 100, -Math.cos(a) * 100), p);
+    const b = ((clockAngle(h) + 14) * Math.PI) / 180;
+    assert.equal(clockPos(Math.sin(b), -Math.cos(b)), p);
   }
+  assert.deepEqual([clockPos(0, -1), clockPos(1, 0), clockPos(0, 1), clockPos(-1, 0)], [0, 3, 6, 9]);
 });
 
-test('nearestTurn: 23:00 to 00:00 steps forward, never spins back round the dial', () => {
-  assert.equal(nearestTurn(hourAngle(23), hourAngle(0)), 180);
-  assert.equal(nearestTurn(-180, hourAngle(23)), -195);
-  assert.equal(nearestTurn(720, 15), 735);
+test('nearestAt: a hex dragged past the 6 at the bottom goes on round the day, onto the other face', () => {
+  assert.equal(nearestAt(17, 6), 18, '17:00 on past the bottom is 18:00, the night');
+  assert.equal(nearestAt(6, 5), 5, 'back from 06:00 is 05:00, the night');
+  assert.equal(nearestAt(18, 5), 17, 'back from 18:00 is 17:00, the day');
+  assert.equal(nearestAt(11, 0), 12, 'over the top stays on its face');
+  assert.equal(nearestAt(23, 0), 0);
+  assert.equal(nearestAt(16, 3), 15);
+});
+
+test('nearestTurn: 11:00 to 12:00 steps forward, never spins back round the clock', () => {
+  assert.equal(nearestTurn(clockAngle(11), clockAngle(12)), 360);
+  assert.equal(nearestTurn(0, clockAngle(23)), -30);
+  assert.equal(nearestTurn(720, 30), 750);
 });
 
 test('daylight: noon brightest, dark from 18:00 to 06:00', () => {

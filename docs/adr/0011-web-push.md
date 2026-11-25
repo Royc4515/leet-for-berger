@@ -39,11 +39,12 @@ Constraints found:
 4. **When (owner's decision).** Two send hours a day by default, **16:00 and 20:00** in the user's
    time zone. The user chooses the hours, and so how many pushes a day (1 to 6, or none): **at most
    one push per send hour, so at most two a day** unless they choose more. **Nothing on the user's
-   rest day.** The hours are set on a **day dial** (owner's request, part C: a picker that is
-   beautiful and quick, not a grid): the 24 hours on a ring, noon at the top and the daylight hours
-   lit, each send hour a hex dragged round the day; a tap on the ring adds one, the centre says how
-   many a day and when the next can come (skipping the rest day). Each hex is a slider for the
-   keyboard and screen readers.
+   rest day.** The hours are set on a **reminder clock** (owner's requests, part C: something
+   beautiful and quick, then "like a clock"): 12 hours with a day face (06 to 17) and a night face
+   (18 to 05); each send hour is a hex dragged round it, and past the 6 at the bottom the clock
+   turns from day to night or back; a Day / Night switch turns it too and counts each half. The
+   centre says how many a day and when the next can come (skipping the rest day). Each hex is a
+   slider for the keyboard and screen readers.
 5. **What (owner's decision), at each send hour, in this order:**
    - **Streaks that end tonight.** Both the coding and the quiz streak at risk: one push for each,
      the one not yet pushed today first. Only one at risk: that one at every send hour. Neither:

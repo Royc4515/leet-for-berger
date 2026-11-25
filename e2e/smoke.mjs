@@ -1928,50 +1928,58 @@ try {
     await acct.waitForFunction(() => navigator.serviceWorker.controller?.scriptURL.endsWith('/sw.js'), null, { timeout: 10000 }).catch(() => {
       throw new Error('sw.js did not register and take control');
     });
-    // The day dial: a hex per send hour on a 24-hour ring (ui/day-dial.js).
+    // The reminder clock (ui/clock-dial.js): 12 hours, a day face (06 to 17) and a night face.
     const knobs = () => acct.evaluate(() => [...document.querySelectorAll('.dial-knob')].map((b) => Number(b.getAttribute('aria-valuenow'))));
-    // Where an hour sits on screen: noon at the top, clockwise, on the middle of the ring.
-    // Mouse clicks do not scroll: the dial is brought into view first.
-    const onRing = async (hour) =>
-      (await acct.locator('.dial').scrollIntoViewIfNeeded()) ??
-      acct.evaluate((hr) => {
-        const box = document.querySelector('.dial').getBoundingClientRect();
-        const a = ((hr - 12) * 15 * Math.PI) / 180;
-        const r = box.width * (117 / 320);
+    // A clock position on screen (0 at the top, clockwise), on the middle of the ring. Mouse clicks
+    // do not scroll, so the clock is brought into view first.
+    const onClock = async (pos) =>
+      (await acct.locator('.hour-clock').scrollIntoViewIfNeeded()) ??
+      acct.evaluate((p) => {
+        const box = document.querySelector('.hour-clock').getBoundingClientRect();
+        const a = (p * 30 * Math.PI) / 180;
+        const r = box.width * (120 / 320);
         return { x: box.left + box.width / 2 + r * Math.sin(a), y: box.top + box.height / 2 - r * Math.cos(a) };
-      }, hour);
+      }, pos);
     const hoursAre = (want) => acct.waitForFunction((w) => JSON.stringify([...document.querySelectorAll('.dial-knob')].map((b) => Number(b.getAttribute('aria-valuenow')))) === w, JSON.stringify(want), { timeout: 5000 }).catch(async () => {
-      throw new Error(`dial hours: want ${JSON.stringify(want)}, got ${JSON.stringify(await knobs())}`);
+      throw new Error(`clock hours: want ${JSON.stringify(want)}, got ${JSON.stringify(await knobs())}`);
     });
     if (JSON.stringify(await knobs()) !== '[16,20]') throw new Error(`default hours: ${JSON.stringify(await knobs())}`);
     const slider = await acct.evaluate(() => { const b = document.querySelector('.dial-knob'); return { role: b.getAttribute('role'), text: b.getAttribute('aria-valuetext'), name: b.getAttribute('aria-label') }; });
-    if (slider.role !== 'slider' || slider.text !== '16:00' || slider.name !== 'Reminder at 16:00') throw new Error(`dial hex semantics: ${JSON.stringify(slider)}`);
+    if (slider.role !== 'slider' || slider.text !== '16:00' || slider.name !== 'Reminder at 16:00') throw new Error(`clock hex semantics: ${JSON.stringify(slider)}`);
     await acct.waitForSelector('.dial-next:has-text("Next")');
-    // A tap on the ring at 09:00 adds a reminder there; it is saved to the account.
-    const nine = await onRing(9);
+    // The switch turns the clock to the day face; its counts say how many each half holds.
+    await acct.click('.clock-face-btn[data-face="day"]');
+    await acct.waitForSelector('.hour-clock.is-day');
+    const counts = await acct.evaluate(() => [...document.querySelectorAll('.clock-face-btn')].map((b) => `${b.dataset.face}:${b.getAttribute('aria-pressed')}:${b.querySelector('.clock-face-count').textContent}`));
+    if (JSON.stringify(counts) !== '["day:true:1","night:false:1"]') throw new Error(`day and night switch: ${JSON.stringify(counts)}`);
+    // A tap on 09 adds a reminder there; it is saved to the account.
+    const nine = await onClock(9);
     await acct.mouse.click(nine.x, nine.y);
     await hoursAre([9, 16, 20]);
     await acct.waitForSelector('.push-saved:has-text("Saved")');
     if (JSON.stringify(pushServer.hours) !== '[9,16,20]') throw new Error(`hours not saved: ${JSON.stringify(pushServer.hours)}`);
-    // Dragged round the ring, the 16:00 hex moves hour by hour to 18:00.
-    const from = await onRing(16);
-    const to = await onRing(18);
+    // Dragged past the 6 at the bottom, 16:00 goes on to 17:00 and then 18:00: the clock turns to night.
+    const from = await onClock(4);
     await acct.mouse.move(from.x, from.y);
     await acct.mouse.down();
-    await acct.mouse.move((from.x + to.x) / 2 + 6, (from.y + to.y) / 2, { steps: 4 });
-    await acct.mouse.move(to.x, to.y, { steps: 6 });
+    const five = await onClock(5);
+    await acct.mouse.move(five.x, five.y, { steps: 5 });
+    const six = await onClock(6);
+    await acct.mouse.move(six.x, six.y, { steps: 5 });
     await acct.mouse.up();
     await hoursAre([9, 18, 20]);
-    // Keyboard: an arrow moves the focused hex an hour; Delete takes one off.
+    await acct.waitForSelector('.hour-clock.is-night');
+    // Keyboard: an arrow moves the focused hex an hour, back across to the day face; Delete takes one off.
     await acct.focus('.dial-knob[aria-valuenow="18"]');
     await acct.keyboard.press('ArrowLeft');
     await hoursAre([9, 17, 20]);
+    await acct.waitForSelector('.hour-clock.is-day');
     if ((await acct.evaluate(() => document.activeElement?.getAttribute('aria-valuenow'))) !== '17') throw new Error('the moved hex must keep focus');
     await acct.focus('.dial-knob[aria-valuenow="9"]');
     await acct.keyboard.press('Delete');
     await hoursAre([17, 20]);
     // A tap on a hex picks it; the centre then offers Remove.
-    const seventeen = await onRing(17);
+    const seventeen = await onClock(5);
     await acct.mouse.click(seventeen.x, seventeen.y);
     await acct.waitForSelector('.dial-selection:not([hidden]) strong:has-text("17:00")');
     await acct.click('.dial-remove');

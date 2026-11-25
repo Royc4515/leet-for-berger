@@ -67,35 +67,9 @@ export function sameKey(a, b) {
 /** "16:00": a send hour as the clock shows it. */
 export const formatHour = (hour) => `${String(hour).padStart(2, '0')}:00`;
 
-/* ---------- The day dial: 24 hours on a ring, noon at the top, midnight at the bottom ---------- */
-
-/** One hour of the dial, in degrees: 360 / 24. */
-export const HOUR_DEG = 15;
-
 /**
- * Where an hour sits on the dial, in degrees clockwise from the top: noon at 0, 18:00 at 90,
- * midnight at 180, 06:00 at -90. The sun's path is the upper half, morning on the left.
- * @param {number} hour 0 to 23
- * @returns {number} -180 to 165
- */
-export function hourAngle(hour) {
-  return (((hour - 12) * HOUR_DEG + 540) % 360) - 180;
-}
-
-/**
- * The hour nearest a point, measured from the dial's centre (x to the right, y down, as on a screen).
- * @param {number} dx
- * @param {number} dy
- * @returns {number} 0 to 23
- */
-export function hourAt(dx, dy) {
-  const deg = (Math.atan2(dx, -dy) * 180) / Math.PI; // clockwise from the top
-  return (((Math.round(deg / HOUR_DEG) + 12) % 24) + 24) % 24;
-}
-
-/**
- * `angle` turned by whole circles to lie nearest `from`: a hex moving from 23:00 to 00:00 steps
- * 15 degrees forward instead of spinning back around the whole dial.
+ * `angle` turned by whole circles to lie nearest `from`: a hex moving from 11:00 to 12:00 steps
+ * 30 degrees forward instead of spinning back around the whole clock.
  * @param {number} from
  * @param {number} angle
  * @returns {number}
@@ -105,13 +79,13 @@ export function nearestTurn(from, angle) {
 }
 
 /**
- * How lit an hour is, 0 at night to 1 at noon: the dial draws the sun's path with it.
+ * How lit an hour is, 0 at night to 1 at noon: the clock's day face brightens toward 12 with it.
  * @param {number} hour
  * @returns {number}
  */
 export function daylight(hour) {
   // Rounded: cos(90 degrees) is 6e-17 in floating point, and 18:00 is night.
-  return Math.round(Math.max(0, Math.cos((hourAngle(hour) * Math.PI) / 180)) * 1000) / 1000;
+  return Math.round(Math.max(0, Math.cos(((hour - 12) * Math.PI) / 12)) * 1000) / 1000;
 }
 
 /**
@@ -139,6 +113,54 @@ export function stepHour(hours, from, dir) {
     if (!hours.includes(h)) return h;
   }
   return from;
+}
+
+/* ---------- The clock: 12 positions, a day face and a night face ---------- */
+
+/**
+ * The two faces of the clock: day 06:00 to 17:00, night 18:00 to 05:00. Like a clock's hand, the
+ * day passes the 6 at the bottom twice, and that is where one face turns into the other.
+ * @param {number} hour
+ * @returns {'day'|'night'}
+ */
+export const faceOf = (hour) => (hour >= 6 && hour < 18 ? 'day' : 'night');
+
+/** Where an hour sits on the clock, in degrees clockwise from the 12 at the top. */
+export const clockAngle = (hour) => (hour % 12) * 30;
+
+/**
+ * The clock position nearest a point from the centre (x right, y down): 0 at the top, 1 to 11 clockwise.
+ * @param {number} dx
+ * @param {number} dy
+ * @returns {number}
+ */
+export function clockPos(dx, dy) {
+  const deg = (Math.atan2(dx, -dy) * 180) / Math.PI;
+  return ((Math.round(deg / 30) % 12) + 12) % 12;
+}
+
+/**
+ * The hour a clock position shows on a face: the day face reads 12 to 17 down the right and
+ * 06 to 11 up the left; the night face 00 to 05 and 18 to 23.
+ * @param {'day'|'night'} face
+ * @param {number} pos 0 to 11
+ * @returns {number}
+ */
+export function faceHour(face, pos) {
+  if (face === 'day') return pos < 6 ? pos + 12 : pos;
+  return pos < 6 ? pos : pos + 12;
+}
+
+/**
+ * Of the two hours at a clock position (morning or evening), the one nearest in time to `from`:
+ * a hex dragged past the 6 keeps going round the day, onto the other face.
+ * @param {number} from
+ * @param {number} pos 0 to 11
+ * @returns {number}
+ */
+export function nearestAt(from, pos) {
+  const dist = (x) => Math.min(Math.abs(x - from), 24 - Math.abs(x - from));
+  return dist(pos) <= dist(pos + 12) ? pos : pos + 12;
 }
 
 /** Where a new reminder goes when it is added without a place: the evening first, then the afternoon. */

@@ -8215,7 +8215,7 @@ body.resizing-y * {
   gap: var(--s-2) var(--s-3);
 }
 
-/* The hours: the day dial (ui/day-dial.js), with how to use it and the add button beside it. */
+/* The hours: the reminder clock (ui/clock-dial.js), with how to use it and the add button beside it. */
 .push-hours {
   display: grid;
   gap: var(--s-3);
@@ -8257,14 +8257,14 @@ body.resizing-y * {
   margin: 0;
 }
 
-/* ---------- The day dial ---------- */
+/* ---------- The reminder clock's shared parts: the frame, the centre, the hexes ---------- */
 .dial {
   position: relative;
   width: 100%;
   max-width: 320px;
   aspect-ratio: 1;
   margin-inline: auto;
-  /* The hexes ride the ring at a radius in cqw, so they stay on it at any size. */
+  /* The hexes ride the clock at a radius in cqw, so they stay on their hours at any size. */
   container-type: inline-size;
   user-select: none;
   -webkit-user-select: none;
@@ -8275,70 +8275,6 @@ body.resizing-y * {
   width: 100%;
   height: 100%;
   overflow: visible;
-}
-
-/* Each hour of the ring; daylight hours glow amber like the sun's path (--light, 0 to 1). */
-.dial-seg {
-  fill: color-mix(in srgb, var(--accent) calc(var(--light) * 42%), var(--panel-3));
-  cursor: pointer;
-  transition: fill var(--t-fast) var(--ease);
-}
-
-/* Night is the darker side of the ring in both themes. */
-.dial-seg.is-night {
-  fill: var(--panel-2);
-}
-
-[data-theme='light'] .dial-seg.is-night {
-  fill: var(--panel-hover);
-}
-
-.dial-seg:hover {
-  fill: var(--panel-hover);
-}
-
-.dial.is-full .dial-seg:not(.is-on) {
-  cursor: not-allowed;
-}
-
-.dial-labels text {
-  fill: var(--muted);
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
-  transition: opacity var(--t-fast) var(--ease);
-}
-
-/* A hex on 12:00 covers the "12" beside it less than it would crowd it: the label steps aside. */
-.dial-labels text.is-covered {
-  opacity: 0;
-}
-
-.dial-sun {
-  fill: none;
-  stroke: var(--accent-text);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-}
-
-.dial-sun circle {
-  fill: var(--accent-soft);
-}
-
-.dial-moon {
-  fill: none;
-  stroke: var(--muted);
-  stroke-width: 1.6;
-  stroke-linejoin: round;
-}
-
-.dial-now line {
-  stroke: var(--text);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
-.dial-now circle {
-  fill: var(--text);
 }
 
 .dial-center {
@@ -8383,6 +8319,12 @@ body.resizing-y * {
   font-size: var(--fs-sm);
 }
 
+.hour-clock .dial-count,
+.hour-clock .dial-count-label,
+.hour-clock .dial-next {
+  transition: color var(--t-slow) var(--ease);
+}
+
 .dial-next {
   max-width: 13ch;
   color: var(--muted);
@@ -8390,15 +8332,16 @@ body.resizing-y * {
   line-height: var(--lh-snug);
 }
 
-/* A reminder: a lit hex on the ring, set round the day by --a (degrees from the top). */
+/* A reminder: a lit hex on its hour, set round the clock by --a (degrees from the top). */
 .dial-knob {
-  --r: 36.6cqw;
+  /* The middle of the ring: 120 of the face's 320. */
+  --r: 37.5cqw;
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 44px;
-  height: 48px;
-  margin: -24px 0 0 -22px;
+  width: 48px;
+  height: 52px;
+  margin: -26px 0 0 -24px;
   padding: 0;
   background: none;
   border: 0;
@@ -8410,15 +8353,15 @@ body.resizing-y * {
 
 .dial-knob-hex {
   position: absolute;
-  /* 28 x 32: one hour of the ring is about 30 px wide, so neighbouring hexes touch, never overlap. */
-  inset: 8px;
+  /* 40 x 44: an hour of the clock is about 60 px wide, so neighbouring hexes never touch. */
+  inset: 4px;
   display: grid;
   place-items: center;
   background: var(--accent);
   clip-path: var(--hex);
   color: var(--accent-ink);
   font-family: var(--mono);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-weight: 700;
   transition: transform var(--t-fast) var(--ease-spring), background-color var(--t-fast) var(--ease);
 }
@@ -8427,7 +8370,7 @@ body.resizing-y * {
 .dial-knob::before {
   content: '';
   position: absolute;
-  inset: 4px 5px;
+  inset: 0 1px;
   background: var(--accent-line);
   clip-path: var(--hex);
   opacity: 0;
@@ -8465,6 +8408,206 @@ body.resizing-y * {
 .dial-knob.is-new .dial-knob-hex {
   transform: scale(0.4);
   opacity: 0;
+}
+
+/* ---------- The reminder clock (ui/clock-dial.js): 12 hours, a day face and a night face ---------- */
+.clock-wrap {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  width: 100%;
+}
+
+.clock-cell {
+  /* By day the light rises toward noon (--light, 0 to 1, set per hour). */
+  fill: color-mix(in srgb, var(--accent) calc(10% + var(--light, 0) * 30%), var(--panel-3));
+  cursor: pointer;
+  transition: fill var(--t-slow) var(--ease);
+}
+
+.hour-clock.is-night .clock-cell {
+  fill: var(--panel-2);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-cell {
+  fill: color-mix(in srgb, var(--text) 24%, var(--panel-3));
+}
+
+.hour-clock .clock-cell:hover {
+  fill: var(--panel-hover);
+}
+
+.hour-clock.is-full .clock-cell {
+  cursor: not-allowed;
+}
+
+.clock-numbers text {
+  fill: var(--text-2);
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  transition: opacity var(--t-slow) var(--ease);
+}
+
+.hour-clock.is-day .clock-numbers.is-night,
+.hour-clock.is-night .clock-numbers.is-day {
+  opacity: 0;
+}
+
+.hour-clock.is-night .clock-numbers text {
+  fill: var(--muted);
+}
+
+/* The sky: a warm glow by day, the dark by night; one fades into the other. */
+.clock-disc.is-day {
+  fill: color-mix(in srgb, var(--accent) 9%, var(--panel));
+}
+
+.clock-disc.is-night {
+  fill: var(--bg);
+  opacity: 0;
+  transition: opacity var(--t-slow) var(--ease);
+}
+
+/* On paper the night is still dark: a deep ink sky with light text, the moon and stars on it. */
+[data-theme='light'] .clock-disc.is-night {
+  fill: var(--text);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-stars circle {
+  fill: var(--panel-2);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-moon {
+  stroke: var(--panel);
+}
+
+[data-theme='light'] .hour-clock.is-night .dial-count {
+  color: var(--panel);
+}
+
+[data-theme='light'] .hour-clock.is-night .dial-count-label {
+  color: var(--panel-2);
+}
+
+[data-theme='light'] .hour-clock.is-night .dial-next {
+  color: var(--panel-3);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-now line {
+  stroke: var(--panel);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-now circle {
+  fill: var(--panel);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-numbers text {
+  fill: var(--text);
+}
+
+.hour-clock.is-night .clock-disc.is-night {
+  opacity: 1;
+}
+
+.clock-stars circle {
+  fill: var(--text-2);
+}
+
+.clock-stars {
+  opacity: 0;
+  transition: opacity var(--t-slow) var(--ease);
+}
+
+.hour-clock.is-night .clock-stars {
+  opacity: 0.7;
+}
+
+/* The sun sets below the count and the moon rises in its place. */
+.clock-sun,
+.clock-moon {
+  transition: transform var(--t-stage) var(--ease-in-out), opacity var(--t-slow) var(--ease);
+}
+
+.clock-sun {
+  fill: none;
+  stroke: var(--accent-text);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+.clock-sun circle {
+  fill: var(--accent-soft);
+}
+
+.hour-clock.is-night .clock-sun {
+  opacity: 0;
+  transform: translateY(26px);
+}
+
+.clock-moon {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.7;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: translateY(26px);
+}
+
+.hour-clock.is-night .clock-moon {
+  opacity: 1;
+  transform: none;
+}
+
+.clock-now line {
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.clock-now circle {
+  fill: var(--text);
+}
+
+/* A hex of the other face leaves with its half of the day. */
+.hour-clock .dial-knob.is-away {
+  opacity: 0;
+  pointer-events: none;
+  transition: transform var(--t-base) var(--ease-spring), opacity var(--t-fast) var(--ease);
+}
+
+.hour-clock .dial-knob:not(.is-away) {
+  transition: transform var(--t-base) var(--ease-spring), opacity var(--t-base) var(--ease);
+}
+
+.clock-faces .clock-face-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.clock-face-icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.clock-face-count:not(:empty) {
+  min-width: 20px;
+  padding: 0 var(--s-1);
+  background: var(--accent-soft);
+  border-radius: var(--r-pill);
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-align: center;
 }
 
 @media (max-width: 640px) {

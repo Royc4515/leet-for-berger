@@ -9,7 +9,7 @@
 import { h, toast } from './dom.js';
 import { createPushClient } from '../auth/push-client.js';
 import { describeHours, suggestHour, MAX_PUSH_HOURS } from '../data/push-device.js';
-import { createDayDial } from './day-dial.js';
+import { createClockDial } from './clock-dial.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 /** Line icons on a 24 grid, drawn in currentColor. */
@@ -97,12 +97,12 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
   }
   howButton.addEventListener('click', () => setGuide(!st.guide));
 
-  /* ---------- The hours: the day dial ---------- */
+  /* ---------- The hours: the reminder clock ---------- */
   const summary = h('span.push-hours-summary');
   const saved = h('span.push-saved');
   const dialHost = h('div.push-dial-host');
   const addButton = h('button.btn.btn-secondary.btn-sm.push-add', { type: 'button', onClick: () => dial?.add(suggestHour(st.view.hours)) }, 'Add a reminder');
-  const howTo = h('p.hint-text.push-howto', {}, 'Drag a hex round the day to move it. Tap the ring to add one there; tap a hex, then Remove, to take it off.');
+  const howTo = h('p.hint-text.push-howto', {}, 'Drag a hex round the clock to move it; past the 6 at the bottom, day turns to night. Tap an hour to add one; tap a hex, then Remove, to take it off.');
   const hoursHint = h('p.hint-text.push-hours-hint');
   const hours = h(
     'div.push-hours',
@@ -110,13 +110,13 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
     h('div.push-hours-head', {}, h('h3.push-sub', {}, 'When'), h('p.push-hours-line', { 'aria-live': 'polite' }, summary, saved)),
     h('div.push-hours-body', {}, dialHost, h('div.push-hours-side', {}, howTo, hoursHint, addButton)),
   );
-  /** @type {ReturnType<typeof createDayDial>|null} made the first time the hours show */
+  /** @type {ReturnType<typeof createClockDial>|null} made the first time the hours show */
   let dial = null;
   // Removing the last hex from the dial's centre leaves no hex to focus: the add button takes it.
   hours.addEventListener('dial:empty', () => addButton.focus({ preventScroll: true }));
   function showDial() {
     if (dial) return;
-    dial = createDayDial({
+    dial = createClockDial({
       hours: st.view.hours,
       now: () => new Date(),
       restDay,
