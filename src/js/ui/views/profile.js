@@ -1,7 +1,7 @@
 /**
  * Profile (#/me, owner's request): who you are signed in as, where you stand, and every account
- * setting in one place: the leaderboard nickname, the quiz language, the page guides, GitHub sync,
- * signing out and your data. Works signed out too, for the progress kept in this browser.
+ * setting in one place: the leaderboard nickname, the themes, the quiz language, the page guides,
+ * GitHub sync, signing out and your data. Works signed out too, for the progress kept in this browser.
  */
 import { h, mount, segmented, confirmDialog, toast, siteFooter } from '../dom.js';
 import { services } from '../../auth/services.js';
@@ -12,6 +12,7 @@ import { profileNumbers, normalizeNickname, NICKNAME_MIN, NICKNAME_MAX } from '.
 import { loadQuizProgress } from '../../state/quiz-progress.js';
 import { clearUserData, LAST_SESSIONS_KEY } from '../../state/user-data.js';
 import { saveSeen } from '../../state/tours.js';
+import { siteThemeControl, codeThemeSelect } from '../theme.js';
 import { dayKey } from '../../state/progress.js';
 import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
 
@@ -194,6 +195,17 @@ export function renderProfile(root, { store }) {
     draw();
   }
 
+  /** Device preferences: the site and code themes. Built once: a redraw keeps the same controls. */
+  const themes = new AbortController();
+  const codeSelect = codeThemeSelect(themes.signal);
+  codeSelect.id = 'profile-code-theme';
+  const appearance = section(
+    'appearance',
+    'Appearance',
+    h('div.profile-field', {}, h('span.quiz-label', {}, 'Site theme'), siteThemeControl(themes.signal), h('p.hint-text', {}, 'System follows your device.')),
+    h('div.profile-field', {}, h('label.quiz-label', { for: codeSelect.id }, 'Code theme'), codeSelect, h('p.hint-text', {}, 'The editor\'s colours. Match site follows the site theme.')),
+  );
+
   /** Device preferences: the quiz language and the page guides. */
   function preferencesSection() {
     return section(
@@ -288,6 +300,7 @@ export function renderProfile(root, { store }) {
         identity(s),
         progressSection(signedIn),
         nicknameSection(s),
+        appearance,
         preferencesSection(),
         githubBlock(s),
         dataSection(s),
@@ -312,6 +325,7 @@ export function renderProfile(root, { store }) {
   const offStore = store.subscribe(redraw);
   return () => {
     disposed = true;
+    themes.abort();
     offAccount();
     offGithub();
     offStore();
