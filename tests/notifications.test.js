@@ -4,9 +4,10 @@ import {
   dueNotifications,
   notificationCopy,
   NOTIFICATION_KINDS,
-  UNFINISHED_MIN_DAYS,
+  UNFINISHED_AFTER_HOURS,
   UNFINISHED_MAX_DAYS,
   AWAY_DAYS,
+  RESTART_DAYS,
 } from '../src/js/data/notifications.js';
 import {
   emptyNotificationState,
@@ -30,6 +31,8 @@ const day = (n) => dayKey(new Date(2026, 10, 25 - n));
 const at = (n, hour = 10) => new Date(2026, 10, 25 - n, hour).toISOString();
 const facts = (f = {}) => ({ activeDays: [], problems: {}, quizDays: [], drafts: [], ...f });
 const attempted = (n, language = 'python') => ({ status: 'attempted', history: [{ at: at(n), language }] });
+const hoursAgo = (h) => new Date(NOON.getTime() - h * 3600000).toISOString();
+const attemptedHoursAgo = (h) => ({ status: 'attempted', history: [{ at: hoursAgo(h), language: 'js' }] });
 const kinds = (list) => list.map((n) => n.kind);
 
 test('a new visitor with no activity gets nothing', () => {
@@ -48,7 +51,7 @@ test('streak: alive from yesterday and nothing accepted today', () => {
 
 test('streak: nothing once today is solved, or once the streak is already broken', () => {
   assert.deepEqual(kinds(dueNotifications(facts({ activeDays: [day(1), day(0)] }), NOON)), []);
-  assert.deepEqual(kinds(dueNotifications(facts({ activeDays: [day(3), day(2)] }), NOON)), []);
+  assert.ok(!kinds(dueNotifications(facts({ activeDays: [day(3), day(2)] }), NOON)).includes('streak'));
 });
 
 test('streak reminders turn urgent in the last four hours of the day', () => {
@@ -68,36 +71,36 @@ test('quiz-streak: the daily quiz played yesterday and not today', () => {
 });
 
 test('unfinished: a problem not solved, last touched within the window', () => {
-  const [n] = dueNotifications(facts({ problems: { 'pair-sum-target': attempted(3) } }), NOON);
+  const [n] = dueNotifications(facts({ problems: { 'pair-sum-target': attempted(2) } }), NOON);
   assert.equal(n.kind, 'unfinished');
-  assert.equal(n.key, `unfinished:pair-sum-target:${day(3)}`);
-  assert.deepEqual(n.data, { problemId: 'pair-sum-target', lang: 'python', days: 3 });
+  assert.equal(n.key, `unfinished:pair-sum-target:${at(2)}`);
+  assert.deepEqual(n.data, { problemId: 'pair-sum-target', lang: 'python', hours: 50, days: 2 });
 });
 
-test('unfinished: not before UNFINISHED_MIN_DAYS, not after UNFINISHED_MAX_DAYS', () => {
-  const recent = { activeDays: [day(0)] }; // keeps "away" out of the way
-  const due = (n) => kinds(dueNotifications(facts({ ...recent, problems: { p: attempted(n) } }), NOON)).includes('unfinished');
-  assert.equal(due(UNFINISHED_MIN_DAYS - 1), false);
-  assert.equal(due(UNFINISHED_MIN_DAYS), true);
-  assert.equal(due(UNFINISHED_MAX_DAYS), true);
-  assert.equal(due(UNFINISHED_MAX_DAYS + 1), false);
+test('unfinished: from UNFINISHED_AFTER_HOURS hours after the last touch, up to UNFINISHED_MAX_DAYS days', () => {
+  const recent = { activeDays: [day(0)] }; // keeps "away" and "restart" out of the way
+  const due = (problem) => kinds(dueNotifications(facts({ ...recent, problems: { p: problem } }), NOON)).includes('unfinished');
+  assert.equal(due(attemptedHoursAgo(UNFINISHED_AFTER_HOURS - 1)), false, 'a short pause is not leaving it');
+  assert.equal(due(attemptedHoursAgo(UNFINISHED_AFTER_HOURS)), true);
+  assert.equal(due(attempted(UNFINISHED_MAX_DAYS)), true);
+  assert.equal(due(attempted(UNFINISHED_MAX_DAYS + 1)), false);
 });
 
 test('unfinished: solved problems never count; a draft edit is a touch', () => {
-  assert.deepEqual(dueNotifications(facts({ problems: { p: { status: 'solved', history: [{ at: at(3), language: 'go' }] } } }), NOON), []);
-  const solvedWithDraft = facts({ problems: { p: { status: 'solved' } }, drafts: [{ problemId: 'p', lang: 'js', at: at(3) }] });
+  assert.deepEqual(dueNotifications(facts({ problems: { p: { status: 'solved', history: [{ at: at(2), language: 'go' }] } } }), NOON), []);
+  const solvedWithDraft = facts({ problems: { p: { status: 'solved' } }, drafts: [{ problemId: 'p', lang: 'js', at: at(2) }] });
   assert.deepEqual(dueNotifications(solvedWithDraft, NOON), []);
   const [n] = dueNotifications(facts({ drafts: [{ problemId: 'never-submitted', lang: 'js', at: at(2) }] }), NOON);
-  assert.deepEqual(n.data, { problemId: 'never-submitted', lang: 'js', days: 2 });
+  assert.deepEqual(n.data, { problemId: 'never-submitted', lang: 'js', hours: 50, days: 2 });
 });
 
 test('unfinished: a newer draft edit means the problem was not left', () => {
-  const f = facts({ problems: { p: attempted(5) }, drafts: [{ problemId: 'p', lang: 'js', at: at(1) }] });
+  const f = facts({ problems: { p: attempted(2) }, drafts: [{ problemId: 'p', lang: 'js', at: hoursAgo(1) }] });
   assert.deepEqual(dueNotifications(f, NOON), []);
 });
 
-test('unfinished: the most recent problem in the window, even while another is in progress today', () => {
-  const f = facts({ problems: { a: attempted(3), b: attempted(5), c: attempted(0) } });
+test('unfinished: the most recent problem in the window, even while another is in progress now', () => {
+  const f = facts({ problems: { a: attempted(1), b: attempted(2), c: attemptedHoursAgo(1) } });
   const list = dueNotifications(f, NOON);
   assert.deepEqual(kinds(list), ['unfinished']);
   assert.equal(list[0].data.problemId, 'a');
@@ -107,7 +110,7 @@ test('unfinished: a touch with an unreadable time is ignored', () => {
   assert.deepEqual(dueNotifications(facts({ problems: { p: { status: 'attempted', history: [{ at: 'yesterday', language: 'js' }] } } }), NOON), []);
 });
 
-test('away: a week or more without practice, with the problem to resume', () => {
+test('away: AWAY_DAYS or more without practice, with the problem to resume', () => {
   const f = facts({ activeDays: [day(12)], problems: { a: attempted(10, 'java'), s: { status: 'solved', history: [{ at: at(9), language: 'go' }] } } });
   const list = dueNotifications(f, NOON);
   assert.deepEqual(kinds(list), ['away']);
@@ -116,9 +119,18 @@ test('away: a week or more without practice, with the problem to resume', () => 
 });
 
 test('away: starts at AWAY_DAYS; a daily quiz counts as practice', () => {
-  assert.deepEqual(kinds(dueNotifications(facts({ activeDays: [day(AWAY_DAYS - 1)] }), NOON)), []);
+  assert.ok(!kinds(dueNotifications(facts({ activeDays: [day(AWAY_DAYS - 1)] }), NOON)).includes('away'));
   assert.deepEqual(kinds(dueNotifications(facts({ activeDays: [day(AWAY_DAYS)] }), NOON)), ['away']);
-  assert.deepEqual(kinds(dueNotifications(facts({ activeDays: [day(AWAY_DAYS)], quizDays: [day(2)] }), NOON)), []);
+  assert.ok(!kinds(dueNotifications(facts({ activeDays: [day(AWAY_DAYS)], quizDays: [day(1)] }), NOON)).includes('away'));
+});
+
+test('restart: no streak at all for RESTART_DAYS days, once per break, never while away', () => {
+  assert.deepEqual(kinds(dueNotifications(facts({ activeDays: [day(RESTART_DAYS - 1)] }), NOON)), ['streak'], 'yesterday still holds a streak');
+  const [n] = dueNotifications(facts({ activeDays: [day(RESTART_DAYS)] }), NOON);
+  assert.deepEqual([n.kind, n.key, n.data], ['restart', `restart:${day(RESTART_DAYS)}`, { days: RESTART_DAYS, lastDay: day(RESTART_DAYS) }]);
+  assert.deepEqual(kinds(dueNotifications(facts({ activeDays: [day(RESTART_DAYS)], quizDays: [day(1)] }), NOON)), ['quiz-streak'], 'a quiz streak is a streak');
+  assert.deepEqual(kinds(dueNotifications(facts({ quizDays: [day(AWAY_DAYS)] }), NOON)), ['away'], 'away replaces it');
+  assert.deepEqual(dueNotifications(facts({ problems: { p: attempted(2) } }), NOON).map((x) => x.kind), ['unfinished'], 'never a streak, nothing to restart');
 });
 
 test('away: nothing to resume when everything touched is solved', () => {
@@ -147,6 +159,7 @@ test('copy: every kind has a title, a body, a link and an action', () => {
   const all = [
     ...dueNotifications(facts({ activeDays: [day(2), day(1)], quizDays: [day(1)], problems: { p: attempted(3) } }), late),
     ...dueNotifications(facts({ activeDays: [day(8)], problems: { p: attempted(8) } }), NOON),
+    ...dueNotifications(facts({ activeDays: [day(2)] }), NOON),
   ];
   assert.deepEqual(kinds(all).sort(), [...NOTIFICATION_KINDS].sort());
   const copy = Object.fromEntries(all.map((n) => [n.kind, notificationCopy(n, { problemTitle: title })]));
@@ -154,11 +167,14 @@ test('copy: every kind has a title, a body, a link and an action', () => {
   assert.deepEqual(copy['quiz-streak'], { title: 'Keep your quiz streak going', body: "Play today's daily quiz. 3 h 0 min left.", href: '#/quiz/daily', action: 'Play the daily quiz' });
   assert.deepEqual(copy.unfinished, { title: 'Finish Pair Sum Target', body: 'You left it 3 days ago, not solved yet.', href: '#/problem/p', action: 'Continue' });
   assert.deepEqual(copy.away, { title: 'Welcome back', body: 'It has been 8 days. Pick up Pair Sum Target where you left it.', href: '#/problem/p', action: 'Continue' });
+  assert.deepEqual(copy.restart, { title: 'Start a new streak', body: "No streak for 2 days. One solve or today's quiz starts one.", href: '#/daily', action: "Today's problem" });
+  const fresh = dueNotifications(facts({ activeDays: [day(0)], problems: { p: attemptedHoursAgo(1 + UNFINISHED_AFTER_HOURS) } }), NOON)[0];
+  assert.equal(notificationCopy(fresh, { problemTitle: title }).body, 'You left it 4 hours ago, not solved yet.');
   for (const c of Object.values(copy)) assert.doesNotMatch(Object.values(c).join(' '), /[!\u2013\u2014]/, 'no exclamation marks or dashes in UI copy');
 });
 
 test('copy: never names a problem the catalog does not have', () => {
-  const unfinished = dueNotifications(facts({ problems: { gone: attempted(3) } }), NOON)[0];
+  const unfinished = dueNotifications(facts({ problems: { gone: attempted(2) } }), NOON)[0];
   assert.equal(notificationCopy(unfinished), null);
   const away = dueNotifications(facts({ activeDays: [day(8)], problems: { gone: attempted(8) } }), NOON)[0];
   assert.deepEqual(notificationCopy(away), { title: 'Welcome back', body: "It has been 8 days. Today's problem is a good way back in.", href: '#/daily', action: "Today's problem" });

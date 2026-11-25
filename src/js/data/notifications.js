@@ -1,36 +1,41 @@
 /**
- * Which reminders are due right now (stage F7, the pure layer under the bell, the toast and,
- * later, Web Push). Every channel asks the same question with the same facts, so a reminder reads
- * the same on the page and on the phone; a channel decides only how and how often it delivers.
+ * Which reminders are due right now (stage F7): the pure layer under the bell and Web Push
+ * (ADR 0011). Every channel asks the same question with the same facts, so a reminder reads the
+ * same on the page and on the phone; a channel decides only how and how often it delivers
+ * (data/push-plan.js for the phone).
  *
- * Rules (thresholds below, each with its reason):
+ * Rules (thresholds below, the owner's, 2026-11-25):
  * - streak: the coding streak is alive (through yesterday, or through the rest day before it) and
  *   nothing is accepted today. Never on the rest day itself: nothing ends that night.
  * - quiz-streak: the same for the daily quiz.
- * - unfinished: the most recently touched problem that is not solved, last submitted or edited
- *   UNFINISHED_MIN_DAYS to UNFINISHED_MAX_DAYS days ago.
+ * - unfinished: the most recently touched problem that is not solved, last submitted or edited at
+ *   least UNFINISHED_AFTER_HOURS hours and at most UNFINISHED_MAX_DAYS days ago.
  * - away: nothing done for AWAY_DAYS days or more. It carries the problem to resume and replaces
- *   unfinished while it shows: one nudge back, not two.
+ *   unfinished and restart while it shows: one nudge back, not three.
+ * - restart: no streak at all, coding or quiz, for RESTART_DAYS days or more: start a new one.
  *
- * Days are local calendar days (state/progress.js dayKey), as the streaks are.
+ * Days are local calendar days (state/progress.js dayKey), as the streaks are; the server passes
+ * the user's wall-clock time (data/push-plan.js toWallClock).
  * Pure: no DOM, no storage, `now` is always a parameter.
  */
 import { dayKey, computeStreak } from '../state/progress.js';
 import { daysBetween, msUntilNextDaily, formatCountdown } from './daily.js';
 
 /**
- * @typedef {'streak'|'quiz-streak'|'away'|'unfinished'} NotificationKind
+ * @typedef {'streak'|'quiz-streak'|'away'|'unfinished'|'restart'} NotificationKind
  */
 
 /** Every kind, in the order they rank when several are due: a streak ends at midnight, the rest can wait. */
-export const NOTIFICATION_KINDS = /** @type {NotificationKind[]} */ (['streak', 'quiz-streak', 'away', 'unfinished']);
+export const NOTIFICATION_KINDS = /** @type {NotificationKind[]} */ (['streak', 'quiz-streak', 'away', 'unfinished', 'restart']);
 
-/** A day's pause is normal; from the second calendar day without a touch, the problem was left. */
-export const UNFINISHED_MIN_DAYS = 2;
+/** A few hours after the last try the problem was left, not paused (owner's decision). */
+export const UNFINISHED_AFTER_HOURS = 3;
 /** After two weeks a half-done problem is history, not a task; reminding then is noise. */
 export const UNFINISHED_MAX_DAYS = 14;
-/** A week without any practice: long enough to be a break, short enough to come back from. */
-export const AWAY_DAYS = 7;
+/** A few days without any practice: a break worth a nudge back (owner's decision). */
+export const AWAY_DAYS = 3;
+/** Two days with no streak at all: time to start one again (owner's decision). */
+export const RESTART_DAYS = 2;
 /** In the last hours before midnight a streak reminder is urgent and ranks first. */
 export const STREAK_URGENT_MS = 4 * 3600 * 1000;
 
@@ -51,7 +56,7 @@ export const STREAK_URGENT_MS = 4 * 3600 * 1000;
 /**
  * @typedef {{ kind: NotificationKind, key: string, urgent: boolean, data: Record<string, any> }} Notification
  * `key` names this one occurrence. Dismissing it hides it until the facts behind it change: a new
- * day for a streak, a new touch for a problem, a new absence for away.
+ * day for a streak, a new touch for a problem, a new absence for away, a new break for restart.
  */
 
 /**
@@ -132,6 +137,7 @@ export function dueNotifications(facts, now, { settings = {}, dismissed = {}, re
   const touched = touches(facts);
   const last = lastActiveDay(facts, touched);
   const idleDays = (t) => daysBetween(dayKey(new Date(t)), today);
+  const idleHours = (t) => Math.floor((now.getTime() - t) / 3600000);
   if (last && daysBetween(last, today) >= AWAY_DAYS) {
     const resume = latestUnsolved(facts, touched, () => true);
     out.push({
@@ -141,10 +147,16 @@ export function dueNotifications(facts, now, { settings = {}, dismissed = {}, re
       data: { days: daysBetween(last, today), lastDay: last, resume: resume && { problemId: resume.problemId, lang: resume.lang } },
     });
   } else {
-    const left = latestUnsolved(facts, touched, (t) => idleDays(t) >= UNFINISHED_MIN_DAYS && idleDays(t) <= UNFINISHED_MAX_DAYS);
+    const left = latestUnsolved(facts, touched, (t) => idleHours(t) >= UNFINISHED_AFTER_HOURS && idleDays(t) <= UNFINISHED_MAX_DAYS);
     if (left) {
-      const day = dayKey(new Date(left.t));
-      out.push({ kind: 'unfinished', key: `unfinished:${left.problemId}:${day}`, urgent: false, data: { problemId: left.problemId, lang: left.lang, days: idleDays(left.t) } });
+      // The touch's own time names it: leaving the same problem again later is a new occurrence.
+      out.push({ kind: 'unfinished', key: `unfinished:${left.problemId}:${new Date(left.t).toISOString()}`, urgent: false, data: { problemId: left.problemId, lang: left.lang, hours: idleHours(left.t), days: idleDays(left.t) } });
+    }
+    // No streak left at all, coding or quiz, for a while (counted with the rest day, as the streaks are).
+    const lastStreakDay = [...(facts.activeDays ?? []), ...(facts.quizDays ?? [])].reduce((a, d) => (d > a ? d : a), '');
+    if (lastStreakDay && computeStreak(facts.activeDays ?? [], now, restDay) === 0 && computeStreak(facts.quizDays ?? [], now, restDay) === 0) {
+      const gap = daysBetween(lastStreakDay, today);
+      if (gap >= RESTART_DAYS) out.push({ kind: 'restart', key: `restart:${lastStreakDay}`, urgent: false, data: { days: gap, lastDay: lastStreakDay } });
     }
   }
 
@@ -162,6 +174,7 @@ export function dueNotifications(facts, now, { settings = {}, dismissed = {}, re
  */
 export function notificationCopy(n, { problemTitle = () => null } = {}) {
   const days = (d) => (d === 1 ? '1 day' : `${d} days`);
+  const hours = (h) => (h === 1 ? '1 hour' : `${h} hours`);
   switch (n.kind) {
     case 'streak':
       return {
@@ -180,7 +193,8 @@ export function notificationCopy(n, { problemTitle = () => null } = {}) {
     case 'unfinished': {
       const name = problemTitle(n.data.problemId);
       if (!name) return null;
-      return { title: `Finish ${name}`, body: `You left it ${days(n.data.days)} ago, not solved yet.`, href: `#/problem/${n.data.problemId}`, action: 'Continue' };
+      const ago = n.data.hours < 24 ? hours(n.data.hours) : days(Math.max(1, n.data.days));
+      return { title: `Finish ${name}`, body: `You left it ${ago} ago, not solved yet.`, href: `#/problem/${n.data.problemId}`, action: 'Continue' };
     }
     case 'away': {
       const id = n.data.resume?.problemId;
@@ -189,6 +203,8 @@ export function notificationCopy(n, { problemTitle = () => null } = {}) {
         ? { title: 'Welcome back', body: `It has been ${days(n.data.days)}. Pick up ${name} where you left it.`, href: `#/problem/${id}`, action: 'Continue' }
         : { title: 'Welcome back', body: `It has been ${days(n.data.days)}. Today's problem is a good way back in.`, href: '#/daily', action: "Today's problem" };
     }
+    case 'restart':
+      return { title: 'Start a new streak', body: `No streak for ${days(n.data.days)}. One solve or today's quiz starts one.`, href: '#/daily', action: "Today's problem" };
     default:
       return null;
   }

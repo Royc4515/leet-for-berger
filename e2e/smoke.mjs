@@ -2435,7 +2435,7 @@ try {
     // The profile turns a kind off; the bell follows at once.
     await rp.goto(`${BASE}#/me`);
     await rp.waitForSelector('#profile-reminders');
-    if ((await rp.$$('#profile-reminders input[type="checkbox"]:checked')).length !== 4) throw new Error('every reminder kind should start on');
+    if ((await rp.$$('#profile-reminders input[type="checkbox"]:checked')).length !== 5) throw new Error('every reminder kind should start on');
     await rp.click('label[for="reminder-quiz-streak"]');
     await rp.waitForSelector('.notify[data-count="1"]');
     // A narrow phone: the bell takes the streak chip's place while something is due, so the title keeps its room.

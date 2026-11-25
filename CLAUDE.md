@@ -57,7 +57,8 @@ src/js/data/problem-meta.js companies, best known complexity, family per shipped
 src/js/data/company-sets.js practice by company: per-company problem lists, one row per family (-> company-sets.json, same script, which also merges content/israel-hiring.json via scripts/content/israel-companies.mjs: aliases collapsed, Israel fields, display order)
 src/js/data/learning-path.js essential path: 131 problems by tier and topic, easy to hard (-> essential-path.json, same script)
 src/js/data/recommend.js   problem of the day, weak spots from progress
-src/js/data/notifications.js which reminders are due (streak, quiz streak, unfinished, away) and their copy; channel-agnostic (stage F7)
+src/js/data/notifications.js which reminders are due (streak, quiz streak, unfinished, away, restart) and their copy; channel-agnostic (stage F7)
+src/js/data/push-plan.js   what a push says at a send hour: order, count, rest day, the user's wall clock on a UTC server (ADR 0011)
 src/js/data/daily.js       daily challenge maths: number, streaks, rolling count, 16-week calendar
 src/js/data/map-layout.js  Problem Map model: topic and subtopic states, lock reasons, tier order, keyboard neighbours, map level URLs (ADR 0010 + amendments); layoutMap draws the social preview
 src/js/data/map-world.js   the continuous map: one world layout, camera maths (fit, zoom at a point, clamp, smooth flight), zoom levels, label placement (ADR 0010 amendment 2)
