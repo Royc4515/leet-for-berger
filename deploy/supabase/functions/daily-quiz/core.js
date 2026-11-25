@@ -155,6 +155,19 @@ export function cleanName(raw) {
 }
 
 /**
+ * The caller's rest day from a request: a weekday 0 (Sunday) to 6 (Saturday), else none. It only
+ * shapes the caller's own streak, so the client's word is enough; an older client sends none and
+ * gets every day counted, as before.
+ * @param {unknown} value a query string value or a JSON body field
+ * @returns {number|null}
+ */
+export function parseRestDay(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 0 && n <= 6 ? n : null;
+}
+
+/**
  * Consecutive played days ending on `day`, or on the day before while `day` is not played yet.
  * A rest day never breaks it: playing on it counts, a day off is skipped. The same rule as the
  * page's computeStreak (src/js/state/progress.js); tests/rest-day.test.js checks they agree.
@@ -257,7 +270,7 @@ export function createHandler({ getUser, now = () => Date.now(), results, names,
     return jwt ? getUser(jwt) : null;
   }
 
-  async function board(day, me) {
+  async function board(day, me, restDay = null) {
     const start = weekStart(day);
     const end = dayFromNumber(dayNumber(start) + 6);
     const week = await results.between(start, end);
@@ -270,7 +283,7 @@ export function createHandler({ getUser, now = () => Date.now(), results, names,
     if (me) {
       const days = await results.daysOf(me, dayFromNumber(dayNumber(day) - 400));
       const nickname = await profiles.nickname(me);
-      out.me = { streak: streakOn(days, day), played: days.includes(day), name: nameMap.get(me) ?? 'Player', custom: Boolean(nickname) };
+      out.me = { streak: streakOn(days, day, restDay), played: days.includes(day), name: nameMap.get(me) ?? 'Player', custom: Boolean(nickname) };
     }
     return out;
   }
@@ -283,7 +296,7 @@ export function createHandler({ getUser, now = () => Date.now(), results, names,
         const day = url.searchParams.get('day') ?? '';
         if (!isPlayableDay(day, now())) return json(400, { error: 'Unknown day' });
         const user = await userOf(req);
-        return json(200, await board(day, user?.id ?? null));
+        return json(200, await board(day, user?.id ?? null, parseRestDay(url.searchParams.get('rest'))));
       }
       if (req.method === 'POST' && route === '/submit') {
         const user = await userOf(req);
@@ -300,7 +313,7 @@ export function createHandler({ getUser, now = () => Date.now(), results, names,
         const ms = Math.min(MAX_MS, Math.max(0, Math.round(Number(body?.ms) || 0)));
         // Only the first play of a day counts; a replay gets its score but changes nothing.
         const recorded = await results.insert({ user_id: user.id, day, correct: score.correct, total: score.total, ms, answers: body.answers });
-        return json(200, { ...score, recorded, board: await board(day, user.id) });
+        return json(200, { ...score, recorded, board: await board(day, user.id, parseRestDay(body?.restDay)) });
       }
       if (req.method === 'POST' && route === '/name') {
         const user = await userOf(req);

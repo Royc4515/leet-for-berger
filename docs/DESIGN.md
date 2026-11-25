@@ -55,6 +55,8 @@ Selection is shown by an outline and a check mark, not by amber fill alone.
 
 Difficulty moved off the status colours so the two never read alike: `--easy` teal `#3ec5b4`, `--medium` gold, `--hard` rose `#ff6b94`, always with pips and the word.
 
+**Rest day** (owner's decision): the weekday the user picks on the profile, Saturday by default, or none. A day off on it never breaks a streak. In the calendars (the Daily page, the daily card's week) its hex carries a `--muted` dot, so it reads apart from a missed day and from the days to come; the legend and each cell's name say "rest day". The streak chip says "today is your rest day" instead of asking for a solve.
+
 ### Type
 
 | Token | Font | Role |

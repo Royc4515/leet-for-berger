@@ -29,14 +29,16 @@ export function createQuizBoard({ account, fetchImpl = (...a) => fetch(...a) }) 
     available: Boolean(enabled),
     /**
      * @param {string} day
+     * @param {{ restDay?: number|null }} [opts] the player's rest day, for their own streak (none: every day counts)
      * @returns {Promise<Board>}
      */
-    board: (day) => call(`/board?day=${encodeURIComponent(day)}`),
+    board: (day, { restDay = null } = {}) => call(`/board?day=${encodeURIComponent(day)}${restDay === null ? '' : `&rest=${restDay}`}`),
     /**
      * @param {{ day: string, answers: { id: string, choice: number }[], ms: number }} p
+     * @param {{ restDay?: number|null }} [opts] the player's rest day, for the streak the answer carries
      * @returns {Promise<{ correct: number, total: number, results: boolean[], recorded: boolean, board: Board }>}
      */
-    submit: (p) => call('/submit', p),
+    submit: (p, { restDay = null } = {}) => call('/submit', restDay === null ? p : { ...p, restDay }),
     /**
      * Sets the signed-in player's board nickname; an empty name goes back to the sign-in name.
      * @param {string} name

@@ -12,6 +12,7 @@ import { loadNotificationState, saveNotificationState, dismiss, loadQuizDays, NO
 import { listDraftEdits } from '../state/drafts.js';
 import { QUIZ_SAVED_EVENT } from '../state/user-data.js';
 import { catalogEntry } from '../problems/index.js';
+import { restDayOf } from '../state/progress.js';
 
 const PANEL_ID = 'notify-panel';
 const TITLE_ID = 'notify-title';
@@ -39,8 +40,8 @@ function bellIcon() {
  */
 export function dueItems(store, now) {
   const prefs = loadNotificationState();
-  const { activeDays, problems } = store.get();
-  const due = dueNotifications({ activeDays, problems, quizDays: loadQuizDays(), drafts: listDraftEdits() }, now, prefs);
+  const state = store.get();
+  const due = dueNotifications({ activeDays: state.activeDays, problems: state.problems, quizDays: loadQuizDays(), drafts: listDraftEdits() }, now, { ...prefs, restDay: restDayOf(state) });
   return due.map((n) => ({ n, copy: notificationCopy(n, { problemTitle: (id) => catalogEntry(id)?.title }) })).filter((x) => x.copy);
 }
 

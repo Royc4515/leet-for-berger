@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added (streak rest day, stage F7, owner's decision)
+- **Streaks have a rest day.** A day off on it never breaks your coding or quiz streak, and practice on it still counts, so someone who keeps Shabbat is no longer capped at 6 days. It is Saturday unless you choose another weekday, or none, under Preferences on the profile (`#/me`).
+- Every streak counts with it: the header chip, Problems, the daily card, the Daily page (streak, best streak, quiz streak), the profile, the quiz pages and the reminders. On the rest day itself the chip says "today is your rest day" instead of asking for a solve, and no streak reminder comes.
+- The calendars mark it: a dot in the rest day's hex on the Daily page and in the daily card's week, with "Rest day" in the legend and in each cell's name.
+- The choice is part of your progress record (`restDay: { day, at }`), so it follows your account; the newest choice wins across devices.
+- The daily quiz leaderboard's streak takes it too (the client sends it; `rest` on `/board`, `restDay` on `/submit`), once the daily-quiz function is redeployed; until then that one number counts every day, as before.
+- The Privacy Policy lists the rest day among what an account stores.
+
 ### Added (reminders on the page, stage F7 step 2, owner's request)
 - **A bell in the header** shows how many reminders are due, and its panel lists them: a streak that ends tonight, the daily quiz streak, a problem you left 2 to 14 days ago, or a welcome back after a week away. Each has a button that goes there and Dismiss. Its name says the count ("Reminders, 2 due"); Escape closes it; dismissing keeps keyboard focus in the panel. The bell loads after the first page, so the first load is unchanged.
 - **Reminders on the profile page** (`#/me`): one switch per kind, all on to start.

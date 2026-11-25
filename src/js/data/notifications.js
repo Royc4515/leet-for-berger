@@ -112,7 +112,7 @@ function lastActiveDay(facts, touched) {
  * @param {Date} now
  * @param {{ settings?: Partial<Record<NotificationKind, boolean>>, dismissed?: Record<string, string>, restDay?: number|null }} [prefs]
  *   `settings`: a kind set to false is off (absent means on); `dismissed`: keys the user closed
- *   (state/notifications.js); `restDay`: the user's streak rest day (data/daily.js DEFAULT_REST_DAY)
+ *   (state/notifications.js); `restDay`: the user's streak rest day (state/progress.js restDayOf)
  * @returns {Notification[]}
  */
 export function dueNotifications(facts, now, { settings = {}, dismissed = {}, restDay = null } = {}) {

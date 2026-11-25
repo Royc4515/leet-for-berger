@@ -9,7 +9,7 @@ import { h, mount, difficulty, stateBlock, loadingState, siteFooter, hexMark } f
 import { catalogEntry } from '../../problems/index.js';
 import { dailyProblem, dailyCandidates } from '../../data/recommend.js';
 import { calendarWeeks, bestStreak, activeInWindow, shiftDay, dailyNumber, parseDay, msUntilNextDaily, formatCountdown } from '../../data/daily.js';
-import { dayKey, computeStreak } from '../../state/progress.js';
+import { dayKey, computeStreak, restDayOf } from '../../state/progress.js';
 import { loadPath } from '../../data/path-loader.js';
 import { dailyCard, pathTopicOf } from '../daily-card.js';
 import { DAILY_QUIZ_SIZE, dailyQuizNumber } from '../../modes/quiz.js';
@@ -19,6 +19,8 @@ const LONG = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric',
 const SHORT = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 const MONTH = new Intl.DateTimeFormat('en-GB', { month: 'short' });
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+/** By getDay(), for the rest day line. */
+const REST_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /**
  * @param {HTMLElement} root
@@ -38,9 +40,10 @@ export function renderDaily(root, { store }) {
     const candidates = dailyCandidates(path);
     const dailyFor = (d) => dailyProblem(candidates, d);
     const isSolved = (id) => state.problems[id]?.status === 'solved';
-    const weeks = calendarWeeks({ today, weeks: 16, activeDays: state.activeDays, dailyFor, isSolved });
-    const streak = computeStreak(state.activeDays, now);
-    const best = bestStreak(state.activeDays);
+    const rest = restDayOf(state);
+    const weeks = calendarWeeks({ today, weeks: 16, activeDays: state.activeDays, dailyFor, isSolved, restDay: rest });
+    const streak = computeStreak(state.activeDays, now, rest);
+    const best = bestStreak(state.activeDays, rest);
     const last30 = activeInWindow(state.activeDays, today, 30);
     const past = Array.from({ length: 7 }, (_, i) => shiftDay(today, i + 1));
     const dailiesSolved = [today, ...past].filter((d) => isSolved(dailyFor(d))).length;
@@ -63,11 +66,12 @@ export function renderDaily(root, { store }) {
           weeks.map((w) => {
             const d = w[row];
             const title = catalogEntry(d.dailyId ?? '')?.title;
+            const restNote = d.rest ? ', rest day' : '';
             const label = d.future
-              ? `${SHORT.format(parseDay(d.day))}: still to come`
-              : `${SHORT.format(parseDay(d.day))}: ${d.active ? 'solved something' : 'no solve'}${title ? `. Daily: ${title}, ${d.dailySolved ? 'solved' : 'not solved yet'}` : ''}`;
+              ? `${SHORT.format(parseDay(d.day))}${restNote}: still to come`
+              : `${SHORT.format(parseDay(d.day))}${restNote}: ${d.active ? 'solved something' : d.rest ? 'your streak rests' : 'no solve'}${title ? `. Daily: ${title}, ${d.dailySolved ? 'solved' : 'not solved yet'}` : ''}`;
             return h(
-              `span.cal-day${d.active ? '.is-active' : ''}${d.dailySolved ? '.is-daily' : ''}${d.today ? '.is-today' : ''}${d.future ? '.is-future' : ''}`,
+              `span.cal-day${d.active ? '.is-active' : ''}${d.dailySolved ? '.is-daily' : ''}${d.today ? '.is-today' : ''}${d.future ? '.is-future' : ''}${d.rest ? '.is-rest' : ''}`,
               // --d: the cell's diagonal, so the calendar fills in as a wave from the top left.
               { role: 'gridcell', title: label, style: { '--d': String(weeks.indexOf(w) + row) } },
               h('span.sr-only', {}, label),
@@ -97,7 +101,7 @@ export function renderDaily(root, { store }) {
         h(
           'section.daily-facts',
           { 'aria-label': 'Your streak' },
-          fact(`${streak}`, 'day streak', streak ? 'Solve one problem a day to keep it.' : 'Solve any problem today to start one.'),
+          fact(`${streak}`, 'day streak', `${streak ? 'Solve one problem a day to keep it.' : 'Solve any problem today to start one.'}${rest === null ? '' : ` ${REST_NAMES[rest]} is your rest day.`}`),
           fact(`${best}`, 'best streak', 'Your longest run.'),
           fact(`${last30}`, 'of the last 30 days', 'Days with an accepted solve. A missed day does not reset this.'),
           fact(`${dailiesSolved} / 8`, 'dailies this week', 'Today and the 7 days before it.'),
@@ -106,7 +110,7 @@ export function renderDaily(root, { store }) {
         h(
           'section.daily-cal-card',
           { 'aria-labelledby': 'cal-title' },
-          h('div.daily-cal-head', {}, h('h2.section-title', { id: 'cal-title' }, 'Last 16 weeks'), h('ul.cal-legend', { 'aria-label': 'Legend' }, h('li', {}, h('span.cal-day.is-active', { 'aria-hidden': 'true' }), 'Solved something'), h('li', {}, h('span.cal-day.is-active.is-daily', { 'aria-hidden': 'true' }), 'Solved that day\'s daily'), h('li', {}, h('span.cal-day', { 'aria-hidden': 'true' }), 'No solve'))),
+          h('div.daily-cal-head', {}, h('h2.section-title', { id: 'cal-title' }, 'Last 16 weeks'), h('ul.cal-legend', { 'aria-label': 'Legend' }, h('li', {}, h('span.cal-day.is-active', { 'aria-hidden': 'true' }), 'Solved something'), h('li', {}, h('span.cal-day.is-active.is-daily', { 'aria-hidden': 'true' }), 'Solved that day\'s daily'), h('li', {}, h('span.cal-day', { 'aria-hidden': 'true' }), 'No solve'), rest === null ? null : h('li', {}, h('span.cal-day.is-rest', { 'aria-hidden': 'true' }), 'Rest day'))),
           h('div.cal-scroll', {}, cal),
           h('p.hint-text', {}, `${state.activeDays.filter((d) => d >= weeks[0][0].day).length} active days in these 16 weeks.`),
         ),
@@ -144,7 +148,7 @@ export function renderDaily(root, { store }) {
   const quizCard = (today, now) => {
     const quiz = loadQuizProgress();
     const done = quiz.daily[today];
-    const streak = dailyQuizStreak(quiz, now);
+    const streak = dailyQuizStreak(quiz, now, restDayOf(store.get()));
     return h(
       'section.daily-quiz-card',
       { 'aria-labelledby': 'daily-quiz-title' },

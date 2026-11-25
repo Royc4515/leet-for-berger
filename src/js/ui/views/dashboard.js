@@ -4,7 +4,7 @@
  */
 import { h, mount, difficulty, chipGroup, stateBlock, siteFooter, hexMark } from '../dom.js';
 import { catalog, TOPICS, DIFFICULTIES } from '../../problems/index.js';
-import { stats } from '../../state/progress.js';
+import { stats, restDayOf } from '../../state/progress.js';
 import { weakSpots } from '../../data/recommend.js';
 import { loadPath } from '../../data/path-loader.js';
 import { dailyCard } from '../daily-card.js';
@@ -78,7 +78,7 @@ export function renderDashboard(root, { store }) {
     mount(
       today,
       dailyCard({ path, state, now: new Date(), compact: true }),
-      quizCard({ now: new Date() }),
+      quizCard({ now: new Date(), restDay: restDayOf(state) }),
       h(
         `section.today-card.today-weak${spots.length ? '' : '.is-empty'}`,
         { 'aria-labelledby': 'weak-title' },

@@ -38,13 +38,6 @@ export function dailyNumber(day) {
 }
 
 /**
- * The rest day of someone who has not chosen one: Saturday (getDay() 6), so Shabbat never breaks a
- * streak (owner's decision, 2026-11-25). The streak functions take the rest day as a parameter
- * and default to none; the user's setting, with this default, is applied where it is read.
- */
-export const DEFAULT_REST_DAY = 6;
-
-/**
  * True when every day strictly between `a` and `b` (a before b) is the rest day; adjacent days qualify.
  * @param {string} a
  * @param {string} b
@@ -112,16 +105,17 @@ export function formatCountdown(ms) {
 }
 
 /**
- * @typedef {{ day: string, active: boolean, today: boolean, future: boolean, dailyId: string|null, dailySolved: boolean }} CalendarDay
+ * @typedef {{ day: string, active: boolean, today: boolean, future: boolean, dailyId: string|null, dailySolved: boolean, rest: boolean }} CalendarDay
  */
 
 /**
  * Weeks of days for the calendar, oldest week first, Monday first in each week; the last week
  * holds today, so the calendar opens on the present (GitHub's phone view opens on the oldest end).
- * @param {{ today: string, weeks?: number, activeDays: string[], dailyFor: (day: string) => string|null, isSolved: (id: string) => boolean }} input
+ * @param {{ today: string, weeks?: number, activeDays: string[], dailyFor: (day: string) => string|null, isSolved: (id: string) => boolean, restDay?: number|null }} input
+ *   `restDay` marks that weekday `rest` (the user's, state/progress.js restDayOf)
  * @returns {CalendarDay[][]}
  */
-export function calendarWeeks({ today, weeks = 16, activeDays, dailyFor, isSolved }) {
+export function calendarWeeks({ today, weeks = 16, activeDays, dailyFor, isSolved, restDay = null }) {
   const active = new Set(activeDays);
   const weekday = (parseDay(today).getDay() + 6) % 7; // Monday = 0
   const start = shiftDay(today, weekday + (weeks - 1) * 7);
@@ -132,7 +126,7 @@ export function calendarWeeks({ today, weeks = 16, activeDays, dailyFor, isSolve
       const day = shiftDay(start, -(w * 7 + d));
       const future = day > today;
       const dailyId = future ? null : dailyFor(day);
-      week.push({ day, active: active.has(day), today: day === today, future, dailyId, dailySolved: Boolean(dailyId && isSolved(dailyId)) });
+      week.push({ day, active: active.has(day), today: day === today, future, dailyId, dailySolved: Boolean(dailyId && isSolved(dailyId)), rest: parseDay(day).getDay() === restDay });
     }
     out.push(week);
   }

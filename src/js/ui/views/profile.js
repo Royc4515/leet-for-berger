@@ -13,13 +13,15 @@ import { loadQuizProgress } from '../../state/quiz-progress.js';
 import { clearUserData, LAST_SESSIONS_KEY } from '../../state/user-data.js';
 import { saveSeen } from '../../state/tours.js';
 import { siteThemeControl, codeThemeSelect } from '../theme.js';
-import { dayKey } from '../../state/progress.js';
+import { dayKey, restDayOf, setRestDay } from '../../state/progress.js';
 import { NOTIFICATION_KINDS } from '../../data/notifications.js';
 import { loadNotificationState, saveNotificationState, setKindEnabled, isKindEnabled, NOTIFICATIONS_CHANGED_EVENT } from '../../state/notifications.js';
 import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
 
 const SYNC_TEXT = { idle: '', syncing: 'Syncing your progress...', synced: 'Progress synced to your account', error: 'Sync failed. Your progress is safe on this device and syncs again on your next solve.' };
 const LANG_KEY = 'lfb:quiz-lang';
+/** Rest day choices, Sunday first as the Israeli week; the value is getDay(), or 'none'. */
+const REST_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 /** What each reminder kind is called on its switch (data/notifications.js NOTIFICATION_KINDS). */
 const REMINDER_LABELS = { streak: 'Coding streak', 'quiz-streak': 'Daily quiz streak', away: 'Welcome back after a week away', unfinished: 'Problems you left unfinished' };
 
@@ -210,8 +212,35 @@ export function renderProfile(root, { store }) {
     h('div.profile-field', {}, h('label.quiz-label', { for: codeSelect.id }, 'Code theme'), codeSelect, h('p.hint-text', {}, 'The editor\'s colours. Match site follows the site theme.')),
   );
 
-  /** Device preferences: the quiz language and the page guides. */
+  /**
+   * The streak rest day (owner's decision): a day off on it never breaks either streak. Part of the
+   * progress record, so it follows the account. Built once: choosing redraws the page through the
+   * store, and a rebuilt select would drop keyboard focus.
+   */
+  const restSelect = h(
+    'select.select#profile-rest-day',
+    {},
+    REST_DAYS.map((name, day) => h('option', { value: String(day) }, day === 6 ? `${name} (default)` : name)),
+    h('option', { value: 'none' }, 'No rest day'),
+  );
+  restSelect.addEventListener('change', () => {
+    const day = restSelect.value === 'none' ? null : Number(restSelect.value);
+    store.update((s) => setRestDay(s, day, new Date()));
+    toast(day === null ? 'Every day now counts for your streaks' : `Your streaks rest on ${REST_DAYS[day]}`, 'success');
+    restSelect.focus({ preventScroll: true });
+  });
+  const restField = h(
+    'div.profile-field',
+    {},
+    h('label.quiz-label', { for: restSelect.id }, 'Streak rest day'),
+    restSelect,
+    h('p.hint-text', {}, 'A day off on it never breaks your coding or quiz streak, and practice on it still counts.'),
+  );
+
+  /** Device preferences: the quiz language and the page guides; the streak rest day. */
   function preferencesSection() {
+    const rest = restDayOf(store.get());
+    restSelect.value = rest === null ? 'none' : String(rest);
     return section(
       'preferences',
       'Preferences',
@@ -240,6 +269,7 @@ export function renderProfile(root, { store }) {
         h('span.quiz-label', {}, 'Page guides'),
         h('div.profile-row', {}, h('span.hint-text', {}, 'Each page shows a short guide on your first visit.'), h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => { saveSeen({}); toast('Guides will show again on each page', 'success'); } }, 'Show them again')),
       ),
+      restField,
     );
   }
 

@@ -188,3 +188,25 @@ test('name: needs a session, shows on the board, and an empty name goes back to 
   assert.deepEqual(reset.body, { name: 'Ana Levi', custom: false });
   assert.equal((await call('GET', `/board?day=${day}`)).body.daily[0].name, 'Ana Levi');
 });
+
+test('the caller\'s streak takes their rest day from the request, and none without one', async () => {
+  // Fri 2026-11-27 and Sun 2026-11-29 played; Saturday off.
+  const { call, rows } = fakeServer(Date.parse('2026-11-29T10:00:00Z'));
+  rows.push({ user_id: 'u-ana', day: '2026-11-27', correct: 5, total: 5, ms: 1, answers: [], submitted_at: '2026-11-27T10:00:00Z' });
+  rows.push({ user_id: 'u-ana', day: '2026-11-29', correct: 5, total: 5, ms: 1, answers: [], submitted_at: '2026-11-29T10:00:00Z' });
+  const streak = async (q) => (await call('GET', `/board?day=2026-11-29${q}`, { token: 'tok-ana' })).body.me.streak;
+  assert.equal(await streak(''), 1, 'an older client sends no rest day: every day counts, as before');
+  assert.equal(await streak('&rest=6'), 2);
+  assert.equal(await streak('&rest=5'), 1);
+  assert.equal(await streak('&rest=9'), 1, 'not a weekday: ignored');
+  assert.equal(await streak('&rest=abc'), 1);
+});
+
+test('submit takes the rest day for the streak it returns', async () => {
+  const { call, rows } = fakeServer(Date.parse('2026-11-29T10:00:00Z'));
+  rows.push({ user_id: 'u-ana', day: '2026-11-27', correct: 5, total: 5, ms: 1, answers: [], submitted_at: '2026-11-27T10:00:00Z' });
+  const day = '2026-11-29';
+  const res = await call('POST', '/submit', { token: 'tok-ana', body: { day, answers: perfect(day), ms: 1000, restDay: 6 } });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.board.me.streak, 2);
+});

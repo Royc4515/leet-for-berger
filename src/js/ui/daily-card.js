@@ -8,7 +8,7 @@ import { h, difficulty } from './dom.js';
 import { catalogEntry } from '../problems/index.js';
 import { dailyProblem, dailyCandidates } from '../data/recommend.js';
 import { dailyNumber, msUntilNextDaily, formatCountdown, calendarWeeks, bestStreak } from '../data/daily.js';
-import { dayKey, computeStreak } from '../state/progress.js';
+import { dayKey, computeStreak, restDayOf } from '../state/progress.js';
 
 const DATE_FMT = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 const WEEKDAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -48,19 +48,20 @@ export function dailyCard({ path, state, now, compact = false, headingId = 'dail
   const done = state.problems[daily.id]?.status === 'solved';
   const topic = pathTopicOf(path, daily.id);
   const today = daily.day;
-  const week = calendarWeeks({ today, weeks: 1, activeDays: state.activeDays, dailyFor: (d) => dailyProblem(dailyCandidates(path), d), isSolved: (id) => state.problems[id]?.status === 'solved' })[0];
-  const streak = computeStreak(state.activeDays, now);
-  const best = bestStreak(state.activeDays);
+  const rest = restDayOf(state);
+  const week = calendarWeeks({ today, weeks: 1, activeDays: state.activeDays, dailyFor: (d) => dailyProblem(dailyCandidates(path), d), isSolved: (id) => state.problems[id]?.status === 'solved', restDay: rest })[0];
+  const streak = computeStreak(state.activeDays, now, rest);
+  const best = bestStreak(state.activeDays, rest);
   const weekRow = h(
     'ol.week-row',
     { 'aria-label': 'This week' },
     week.map((d, i) =>
       h(
-        `li.week-day${d.active ? '.is-active' : ''}${d.today ? '.is-today' : ''}${d.future ? '.is-future' : ''}`,
+        `li.week-day${d.active ? '.is-active' : ''}${d.today ? '.is-today' : ''}${d.future ? '.is-future' : ''}${d.rest ? '.is-rest' : ''}`,
         {},
         h('span.week-hex', { 'aria-hidden': 'true' }),
         h('span.week-label', { 'aria-hidden': 'true' }, WEEKDAY[i][0]),
-        h('span.sr-only', {}, `${WEEKDAY[i]}: ${d.future ? 'still to come' : d.active ? 'solved something' : d.today ? 'nothing solved yet' : 'no solve'}`),
+        h('span.sr-only', {}, `${WEEKDAY[i]}${d.rest ? ', rest day' : ''}: ${d.future ? 'still to come' : d.active ? 'solved something' : d.rest ? 'your streak rests' : d.today ? 'nothing solved yet' : 'no solve'}`),
       ),
     ),
   );

@@ -3830,6 +3830,10 @@ body.lockdown .toast-host {
   background: var(--hex-locked);
 }
 
+.week-day.is-rest:not(.is-active):not(.is-today) .week-hex {
+  background: radial-gradient(circle, var(--muted) 22%, var(--hex-new) 25%);
+}
+
 .week-label {
   color: var(--muted);
   font-family: var(--mono);
@@ -4207,6 +4211,12 @@ body.lockdown .toast-host {
 .cal-day.is-future {
   background: var(--hex-locked);
   opacity: 0.6;
+}
+
+/* The rest day (state/progress.js restDayOf): a day off there never breaks a streak. A dot in the
+   hex, so it reads apart from a missed day and from the days still to come. */
+.cal-day.is-rest:not(.is-active):not(.is-today) {
+  background: radial-gradient(circle, var(--muted) 22%, var(--hex-new) 25%);
 }
 
 .cal-legend .cal-day {

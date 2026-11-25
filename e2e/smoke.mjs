@@ -1201,7 +1201,7 @@ try {
     if (!headerState.navHidden || !headerState.brandNameHidden || !headerState.titleVisible) {
       throw new Error(`unexpected mobile header state: ${JSON.stringify(headerState)}`);
     }
-    if (headerState.streakAriaLabel !== null || !/^(\d+-day streak(, solve one today to keep it)?|No streak yet)$/.test(headerState.streakSr ?? '') || headerState.streakHiddenParts < 2) {
+    if (headerState.streakAriaLabel !== null || !/^(\d+-day streak(, solve one today to keep it|, today is your rest day)?|No streak yet)$/.test(headerState.streakSr ?? '') || headerState.streakHiddenParts < 2) {
       throw new Error(`streak chip not accessible: ${JSON.stringify(headerState)}`);
     }
 
@@ -2413,7 +2413,8 @@ try {
       const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const ago = (n) => new Date(Date.now() - n * 86400000);
       // A coding streak and a quiz streak alive from yesterday, and a problem tried three days ago.
-      localStorage.setItem('lfb:progress:v1', JSON.stringify({ version: 1, problems: { 'pair-sum-target': { status: 'attempted', submissions: 1, accepted: 0, revealed: false, history: [{ at: ago(3).toISOString(), language: 'python', verdict: 'Wrong Answer', passed: 9, total: 15, code: null }] } }, activeDays: [key(ago(2)), key(ago(1))], totals: { submissions: 3, accepted: 2 }, drafts: {} }));
+      // No rest day: on a Saturday the default one would rightly hold the streak reminders back.
+      localStorage.setItem('lfb:progress:v1', JSON.stringify({ version: 1, problems: { 'pair-sum-target': { status: 'attempted', submissions: 1, accepted: 0, revealed: false, history: [{ at: ago(3).toISOString(), language: 'python', verdict: 'Wrong Answer', passed: 9, total: 15, code: null }] } }, activeDays: [key(ago(2)), key(ago(1))], totals: { submissions: 3, accepted: 2 }, drafts: {}, restDay: { day: null, at: ago(10).toISOString() } }));
       localStorage.setItem('lfb:quiz:v1', JSON.stringify({ questions: {}, daily: { [key(ago(1))]: { correct: 4, total: 5 } }, best: {} }));
     });
     await rp.goto(`${BASE}#/`);
@@ -2449,6 +2450,50 @@ try {
     await rp.waitForSelector('.problem-table');
     const drafts = await rp.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('lfb:draft')));
     if (drafts.length) throw new Error(`an opened problem stored a draft: ${drafts.join(', ')}`);
+    await ctx.close();
+  });
+
+  await check('rest day: Saturday by default carries a streak over a day off; the profile can choose none, keeps focus, and stores the choice; the calendar marks rest days', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const rd = await ctx.newPage();
+    rd.on('console', (m) => m.type() === 'error' && errors.push(`console (rest day): ${m.text()}`));
+    rd.on('pageerror', (e) => errors.push(`pageerror (rest day): ${e.message}`));
+    await rd.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await rd.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+      if (sessionStorage.getItem('seeded')) return;
+      sessionStorage.setItem('seeded', '1');
+      const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const back = (n) => {
+        const d = new Date();
+        d.setHours(12, 0, 0, 0);
+        d.setDate(d.getDate() - n);
+        return d;
+      };
+      // The Friday before the last Saturday, then every day from that Sunday to today: Saturday off.
+      let sat = 1;
+      while (back(sat).getDay() !== 6) sat++;
+      const days = [key(back(sat + 1))];
+      for (let n = sat - 1; n >= 0; n--) days.push(key(back(n)));
+      localStorage.setItem('lfb:progress:v1', JSON.stringify({ version: 1, problems: {}, activeDays: days, totals: { submissions: days.length, accepted: days.length }, drafts: {} }));
+    });
+    await rd.goto(`${BASE}#/daily`);
+    await rd.waitForSelector('.cal-day.is-rest');
+    const seeded = await rd.evaluate(() => JSON.parse(localStorage.getItem('lfb:progress:v1')).activeDays.length);
+    const chip = () => rd.$eval('.streak-chip .streak-count', (e) => Number(e.textContent));
+    if ((await chip()) !== seeded) throw new Error(`with Saturday as the rest day the streak should be ${seeded}, got ${await chip()}`);
+    const cal = await rd.evaluate(() => ({ rest: document.querySelectorAll('.cal .cal-day.is-rest').length, legend: [...document.querySelectorAll('.cal-legend li')].map((li) => li.textContent).includes('Rest day'), label: document.querySelector('.cal .cal-day.is-rest')?.getAttribute('title') ?? '' }));
+    if (cal.rest < 16 || !cal.legend || !/rest day/.test(cal.label)) throw new Error(`calendar rest days: ${JSON.stringify(cal)}`);
+    await rd.goto(`${BASE}#/me`);
+    await rd.waitForSelector('#profile-rest-day');
+    if ((await rd.$eval('#profile-rest-day', (e) => e.value)) !== '6') throw new Error('the picker should start on Saturday');
+    await rd.selectOption('#profile-rest-day', 'none');
+    await rd.waitForFunction((n) => Number(document.querySelector('.streak-chip .streak-count').textContent) === n, seeded - 1);
+    const after = await rd.evaluate(() => ({ focus: document.activeElement?.id, stored: JSON.parse(localStorage.getItem('lfb:progress:v1')).restDay }));
+    if (after.focus !== 'profile-rest-day' || after.stored?.day !== null || !after.stored?.at) throw new Error(`choosing no rest day: ${JSON.stringify(after)}`);
+    await rd.selectOption('#profile-rest-day', '6');
+    await rd.waitForFunction((n) => Number(document.querySelector('.streak-chip .streak-count').textContent) === n, seeded);
     await ctx.close();
   });
 

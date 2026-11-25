@@ -66,5 +66,19 @@ export function mergeProgress(local, remote) {
       accepted: Math.max(base.totals.accepted, remote.totals?.accepted ?? 0, sum(problems, 'accepted')),
     },
     drafts: { ...(remote.drafts ?? {}), ...base.drafts },
+    ...newestRestDay(base.restDay, remote.restDay),
   };
+}
+
+/**
+ * The rest day choice made last, on whichever device; none stored when nobody chose (the default
+ * applies, state/progress.js restDayOf). A tie keeps the local one.
+ * @param {{ day: number|null, at: string }|undefined} local
+ * @param {{ day: number|null, at: string }|undefined} remote
+ * @returns {{ restDay?: { day: number|null, at: string } }}
+ */
+function newestRestDay(local, remote) {
+  const when = (c) => (c && typeof c === 'object' && typeof c.at === 'string' ? c.at : '');
+  const pick = when(remote) > when(local) ? remote : local ?? remote;
+  return pick ? { restDay: pick } : {};
 }
