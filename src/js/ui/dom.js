@@ -4,6 +4,7 @@
  */
 import { glide } from './motion.js';
 import { tourForRoute } from '../data/tour-routes.js';
+import { AUTHOR_NAME, AUTHOR_LINKS, EXTERNAL_LINK, creditLinkName } from '../data/credit.js';
 
 /**
  * Hyperscript-style element factory. Children that are strings become text nodes,
@@ -265,7 +266,27 @@ export function siteFooter({ note = '' } = {}) {
         : null,
       h('a', { href: 'privacy.html' }, 'Privacy Policy'),
     ),
+    siteCredit(),
     note ? h('p.site-links-note', {}, note) : null,
+  );
+}
+
+/**
+ * The author credit at the end of the shared footer (owner's request): "Built by" and the name,
+ * which links to the portfolio, then LinkedIn and GitHub. Quiet like the rest of the footer, so it
+ * never competes with practice; the footer is absent from the workspace and sessions, and so is
+ * this. Each link opens a new tab without an opener (`EXTERNAL_LINK`). privacy.html carries the
+ * same markup by hand (tests/credit.test.js).
+ * @returns {HTMLElement}
+ */
+export function siteCredit() {
+  const [portfolio, ...rest] = AUTHOR_LINKS;
+  const link = (l, text) => h('a', { href: l.href, ...EXTERNAL_LINK, 'aria-label': creditLinkName(l), dataset: { credit: l.id } }, text);
+  return h(
+    'div.site-links-credit',
+    {},
+    h('span', {}, 'Built by ', link(portfolio, AUTHOR_NAME)),
+    rest.map((l) => link(l, l.label)),
   );
 }
 

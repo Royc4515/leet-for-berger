@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark light" />
     <meta name="description" content="Privacy policy for Leet-For-Berger: what is stored when you sign in, and how to have it deleted." />
+    <meta name="author" content="Roy Carmelli" />
     <title>Privacy Policy - Leet-For-Berger</title>
     <link rel="icon" href="src/brand/favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#100f0d" />
@@ -71,6 +72,20 @@
         <p>Company names are trademarks of their owners. The site uses them only to say which companies asked a problem, from public datasets. It shows no company logos and has no affiliation with any company.</p>
 
         <p><a class="btn btn-secondary" href="./#/">Back to site</a></p>
+        <!-- The shared footer's brand and author credit, by hand (src/js/ui/dom.js siteFooter; tests/credit.test.js keeps the links in step). -->
+        <footer class="site-links">
+          <span class="site-links-brand"><span class="hexmark solved" aria-hidden="true"></span><span class="site-links-copy">Leet-For-Berger</span></span>
+          <nav class="site-links-nav" aria-label="Footer">
+            <a href="./#/map">Map</a>
+            <a href="./#/daily">Daily</a>
+            <a href="./#/path">Path</a>
+          </nav>
+          <div class="site-links-credit">
+            <span>Built by <a href="https://roy-carmelli-portfolio.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Roy Carmelli's portfolio (opens in a new tab)" data-credit="portfolio">Roy Carmelli</a></span>
+            <a href="https://www.linkedin.com/in/roy-carmelli" target="_blank" rel="noopener noreferrer" aria-label="Roy Carmelli on LinkedIn (opens in a new tab)" data-credit="linkedin">LinkedIn</a>
+            <a href="https://github.com/Royc4515" target="_blank" rel="noopener noreferrer" aria-label="Roy Carmelli on GitHub (opens in a new tab)" data-credit="github">GitHub</a>
+          </div>
+        </footer>
       </article>
     </main>
     <nav class="tab-bar" aria-label="Primary">

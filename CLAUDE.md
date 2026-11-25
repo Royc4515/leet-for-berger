@@ -67,6 +67,7 @@ src/js/data/map-world.js   the continuous map: one world layout, camera maths (f
 src/js/data/problem-topics.js taxonomy topic per shipped problem (-> problem-topics.json, build-meta.mjs)
 src/js/data/palette-search.js command palette ranking
 src/js/data/themes.js      code themes (Dark Berger, Berger Light, Shuvat Light Pink), Match site, monacoTheme from the --code-* tokens; ui/theme.js = choices and their controls (Profile, toolbar, palette)
+src/js/data/credit.js      the author credit (name, portfolio, LinkedIn, GitHub): shared footer, palette, privacy.html
 src/js/data/profile.js     profile numbers and the leaderboard nickname rule (shared with the quiz board)
 src/js/data/share.js       what each share button sends (spoiler-free texts and links); ui/share.js = the button (share sheet or copy)
 src/js/data/tours.js       guided tour content (one per page + welcome + mentor), validateTour; tour-routes.js = route to tour (startup); tour-layout.js = card and spotlight placement (pure)

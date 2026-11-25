@@ -7,10 +7,10 @@
  */
 
 /**
- * @typedef {{ kind: 'page'|'action'|'setting'|'problem'|'topic'|'company', id: string, label: string, hint?: string, href?: string, run?: () => void, keywords?: string }} PaletteItem
+ * @typedef {{ kind: 'page'|'action'|'setting'|'link'|'problem'|'topic'|'company', id: string, label: string, hint?: string, href?: string, run?: () => void, keywords?: string }} PaletteItem
  */
 
-const KIND_ORDER = { page: 0, problem: 1, topic: 2, company: 3, action: 4, setting: 4 };
+const KIND_ORDER = { page: 0, problem: 1, topic: 2, company: 3, action: 4, setting: 4, link: 5 };
 
 /**
  * Scores one label against a query, or returns -1 when the query is not a subsequence.
