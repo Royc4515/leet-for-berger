@@ -415,6 +415,24 @@ test('board client: reads the board signed out, submits choices with the session
   await assert.rejects(failing.board('2026-11-24'), /nope/);
 });
 
+test('board client: sends the player\'s rest day for their own streak, and nothing when there is none', async () => {
+  const calls = [];
+  const account = { config: { supabaseUrl: 'https://p.supabase.co', supabaseAnonKey: 'anon', enabled: true }, accessToken: async () => 'jwt' };
+  const fetchImpl = async (url, init) => {
+    calls.push({ url, init });
+    return new Response('{}', { status: 200 });
+  };
+  const board = createQuizBoard({ account, fetchImpl });
+  await board.board('2026-11-24', { restDay: 6 });
+  await board.board('2026-11-24', { restDay: null });
+  await board.submit({ day: '2026-11-24', answers: [], ms: 1 }, { restDay: 0 });
+  await board.submit({ day: '2026-11-24', answers: [], ms: 1 }, { restDay: null });
+  assert.equal(calls[0].url, 'https://p.supabase.co/functions/v1/daily-quiz/board?day=2026-11-24&rest=6');
+  assert.equal(calls[1].url, 'https://p.supabase.co/functions/v1/daily-quiz/board?day=2026-11-24');
+  assert.deepEqual(JSON.parse(calls[2].init.body), { day: '2026-11-24', answers: [], ms: 1, restDay: 0 });
+  assert.deepEqual(JSON.parse(calls[3].init.body), { day: '2026-11-24', answers: [], ms: 1 });
+});
+
 test('dailyQuizAccess: signed in to play where the site has accounts, open where it has none', () => {
   assert.equal(dailyQuizAccess({ accounts: true, status: 'signed-in' }), 'play');
   assert.equal(dailyQuizAccess({ accounts: true, status: 'signed-out' }), 'sign-in');

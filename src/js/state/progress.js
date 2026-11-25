@@ -89,7 +89,7 @@ export function markRevealed(state, problemId) {
  * @param {string[]} activeDays day keys
  * @param {Date} [now]
  * @param {number|null} [restDay] weekday, 0 Sunday to 6 Saturday; null: every day counts
- *   (data/daily.js DEFAULT_REST_DAY is the user's default once the setting ships)
+ *   (the user's own is restDayOf(state))
  * @returns {number}
  */
 export function computeStreak(activeDays, now = new Date(), restDay = null) {
@@ -106,13 +106,45 @@ export function computeStreak(activeDays, now = new Date(), restDay = null) {
   return streak;
 }
 
+/**
+ * The rest day of someone who has not chosen one: Saturday (getDay() 6), so Shabbat never breaks a
+ * streak (owner's decision, 2026-11-25).
+ */
+export const DEFAULT_REST_DAY = 6;
+
+const isWeekday = (day) => Number.isInteger(day) && day >= 0 && day <= 6;
+
+/**
+ * The user's streak rest day: their choice (a weekday, or null for none), else DEFAULT_REST_DAY.
+ * The choice lives in the progress record as `restDay: { day, at }`, so it syncs with the account
+ * and the newest choice wins across devices (state/sync.js).
+ * @param {{ restDay?: { day: number|null, at: string } }} state
+ * @returns {number|null}
+ */
+export function restDayOf(state) {
+  const choice = state?.restDay;
+  if (choice && typeof choice === 'object' && (choice.day === null || isWeekday(choice.day))) return choice.day;
+  return DEFAULT_REST_DAY;
+}
+
+/**
+ * Records the user's rest day choice.
+ * @param {ReturnType<typeof emptyState>} state
+ * @param {number|null} day a weekday, 0 Sunday to 6 Saturday, or null for no rest day
+ * @param {Date} now when it was chosen: the newest choice wins across devices
+ */
+export function setRestDay(state, day, now = new Date()) {
+  if (day !== null && !isWeekday(day)) throw new Error(`A rest day is a weekday, 0 to 6, or null: got ${day}`);
+  return { ...state, restDay: { day, at: now.toISOString() } };
+}
+
 /** @param {ReturnType<typeof emptyState>} state */
 export function stats(state, now = new Date()) {
   const solved = Object.values(state.problems).filter((p) => p.status === 'solved').length;
   const { submissions, accepted } = state.totals;
   return {
     solved,
-    streak: computeStreak(state.activeDays, now),
+    streak: computeStreak(state.activeDays, now, restDayOf(state)),
     accuracy: submissions === 0 ? null : Math.round((accepted / submissions) * 100),
     submissions,
   };

@@ -4,7 +4,7 @@
  * Hash routing (not History API) so the app works on GitHub Pages with zero server
  * config: a refresh on any route still serves index.html.
  */
-import { createStore, stats, dayKey } from './state/progress.js';
+import { createStore, stats, dayKey, restDayOf } from './state/progress.js';
 import { createAccount, restoreReturnRoute } from './auth/account.js';
 import { mountAccountMenu } from './ui/account-menu.js';
 import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
@@ -192,7 +192,9 @@ function renderStreak() {
   const { streak } = stats(state);
   // Lit only once today has an accepted submission; a streak kept alive by yesterday stays dim.
   const today = state.activeDays.includes(dayKey());
-  const label = streak ? `${streak}-day streak${today ? '' : ', solve one today to keep it'}` : 'No streak yet';
+  // On the rest day nothing ends at midnight, so the chip does not ask for a solve.
+  const resting = new Date().getDay() === restDayOf(state);
+  const label = streak ? `${streak}-day streak${today ? '' : resting ? ', today is your rest day' : ', solve one today to keep it'}` : 'No streak yet';
   streakChip.title = label;
   streakChip.href = '#/daily';
   const wasLit = streakChip.classList.contains('is-active');

@@ -2,7 +2,7 @@
  * The profile page (#/me, owner's request: one place to manage the account and see where you
  * stand). Pure: progress in, numbers out; the nickname rule the leaderboard and the profile share.
  */
-import { stats } from '../state/progress.js';
+import { stats, restDayOf } from '../state/progress.js';
 import { dailyQuizStreak } from '../state/quiz-progress.js';
 
 /**
@@ -14,7 +14,7 @@ export function profileNumbers({ progress, quiz, now }) {
   const s = stats(progress, now);
   return {
     ...s,
-    quizStreak: dailyQuizStreak(quiz, now),
+    quizStreak: dailyQuizStreak(quiz, now, restDayOf(progress)),
     quizDays: Object.keys(quiz.daily).length,
     quizAnswered: Object.keys(quiz.questions).length,
   };

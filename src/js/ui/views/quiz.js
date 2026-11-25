@@ -18,7 +18,7 @@ import { services } from '../../auth/services.js';
 import { createQuizBoard } from '../../auth/quiz-board.js';
 import { dailyQuizNeedsSignIn, SIGN_IN_NOTE } from '../quiz-card.js';
 import { loadQuizProgress, saveQuizProgress, recordSession, masteredIds, topicProgress, dailyQuizStreak } from '../../state/quiz-progress.js';
-import { dayKey } from '../../state/progress.js';
+import { dayKey, load as loadProgress, restDayOf } from '../../state/progress.js';
 import { msUntilNextDaily, formatCountdown } from '../../data/daily.js';
 import { revealDelta } from '../../data/scroll-reveal.js';
 import { reducedMotion } from '../motion.js';
@@ -266,6 +266,8 @@ function quizBoard() {
 }
 
 const signedIn = () => services.account?.get?.().status === 'signed-in';
+/** The player's streak rest day. Read from the stored progress record, which the store writes on every change: these views get no store. */
+const restDay = () => restDayOf(loadProgress());
 
 /** "1:05" from milliseconds, for the board's time column. */
 const mmss = (ms) => clock(Math.max(1000, ms));
@@ -315,7 +317,7 @@ function boardBlock({ day, lang, submit = null, onBoard = () => {} }) {
       await client.setName(name);
       toast(t.nameSaved, 'success');
       editing = false;
-      draw(await client.board(day), mine);
+      draw(await client.board(day, { restDay: restDay() }), mine);
     } catch {
       toast(t.nameFailed, 'error');
       draw(board, mine);
@@ -403,8 +405,8 @@ function boardBlock({ day, lang, submit = null, onBoard = () => {} }) {
           ),
     );
   };
-  const send = () => client.submit({ day, ...submit }).then((mine) => [mine.board, mine]);
-  const go = client.board(day).then((board) => (submit && signedIn() && board.me && !board.me.played ? send() : [board, null]));
+  const send = () => client.submit({ day, ...submit }, { restDay: restDay() }).then((mine) => [mine.board, mine]);
+  const go = client.board(day, { restDay: restDay() }).then((board) => (submit && signedIn() && board.me && !board.me.played ? send() : [board, null]));
   go.then(
     ([board, mine]) => {
       draw(board, mine);
@@ -451,7 +453,7 @@ export function renderQuizHub(root) {
     const perTopic = topicProgress(progress, QUIZ_INDEX);
     const today = dayKey(new Date());
     const todayResult = progress.daily[today];
-    const quizStreak = dailyQuizStreak(progress, new Date());
+    const quizStreak = dailyQuizStreak(progress, new Date(), restDay());
 
     const pool = () => QUIZ_INDEX.filter((q) => !setup.topics.length || setup.topics.includes(q.topic)).length;
     const scopeLine = h('p.quiz-scope', { 'aria-live': 'polite' });
@@ -611,7 +613,7 @@ export function renderDailyQuiz(root) {
             // Only the first play of the day goes to the server; a replay is practice, but it still
             // delivers the stored first play if the server never got it.
             const submit = first ? play : (before.daily[today]?.play ?? null);
-            stop = renderResults(root, { session: finished, lang, daily: { number, first, day: today, results, submit, streak: dailyQuizStreak(loadQuizProgress(), new Date()) }, onAgain: begin, onRetryMissed: null, onBack: () => (location.hash = '#/quiz') });
+            stop = renderResults(root, { session: finished, lang, daily: { number, first, day: today, results, submit, streak: dailyQuizStreak(loadQuizProgress(), new Date(), restDay()) }, onAgain: begin, onRetryMissed: null, onBack: () => (location.hash = '#/quiz') });
           },
           onQuit: () => (location.hash = '#/quiz'),
         });
@@ -682,7 +684,7 @@ export function renderDailyQuiz(root) {
           h(
             'div.quiz-actions',
             {},
-            done.results ? dailyResultButton({ number, results: done.results, streak: () => boardStreak ?? dailyQuizStreak(loadQuizProgress(), new Date()), rank: () => boardRank, lang }) : null,
+            done.results ? dailyResultButton({ number, results: done.results, streak: () => boardStreak ?? dailyQuizStreak(loadQuizProgress(), new Date(), restDay()), rank: () => boardRank, lang }) : null,
             h(`button.btn${done.results ? '.btn-secondary' : '.btn-primary'}`, { type: 'button', onClick: begin }, 'Play it again'),
             h('a.btn.btn-ghost', { href: '#/quiz' }, 'More quizzes'),
           ),

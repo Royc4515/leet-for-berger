@@ -23,14 +23,14 @@ export function dailyQuizNeedsSignIn() {
 }
 
 /**
- * @param {{ now: Date }} opts
+ * @param {{ now: Date, restDay?: number|null }} opts `restDay`: the player's (state/progress.js restDayOf)
  * @returns {HTMLElement}
  */
-export function quizCard({ now }) {
+export function quizCard({ now, restDay = null }) {
   const progress = loadQuizProgress();
   const today = dayKey(now);
   const done = progress.daily[today];
-  const streak = dailyQuizStreak(progress, now);
+  const streak = dailyQuizStreak(progress, now, restDay);
   const squares = done?.results ?? null;
   return h(
     `section.today-card.today-quiz${done ? '.is-done' : ''}`,
