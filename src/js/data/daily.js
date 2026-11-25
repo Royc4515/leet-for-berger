@@ -38,16 +38,39 @@ export function dailyNumber(day) {
 }
 
 /**
- * Longest run of consecutive active days ever.
+ * The rest day of someone who has not chosen one: Saturday (getDay() 6), so Shabbat never breaks a
+ * streak (owner's decision, 2026-11-25). The streak functions take the rest day as a parameter
+ * and default to none; the user's setting, with this default, is applied where it is read.
+ */
+export const DEFAULT_REST_DAY = 6;
+
+/**
+ * True when every day strictly between `a` and `b` (a before b) is the rest day; adjacent days qualify.
+ * @param {string} a
+ * @param {string} b
+ * @param {number|null} restDay
+ */
+function onlyRestBetween(a, b, restDay) {
+  const gap = daysBetween(a, b);
+  if (gap === 1) return true;
+  if (restDay === null) return false;
+  for (let k = 1; k < gap; k++) if (parseDay(shiftDay(a, -k)).getDay() !== restDay) return false;
+  return true;
+}
+
+/**
+ * Longest run of consecutive active days ever. A rest day between two active days does not
+ * break the run, as in state/progress.js computeStreak.
  * @param {string[]} activeDays day keys, any order, duplicates allowed
+ * @param {number|null} [restDay] weekday, 0 Sunday to 6 Saturday; null: every day counts
  * @returns {number}
  */
-export function bestStreak(activeDays) {
+export function bestStreak(activeDays, restDay = null) {
   const days = [...new Set(activeDays)].sort();
   let best = 0;
   let run = 0;
   for (let i = 0; i < days.length; i++) {
-    run = i > 0 && daysBetween(days[i - 1], days[i]) === 1 ? run + 1 : 1;
+    run = i > 0 && onlyRestBetween(days[i - 1], days[i], restDay) ? run + 1 : 1;
     best = Math.max(best, run);
   }
   return best;

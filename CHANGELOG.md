@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added (reminders on the page, stage F7 step 2, owner's request)
+- **A bell in the header** shows how many reminders are due, and its panel lists them: a streak that ends tonight, the daily quiz streak, a problem you left 2 to 14 days ago, or a welcome back after a week away. Each has a button that goes there and Dismiss. Its name says the count ("Reminders, 2 due"); Escape closes it; dismissing keeps keyboard focus in the panel. The bell loads after the first page, so the first load is unchanged.
+- **Reminders on the profile page** (`#/me`): one switch per kind, all on to start.
+- **Not a toast**: the design system keeps toasts for confirming something that already happened.
+- On a phone the bell shows only while something is due; under 420 px it takes the streak chip's place, so the page title keeps its room.
+
+### Added (notifications, stage F7 step 1, owner's request)
+- **The rules behind reminders, with no UI yet** (`src/js/data/notifications.js`): which reminders are due right now, most pressing first. A coding streak alive from yesterday with nothing accepted today (urgent in the last 4 hours before midnight); the same for the daily quiz; the most recent unsolved problem last submitted or edited 2 to 14 days ago; and after 7 days or more without any practice, a welcome back that names the problem to resume. Each has its copy and link. The page (step 2) and Web Push (step 3) will ask the same rules.
+- **Settings per kind and dismissed reminders** (`src/js/state/notifications.js`, `lfb:notifications:v1`): every kind starts on, a dismissed reminder stays hidden until its facts change (a new day, a new touch), and old dismissals are dropped after 30 days. Cleared on sign-out with the rest of the user's data.
+- **A streak rest day, as logic only (owner's decision)**: the coding and quiz streaks take one weekday that never breaks them (Saturday by default, `DEFAULT_REST_DAY`): practice on it counts, a day off on it is skipped, and no streak reminder fires on it. Someone who keeps Shabbat can now pass 6 days. `computeStreak`, `bestStreak`, `dailyQuizStreak` and the server's `streakOn` take it as a parameter that defaults to none, so no streak shown on the site changes until the picker ships (step 2); a test checks that the page and the server agree on 600 seeded histories.
+
+### Changed (drafts)
+- **A draft now records when its code last changed** (`lfb:draft-at:v1:*`, cleared on sign-out), and only a real change moves it: closing the editor or switching language saves the same code and does not. **Code equal to the starter is no longer stored as a draft**, so opening a problem and leaving stores nothing and never counts as work left unfinished. Drafts saved before this have no edit time and are never reported.
+
 ### Fixed (deploys)
 - **Deploys stop failing on GitHub's side.** Three of four deploys on 2026-11-25 failed and needed a re-run, the site staying a version behind until then. Two failed with "No artifacts named github-pages were found": the deploy ran in the same job a second after the upload, before the artifact was listed. The deploy now has its own job after the build (GitHub's own Pages layout). The third was Pages answering "Deployment failed, try again later": the deploy job now tries once more after 30 seconds. A newer push also waits for a running deploy instead of cancelling it halfway. `tests/ci.test.js` holds the layout in place.
 

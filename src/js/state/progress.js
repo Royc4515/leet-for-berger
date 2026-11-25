@@ -83,14 +83,24 @@ export function markRevealed(state, problemId) {
 /**
  * Consecutive days with an accepted submission, ending today or yesterday.
  * Yesterday still counts so the streak does not show 0 every morning before the first solve.
+ * A rest day never breaks the streak: practice on it still counts, a day off is skipped, so
+ * someone who keeps Shabbat can hold a streak past six days. The server's quiz streak
+ * (deploy/supabase/functions/daily-quiz/core.js streakOn) follows the same rule.
+ * @param {string[]} activeDays day keys
+ * @param {Date} [now]
+ * @param {number|null} [restDay] weekday, 0 Sunday to 6 Saturday; null: every day counts
+ *   (data/daily.js DEFAULT_REST_DAY is the user's default once the setting ships)
+ * @returns {number}
  */
-export function computeStreak(activeDays, now = new Date()) {
+export function computeStreak(activeDays, now = new Date(), restDay = null) {
   const days = new Set(activeDays);
   const cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   if (!days.has(dayKey(cursor))) cursor.setDate(cursor.getDate() - 1);
   let streak = 0;
-  while (days.has(dayKey(cursor))) {
-    streak++;
+  // Ends: a single weekday rests, so every week holds a day that is neither active nor rest.
+  for (;;) {
+    if (days.has(dayKey(cursor))) streak++;
+    else if (cursor.getDay() !== restDay) break;
     cursor.setDate(cursor.getDate() - 1);
   }
   return streak;

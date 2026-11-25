@@ -100,7 +100,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
       }
     : {
         load: (lang) => loadDraft(problem.id, lang),
-        save: (lang, code) => saveDraft(problem.id, lang, code),
+        save: (lang, code) => saveDraft(problem.id, lang, code, { starter: problem.starterCode[lang] }),
         clear: (lang) => clearDraft(problem.id, lang),
       };
 
