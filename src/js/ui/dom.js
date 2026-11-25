@@ -54,15 +54,28 @@ export function trustedHtml(tag, html) {
 
 let toastHost;
 /**
+ * A toast (docs/DESIGN.md): confirms something that already happened, never the only place a result
+ * appears. An optional action (a small ghost button, "Back to dark") closes it and runs.
  * @param {string} message
  * @param {'info'|'success'|'warn'|'error'} [kind]
+ * @param {number} [ms] how long it stays
+ * @param {{ label: string, onClick: () => void } | null} [action]
+ * @returns {HTMLElement} the toast, so a caller can replace it early
  */
-export function toast(message, kind = 'info', ms = 3200) {
+export function toast(message, kind = 'info', ms = 3200, action = null) {
   toastHost ??= document.body.appendChild(h('div.toast-host', { role: 'status', 'aria-live': 'polite' }));
-  const t = h(`div.toast.toast-${kind}`, {}, message);
+  const t = h(
+    `div.toast.toast-${kind}`,
+    {},
+    h('span.toast-text', {}, message),
+    action
+      ? h('button.btn.btn-ghost.btn-sm.toast-action', { type: 'button', onClick: () => (t.classList.add('leaving'), setTimeout(() => t.remove(), 300), action.onClick()) }, action.label)
+      : null,
+  );
   toastHost.append(t);
   setTimeout(() => t.classList.add('leaving'), ms);
   setTimeout(() => t.remove(), ms + 300);
+  return t;
 }
 
 let dialogSeq = 0;

@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added (theme quips, owner's request)
+- **Switching a theme gets a line.** Going light teases ("Light mode. Your retinas just filed a bug report.") with a "Back to dark" button on the toast; going dark approves ("Dark mode. Now you look like you know what a segfault is."); System and every code theme have their own, from Terminal Berger's "Hacking like a Berger mode" to Dark Berger's "well done" burger lines, and the pink theme honours Grace Hopper, Margaret Hamilton and Ada Lovelace. All lines approved by the owner; they rotate at random and never repeat back to back, and a new switch replaces the last toast. Only for a switch the user makes (header, Profile, palette, editor toolbar), never inside an interview, mock OA or battle. `src/js/data/theme-quips.js` (pure, unit-tested), `src/js/ui/theme-quips.js` (loaded after the first page), an e2e step. Toasts can carry one action.
+
 ### Added (author credit, owner's request)
 - **The site says who built it.** The shared footer, on every browse page and the privacy page, ends with "Built by Roy Carmelli": the name links to the portfolio, then LinkedIn and GitHub, each with a small monochrome mark in the text's colour. Quiet like the rest of the footer, never in the workspace or an interview, mock OA or battle. Each link opens a new tab with `rel="noopener noreferrer"` and says so in its accessible name. The command palette finds them too ("author", "built by", "portfolio") and opens them in a new tab. Both HTML shells carry `<meta name="author">`. One source for the links: `src/js/data/credit.js` (`tests/credit.test.js`, and an e2e step in both themes at laptop and phone width).
 

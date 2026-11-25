@@ -8,6 +8,7 @@
  *
  * Fires `theme:change` on window (detail: 'dark' | 'light') when the applied theme changes: the
  * user picked another, the system switched while on "System", or another tab saved a new choice.
+ * Fires `theme:chosen` (detail: { kind: 'site', from, to }) only when the user makes a choice here.
  */
 (() => {
   const KEY = 'lfb:theme';
@@ -56,6 +57,8 @@
   };
 
   const set = (pref) => {
+    // What was on screen before, for `theme:chosen` (ui/theme-quips.js answers a switch with a line).
+    const from = root.dataset.theme;
     unsaved = pref;
     try {
       localStorage.setItem(KEY, pref);
@@ -63,6 +66,7 @@
       /* storage blocked */
     }
     apply(true);
+    dispatchEvent(new CustomEvent('theme:chosen', { detail: { kind: 'site', from, to: pref } }));
   };
 
   // One click is the opposite of what is on screen, saved as that choice (so it also leaves System).

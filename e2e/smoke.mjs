@@ -12,6 +12,7 @@ import { startServer } from '../scripts/serve.mjs';
 import { startFakeRunner } from './fake-runner.mjs';
 import { loadProblem } from '../src/js/problems/index.js';
 import { TOURS } from '../src/js/data/tours.js';
+import { THEME_QUIPS } from '../src/js/data/theme-quips.js';
 
 const args = new Set(process.argv.slice(2));
 const skipPython = args.has('--no-python');
@@ -2951,6 +2952,70 @@ try {
     await editorShows('dark-berger');
     const after = { ...(await look()), ...(await editor()) };
     if (after.saved !== 'dark' || after.bright || after.base !== 'vs-dark' || after.select !== 'site') throw new Error(`palette to Dark with Match site: ${JSON.stringify(after)}`);
+    await ctx.close();
+  });
+
+  await check('theme quips: going light teases with Back to dark, going dark approves, code themes get their own line, nothing inside a session', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 } });
+    const qp = await ctx.newPage();
+    qp.on('console', (m) => m.type() === 'error' && errors.push(`console (quips): ${m.text()}`));
+    qp.on('pageerror', (e) => errors.push(`pageerror (quips): ${e.message}`));
+    await qp.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await qp.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+    });
+    const toasts = () => qp.evaluate(() => [...document.querySelectorAll('.toast:not(.leaving)')].map((t) => ({ text: t.querySelector('.toast-text')?.textContent, action: t.querySelector('.toast-action')?.textContent ?? null })));
+    const lastToast = async () => (await toasts()).at(-1);
+    await qp.goto(`${BASE}#/path`);
+    await qp.waitForSelector('.path-tier');
+    // The quips load after the first page, like the bell.
+    await qp.waitForFunction(() => performance.getEntriesByType('resource').some((r) => r.name.includes('/ui/theme-quips.js')));
+
+    // Dark to light: a tease from the approved three, with the way back.
+    await qp.click('#theme-toggle');
+    await qp.waitForSelector('.toast .toast-action');
+    const light = await lastToast();
+    if (!THEME_QUIPS.toLight.includes(light.text) || light.action !== 'Back to dark') throw new Error(`light quip: ${JSON.stringify(light)}`);
+    if ((await qp.evaluate(() => document.documentElement.dataset.theme)) !== 'light') throw new Error('the switch must happen at once, the quip never blocks it');
+    if (shotsDir) await qp.waitForTimeout(400), await qp.screenshot({ path: `${shotsDir}/41-quip-light.png` }); // after the toast's entrance
+
+    // Back to dark: the theme returns and no second line follows.
+    const before = (await toasts()).length;
+    await qp.click('.toast-action');
+    await qp.waitForFunction(() => document.documentElement.dataset.theme === 'dark' && localStorage.getItem('lfb:theme') === 'dark');
+    await qp.waitForTimeout(400);
+    if ((await toasts()).length >= before) throw new Error(`Back to dark added a toast: ${JSON.stringify(await toasts())}`);
+
+    // Light again, then the header switch to dark: an approving line, no button. Never the same line twice in a row.
+    await qp.click('#theme-toggle');
+    await qp.waitForFunction(() => document.documentElement.dataset.theme === 'light');
+    const second = await lastToast();
+    if (second.text === light.text) throw new Error('the same tease came twice in a row');
+    await qp.click('#theme-toggle');
+    await qp.waitForFunction((lines) => lines.includes([...document.querySelectorAll('.toast:not(.leaving) .toast-text')].at(-1)?.textContent), THEME_QUIPS.toDark);
+    if ((await lastToast()).action !== null) throw new Error('going dark offers no way back');
+    if ((await toasts()).length !== 1) throw new Error(`quips pile up instead of replacing each other: ${JSON.stringify(await toasts())}`);
+    if (shotsDir) await qp.waitForTimeout(400), await qp.screenshot({ path: `${shotsDir}/41-quip-dark.png` }); // after the toast's entrance
+
+    // A code theme from the palette: its own line (the pink theme honours the women who built the field).
+    await qp.click('#palette-trigger');
+    await qp.waitForSelector('dialog.palette[open] .palette-input');
+    await qp.keyboard.type('code theme shuvat');
+    await qp.waitForFunction(() => /Shuvat Light Pink/.test(document.querySelector('.palette-item[aria-selected="true"] .palette-label')?.textContent ?? ''));
+    await qp.keyboard.press('Enter');
+    await qp.waitForFunction((lines) => lines.includes([...document.querySelectorAll('.toast:not(.leaving) .toast-text')].at(-1)?.textContent), THEME_QUIPS.code['shuvat-light-pink']);
+    if (shotsDir) await qp.waitForTimeout(400), await qp.screenshot({ path: `${shotsDir}/41-quip-pink.png` }); // after the toast's entrance
+
+    // Inside an interview: a theme change says nothing.
+    await qp.goto(`${BASE}#/interview`);
+    await qp.click('button:has-text("Start interview")');
+    await qp.waitForSelector('.session-banner.interview');
+    await qp.waitForSelector('.toast', { state: 'detached', timeout: 10000 });
+    await qp.evaluate(() => window.lfbTheme.set('light'));
+    await qp.waitForTimeout(500);
+    if ((await toasts()).length) throw new Error(`a quip inside an interview: ${JSON.stringify(await toasts())}`);
+    await qp.evaluate(() => window.lfbTheme.set('dark'));
     await ctx.close();
   });
 

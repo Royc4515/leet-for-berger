@@ -242,6 +242,12 @@ firstRoute.finally(() =>
     .then((m) => m.mountNotifyBell(document.getElementById('notify'), { store }))
     .catch(() => {}),
 );
+// Theme switches get a line (owner's request); loaded after the first page, not a startup module.
+firstRoute.finally(() =>
+  import('./ui/theme-quips.js')
+    .then((m) => m.installThemeQuips())
+    .catch(() => {}),
+);
 
 // Accounts are optional and inert without a Supabase project in config.js (ADR 0006).
 const account = createAccount({ store });

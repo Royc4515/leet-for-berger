@@ -2103,6 +2103,17 @@ body.lockdown .toast-host {
   background: var(--warn);
 }
 
+/* A toast's one action ("Back to dark"): after the text, never squeezed. */
+.toast-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-action {
+  flex: none;
+  margin-left: auto;
+}
+
 .toast.leaving {
   opacity: 0;
   transform: translateY(-6px);
