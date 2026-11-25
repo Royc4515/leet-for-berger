@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed (themes, owner's request)
+- **A softer light theme**: the first one was too bright. Nothing is white any more: the cards and the editor are warm paper (relative luminance 0.84, was 0.97) on a slightly darker ground, with every colour retuned so text, status and difficulty still pass the same contrast checks.
+- **Four more code themes**: **Midnight** (deep navy), **Terminal** (green phosphor on black), **High Contrast** (black, white and bright colours, for glare, projectors and low vision) and **Mint Light** (soft sage paper), next to Dark Berger, Berger Light and Shuvat Light Pink. Each is one block of tokens in `app.css`; the contrast tests cover them like the rest.
+
 ### Added (themes, owner's request)
 - **Light theme for the whole site**: Dark (the default), Light, or System, which follows the device as it changes. Set in Profile (Appearance) or from the command palette ("Theme: Light"); kept per device. The page starts in the saved theme with no flash of the other one, and the browser bar follows it. Every screen keeps its meanings: green solved, coral tried, amber what to do now.
 - **Code themes for the editor**, as in VS Code: **Dark Berger**, **Berger Light** and **Shuvat Light Pink**, or Match site (the default, Dark Berger on the dark site and Berger Light on the light one). Set in Profile, from a menu next to the language in the editor toolbar (not on a phone, where the toolbar stays one row), or from the palette ("Code theme: ..."). A chosen code theme stays whatever the site does, so a pink editor works on a dark page.

@@ -106,6 +106,8 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Share buttons (owner's request): problem, solve, company, map place, learning path, daily, interview report, race result; spoiler-free texts
   - [x] CI runs only the unit tests a change reaches (traced proof), the smoke test only when the site changed, on the runner's Chrome
   - [x] Themes (owner's request): a light theme for the whole site (Dark, Light or System) and code themes for the editor, Dark Berger, Berger Light and Shuvat Light Pink, from Profile, the workspace toolbar and the command palette; every colour written once, in theme layers in `app.css` (`docs/DESIGN.md` "Themes")
+  - [x] Softer light theme (owner: too bright) and four more code themes: Midnight, Terminal, High Contrast, Mint Light
+  - [ ] Sun/moon button in the header (owner's request), after the notifications bell (#73) lands next to it
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)

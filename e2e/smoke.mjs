@@ -2448,56 +2448,79 @@ try {
       window.LFB_SUPABASE_URL = '';
       // The theme as the first frame sees it: set by theme-boot.js in <head>, never by a later module.
       requestAnimationFrame(() => (window.__firstFrameTheme = document.documentElement.dataset.theme));
-    });
-    const look = () =>
-      tp.evaluate(() => ({
-        theme: document.documentElement.dataset.theme,
-        first: window.__firstFrameTheme,
-        bg: getComputedStyle(document.body).backgroundColor,
-        bar: document.querySelector('meta[name="theme-color"]').content,
-        saved: localStorage.getItem('lfb:theme'),
-      }));
-    const editor = () =>
-      tp.evaluate(() => {
+      // Colours are read from the CSS tokens, so the step checks the contract (the page and Monaco
+      // draw the tokens) and not a copy of the palette.
+      const rgb = (color) => {
+        const probe = document.createElement('i');
+        probe.style.color = color;
+        document.body.append(probe);
+        const out = getComputedStyle(probe).color;
+        probe.remove();
+        return out;
+      };
+      window.__look = () => {
+        const [r, g, b] = getComputedStyle(document.body).backgroundColor.match(/\d+/g).map(Number);
+        return {
+          theme: document.documentElement.dataset.theme,
+          first: window.__firstFrameTheme,
+          bright: (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.5,
+          barIsGround: document.querySelector('meta[name="theme-color"]').content === getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+          saved: localStorage.getItem('lfb:theme'),
+        };
+      };
+      window.__editor = () => {
         const ed = document.querySelector('.monaco-editor');
-        return { bg: getComputedStyle(ed).backgroundColor, base: ed.classList.contains('vs-dark') ? 'vs-dark' : ed.classList.contains('vs') ? 'vs' : '?', host: document.querySelector('.editor-host').dataset.codeTheme, select: document.querySelector('.toolbar .code-theme-select').value };
-      });
+        const host = document.querySelector('.editor-host');
+        return {
+          drawn: Boolean(ed) && getComputedStyle(ed).backgroundColor === rgb(getComputedStyle(host).getPropertyValue('--code-bg').trim()),
+          base: ed?.classList.contains('vs-dark') ? 'vs-dark' : ed?.classList.contains('vs') ? 'vs' : '?',
+          host: host?.dataset.codeTheme,
+          select: document.querySelector('.toolbar .code-theme-select')?.value,
+        };
+      };
+    });
+    const look = () => tp.evaluate(() => window.__look());
+    const editor = () => tp.evaluate(() => window.__editor());
+    // Monaco has redrawn in the code theme `id`, in that theme's own colours.
+    const editorShows = (id) => tp.waitForFunction((want) => window.__editor().host === want && window.__editor().drawn, id);
 
     await tp.goto(`${BASE}#/me`);
     await tp.waitForSelector('#profile-appearance');
     const dark = await look();
-    if (dark.theme !== 'dark' || dark.bg !== 'rgb(16, 15, 13)') throw new Error(`default theme: ${JSON.stringify(dark)}`);
+    if (dark.theme !== 'dark' || dark.bright) throw new Error(`default theme: ${JSON.stringify(dark)}`);
     await tp.click('#profile-appearance .segmented-btn[data-value="light"]');
     await tp.waitForFunction(() => document.documentElement.dataset.theme === 'light');
     const light = await look();
-    if (light.bg !== 'rgb(245, 241, 234)' || light.bar !== '#f5f1ea' || light.saved !== 'light') throw new Error(`light theme: ${JSON.stringify(light)}`);
+    if (!light.bright || !light.barIsGround || light.saved !== 'light') throw new Error(`light theme: ${JSON.stringify(light)}`);
     await tp.reload();
     await tp.waitForSelector('#profile-appearance');
     const reloaded = await look();
-    if (reloaded.first !== 'light' || reloaded.bg !== 'rgb(245, 241, 234)') throw new Error(`light theme after reload, first frame included: ${JSON.stringify(reloaded)}`);
+    if (reloaded.first !== 'light' || !reloaded.bright) throw new Error(`light theme after reload, first frame included: ${JSON.stringify(reloaded)}`);
     if ((await tp.getAttribute('#profile-appearance .segmented-btn[data-value="light"]', 'aria-pressed')) !== 'true') throw new Error('Profile does not show the saved theme');
 
     // Shuvat Light Pink chosen in Profile is the editor's theme on the problem page.
     await tp.selectOption('#profile-code-theme', 'shuvat-light-pink');
     await tp.goto(`${BASE}#/problem/pair-sum-target`);
     await tp.waitForSelector('.monaco-editor .view-line');
+    await editorShows('shuvat-light-pink');
     const pink = await editor();
-    if (pink.bg !== 'rgb(255, 243, 248)' || pink.base !== 'vs' || pink.host !== 'shuvat-light-pink' || pink.select !== 'shuvat-light-pink') throw new Error(`Shuvat Light Pink: ${JSON.stringify(pink)}`);
+    if (pink.base !== 'vs' || pink.select !== 'shuvat-light-pink') throw new Error(`Shuvat Light Pink: ${JSON.stringify(pink)}`);
     // The toolbar switches it in place: Dark Berger on the light page.
     await tp.selectOption('.toolbar .code-theme-select', 'dark-berger');
-    await tp.waitForFunction(() => getComputedStyle(document.querySelector('.monaco-editor')).backgroundColor === 'rgb(23, 21, 18)');
+    await editorShows('dark-berger');
     if ((await editor()).base !== 'vs-dark') throw new Error('Dark Berger is not drawn on vs-dark');
     // Match site follows the site theme, here changed from the palette.
     await tp.selectOption('.toolbar .code-theme-select', 'site');
-    await tp.waitForFunction(() => getComputedStyle(document.querySelector('.monaco-editor')).backgroundColor === 'rgb(253, 251, 248)');
+    await editorShows('berger-light');
     await tp.click('#palette-trigger'); // Ctrl+K inside Monaco is the start of its own chords
     await tp.waitForSelector('dialog.palette[open] .palette-input');
     await tp.keyboard.type('Theme: Dark');
     await tp.waitForFunction(() => document.querySelector('.palette-item[aria-selected="true"] .palette-label')?.textContent === 'Theme: Dark');
     await tp.keyboard.press('Enter');
-    await tp.waitForFunction(() => document.documentElement.dataset.theme === 'dark' && getComputedStyle(document.querySelector('.monaco-editor')).backgroundColor === 'rgb(23, 21, 18)');
+    await tp.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
+    await editorShows('dark-berger');
     const after = { ...(await look()), ...(await editor()) };
-    if (after.saved !== 'dark' || after.base !== 'vs-dark' || after.host !== 'dark-berger' || after.select !== 'site') throw new Error(`palette to Dark with Match site: ${JSON.stringify(after)}`);
+    if (after.saved !== 'dark' || after.bright || after.base !== 'vs-dark' || after.select !== 'site') throw new Error(`palette to Dark with Match site: ${JSON.stringify(after)}`);
     await ctx.close();
   });
 

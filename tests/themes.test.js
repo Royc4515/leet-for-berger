@@ -9,9 +9,10 @@ import { CODE_THEMES, CODE_THEME_OPTIONS, MATCH_SITE, codeThemeFor, parseCodeThe
 
 const BOOT = readFileSync(new URL('../src/js/theme-boot.js', import.meta.url), 'utf8');
 
-test('the code themes are the owner\'s three, offered after Match site', () => {
-  assert.deepEqual(CODE_THEMES.map((t) => t.label), ['Dark Berger', 'Berger Light', 'Shuvat Light Pink']);
-  assert.deepEqual(CODE_THEME_OPTIONS.map((o) => o.value), [MATCH_SITE, 'dark-berger', 'berger-light', 'shuvat-light-pink']);
+test('the code themes, the owner\'s three first, are offered after Match site', () => {
+  assert.deepEqual(CODE_THEMES.map((t) => t.label), ['Dark Berger', 'Berger Light', 'Shuvat Light Pink', 'Midnight', 'Terminal', 'High Contrast', 'Mint Light']);
+  assert.deepEqual(CODE_THEME_OPTIONS.map((o) => o.value), [MATCH_SITE, ...CODE_THEMES.map((t) => t.id)]);
+  assert.equal(new Set(CODE_THEMES.map((t) => t.id)).size, CODE_THEMES.length, 'ids are unique');
   // Match site resolves to exactly one theme per site palette.
   for (const scheme of ['dark', 'light']) assert.equal(CODE_THEMES.filter((t) => t.site && t.scheme === scheme).length, 1);
 });
