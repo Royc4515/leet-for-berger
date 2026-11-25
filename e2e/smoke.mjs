@@ -2215,6 +2215,8 @@ try {
     await page.goto(`${BASE}#/nope`);
     await page.waitForSelector('.page .state .state-title');
     await expectText('.page .state', /Not found/);
+    // The footer is not a startup module: main.js loads it after the block, the credit with it.
+    await page.waitForSelector('.page footer.site-links .site-links-credit a[data-credit="portfolio"]');
   });
 
   await check('unknown problem id shows not found; a problem module that fails to load shows could not load', async () => {

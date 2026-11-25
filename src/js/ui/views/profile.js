@@ -3,7 +3,8 @@
  * setting in one place: the leaderboard nickname, the themes, the quiz language, the page guides,
  * the reminders, GitHub sync, signing out and your data. Works signed out too, for the progress kept in this browser.
  */
-import { h, mount, segmented, confirmDialog, toast, siteFooter } from '../dom.js';
+import { h, mount, segmented, confirmDialog, toast } from '../dom.js';
+import { siteFooter } from '../footer.js';
 import { services } from '../../auth/services.js';
 import { userInitials } from '../../auth/account.js';
 import { createQuizBoard } from '../../auth/quiz-board.js';

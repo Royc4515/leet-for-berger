@@ -4,7 +4,8 @@
  */
 import { shareButton } from '../share.js';
 import { pathShare } from '../../data/share.js';
-import { h, mount, difficulty, stateBlock, loadingState, siteFooter, hexMark } from '../dom.js';
+import { h, mount, difficulty, stateBlock, loadingState, hexMark } from '../dom.js';
+import { siteFooter } from '../footer.js';
 import { catalogEntry } from '../../problems/index.js';
 import { pathProgress, conceptLabel, topicStartsOpen, TIER_SUMMARIES } from '../../data/learning-path.js';
 import { TOPICS } from '../../data/taxonomy.js';

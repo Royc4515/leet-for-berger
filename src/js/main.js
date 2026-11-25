@@ -10,7 +10,7 @@ import { mountAccountMenu } from './ui/account-menu.js';
 import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
 import { services } from './auth/services.js';
 import { catalogEntry, loadProblem } from './problems/index.js';
-import { h, mount, toast, stateBlock, loadingState, siteFooter } from './ui/dom.js';
+import { h, mount, toast, stateBlock, loadingState } from './ui/dom.js';
 import { loadSeen, hasSeen } from './state/tours.js';
 import { tourForRoute } from './data/tour-routes.js';
 import { viewTransition, glide, installSpotlight, animate, DUR, EASE } from './ui/motion.js';
@@ -53,15 +53,13 @@ async function loadProblemRoute(_, [, id]) {
 
 function renderNotFound(root, message = 'This page is not on the map. The link may be old, or the address has a typo.', title = 'Not found', kind = 'empty') {
   const retry = kind === 'error' ? { label: 'Try again', onClick: () => location.reload() } : { label: 'Open the map', href: '#/map' };
-  mount(
-    root,
-    h(
-      'div.page.page-narrow',
-      {},
-      stateBlock({ title, body: message, kind, headingTag: 'h1', action: retry, secondary: { label: 'Back to problems', href: '#/' } }),
-      siteFooter(),
-    ),
-  );
+  const page = h('div.page.page-narrow', {}, stateBlock({ title, body: message, kind, headingTag: 'h1', action: retry, secondary: { label: 'Back to problems', href: '#/' } }));
+  mount(root, page);
+  // The footer is not a startup module (tests/startup-graph.test.js): it follows a moment later,
+  // and only onto this page if it is still the one shown.
+  import('./ui/footer.js')
+    .then(({ siteFooter }) => page.isConnected && page.append(siteFooter()))
+    .catch(() => {});
   return () => {};
 }
 

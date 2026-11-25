@@ -3,7 +3,8 @@
  */
 import { shareButton } from '../share.js';
 import { interviewShare, battleShare } from '../../data/share.js';
-import { h, mount, toast, confirmDialog, difficulty, chipGroup, ilMark, siteFooter, companyMark } from '../dom.js';
+import { h, mount, toast, confirmDialog, difficulty, chipGroup, ilMark, companyMark } from '../dom.js';
+import { siteFooter } from '../footer.js';
 import { createPicker, createOptionGroup } from '../picker.js';
 import { renderWorkspace } from './workspace.js';
 import { availableEntries, catalogEntry, loadProblem, TOPICS, DIFFICULTIES } from '../../problems/index.js';

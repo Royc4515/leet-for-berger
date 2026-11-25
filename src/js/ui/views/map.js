@@ -26,7 +26,8 @@
  */
 import { shareButton } from '../share.js';
 import { mapShare } from '../../data/share.js';
-import { h, mount, difficulty, segmented, stateBlock, loadingState, siteFooter, companyMark } from '../dom.js';
+import { h, mount, difficulty, segmented, stateBlock, loadingState, companyMark } from '../dom.js';
+import { siteFooter } from '../footer.js';
 import { availableEntries, catalogEntry } from '../../problems/index.js';
 import { TOPICS } from '../../data/taxonomy.js';
 import { TIER_TITLES, pathProgress, conceptLabel } from '../../data/learning-path.js';

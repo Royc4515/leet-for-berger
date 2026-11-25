@@ -5,7 +5,8 @@
  * the daily quiz. Session rules live in modes/quiz.js (pure); this file draws them, loads the
  * topics a session needs, and saves the result.
  */
-import { h, mount, segmented, progressBar, siteFooter, confirmDialog, loadingState, stateBlock, toast } from '../dom.js';
+import { h, mount, segmented, progressBar, confirmDialog, loadingState, stateBlock, toast } from '../dom.js';
+import { siteFooter } from '../footer.js';
 import { QUIZ_TOPICS } from '../../data/quiz-topics.js';
 import { QUIZ_INDEX } from '../../data/quiz-index.js';
 import { loadQuizTopics } from '../../data/quiz-loader.js';

@@ -68,7 +68,7 @@ What each screen must help them do:
 | C13 | Confirm dialog | `dom.js confirmDialog` | neutral, danger, 390 | Step 1 | [x] |
 | C14 | Toast | `dom.js toast` | info, success, warn, error, stacking | Step 1 | [x] |
 | C15 | Skip link | `index.html` | focus | Step 1 | [x] |
-| C16 | Footer | `dom.js siteFooter` | browse pages | Step 1 | [x] |
+| C16 | Footer | `footer.js siteFooter` | browse pages | Step 1 | [x] |
 | C17 | Buttons | `app.css` | primary, secondary, ghost, danger, icon, sizes, disabled, loading | Step 1 | [x] |
 | C18 | Chips and chip groups | `dom.js chip, chipGroup` | off, on, focus | Step 1 | [x] |
 | C19 | Segmented control | `dom.js segmented` | selected, focus | Step 1 | [x] |
