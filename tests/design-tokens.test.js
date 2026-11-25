@@ -242,15 +242,18 @@ for (const [name, vars] of Object.entries(THEMES)) {
 }
 
 for (const t of CODE_THEMES) {
-  test(`code theme ${t.label}: hex colours Monaco accepts, syntax at 4.5:1, line numbers and cursor at 3:1`, () => {
+  const min = t.contrast ?? 4.5;
+  test(`code theme ${t.label}: hex colours Monaco accepts, syntax at ${min}:1, line numbers and cursor at 3:1`, () => {
     const vars = codeTheme(t);
     const read = (token) => vars.get(token);
     for (const token of CODE_TOKENS) assert.match(read(token) ?? '', /^#[0-9a-f]{6}$/i, `${t.id} ${token} must be a #rrggbb colour (Monaco takes no other)`);
     const c = (fg) => contrastRatio(read(fg), read('--code-bg'));
     for (const fg of ['--code-fg', '--code-comment', '--code-keyword', '--code-string', '--code-number', '--code-type', '--code-delimiter', '--code-identifier', '--code-gutter-active', '--code-bracket-1', '--code-bracket-2', '--code-bracket-3']) {
-      assert.ok(c(fg) >= 4.5, `${t.id} ${fg} contrast ${c(fg).toFixed(2)}:1 is below 4.5:1`);
+      assert.ok(c(fg) >= min, `${t.id} ${fg} contrast ${c(fg).toFixed(2)}:1 is below ${min}:1`);
     }
-    for (const fg of ['--code-gutter', '--code-cursor']) assert.ok(c(fg) >= 3, `${t.id} ${fg} contrast ${c(fg).toFixed(2)}:1 is below 3:1`);
+    for (const fg of ['--code-gutter', '--code-cursor']) assert.ok(c(fg) >= Math.min(min, 3), `${t.id} ${fg} contrast ${c(fg).toFixed(2)}:1 is below 3:1`);
+    // A high contrast theme keeps its line numbers at its own bar too.
+    if (t.contrast) assert.ok(c('--code-gutter') >= min, `${t.id} line numbers contrast ${c('--code-gutter').toFixed(2)}:1 is below ${min}:1`);
     const monaco = monacoTheme(read, t.scheme);
     assert.equal(monaco.base, t.scheme === 'light' ? 'vs' : 'vs-dark');
     assert.equal(monaco.colors['editor.background'], read('--code-bg'));
