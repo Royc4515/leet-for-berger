@@ -10,16 +10,15 @@ permissions:
   pages: write
   id-token: write
 
+# One deploy at a time. A newer push waits instead of cancelling a deploy halfway (a cancelled
+# deploy is a red run with nothing published); runs queued behind it collapse to the newest.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       # Ship only what the browser needs: no tests, docs or tooling on the public site.
@@ -43,5 +42,24 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+
+  # don't touch / its own job, after the build job: deploying in the same job, a second after the
+  # upload, failed with "No artifacts named github-pages were found" (the artifact was not listed
+  # yet). This is GitHub's own Pages layout.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.retry.outputs.page_url || steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      # Pages itself sometimes answers "Deployment failed, try again later"; a re-run then
+      # succeeds, so the job tries once more after a pause instead of leaving the site behind.
+      - if: steps.deployment.outcome == 'failure'
+        run: sleep 30
+      - id: retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
