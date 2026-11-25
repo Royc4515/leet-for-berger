@@ -15,6 +15,7 @@
 import { h, mount, trustedHtml, toast, confirmDialog, difficulty } from '../dom.js';
 import { attachResizer } from '../resizer.js';
 import { createEditor } from '../editor.js';
+import { codeThemeSelect } from '../theme.js';
 import { renderIdle, renderPending, renderResult, renderError, renderGrowthLine } from '../results.js';
 import { buildSuite, judge, comparatorFor } from '../../engine/harness.js';
 import { estimateGrowth, describeGrowth, shouldRetryGrowth } from '../../engine/growth.js';
@@ -226,6 +227,8 @@ export function renderWorkspace(root, { problem, store, session = null }) {
   const resetBtn = h('button.btn.btn-ghost.btn-icon', { type: 'button', title: 'Reset to starter code', 'aria-label': 'Reset to starter code' }, '↺');
   const mentorBtn = h('button.btn.btn-ghost', { type: 'button', disabled: !allowAssist, 'aria-pressed': 'false', title: allowAssist ? 'AI Mentor: Socratic hints' : 'Disabled in this mode', 'data-action': 'mentor' }, 'Mentor');
 
+  const themes = new AbortController();
+  cleanups.push(() => themes.abort());
   const editorHost = h('div.editor-host#ws-code', {}, h('div.editor-loading', {}, h('span.spinner'), ' Loading editor...'));
   // A status region (polite). Not atomic: the growth line added after a verdict is read on its own.
   const consoleBody = h('div.console-body', { role: 'status', 'aria-live': 'polite', 'aria-atomic': 'false' });
@@ -242,7 +245,7 @@ export function renderWorkspace(root, { problem, store, session = null }) {
     h(
       'div.toolbar',
       {},
-      h('div.toolbar-group.toolbar-setup', {}, langSelect, resetBtn, runnerNote),
+      h('div.toolbar-group.toolbar-setup', {}, langSelect, codeThemeSelect(themes.signal), resetBtn, runnerNote),
       h('div.toolbar-group.toolbar-help', {}, mentorBtn, revealBtn),
       runGroup,
     ),

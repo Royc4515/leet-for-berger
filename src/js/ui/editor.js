@@ -7,6 +7,8 @@
  */
 
 import { TS_COMPILER_OPTIONS, AMBIENT_TYPES } from '../engine/typescript.js';
+import { monacoTheme } from '../data/themes.js';
+import { currentCodeTheme, onThemeChange } from './theme.js';
 
 // don't touch / pinned: Monaco's AMD paths and worker layout change between majors.
 const MONACO_VERSION = '0.52.2';
@@ -137,58 +139,24 @@ export function loadMonaco() {
  * @property {boolean} isFallback
  */
 
-const THEME = 'lfb-dark';
-let themeDefined = false;
-
 /**
- * Monaco's vs-dark with the panel colours of the design tokens (docs/DESIGN.md), so the editor is
- * the same surface as the panes around it. Read from the CSS at runtime: one source of truth, and
- * Monaco only accepts hex, which the surface tokens are. Defined once per page (pinned 0.52.2 API).
- * @param {any} monaco
+ * Draws the editor host in the chosen code theme (its data-theme and data-code-theme pick the
+ * --code-* tokens in app.css) and, with Monaco, gives Monaco the same colours read back from the
+ * host: the colours are written once, in the CSS. Monaco themes are page-wide; a page has one editor.
+ * @param {any} monaco null for the plain textarea, which the CSS alone colours
+ * @param {HTMLElement} host
+ * @returns {string} the Monaco theme name
  */
-function defineTheme(monaco) {
-  if (themeDefined) return;
-  const css = getComputedStyle(document.documentElement);
-  const tok = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
-  // Syntax in warm, low-chroma colours that sit on the graphite ground for hours without glare;
-  // the lamp amber is kept for the cursor only (docs/DESIGN.md, Atlas).
-  monaco.editor.defineTheme(THEME, {
-    base: 'vs-dark',
-    inherit: true,
-    rules: [
-      { token: 'comment', foreground: '8a8174', fontStyle: 'italic' },
-      { token: 'keyword', foreground: 'e59a7f' },
-      { token: 'string', foreground: 'aac98e' },
-      { token: 'number', foreground: 'dcbc76' },
-      { token: 'regexp', foreground: 'dcbc76' },
-      { token: 'type', foreground: '93c1d4' },
-      { token: 'type.identifier', foreground: '93c1d4' },
-      { token: 'delimiter', foreground: 'b3aa9c' },
-      { token: 'identifier', foreground: 'ece5d9' },
-    ],
-    colors: {
-      'editor.background': tok('--panel', '#171512'),
-      'editor.foreground': tok('--text', '#f2ece2'),
-      'editorGutter.background': tok('--panel', '#171512'),
-      'editor.lineHighlightBackground': tok('--panel-2', '#1e1c18'),
-      'editor.lineHighlightBorder': tok('--panel-2', '#1e1c18'),
-      'editorLineNumber.foreground': tok('--border-control', '#6f675b'),
-      'editorLineNumber.activeForeground': tok('--text-2', '#cbc2b5'),
-      'editorCursor.foreground': tok('--accent', '#f3a93c'),
-      'editor.selectionBackground': '#4a3b25',
-      'editor.inactiveSelectionBackground': '#3a3125',
-      'editorBracketMatch.background': '#3d3426',
-      'editorBracketMatch.border': '#6f675b',
-      'editorWidget.background': tok('--panel-2', '#1e1c18'),
-      'editorWidget.border': tok('--border-strong', '#3d3831'),
-      'editorSuggestWidget.background': tok('--panel-2', '#1e1c18'),
-      'editorSuggestWidget.selectedBackground': tok('--panel-3', '#27241f'),
-      'editorIndentGuide.background1': tok('--border', '#2c2823'),
-      'editorIndentGuide.activeBackground1': tok('--border-strong', '#3d3831'),
-      'scrollbarSlider.background': `${tok('--border-strong', '#3d3831')}99`,
-    },
-  });
-  themeDefined = true;
+function applyCodeTheme(monaco, host) {
+  const theme = currentCodeTheme();
+  host.dataset.theme = theme.scheme;
+  host.dataset.codeTheme = theme.id;
+  if (monaco) {
+    const css = getComputedStyle(host);
+    monaco.editor.defineTheme(theme.id, monacoTheme((token) => css.getPropertyValue(token).trim(), theme.scheme));
+    monaco.editor.setTheme(theme.id);
+  }
+  return theme.id;
 }
 
 /**
@@ -197,16 +165,16 @@ function defineTheme(monaco) {
  * @returns {Promise<EditorHandle>}
  */
 export async function createEditor(host, { value, language }) {
+  // The host takes the code theme at once, so the loading state already has its colours.
+  applyCodeTheme(null, host);
   const monaco = await loadMonaco();
-  if (!host.isConnected) return fallbackEditor(host, { value }); // view left while loading
-  if (!monaco) return fallbackEditor(host, { value });
+  if (!host.isConnected || !monaco) return fallbackEditor(host, { value }); // view left while loading, or no CDN
 
-  defineTheme(monaco);
+  const themes = new AbortController();
   const editor = monaco.editor.create(host, {
     value,
     language,
-    // Based on vs-dark, so the editor still carries the vs-dark class and token colours.
-    theme: THEME,
+    theme: applyCodeTheme(monaco, host),
     automaticLayout: false, // we call layout() from the resizer; the built-in polling is laggy
     fontSize: 14,
     fontFamily: "'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -225,6 +193,7 @@ export async function createEditor(host, { value, language }) {
 
   const ro = new ResizeObserver(() => editor.layout());
   ro.observe(host);
+  onThemeChange(() => applyCodeTheme(monaco, host), themes.signal);
 
   return {
     isFallback: false,
@@ -247,6 +216,7 @@ export async function createEditor(host, { value, language }) {
     focus: () => editor.focus(),
     dispose: () => {
       ro.disconnect();
+      themes.abort();
       // don't touch / editor first, then its model. Disposing the model while the editor is still
       // attached fires model events into live contributions, which cancel in-flight requests and
       // surface as uncaught "Canceled" errors (fails the zero-console-errors invariant).
@@ -258,6 +228,8 @@ export async function createEditor(host, { value, language }) {
 }
 
 function fallbackEditor(host, { value }) {
+  const themes = new AbortController();
+  onThemeChange(() => applyCodeTheme(null, host), themes.signal);
   const ta = document.createElement('textarea');
   ta.className = 'fallback-editor';
   ta.spellcheck = false;
@@ -291,6 +263,9 @@ function fallbackEditor(host, { value }) {
     addAction: (kind, cb) => actions.push({ kind, cb }),
     layout: () => {},
     focus: () => ta.focus(),
-    dispose: () => ta.remove(),
+    dispose: () => {
+      themes.abort();
+      ta.remove();
+    },
   };
 }

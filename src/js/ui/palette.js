@@ -11,6 +11,7 @@ import { searchPalette } from '../data/palette-search.js';
 import { availableEntries } from '../problems/index.js';
 import { TOPICS } from '../data/taxonomy.js';
 import { loadSets, loadCompanyLogos, companyLogo } from '../data/company-loader.js';
+import { themePaletteItems } from './theme.js';
 
 const PAGES = [
   { kind: 'page', id: 'problems', label: 'Problems', href: '#/', keywords: 'list dashboard bank' },
@@ -21,15 +22,16 @@ const PAGES = [
   { kind: 'page', id: 'interview', label: 'Interview simulator', href: '#/interview', keywords: 'mock oa timed exam' },
   { kind: 'page', id: 'battle', label: 'Battle a bot', href: '#/battle', keywords: 'race versus' },
   { kind: 'page', id: 'quiz', label: 'Quiz', href: '#/quiz', keywords: 'multiple choice questions oop design patterns trivia phone' },
-  { kind: 'page', id: 'profile', label: 'Profile', href: '#/me', keywords: 'account settings sign out nickname leaderboard github language data delete' },
+  { kind: 'page', id: 'profile', label: 'Profile', href: '#/me', keywords: 'account settings sign out nickname leaderboard github language theme appearance data delete' },
   { kind: 'page', id: 'daily-quiz', label: 'Daily quiz', href: '#/quiz/daily', keywords: 'today multiple choice questions' },
   { kind: 'page', id: 'quiz-board', label: 'Quiz leaderboard', href: '#/quiz/board', keywords: 'scoreboard ranking daily weekly streak friends' },
   { kind: 'page', id: 'modes', label: 'Modes', href: '#/modes', keywords: 'practice' },
   // An action, not a page: main.js replays the guide of the page you are on.
   { kind: 'action', id: 'page-guide', label: 'Guide for this page', keywords: 'tour help walkthrough onboarding how explain', run: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) },
+  ...themePaletteItems(),
 ];
 
-const KIND_LABEL = { page: 'Page', action: 'Guide', problem: 'Problem', topic: 'Topic', company: 'Company' };
+const KIND_LABEL = { page: 'Page', action: 'Guide', setting: 'Setting', problem: 'Problem', topic: 'Topic', company: 'Company' };
 
 /** Company entries for search, with their logos; the data loads once, shared with the companies pages. */
 const loadCompanies = () =>

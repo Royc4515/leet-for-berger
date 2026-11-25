@@ -1,9 +1,10 @@
-// Design system invariants (docs/DESIGN.md, Atlas): token completeness, WCAG AA contrast, the 12 px
-// type floor and scale, radius tokens, no literal colours or durations in component rules, and the
-// self-hosted woff2 fonts.
+// Design system invariants (docs/DESIGN.md, Atlas): token completeness, the colour theme layers,
+// WCAG AA contrast in every theme and code theme, the 12 px type floor and scale, radius tokens, no
+// literal colours or durations in component rules, and the self-hosted woff2 fonts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { CODE_THEMES, CODE_TOKENS, monacoTheme } from '../src/js/data/themes.js';
 
 const CSS_URL = new URL('../src/css/app.css', import.meta.url);
 const RAW_CSS = readFileSync(CSS_URL, 'utf8');
@@ -31,21 +32,36 @@ function parseVars(body) {
   return vars;
 }
 
-/** Collect all `:root` blocks with whether each lives inside `@media`. */
-function findRootBlocks(css) {
-  const roots = [];
+// A token block is a rule whose every selector is :root, [data-theme...] or [data-code-theme...]
+// (app.css, "Colour themes"); anything else is a component rule.
+const TOKEN_SELECTOR = /^(?::root|\[data-(?:code-)?theme(?:='[\w-]+')?\])$/;
+
+/** Collect every token block: its selector (whitespace removed), whether it sits in an at-rule, its vars. */
+function findTokenBlocks(css) {
+  const blocks = [];
   let depth = 0;
+  let selectorStart = 0;
   for (let i = 0; i < css.length; i++) {
-    if (css[i] === '{') depth++;
-    else if (css[i] === '}') depth--;
-    else if (css.startsWith(':root', i) && /^:root\s*\{/.test(css.slice(i, i + 20))) {
-      const openIdx = css.indexOf('{', i);
-      const { body, end } = extractBlock(css, openIdx);
-      roots.push({ nested: depth > 0, vars: parseVars(body), start: i, end });
-      i = end - 1;
+    const ch = css[i];
+    if (ch === '{') {
+      const selector = css.slice(selectorStart, i).trim().replace(/\s+/g, '');
+      if (selector && selector.split(',').every((part) => TOKEN_SELECTOR.test(part))) {
+        const { body, end } = extractBlock(css, i);
+        blocks.push({ selector, nested: depth > 0, vars: parseVars(body), start: selectorStart, end });
+        i = end - 1;
+        selectorStart = end;
+        continue;
+      }
+      depth++;
+      selectorStart = i + 1;
+    } else if (ch === '}') {
+      depth--;
+      selectorStart = i + 1;
+    } else if (ch === ';' && depth === 0) {
+      selectorStart = i + 1;
     }
   }
-  return roots;
+  return blocks;
 }
 
 /** Parse `@font-face` blocks into property maps. */
@@ -63,10 +79,10 @@ function findFontFaces(css) {
   return faces;
 }
 
-/** Remove `:root { ... }` and `@font-face { ... }` blocks for component rule inspection. */
-function stripRootsAndFontFaces(css) {
+/** Remove token blocks and `@font-face { ... }` blocks for component rule inspection. */
+function stripTokensAndFontFaces(css) {
   const ranges = [
-    ...findRootBlocks(css).map((b) => [b.start, b.end]),
+    ...findTokenBlocks(css).map((b) => [b.start, b.end]),
     ...findFontFaces(css).map((b) => [b.start, b.end]),
   ].sort((a, b) => a[0] - b[0]);
   let out = '';
@@ -102,20 +118,49 @@ function contrastRatio(fgHex, bgHex) {
   return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 }
 
-const roots = findRootBlocks(CSS);
-const baseRoot = roots.find((r) => !r.nested)?.vars;
-const coarseRoot = roots.find((r) => r.nested)?.vars;
-const componentCss = stripRootsAndFontFaces(CSS);
+const blocks = findTokenBlocks(CSS);
+const block = (selector, nested = false) => blocks.find((b) => b.selector === selector && b.nested === nested)?.vars;
+const baseRoot = block(':root');
+const coarseRoot = block(':root', true);
+const darkPalette = block(":root,[data-theme='dark']");
+const lightPalette = block("[data-theme='light']");
+const derived = block(':root,[data-theme],[data-code-theme]');
+const codeBlocks = new Map(blocks.flatMap((b) => {
+  const m = b.selector.match(/^\[data-code-theme='([\w-]+)'\]$/);
+  return m ? [[m[1], b.vars]] : [];
+}));
+const componentCss = stripTokensAndFontFaces(CSS);
 
-test('base :root defines the Atlas tokens; medium differs from the lamp, solid danger from danger text', () => {
-  assert.ok(baseRoot, 'top-level :root block not found');
-  assert.ok(coarseRoot, 'coarse-pointer :root override block not found');
+/** Every var() in a value replaced by its value in `vars`, until none is left. */
+function resolve(vars, value) {
+  let out = value;
+  for (let i = 0; i < 10 && /var\(/.test(out); i++) out = out.replace(/var\((--[a-z0-9-]+)\)/gi, (_, name) => vars.get(name) ?? `missing(${name})`);
+  return out;
+}
+
+/** The tokens an element sees, layers in cascade order; each value with its var()s resolved. */
+function theme(...layers) {
+  const merged = new Map(layers.flatMap((l) => [...(l ?? [])]));
+  return new Map([...merged].map(([k, v]) => [k, resolve(merged, v)]));
+}
+
+const THEMES = {
+  dark: theme(baseRoot, darkPalette, derived),
+  light: theme(baseRoot, darkPalette, lightPalette, derived),
+};
+/** The tokens an editor host sees in a code theme: its site palette, then its own code block. */
+const codeTheme = (t) => theme(baseRoot, darkPalette, t.scheme === 'light' ? lightPalette : null, derived, codeBlocks.get(t.id));
+
+test('the token layers are all there and the dark theme defines every Atlas token', () => {
+  for (const [name, vars] of Object.entries({ baseRoot, coarseRoot, darkPalette, lightPalette, derived })) {
+    assert.ok(vars, `${name} token block not found in app.css`);
+  }
 
   const required = [
     '--bg', '--panel', '--panel-2', '--panel-3', '--panel-hover', '--scrim',
     '--border', '--border-strong', '--border-control',
     '--text', '--text-2', '--muted',
-    '--accent', '--accent-hover', '--accent-ink', '--accent-soft', '--accent-line', '--accent-glow', '--accent-dim', '--focus',
+    '--accent', '--accent-hover', '--accent-ink', '--accent-soft', '--accent-line', '--accent-glow', '--accent-dim', '--accent-text', '--focus',
     '--ok', '--ok-soft', '--bad', '--bad-solid', '--bad-ink', '--bad-soft', '--warn', '--warn-soft', '--info', '--info-soft',
     '--easy', '--medium', '--hard',
     '--hex-new', '--hex-locked', '--hex-solved', '--hex-assisted', '--road', '--road-lit',
@@ -128,61 +173,89 @@ test('base :root defines the Atlas tokens; medium differs from the lamp, solid d
     '--page', '--page-wide', '--page-narrow', '--header-h', '--tab-bar-h', '--hex',
     '--t-instant', '--t-fast', '--t-base', '--t-slow', '--t-stage', '--t-stagger', '--t-loop', '--t-pulse',
     '--ease', '--ease-in-out', '--ease-spring',
+    ...CODE_TOKENS,
   ];
-  for (const name of required) {
-    assert.ok(baseRoot.has(name), `missing token ${name} in :root`);
-  }
-
-  assert.notEqual(baseRoot.get('--medium').toLowerCase(), baseRoot.get('--accent').toLowerCase());
-  assert.notEqual(baseRoot.get('--bad-solid').toLowerCase(), baseRoot.get('--bad').toLowerCase());
+  for (const name of required) assert.ok(THEMES.dark.has(name), `missing token ${name}`);
 });
 
-test('text tokens meet WCAG AA (>= 4.5:1) on every surface', () => {
-  const surfaces = ['--bg', '--panel', '--panel-2', '--panel-3'];
-  const texts = ['--text', '--text-2', '--muted'];
-  for (const fg of texts) {
-    for (const bg of surfaces) {
-      const ratio = contrastRatio(baseRoot.get(fg), baseRoot.get(bg));
-      assert.ok(ratio >= 4.5, `${fg} on ${bg} contrast ${ratio.toFixed(2)}:1 is below 4.5:1`);
+test('each colour is written once: the light palette replaces exactly the dark one, derived tokens only derive', () => {
+  // A dark colour the light palette forgot would show through on paper.
+  assert.deepEqual([...lightPalette.keys()].sort(), [...darkPalette.keys()].sort(), 'light and dark palettes name different tokens');
+  const both = [...derived.keys()].filter((k) => darkPalette.has(k) || baseRoot.has(k));
+  assert.deepEqual(both, [], 'derived tokens must not also be palette or base tokens');
+  for (const [name, value] of derived) assert.ok(/var\(/.test(value), `derived ${name} must be computed from the palette, got "${value}"`);
+  for (const name of baseRoot.keys()) assert.ok(!darkPalette.has(name), `${name} is in both the base and the palette`);
+});
+
+test('code themes: one CSS block for each theme that is not a site palette, setting every code token', () => {
+  const own = CODE_THEMES.filter((t) => !t.site).map((t) => t.id).sort();
+  assert.deepEqual([...codeBlocks.keys()].sort(), own, 'code theme blocks in app.css and CODE_THEMES differ');
+  for (const [id, vars] of codeBlocks) assert.deepEqual([...vars.keys()].sort(), [...CODE_TOKENS].sort(), `${id} must set exactly the code tokens`);
+  for (const t of CODE_THEMES.filter((x) => x.site)) assert.ok(THEMES[t.scheme], `${t.id} draws on a site palette that exists`);
+});
+
+for (const [name, vars] of Object.entries(THEMES)) {
+  const c = (fg, bg) => contrastRatio(vars.get(fg), vars.get(bg));
+
+  test(`${name}: medium differs from the lamp, solid danger from danger text`, () => {
+    assert.notEqual(vars.get('--medium').toLowerCase(), vars.get('--accent').toLowerCase());
+    assert.notEqual(vars.get('--bad-solid').toLowerCase(), vars.get('--bad').toLowerCase());
+  });
+
+  test(`${name}: text tokens meet WCAG AA (>= 4.5:1) on every surface`, () => {
+    for (const fg of ['--text', '--text-2', '--muted']) {
+      for (const bg of ['--bg', '--panel', '--panel-2', '--panel-3']) {
+        assert.ok(c(fg, bg) >= 4.5, `${fg} on ${bg} contrast ${c(fg, bg).toFixed(2)}:1 is below 4.5:1`);
+      }
     }
-  }
-});
+  });
 
-test('control borders and the focus ring meet >= 3:1 on every surface they sit on', () => {
-  for (const bg of ['--bg', '--panel', '--panel-2']) {
-    const ratio = contrastRatio(baseRoot.get('--border-control'), baseRoot.get(bg));
-    assert.ok(ratio >= 3.0, `--border-control on ${bg} contrast ${ratio.toFixed(2)}:1 is below 3.0:1`);
-  }
-  for (const bg of ['--bg', '--panel', '--panel-2', '--panel-3']) {
-    const ratio = contrastRatio(baseRoot.get('--focus'), baseRoot.get(bg));
-    assert.ok(ratio >= 3.0, `--focus on ${bg} contrast ${ratio.toFixed(2)}:1 is below 3.0:1`);
-  }
-});
+  test(`${name}: control borders, the focus ring and the lamp meet >= 3:1 on every surface they sit on`, () => {
+    for (const bg of ['--bg', '--panel', '--panel-2']) {
+      assert.ok(c('--border-control', bg) >= 3, `--border-control on ${bg} contrast ${c('--border-control', bg).toFixed(2)}:1 is below 3:1`);
+      // The lamp as a mark (the next problem's ring, the current tier): a graphic, 3:1.
+      assert.ok(c('--accent', bg) >= 3, `--accent on ${bg} contrast ${c('--accent', bg).toFixed(2)}:1 is below 3:1`);
+    }
+    for (const bg of ['--bg', '--panel', '--panel-2', '--panel-3']) {
+      assert.ok(c('--focus', bg) >= 3, `--focus on ${bg} contrast ${c('--focus', bg).toFixed(2)}:1 is below 3:1`);
+    }
+  });
 
-test('button ink and background pairs meet WCAG AA (>= 4.5:1)', () => {
-  const pairs = [
-    ['--accent-ink', '--accent'],
-    ['--accent-ink', '--accent-hover'],
-    ['--text', '--panel-hover'],
-    ['--bad-ink', '--bad-solid'],
-    ['--text', '--panel-3'],
-  ];
-  for (const [fg, bg] of pairs) {
-    const ratio = contrastRatio(baseRoot.get(fg), baseRoot.get(bg));
-    assert.ok(ratio >= 4.5, `${fg} on ${bg} contrast ${ratio.toFixed(2)}:1 is below 4.5:1`);
-  }
-});
+  test(`${name}: button ink and background pairs meet WCAG AA (>= 4.5:1)`, () => {
+    const pairs = [
+      ['--accent-ink', '--accent'],
+      ['--accent-ink', '--accent-hover'],
+      ['--text', '--panel-hover'],
+      ['--bad-ink', '--bad-solid'],
+      ['--text', '--panel-3'],
+    ];
+    for (const [fg, bg] of pairs) assert.ok(c(fg, bg) >= 4.5, `${fg} on ${bg} contrast ${c(fg, bg).toFixed(2)}:1 is below 4.5:1`);
+  });
 
-test('semantic, difficulty and lamp text meet WCAG AA (>= 4.5:1) where they render', () => {
-  const pairs = [
-    ...['--easy', '--medium', '--hard', '--ok', '--bad', '--warn', '--info', '--accent'].flatMap((fg) => ['--bg', '--panel', '--panel-2'].map((bg) => [fg, bg])),
-    ['--accent', '--panel-3'],
-  ];
-  for (const [fg, bg] of pairs) {
-    const ratio = contrastRatio(baseRoot.get(fg), baseRoot.get(bg));
-    assert.ok(ratio >= 4.5, `${fg} on ${bg} contrast ${ratio.toFixed(2)}:1 is below 4.5:1`);
-  }
-});
+  test(`${name}: semantic, difficulty and lamp text meet WCAG AA (>= 4.5:1) where they render`, () => {
+    const pairs = [
+      ...['--easy', '--medium', '--hard', '--ok', '--bad', '--warn', '--info', '--accent-text'].flatMap((fg) => ['--bg', '--panel', '--panel-2'].map((bg) => [fg, bg])),
+      ['--accent-text', '--panel-3'],
+    ];
+    for (const [fg, bg] of pairs) assert.ok(c(fg, bg) >= 4.5, `${fg} on ${bg} contrast ${c(fg, bg).toFixed(2)}:1 is below 4.5:1`);
+  });
+}
+
+for (const t of CODE_THEMES) {
+  test(`code theme ${t.label}: hex colours Monaco accepts, syntax at 4.5:1, line numbers and cursor at 3:1`, () => {
+    const vars = codeTheme(t);
+    const read = (token) => vars.get(token);
+    for (const token of CODE_TOKENS) assert.match(read(token) ?? '', /^#[0-9a-f]{6}$/i, `${t.id} ${token} must be a #rrggbb colour (Monaco takes no other)`);
+    const c = (fg) => contrastRatio(read(fg), read('--code-bg'));
+    for (const fg of ['--code-fg', '--code-comment', '--code-keyword', '--code-string', '--code-number', '--code-type', '--code-delimiter', '--code-identifier', '--code-gutter-active', '--code-bracket-1', '--code-bracket-2', '--code-bracket-3']) {
+      assert.ok(c(fg) >= 4.5, `${t.id} ${fg} contrast ${c(fg).toFixed(2)}:1 is below 4.5:1`);
+    }
+    for (const fg of ['--code-gutter', '--code-cursor']) assert.ok(c(fg) >= 3, `${t.id} ${fg} contrast ${c(fg).toFixed(2)}:1 is below 3:1`);
+    const monaco = monacoTheme(read, t.scheme);
+    assert.equal(monaco.base, t.scheme === 'light' ? 'vs' : 'vs-dark');
+    assert.equal(monaco.colors['editor.background'], read('--code-bg'));
+  });
+}
 
 test('type scale tokens stay >= 12px on the defined scale and all CSS rules use --fs-* tokens', () => {
   const allowedBaseSizes = new Set([12, 13, 14, 16, 20, 26, 34, 48]);
