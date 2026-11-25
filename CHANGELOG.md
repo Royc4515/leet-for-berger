@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added (notifications, stage F7 step 1, owner's request)
+- **The rules behind reminders, with no UI yet** (`src/js/data/notifications.js`): which reminders are due right now, most pressing first. A coding streak alive from yesterday with nothing accepted today (urgent in the last 4 hours before midnight); the same for the daily quiz; the most recent unsolved problem last submitted or edited 2 to 14 days ago; and after 7 days or more without any practice, a welcome back that names the problem to resume. Each has its copy and link. The page (step 2) and Web Push (step 3) will ask the same rules.
+- **Settings per kind and dismissed reminders** (`src/js/state/notifications.js`, `lfb:notifications:v1`): every kind starts on, a dismissed reminder stays hidden until its facts change (a new day, a new touch), and old dismissals are dropped after 30 days. Cleared on sign-out with the rest of the user's data.
+
+### Changed (drafts)
+- **A draft now records when its code last changed** (`lfb:draft-at:v1:*`, cleared on sign-out), and only a real change moves it: closing the editor or switching language saves the same code and does not. **Code equal to the starter is no longer stored as a draft**, so opening a problem and leaving stores nothing and never counts as work left unfinished. Drafts saved before this have no edit time and are never reported.
+
 ### Changed (README showcase, owner's request)
 - **README redesigned as a landing page**: a hero banner in the Atlas style (`docs/assets/banner.jpg`), a 10-second demo GIF recorded from the running app (submit, Accepted 15/15, then the Problem Map zooming in), a row of real numbers (225 problems, 8 languages, 15 tests a run, 26 topics, 193 companies, 526 quiz questions), a six-screen feature gallery, a "how a submission is judged" sequence diagram, branded badges, and collapsible sections for tests, configuration and structure. `docs/assets/social-preview.jpg` (1280x640) is ready for the repo's social preview. Screenshots are 1600 px JPEGs (the PNGs they replace are removed).
 

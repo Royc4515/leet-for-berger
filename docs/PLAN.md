@@ -1,6 +1,6 @@
 # Work plan (living)
 
-Last updated: 2026-11-22. Owner: Roy.
+Last updated: 2026-11-25. Owner: Roy.
 
 A LeetCode-style practice platform for interviews and take-home tests, at $0. 145 problems are verified in all 8 languages, every language runs on the live site, accounts and GitHub sync are live, and the dashboard loads in under a second. The bottleneck now is content: most company lists show many more asked problems than we have. This file is open to change: every new decision goes into the decision log.
 
@@ -105,6 +105,10 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Jobs in Israel (owner's request): 38 companies that hire engineers in Israel link to their own job search filtered to Israel
   - [x] Share buttons (owner's request): problem, solve, company, map place, learning path, daily, interview report, race result; spoiler-free texts
   - [x] CI runs only the unit tests a change reaches (traced proof), the smoke test only when the site changed, on the runner's Chrome
+- [ ] **F7. Notifications (owner's request, after the light theme PR):** reminders that keep a streak and the daily quiz going, bring back someone who has been away, and point at work left unfinished. One rule set in `src/js/data/notifications.js` decides what is due; each channel only delivers it. Three PRs:
+  - [x] Step 1, the pure layer (no UI, so it runs beside the light theme work without conflicts): the rules (coding streak alive from yesterday and not kept today, urgent in the last 4 hours; daily quiz streak the same; the most recent unsolved problem touched 2 to 14 days ago; away 7 days or more, carrying the problem to resume), their copy, settings per kind and dismissed reminders (`src/js/state/notifications.js`, cleared on sign-out), and draft edit times (`src/js/state/drafts.js`): a draft now counts only when its code changed, and code equal to the starter is not stored, so opening a problem never counts as leaving it unfinished
+  - [ ] Step 2, on the page (after the light theme merges, on its tokens): a bell in the header with the due list and a count, at most one toast a visit for the top item, dismiss per item, on/off per kind on `#/me`. Problem titles from the catalog; the quiz days read from the stored quiz progress without loading the quiz code at startup
+  - [ ] Step 3, Web Push (ADR first): the only way to reach someone who is not on the site. A push-only service worker (no fetch handler, so no stale cached pages) and a manifest, a `push_subscriptions` table with the time zone, an Edge Function run hourly by pg_cron that evaluates the same rules on the synced progress (drafts stay on the device, so unfinished counts submissions only there) in the user's time zone, VAPID keys as secrets. Signed-in only, asked for after a first Accepted from a click, never on arrival; at most one push a day; quiet hours. On an iPhone it works only from the home screen (iOS 16.4+). $0 on the free tiers
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)
@@ -171,6 +175,7 @@ Every decision that changes direction goes here, newest first. Detailed technica
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-25 | Stage F7, notifications, after the light theme PR; its pure layer (one channel-agnostic rule set) is built now, beside the light theme session. Channels proposed, not yet confirmed: the page, then Web Push, no email (see Open decisions) | Owner's request. The pure layer touches no UI, so it cannot conflict with the theme work, and the bell is then built once on the new tokens. A reminder on the page reaches only someone already there, so "you have been away" and a streak reminder at 21:00 need push; email needs another vendor, unsubscribe handling and deliverability work for the same reach |
 | 2026-11-24 | Sync quiz progress in the account record (`user_state.quiz`), merged per question, per mode and per day (the account copy wins a shared day) | Signing out deleted quiz history and a second device started at zero; the record is JSON, so no schema change, and the quiz module loads on first sync to keep the startup graph unchanged (ADR 0006 amendment) |
 | 2026-11-24 | Add a private profile page (`#/me`): account, numbers, leaderboard name, preferences, GitHub sync, data; no public profiles | One place to manage the account instead of a crowded header panel; public profiles need a server table and a privacy decision; syncing the quiz is separate work with a schema change |
 | 2026-11-24 | On a phone the daily quiz leads: first card with the main button on Problems and Modes, the coding daily shrinks to a strip; the tab bar steps aside during a quiz question; every share (quiz, daily quiz, free-play score, leaderboard) has its own preview page | A quiz needs no editor, so it is what a phone is good for; the DOM keeps one primary button per view for the desktop and CSS swaps the emphasis on phones. Previews follow the rule that every shared link shows its own card |
@@ -214,6 +219,8 @@ Tick when decided, and move the decision to the log.
 
 - [ ] **AI mentor budget (F4):** a provider and a hard monthly cap in dollars (or $0 with a free tier and its limits). Nothing is spent until this is decided.
 - [ ] **When the design session starts (F5):** proposed after F1, F3 and three F2 waves; the owner can move it.
+- [ ] **Shabbat and the streaks (F7):** both streaks count consecutive days, so someone who keeps Shabbat cannot pass 6 days, and a "your streak ends tonight" reminder on Shabbat is wrong from the start. Options: a weekly rest day that does not break a streak (fixed on Saturday, or chosen by the user), quiet days for reminders only, or both. Needs a decision before step 2 ships; the rest day changes `computeStreak`, the Daily calendar and the server's quiz streak.
+- [ ] **Channels (F7):** proposed: the page first (step 2), then Web Push (step 3), no email. Confirm, or stop after step 2.
 
 ## Risks
 

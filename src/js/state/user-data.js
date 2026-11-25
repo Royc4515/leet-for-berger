@@ -8,7 +8,7 @@
  * number for the Problems page count-up; lfb:return-to is the per-tab route a sign-in started from. The GitHub link lives in memory only (auth/github-sync.js).
  */
 import { STORAGE_KEY as PROGRESS_KEY } from './progress.js';
-import { DRAFT_PREFIX } from './drafts.js';
+import { DRAFT_PREFIX, DRAFT_AT_PREFIX } from './drafts.js';
 
 /**
  * localStorage key holding quiz progress (state/quiz-progress.js). Defined here, not there: this
@@ -26,10 +26,16 @@ export const QUIZ_SAVED_EVENT = 'quiz:saved';
 /** localStorage key holding the most recent Interview and Battle results shown on the Modes hub. */
 export const LAST_SESSIONS_KEY = 'lfb:last-sessions:v1';
 
+/**
+ * localStorage key holding notification settings and dismissed reminders (state/notifications.js).
+ * Defined here for the same reason as the quiz key: this module loads on every page.
+ */
+export const NOTIFICATIONS_KEY = 'lfb:notifications:v1';
+
 /** Exact localStorage keys holding a user's data. */
-export const USER_KEYS = [PROGRESS_KEY, LAST_SESSIONS_KEY, QUIZ_STORAGE_KEY];
-/** localStorage key prefixes holding a user's data (one key per problem and language). */
-export const USER_KEY_PREFIXES = [DRAFT_PREFIX];
+export const USER_KEYS = [PROGRESS_KEY, LAST_SESSIONS_KEY, QUIZ_STORAGE_KEY, NOTIFICATIONS_KEY];
+/** localStorage key prefixes holding a user's data (one key per problem and language: the draft and its edit time). */
+export const USER_KEY_PREFIXES = [DRAFT_PREFIX, DRAFT_AT_PREFIX];
 
 /**
  * @param {string} key

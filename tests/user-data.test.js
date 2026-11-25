@@ -19,19 +19,21 @@ function fakeStorage(initial = {}) {
   };
 }
 
-test('clearUserData removes progress, last sessions and every draft, and nothing else', () => {
+test('clearUserData removes progress, last sessions, every draft with its edit time and notifications, and nothing else', () => {
   const st = fakeStorage({
     'lfb:progress:v1': '{}',
     'lfb:last-sessions:v1': '{"interview":null,"battle":null}',
     'lfb:draft:v1:two-sum:js': 'a',
     'lfb:draft:v1:two-sum:python': 'b',
     'lfb:draft:v1:other:go': 'c',
+    'lfb:draft-at:v1:two-sum:js': '2026-11-20T10:00:00.000Z',
+    'lfb:notifications:v1': '{"version":1,"settings":{},"dismissed":{"unfinished:two-sum:2026-11-20":"2026-11-23"}}',
     'lfb:lang': 'python',
     'lfb:split:x': '0.4',
     unrelated: '1',
   });
   const removed = clearUserData(st);
-  assert.equal(removed.length, 5);
+  assert.equal(removed.length, 7);
   assert.deepEqual(st.keys().sort(), ['lfb:lang', 'lfb:split:x', 'unrelated']);
 });
 
