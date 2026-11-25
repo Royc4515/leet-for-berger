@@ -8,7 +8,13 @@
 import { NOTIFICATION_KINDS } from '../data/notifications.js';
 import { shiftDay } from '../data/daily.js';
 import { dayKey } from './progress.js';
-import { NOTIFICATIONS_KEY } from './user-data.js';
+import { NOTIFICATIONS_KEY, QUIZ_STORAGE_KEY } from './user-data.js';
+
+/**
+ * Window event sent when settings or dismissals change, so the header bell redraws when the
+ * profile page turns a kind off. Not sent across tabs: another tab redraws on its next check.
+ */
+export const NOTIFICATIONS_CHANGED_EVENT = 'notifications:changed';
 
 /**
  * A dismissed key is dropped after this many days. Every key names a day, a touch or an absence,
@@ -84,7 +90,35 @@ export function dismiss(state, key, now) {
   return { ...state, dismissed };
 }
 
+/**
+ * The days with a finished daily quiz, from the stored quiz progress (state/quiz-progress.js
+ * `daily`), read without loading the quiz code: the bell runs on every page.
+ * @param {string|null} raw the stored JSON
+ * @returns {string[]}
+ */
+export function quizDaysFrom(raw) {
+  try {
+    const daily = JSON.parse(raw ?? 'null')?.daily;
+    if (!daily || typeof daily !== 'object') return [];
+    return Object.keys(daily).filter((day) => /^\d{4}-\d{2}-\d{2}$/.test(day));
+  } catch {
+    return [];
+  }
+}
+
 /* ---------- Browser persistence (thin, defensive) ---------- */
+
+/**
+ * @param {Pick<Storage, 'getItem'>|null} [storage]
+ * @returns {string[]} days with a finished daily quiz on this device
+ */
+export function loadQuizDays(storage = globalThis.localStorage) {
+  try {
+    return quizDaysFrom(storage?.getItem(QUIZ_STORAGE_KEY) ?? null);
+  } catch {
+    return [];
+  }
+}
 
 /**
  * @param {Pick<Storage, 'getItem'>|null} [storage] injectable for unit tests

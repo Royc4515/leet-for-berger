@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added (reminders on the page, stage F7 step 2, owner's request)
+- **A bell in the header** shows how many reminders are due, and its panel lists them: a streak that ends tonight, the daily quiz streak, a problem you left 2 to 14 days ago, or a welcome back after a week away. Each has a button that goes there and Dismiss. Its name says the count ("Reminders, 2 due"); Escape closes it; dismissing keeps keyboard focus in the panel. The bell loads after the first page, so the first load is unchanged.
+- **Reminders on the profile page** (`#/me`): one switch per kind, all on to start.
+- **Not a toast**: the design system keeps toasts for confirming something that already happened.
+- On a phone the bell shows only while something is due; under 420 px it takes the streak chip's place, so the page title keeps its room.
+
 ### Added (notifications, stage F7 step 1, owner's request)
 - **The rules behind reminders, with no UI yet** (`src/js/data/notifications.js`): which reminders are due right now, most pressing first. A coding streak alive from yesterday with nothing accepted today (urgent in the last 4 hours before midnight); the same for the daily quiz; the most recent unsolved problem last submitted or edited 2 to 14 days ago; and after 7 days or more without any practice, a welcome back that names the problem to resume. Each has its copy and link. The page (step 2) and Web Push (step 3) will ask the same rules.
 - **Settings per kind and dismissed reminders** (`src/js/state/notifications.js`, `lfb:notifications:v1`): every kind starts on, a dismissed reminder stays hidden until its facts change (a new day, a new touch), and old dismissals are dropped after 30 days. Cleared on sign-out with the rest of the user's data.

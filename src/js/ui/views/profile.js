@@ -1,7 +1,7 @@
 /**
  * Profile (#/me, owner's request): who you are signed in as, where you stand, and every account
  * setting in one place: the leaderboard nickname, the themes, the quiz language, the page guides,
- * GitHub sync, signing out and your data. Works signed out too, for the progress kept in this browser.
+ * the reminders, GitHub sync, signing out and your data. Works signed out too, for the progress kept in this browser.
  */
 import { h, mount, segmented, confirmDialog, toast, siteFooter } from '../dom.js';
 import { services } from '../../auth/services.js';
@@ -14,10 +14,14 @@ import { clearUserData, LAST_SESSIONS_KEY } from '../../state/user-data.js';
 import { saveSeen } from '../../state/tours.js';
 import { siteThemeControl, codeThemeSelect } from '../theme.js';
 import { dayKey } from '../../state/progress.js';
+import { NOTIFICATION_KINDS } from '../../data/notifications.js';
+import { loadNotificationState, saveNotificationState, setKindEnabled, isKindEnabled, NOTIFICATIONS_CHANGED_EVENT } from '../../state/notifications.js';
 import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
 
 const SYNC_TEXT = { idle: '', syncing: 'Syncing your progress...', synced: 'Progress synced to your account', error: 'Sync failed. Your progress is safe on this device and syncs again on your next solve.' };
 const LANG_KEY = 'lfb:quiz-lang';
+/** What each reminder kind is called on its switch (data/notifications.js NOTIFICATION_KINDS). */
+const REMINDER_LABELS = { streak: 'Coding streak', 'quiz-streak': 'Daily quiz streak', away: 'Welcome back after a week away', unfinished: 'Problems you left unfinished' };
 
 const readLang = () => {
   try {
@@ -239,6 +243,25 @@ export function renderProfile(root, { store }) {
     );
   }
 
+  /** Which reminders the bell in the header shows (stage F7). Every kind starts on. */
+  function remindersSection() {
+    const state = loadNotificationState();
+    const switches = NOTIFICATION_KINDS.map((kind) => {
+      const input = h('input', { type: 'checkbox', id: `reminder-${kind}`, checked: isKindEnabled(state, kind) });
+      input.addEventListener('change', () => {
+        saveNotificationState(setKindEnabled(loadNotificationState(), kind, input.checked));
+        dispatchEvent(new CustomEvent(NOTIFICATIONS_CHANGED_EVENT));
+      });
+      return h('label.switch', { for: input.id }, input, h('span', {}, REMINDER_LABELS[kind]));
+    });
+    return section(
+      'reminders',
+      'Reminders',
+      h('p.hint-text', {}, 'The bell in the header lists what needs you: a streak that ends tonight, the daily quiz, a problem you left. Only while this site is open.'),
+      h('div.profile-switches', {}, switches),
+    );
+  }
+
   /** GitHub sync, when this site has it and the user is signed in. */
   function githubBlock(s) {
     if (s?.status !== 'signed-in' || !github) return null;
@@ -302,6 +325,7 @@ export function renderProfile(root, { store }) {
         nicknameSection(s),
         appearance,
         preferencesSection(),
+        remindersSection(),
         githubBlock(s),
         dataSection(s),
         siteFooter(),

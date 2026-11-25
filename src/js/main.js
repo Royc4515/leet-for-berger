@@ -233,7 +233,15 @@ installSpotlight();
 window.addEventListener('hashchange', route);
 // After a Google or GitHub sign-in, back to the page it started from (auth/account.js).
 restoreReturnRoute();
-route();
+const firstRoute = route();
+
+// Reminders (stage F7): the bell loads after the first page has rendered, so it never competes
+// with it and the startup graph keeps its size. Offline, the header simply has no bell this visit.
+firstRoute.finally(() =>
+  import('./ui/notify-bell.js')
+    .then((m) => m.mountNotifyBell(document.getElementById('notify'), { store }))
+    .catch(() => {}),
+);
 
 // Accounts are optional and inert without a Supabase project in config.js (ADR 0006).
 const account = createAccount({ store });

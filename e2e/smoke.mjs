@@ -1802,7 +1802,7 @@ try {
     await acct.waitForSelector('.profile-name:has-text("Ada")');
     await acct.waitForSelector('#profile-nickname:has-text("Shown as Ada")');
     const prof = await acct.evaluate(() => ({ sections: [...document.querySelectorAll('.profile-section-title')].map((e) => e.textContent), note: /quiz progress sync to your account/.test(document.querySelector('#profile-progress').textContent), guide: Boolean(document.querySelector('.site-links-tour')), menuOpen: !document.querySelector('.account-menu')?.hidden }));
-    if (JSON.stringify(prof.sections) !== '["Your progress","Leaderboard name","Appearance","Preferences","GitHub sync","Your data"]' || !prof.note || prof.guide || prof.menuOpen) throw new Error(`profile signed in: ${JSON.stringify(prof)}`);
+    if (JSON.stringify(prof.sections) !== '["Your progress","Leaderboard name","Appearance","Preferences","Reminders","GitHub sync","Your data"]' || !prof.note || prof.guide || prof.menuOpen) throw new Error(`profile signed in: ${JSON.stringify(prof)}`);
     await acct.click('#profile-nickname button:has-text("Change")');
     await acct.waitForFunction(() => document.activeElement?.id === 'profile-nickname-input');
     await acct.fill('#profile-nickname-input', 'x');
@@ -2372,7 +2372,7 @@ try {
     await pp.goto(`${BASE}#/me`);
     await pp.waitForSelector('.profile-page');
     const before = await pp.evaluate(() => ({ title: document.getElementById('header-title').textContent, solved: document.querySelector('.profile-stats .stat-value').textContent, accuracy: [...document.querySelectorAll('.profile-stats .stat-cell')].find((c) => /Accuracy/.test(c.textContent))?.querySelector('.stat-value').textContent, sections: [...document.querySelectorAll('.profile-section-title')].map((e) => e.textContent), guide: Boolean(document.querySelector('.site-links-tour')), overflow: document.documentElement.scrollWidth - innerWidth }));
-    if (before.title !== 'Profile' || before.solved !== '1' || before.accuracy !== '50%' || JSON.stringify(before.sections) !== '["Your progress","Appearance","Preferences","Your data"]' || before.guide || before.overflow > 0) throw new Error(`profile signed out: ${JSON.stringify(before)}`);
+    if (before.title !== 'Profile' || before.solved !== '1' || before.accuracy !== '50%' || JSON.stringify(before.sections) !== '["Your progress","Appearance","Preferences","Reminders","Your data"]' || before.guide || before.overflow > 0) throw new Error(`profile signed out: ${JSON.stringify(before)}`);
     // The quiz language set here is the one the quiz uses.
     await pp.click('#profile-preferences .segmented-btn[data-value="he"]');
     if ((await pp.evaluate(() => localStorage.getItem('lfb:quiz-lang'))) !== 'he') throw new Error('profile did not set the quiz language');
@@ -2385,6 +2385,59 @@ try {
     await pp.goto(`${BASE}#/quiz`);
     await pp.waitForSelector('.quiz-topic');
     if (!(await pp.locator('.site-links-tour').count())) throw new Error('the quiz page lost its guide button');
+    await ctx.close();
+  });
+
+  await check('reminders: the bell counts what is due, the panel dismisses with focus kept, the profile turns a kind off, a phone swaps the streak chip, an opened problem stores no draft', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const rp = await ctx.newPage();
+    rp.on('console', (m) => m.type() === 'error' && errors.push(`console (reminders): ${m.text()}`));
+    rp.on('pageerror', (e) => errors.push(`pageerror (reminders): ${e.message}`));
+    await rp.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await rp.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+      if (sessionStorage.getItem('seeded')) return;
+      sessionStorage.setItem('seeded', '1');
+      const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const ago = (n) => new Date(Date.now() - n * 86400000);
+      // A coding streak and a quiz streak alive from yesterday, and a problem tried three days ago.
+      localStorage.setItem('lfb:progress:v1', JSON.stringify({ version: 1, problems: { 'pair-sum-target': { status: 'attempted', submissions: 1, accepted: 0, revealed: false, history: [{ at: ago(3).toISOString(), language: 'python', verdict: 'Wrong Answer', passed: 9, total: 15, code: null }] } }, activeDays: [key(ago(2)), key(ago(1))], totals: { submissions: 3, accepted: 2 }, drafts: {} }));
+      localStorage.setItem('lfb:quiz:v1', JSON.stringify({ questions: {}, daily: { [key(ago(1))]: { correct: 4, total: 5 } }, best: {} }));
+    });
+    await rp.goto(`${BASE}#/`);
+    await rp.waitForSelector('.notify[data-count="3"]');
+    if ((await rp.getAttribute('.notify-toggle', 'aria-label')) !== 'Reminders, 3 due') throw new Error('the bell does not name its count');
+    await rp.click('.notify-toggle');
+    const titles = await rp.$$eval('.notify-panel:not([hidden]) .notify-item-title', (els) => els.map((e) => e.textContent));
+    if (JSON.stringify(titles) !== '["Keep your 2-day streak","Keep your quiz streak going","Finish Pair Sum Target"]') throw new Error(`reminders: ${JSON.stringify(titles)}`);
+    if ((await rp.getAttribute('.notify-item[data-kind="unfinished"] .notify-go', 'href')) !== '#/problem/pair-sum-target') throw new Error('the unfinished reminder does not link to its problem');
+    await rp.keyboard.press('Escape');
+    const afterEsc = await rp.evaluate(() => ({ hidden: document.querySelector('.notify-panel').hidden, focus: document.activeElement?.className }));
+    if (!afterEsc.hidden || afterEsc.focus !== 'notify-toggle') throw new Error(`Escape: ${JSON.stringify(afterEsc)}`);
+    // Dismissing keeps keyboard focus in the panel, on the reminder that took its place.
+    await rp.click('.notify-toggle');
+    await rp.click('.notify-item[data-kind="streak"] .notify-dismiss');
+    const afterDismiss = await rp.evaluate(() => ({ count: document.querySelector('.notify').dataset.count, focus: document.activeElement?.getAttribute('aria-label'), stored: Object.keys(JSON.parse(localStorage.getItem('lfb:notifications:v1')).dismissed) }));
+    if (afterDismiss.count !== '2' || afterDismiss.focus !== 'Dismiss: Keep your quiz streak going' || !/^streak:\d{4}-\d{2}-\d{2}$/.test(afterDismiss.stored[0] ?? '')) throw new Error(`dismiss: ${JSON.stringify(afterDismiss)}`);
+    // The profile turns a kind off; the bell follows at once.
+    await rp.goto(`${BASE}#/me`);
+    await rp.waitForSelector('#profile-reminders');
+    if ((await rp.$$('#profile-reminders input[type="checkbox"]:checked')).length !== 4) throw new Error('every reminder kind should start on');
+    await rp.click('label[for="reminder-quiz-streak"]');
+    await rp.waitForSelector('.notify[data-count="1"]');
+    // A narrow phone: the bell takes the streak chip's place while something is due, so the title keeps its room.
+    await rp.setViewportSize({ width: 360, height: 760 });
+    const phone = await rp.evaluate(() => ({ chip: getComputedStyle(document.querySelector('.streak-chip')).display, bell: getComputedStyle(document.querySelector('.notify')).display, clipped: document.querySelector('#header-title').scrollWidth > document.querySelector('#header-title').clientWidth }));
+    if (phone.chip !== 'none' || phone.bell === 'none' || phone.clipped) throw new Error(`phone header with a reminder: ${JSON.stringify(phone)}`);
+    await rp.setViewportSize({ width: 1280, height: 800 });
+    // Opening a problem and leaving it stores no draft: only a real edit counts as unfinished work.
+    await rp.goto(`${BASE}#/problem/pair-sum-target`);
+    await rp.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await rp.goto(`${BASE}#/`);
+    await rp.waitForSelector('.problem-table');
+    const drafts = await rp.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('lfb:draft')));
+    if (drafts.length) throw new Error(`an opened problem stored a draft: ${drafts.join(', ')}`);
     await ctx.close();
   });
 

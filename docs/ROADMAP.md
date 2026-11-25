@@ -71,7 +71,7 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 - [ ] `RemoteMentor` behind `/api/mentor` (LLM key server-side, Socratic system prompt already in repo)
 - [ ] Real-time Battle: WebSocket rooms, `RemoteOpponent`, server-side judging
 - [ ] Interview analytics history and trends
-- [~] Notifications (`PLAN.md` F7): the rules, settings and draft edit times are done; the bell and toast on the page, then Web Push from a Supabase cron, are next
+- [~] Notifications (`PLAN.md` F7): the rules, settings, draft edit times and the bell in the header are done; the streak rest day on the page, then Web Push from a Supabase cron, are next
 
 ## Open decisions
 

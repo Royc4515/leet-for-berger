@@ -7710,6 +7710,220 @@ body.resizing-y * {
 }
 
 /* =========================================================================
+   Reminders bell (stage F7): a header button with a count, and its panel
+   ========================================================================= */
+.notify-host {
+  display: flex;
+  align-items: center;
+}
+
+.notify {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notify-toggle {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+.notify-toggle:hover,
+.notify-toggle[aria-expanded='true'] {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+/* Something is due: the bell reads as ink, its count as the lamp (what to do now). */
+.notify:not([data-count='0']) .notify-toggle {
+  color: var(--text);
+}
+
+.notify-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.notify-count {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 var(--s-1);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+}
+
+.notify-count:empty {
+  display: none;
+}
+
+.notify-backdrop {
+  display: none;
+}
+
+.notify-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--s-2));
+  z-index: 50;
+  display: grid;
+  gap: var(--s-3);
+  width: 340px;
+  padding: var(--s-4);
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+  animation: menu-in var(--t-base) var(--ease) both;
+}
+
+.notify-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.notify-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--fs-lg);
+}
+
+/* Focus lands here after the last reminder is dismissed; it is not a control, so no ring. */
+.notify-title:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.notify-items {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notify-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s-3);
+  padding: var(--s-3);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+/* The last hours of a streak: the edge is lit too; the time left is in the text. */
+.notify-item.is-urgent {
+  border-color: var(--accent-line);
+}
+
+/* The mark follows the meaning: amber for a streak, coral for a problem tried and left, grey for a return. */
+.notify-mark {
+  width: 12px;
+  height: 14px;
+  margin-top: var(--s-1);
+  background: var(--accent);
+  clip-path: var(--hex);
+}
+
+.notify-item[data-kind='unfinished'] .notify-mark {
+  background: var(--hex-tried);
+}
+
+.notify-item[data-kind='away'] .notify-mark {
+  background: var(--border-control);
+}
+
+.notify-item-title {
+  color: var(--text);
+  font-size: var(--fs-md);
+}
+
+.notify-body {
+  margin: var(--s-1) 0 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+
+.notify-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+
+.notify-empty {
+  margin: 0;
+}
+
+.profile-switches {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+}
+
+@media (pointer: coarse) {
+  .notify-toggle {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Phone: the page title needs the room, so the bell shows only while something is due (the
+   settings are on the profile page), and its panel is a sheet like the account panel. */
+@media (max-width: 820px) {
+  .notify[data-count='0']:not(.is-open) {
+    display: none;
+  }
+
+  .notify-backdrop {
+    position: fixed;
+    inset: var(--header-h) 0 0 0;
+    z-index: 45;
+    display: block;
+    background: var(--scrim);
+    backdrop-filter: blur(2px);
+  }
+
+  .notify-panel {
+    position: fixed;
+    inset-inline: var(--s-3);
+    top: calc(var(--header-h) + var(--s-2));
+    width: auto;
+    z-index: 50;
+  }
+}
+
+/* Narrow phones: while reminders are due, the bell takes the streak chip's place, so the page title
+   keeps its room (owner's report: a crowded header once cut it to one letter). The streak is
+   usually what the bell is about, and its number is in the reminder. */
+@media (max-width: 420px) {
+  .header-right:has(.notify:not([data-count='0'])) .streak-chip {
+    display: none;
+  }
+}
+
+/* =========================================================================
    Static pages (privacy)
    ========================================================================= */
 .legal h2 {

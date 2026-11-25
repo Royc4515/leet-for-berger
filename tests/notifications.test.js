@@ -17,8 +17,10 @@ import {
   loadNotificationState,
   saveNotificationState,
   DISMISS_KEEP_DAYS,
+  quizDaysFrom,
+  loadQuizDays,
 } from '../src/js/state/notifications.js';
-import { NOTIFICATIONS_KEY } from '../src/js/state/user-data.js';
+import { NOTIFICATIONS_KEY, QUIZ_STORAGE_KEY } from '../src/js/state/user-data.js';
 import { dayKey } from '../src/js/state/progress.js';
 import { shiftDay } from '../src/js/data/daily.js';
 
@@ -207,4 +209,15 @@ test('load and save round-trip; a broken or missing store starts empty', () => {
   assert.deepEqual(loadNotificationState(fakeStorage({ [NOTIFICATIONS_KEY]: '{not json' })), emptyNotificationState());
   assert.deepEqual(loadNotificationState(null), emptyNotificationState());
   assert.doesNotThrow(() => saveNotificationState(s, { setItem: () => { throw new Error('quota'); } }));
+});
+
+test('quiz days are read from the stored quiz progress, and junk reads as none', () => {
+  const stored = JSON.stringify({ questions: {}, daily: { '2026-11-23': { correct: 5, total: 10 }, '2026-11-24': { correct: 7, total: 10 }, bogus: {} }, best: {} });
+  assert.deepEqual(quizDaysFrom(stored), ['2026-11-23', '2026-11-24']);
+  assert.deepEqual(quizDaysFrom(null), []);
+  assert.deepEqual(quizDaysFrom('{not json'), []);
+  assert.deepEqual(quizDaysFrom('{"daily":5}'), []);
+  assert.deepEqual(loadQuizDays(fakeStorage({ [QUIZ_STORAGE_KEY]: stored })), ['2026-11-23', '2026-11-24']);
+  assert.deepEqual(loadQuizDays(null), []);
+  assert.deepEqual(loadQuizDays({ getItem: () => { throw new Error('blocked'); } }), []);
 });
