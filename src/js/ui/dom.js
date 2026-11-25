@@ -286,7 +286,9 @@ export function siteCredit() {
     'div.site-links-credit',
     {},
     h('span', {}, 'Built by ', link(portfolio, AUTHOR_NAME)),
-    rest.map((l) => link(l, l.label)),
+    // A space between links: the flex gap spaces them on screen, but copied text and reader mode
+    // read the text nodes, which would run "Roy CarmelliLinkedInGitHub" together.
+    rest.map((l) => [' ', link(l, l.label)]),
   );
 }
 
