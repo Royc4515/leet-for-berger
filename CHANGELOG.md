@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added (Web Push, stage F7 step 3, part A: the rules, owner's decisions)
+- **ADR 0011, Web Push reminders**: opt in per device while signed in, a push-only service worker, an hourly run on the server, the pushes per user (not per device, so a phone and a laptop never double them), and on an iPhone a three-step Add to Home Screen guide. Native app, email, Telegram and WhatsApp were weighed and left out for now.
+- **What a push says at each send hour** (`src/js/data/push-plan.js`, pure): 16:00 and 20:00 in the user's time zone unless they choose other hours (1 to 6 a day, at most one push an hour); nothing on the rest day; a streak that ends tonight first (both at risk: one push each; only one: that one at every hour); then, each once, a return after 3 days away, a problem left unsolved 3 hours after its last try, a new streak after 2 days without any. The server runs in UTC, so `toWallClock` and `zonedFacts` give the rules the user's own clock and calendar.
+
+### Changed (reminders, owner's decisions)
+- **The bell takes the push thresholds**: "welcome back" after 3 days away (was 7), a problem counts as left 3 hours after its last try (was 2 days; the reminder says "4 hours ago" until a day has passed), and a new kind, **"Start a new streak"**, after 2 days with no streak at all, coding or quiz (its own switch on `#/me`).
+
 ### Added (streak rest day, stage F7, owner's decision)
 - **Streaks have a rest day.** A day off on it never breaks your coding or quiz streak, and practice on it still counts, so someone who keeps Shabbat is no longer capped at 6 days. It is Saturday unless you choose another weekday, or none, under Preferences on the profile (`#/me`).
 - Every streak counts with it: the header chip, Problems, the daily card, the Daily page (streak, best streak, quiz streak), the profile, the quiz pages and the reminders. On the rest day itself the chip says "today is your rest day" instead of asking for a solve, and no streak reminder comes.

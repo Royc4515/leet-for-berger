@@ -62,7 +62,7 @@ test('reminders: none on the rest day itself, and the day after it keeps the str
   assert.deepEqual(kinds(at('2026-11-28'), SAT), [], 'Saturday is the rest day: nothing ends tonight');
   assert.deepEqual(kinds(at('2026-11-28'), null), ['streak', 'quiz-streak']);
   assert.deepEqual(kinds(at('2026-11-29'), SAT), ['streak', 'quiz-streak'], 'Sunday: alive through Friday');
-  assert.deepEqual(kinds(at('2026-11-29'), null), [], 'without a rest day it already broke on Saturday');
+  assert.deepEqual(kinds(at('2026-11-29'), null), ['restart'], 'without a rest day both broke on Saturday: start again');
   const [n] = dueNotifications({ ...facts, activeDays: ['2026-11-26', '2026-11-27'] }, at('2026-11-29'), { restDay: SAT });
   assert.equal(n.data.streak, 2);
 });

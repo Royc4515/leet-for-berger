@@ -23,7 +23,7 @@ const LANG_KEY = 'lfb:quiz-lang';
 /** Rest day choices, Sunday first as the Israeli week; the value is getDay(), or 'none'. */
 const REST_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 /** What each reminder kind is called on its switch (data/notifications.js NOTIFICATION_KINDS). */
-const REMINDER_LABELS = { streak: 'Coding streak', 'quiz-streak': 'Daily quiz streak', away: 'Welcome back after a week away', unfinished: 'Problems you left unfinished' };
+const REMINDER_LABELS = { streak: 'Coding streak', 'quiz-streak': 'Daily quiz streak', away: 'Welcome back after a few days away', unfinished: 'Problems you left unfinished', restart: 'Start a new streak after a break' };
 
 const readLang = () => {
   try {
