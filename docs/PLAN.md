@@ -1,6 +1,6 @@
 # Work plan (living)
 
-Last updated: 2026-11-22. Owner: Roy.
+Last updated: 2026-11-25. Owner: Roy.
 
 A LeetCode-style practice platform for interviews and take-home tests, at $0. 145 problems are verified in all 8 languages, every language runs on the live site, accounts and GitHub sync are live, and the dashboard loads in under a second. The bottleneck now is content: most company lists show many more asked problems than we have. This file is open to change: every new decision goes into the decision log.
 
@@ -105,6 +105,7 @@ Stages A to D2 below are the history. The order from here is stage F. Each item 
   - [x] Jobs in Israel (owner's request): 38 companies that hire engineers in Israel link to their own job search filtered to Israel
   - [x] Share buttons (owner's request): problem, solve, company, map place, learning path, daily, interview report, race result; spoiler-free texts
   - [x] CI runs only the unit tests a change reaches (traced proof), the smoke test only when the site changed, on the runner's Chrome
+  - [x] Themes (owner's request): a light theme for the whole site (Dark, Light or System) and code themes for the editor, Dark Berger, Berger Light and Shuvat Light Pink, from Profile, the workspace toolbar and the command palette; every colour written once, in theme layers in `app.css` (`docs/DESIGN.md` "Themes")
 - [ ] **Owner:** check GitHub sync end to end (connect a repo, solve, see the commit); redeploy the Worker (stage B)
 
 ### Deferred until there is a reason (decided 2026-11-19)
@@ -171,6 +172,7 @@ Every decision that changes direction goes here, newest first. Detailed technica
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-25 | Add a light site theme and three code themes (owner's request; reverses the F5 "defer light theme"). Dark stays the default; System follows the device. Colours live once in layered tokens (palettes, derived, code themes), `data-theme` works on any element, and Monaco reads its colours from the CSS; both choices are device preferences, not account data | The owner asked for light mode and VS Code style code themes, named by the owner. Layering keeps one source per colour, so a theme is one block of values and the contrast tests cover every theme |
 | 2026-11-24 | Sync quiz progress in the account record (`user_state.quiz`), merged per question, per mode and per day (the account copy wins a shared day) | Signing out deleted quiz history and a second device started at zero; the record is JSON, so no schema change, and the quiz module loads on first sync to keep the startup graph unchanged (ADR 0006 amendment) |
 | 2026-11-24 | Add a private profile page (`#/me`): account, numbers, leaderboard name, preferences, GitHub sync, data; no public profiles | One place to manage the account instead of a crowded header panel; public profiles need a server table and a privacy decision; syncing the quiz is separate work with a schema change |
 | 2026-11-24 | On a phone the daily quiz leads: first card with the main button on Problems and Modes, the coding daily shrinks to a strip; the tab bar steps aside during a quiz question; every share (quiz, daily quiz, free-play score, leaderboard) has its own preview page | A quiz needs no editor, so it is what a phone is good for; the DOM keeps one primary button per view for the desktop and CSS swaps the emphasis on phones. Previews follow the rule that every shared link shows its own card |

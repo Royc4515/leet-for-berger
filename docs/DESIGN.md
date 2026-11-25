@@ -1,8 +1,8 @@
 # Design system: Atlas
 
-Direction (stage F6, `docs/research/DESIGN_DIRECTIONS.md`): **a territory you light up.** The curriculum is a map of 26 topics in six tiers; every problem is a hex; solving one lights it. The hex is the unit everywhere: on the map, as the status mark in lists, as a day in the daily calendar, as a test case in the verdict, as the company mark and the logo. The ground is warm graphite. Status is told by plain colours (the owner asked for success and failure at a glance): **green** solved, a **green ring** solved with help, **coral** tried and not solved yet, **grey** not started. There is one lamp colour, **amber**, and it only ever means **what to do now**: your next problem, the primary action, where you are.
+Direction (stage F6, `docs/research/DESIGN_DIRECTIONS.md`): **a territory you light up.** The curriculum is a map of 26 topics in six tiers; every problem is a hex; solving one lights it. The hex is the unit everywhere: on the map, as the status mark in lists, as a day in the daily calendar, as a test case in the verdict, as the company mark and the logo. The ground is warm graphite (warm paper in the light theme, see Themes). Status is told by plain colours (the owner asked for success and failure at a glance): **green** solved, a **green ring** solved with help, **coral** tried and not solved yet, **grey** not started. There is one lamp colour, **amber**, and it only ever means **what to do now**: your next problem, the primary action, where you are.
 
-Everything lives in [`src/css/app.css`](../src/css/app.css): tokens in `:root` at the top, component rules below, view rules last. Component rules never use a literal colour, font size, radius, shadow or duration; `tests/design-tokens.test.js` enforces contrast, the type floor and token use.
+Everything lives in [`src/css/app.css`](../src/css/app.css): tokens at the top (theme-independent tokens in `:root`, then the colour theme layers, see Themes), component rules below, view rules last. Component rules never use a literal colour, font size, radius, shadow or duration; `tests/design-tokens.test.js` enforces contrast, the type floor and token use.
 
 Replaces the F5 "quiet instrument" system (`docs/archive/DESIGN_PLAN.md`, kept for history). What F5 got right stays: one primary per screen, 44 px touch targets, a 12 px floor, state never shown by colour alone, filters as chips, scopes as segmented controls.
 
@@ -36,6 +36,7 @@ Replaces the F5 "quiet instrument" system (`docs/archive/DESIGN_PLAN.md`, kept f
 |---|---|---|
 | `--accent` | `#f3a93c` | The next problem (its ring), the primary action, the current position, the streak. Never a status. |
 | `--accent-hover`, `--accent-ink`, `--accent-soft`, `--accent-line`, `--accent-glow`, `--accent-dim` | | Hover, ink on amber, tints, the assisted (solved with help) hex |
+| `--accent-text` | `--accent` | Amber as text (4.5:1). The lamp itself on graphite; a darker amber on paper, where the lamp as a fill and ring stays bright with dark ink. |
 | `--focus` | `#ffc874` | Keyboard focus ring, everywhere |
 | `--ok`, `--bad`, `--warn`, `--info` (+ `-soft`) | green, red, yellow, blue | Test results, errors, warnings, informational marks (the IL mark). Never decoration. |
 | `--bad-solid` / `--bad-ink` | `#c63a2c` / white | Danger buttons (5.1:1) |
@@ -83,6 +84,45 @@ Scale (px): `--fs-xs` 12 (floor), `--fs-sm` 13, `--fs-md` 14 (15 on touch), `--f
 | `--t-stage` | 600 | One signature moment (unlock, first solve) |
 
 Easing: `--ease` (out, default), `--ease-in-out` (things that move across the screen), `--ease-spring` (dialogs, toggles; a small overshoot). The same values are exported from `src/js/ui/motion.js` for script-driven animation.
+
+## Themes
+
+Owner's request (2026-11-25): a light theme for the whole site, and code themes for the editor, as in VS Code. Only colours change between themes; every meaning stays (green solved, coral tried, amber what to do now), and both site themes pass the same contrast checks.
+
+**Site theme**: Dark (the default), Light, or System (follows the device, live). Profile (Appearance) or the command palette ("Theme: ..."). A device preference (`lfb:theme`), not account data. `src/js/theme-boot.js`, a classic script in the `<head>` of every page before the stylesheet, sets `data-theme` on `<html>` before the first paint and keeps the browser bar (`theme-color`) on `--bg`.
+
+**Code theme** (the editor only): Match site (the default), **Dark Berger**, **Berger Light**, **Shuvat Light Pink** (names are the owner's easter eggs). Profile, the workspace toolbar (next to the language; not on a phone, where the editor needs the height) or the palette ("Code theme: ..."). A device preference (`lfb:code-theme`). Match site shows Dark Berger on the dark site and Berger Light on the light one; a chosen theme stays whatever the site does, so a pink editor can sit on a dark page.
+
+**Each colour is written once.** The colour tokens come in three layers in `app.css`:
+
+1. **Palettes**: the raw colours. Dark in `:root, [data-theme='dark']`; `[data-theme='light']` replaces every one of them. Each palette also holds its code theme's syntax colours (`--code-comment`, `--code-keyword`, ...).
+2. **Derived** (`:root, [data-theme], [data-code-theme]`): tints (`color-mix` of the palette colour: `--accent-soft` 13%, `--accent-line` 42%, `--accent-glow` 32%, `--ok-soft`, `--bad-soft`, `--warn-soft` 13%, `--info-soft` 12%, `--solved-soft` 16%), status aliases (`--hex-solved`, `--hex-assisted`, `--shadow-lamp`) and the editor's surfaces (`--code-bg` is `--panel`, `--code-line` is `--panel-2`, `--code-cursor` is `--accent`, ...). Re-declared on any themed element, so they follow the palette active there.
+3. **Code themes**: a code theme that is not a site palette (`[data-code-theme='shuvat-light-pink']`) replaces the `--code-*` tokens only.
+
+`data-theme` works on any element, not just `<html>`. The editor host carries its own `data-theme` and `data-code-theme` (`ui/editor.js`), and Monaco gets its theme by reading the `--code-*` tokens back from the host (`monacoTheme` in `data/themes.js`): no colour is written in JavaScript. Adding a code theme is a block of `--code-*` tokens in layer 3 and an entry in `CODE_THEMES`.
+
+`tests/design-tokens.test.js` holds this in place: the light palette names exactly the dark palette's tokens (a forgotten one would show dark on paper), derived tokens only derive, every code theme sets every code token as a `#rrggbb` colour (Monaco takes no other), and every theme passes the contrast checks: text 4.5:1 on every surface, controls, focus and the lamp as a mark 3:1, syntax, active line number and bracket pairs 4.5:1 on the code background, line numbers and cursor 3:1.
+
+### Light palette
+
+| Token | Value | Note |
+|---|---|---|
+| `--bg` / `--panel` / `--panel-2` / `--panel-3` / `--panel-hover` | `#f5f1ea` / `#fdfbf8` / `#f0eae0` / `#e7dfd2` / `#ddd3c4` | Warm paper; cards are lighter than the ground |
+| `--border` / `--border-strong` / `--border-control` | `#e3dbce` / `#d0c5b3` / `#8b806f` | Control edges 3:1 or more |
+| `--text` / `--text-2` / `--muted` | `#1d1913` / `#463e33` / `#665c4e` | Muted at least 4.9:1 on `--panel-3` |
+| `--accent` / `--accent-hover` / `--accent-ink` / `--accent-text` / `--focus` | `#bf7400` / `#d08516` / `#1d1203` / `#8c5300` / `#a86200` | Bright lamp with dark ink; darker amber as text and focus |
+| `--ok` / `--bad` / `--warn` / `--info` | `#1a7343` / `#b83a2b` / `#896300` / `#2b5fae` | Darker, so they read as text on paper |
+| `--easy` / `--medium` / `--hard` | `#0b766a` / `#7d6200` / `#be2456` | Same hues as dark |
+| `--hex-new` / `--hex-locked` / `--hex-tried` | `#e2d9ca` / `#ece6dc` / `#d9634f` | |
+| Shadows | warm brown at 6% to 38% | Black shadows read as dirt on paper |
+
+### Code themes
+
+| Theme | Surface | Keyword / string / type / comment |
+|---|---|---|
+| Dark Berger | the dark palette | `#e59a7f` / `#aac98e` / `#93c1d4` / `#8a8174` |
+| Berger Light | the light palette | `#a33b20` / `#3d7420` / `#1d6585` / `#766a59` |
+| Shuvat Light Pink | `#fff3f8`, ink `#4a2238`, cursor `#e0457f` | `#c2185b` raspberry / `#23735f` mint / `#7440ad` lavender / `#8b5a72` |
 
 ## Components
 
