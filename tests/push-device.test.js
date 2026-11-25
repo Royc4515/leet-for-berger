@@ -257,6 +257,16 @@ test('disable: the server forgets the device first, then the browser; a server e
   assert.equal(down.log.at(-1), 'local unsubscribe');
 });
 
+test('test: asks the server to push to this device by its endpoint; no subscription, no test', async () => {
+  const b = fakeBrowser();
+  const client = createPushClient({ account: b.account, scope: b.scope, fetchImpl: b.fetchImpl });
+  await assert.rejects(client.test(), /Turn notifications on/);
+  await client.enable();
+  await client.test();
+  const t = b.calls.at(-1);
+  assert.deepEqual([t.method, t.route, t.auth, t.body], ['POST', '/test', 'Bearer jwt', { endpoint: 'https://push.example/abc' }]);
+});
+
 test('settings and save: GET, and a POST that carries the time zone', async () => {
   const b = fakeBrowser();
   const client = createPushClient({ account: b.account, scope: b.scope, fetchImpl: b.fetchImpl });

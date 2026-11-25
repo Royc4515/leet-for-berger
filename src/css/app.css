@@ -8053,7 +8053,7 @@ body.resizing-y * {
 .push-device {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: 'icon title control' 'icon status control';
+  grid-template-areas: 'icon title control' 'icon status control' 'icon test control';
   align-items: center;
   gap: var(--s-half) var(--s-4);
   padding: var(--s-4);
@@ -8093,6 +8093,12 @@ body.resizing-y * {
 .push-device > .switch,
 .push-how {
   grid-area: control;
+}
+
+.push-test {
+  grid-area: test;
+  justify-self: start;
+  margin-inline-start: calc(-1 * var(--s-3));
 }
 
 .push-device-title {
@@ -8615,7 +8621,7 @@ body.resizing-y * {
      is decoration a phone has no room for; the switch and the lit edge carry the state. */
   .push-device {
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: 'title control' 'status status';
+    grid-template-areas: 'title control' 'status status' 'test test';
     gap: var(--s-2) var(--s-3);
   }
 

@@ -116,6 +116,17 @@ export function createPushClient({ account, scope = globalThis, fetchImpl = (...
       await sub.unsubscribe().catch(() => {});
     },
 
+    /**
+     * Asks the server to push a test to this device: the whole way a reminder goes, from the push
+     * function through the browser's push service to here.
+     * @returns {Promise<{ sent: boolean }>}
+     */
+    async test() {
+      const sub = await current();
+      if (!sub) throw new Error('Turn notifications on for this device first');
+      return call('/test', { endpoint: sub.endpoint });
+    },
+
     /** @returns {Promise<PushView>} the signed-in user's send hours, kinds off and device count */
     settings: () => call('/settings'),
     /**

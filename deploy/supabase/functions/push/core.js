@@ -12,6 +12,7 @@
  *   POST /settings { hours?, off?, timeZone? }      what is not sent stays as it was
  *   POST /subscribe { subscription: { endpoint, keys: { p256dh, auth } }, timeZone, hours?, off? }
  *   POST /unsubscribe { endpoint }
+ *   POST /test { endpoint }    a test push to the caller's own device, right after it is turned on
  *   POST /run                  the hourly cron (header x-push-secret): pushes what is due
  */
 import { pickPush, normalizePushSettings, toWallClock, zonedFacts, isTimeZone } from './lib/push-plan.js';
@@ -23,6 +24,25 @@ import { shiftDay } from './lib/daily.js';
 export const MAX_FAILURES = 5;
 /** How far back the send log counts, for "pushed once" (an absence, a problem, a break). */
 export const LOG_DAYS = 30;
+/** One test push per user in this time: a test is a check, not a way to ring a phone on repeat. */
+export const TEST_EVERY_MS = 30 * 1000;
+
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/**
+ * What the test push says (owner's request: something with a bit of fun): a radio check, then
+ * what the real reminders will do, with the user's own hours and rest day.
+ * @param {{ hours: number[], restDay: number|null }} settings
+ * @returns {{ title: string, body: string }}
+ */
+export function testCopy({ hours, restDay }) {
+  const times = hours.map((h) => `${String(h).padStart(2, '0')}:00`);
+  const list = times.length < 2 ? times[0] : `${times.slice(0, -1).join(', ')} and ${times.at(-1)}`;
+  const when = times.length
+    ? `The real ones come at ${list}, only when something is due${restDay === null ? '' : `, and never on ${WEEKDAYS[restDay]}`}.`
+    : 'You have no reminder hours yet: pick some on your profile.';
+  return { title: 'Radio check: loud and clear', body: `Reminders now reach this device. ${when}` };
+}
 
 const B64URL = /^[A-Za-z0-9_-]+$/;
 
@@ -85,6 +105,21 @@ function sameSecret(a, b) {
  */
 export function createHandler({ getUser, now = () => Date.now(), siteUrl, cronSecret, publicKey, titles = {}, send, db }) {
   const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+  /** user id -> when their last test push went: kept per instance, enough to stop a stuck button. */
+  const lastTest = new Map();
+
+  /** The test push: to the caller's own device only, at most once per TEST_EVERY_MS. */
+  async function testPush(user, endpoint) {
+    const sub = (await db.subs.ofUser(user.id)).find((s) => s.endpoint === endpoint);
+    if (!sub) return json(404, { error: 'Turn notifications on for this device first' });
+    if (now() - (lastTest.get(user.id) ?? -Infinity) < TEST_EVERY_MS) return json(429, { error: 'A test is on its way. Try again in a moment.' });
+    lastTest.set(user.id, now());
+    const { hours } = normalizePushSettings((await db.settings.get(user.id)) ?? {});
+    const copy = testCopy({ hours, restDay: restDayOf(await db.state.of(user.id)) });
+    const result = await send(sub, { ...copy, url: new URL('#/me', siteUrl).href, tag: 'test' });
+    if (result === 'gone') await db.subs.drop(sub.id);
+    return json(200, { sent: result === 'ok' });
+  }
 
   async function userOf(req) {
     const auth = req.headers.get('Authorization') ?? '';
@@ -159,7 +194,7 @@ export function createHandler({ getUser, now = () => Date.now(), siteUrl, cronSe
       }
       if (req.method === 'GET' && route === '/key') return json(200, { publicKey: await publicKey() });
       const user = await userOf(req);
-      if (!user && ['/settings', '/subscribe', '/unsubscribe'].includes(route)) return json(401, { error: 'Sign in to get reminders on this device' });
+      if (!user && ['/settings', '/subscribe', '/unsubscribe', '/test'].includes(route)) return json(401, { error: 'Sign in to get reminders on this device' });
       if (req.method === 'GET' && route === '/settings') return json(200, await view(user.id));
       if (req.method === 'POST' && (route === '/settings' || route === '/subscribe')) {
         const body = await req.json().catch(() => null);
@@ -176,6 +211,11 @@ export function createHandler({ getUser, now = () => Date.now(), siteUrl, cronSe
         }
         await db.settings.upsert(await mergedSettings(user.id, body));
         return json(200, await view(user.id));
+      }
+      if (req.method === 'POST' && route === '/test') {
+        const body = await req.json().catch(() => null);
+        if (typeof body?.endpoint !== 'string') return json(400, { error: 'Invalid endpoint' });
+        return testPush(user, body.endpoint);
       }
       if (req.method === 'POST' && route === '/unsubscribe') {
         const body = await req.json().catch(() => null);
