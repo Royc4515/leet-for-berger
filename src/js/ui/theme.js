@@ -34,6 +34,7 @@ export function getCodeThemePref() {
  * @param {string} pref a CODE_THEME_OPTIONS value
  */
 export function setCodeThemePref(pref) {
+  const from = getCodeThemePref();
   unsavedCode = parseCodeThemePref(pref);
   try {
     localStorage.setItem(CODE_KEY, unsavedCode);
@@ -41,6 +42,8 @@ export function setCodeThemePref(pref) {
     /* storage blocked */
   }
   dispatchEvent(new CustomEvent(CHANGE));
+  // A choice the user made (ui/theme-quips.js answers it), unlike CHANGE, which redraws.
+  dispatchEvent(new CustomEvent('theme:chosen', { detail: { kind: 'code', from, to: unsavedCode } }));
 }
 
 /**
