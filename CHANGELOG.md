@@ -16,6 +16,17 @@
 ### Changed (drafts)
 - **A draft now records when its code last changed** (`lfb:draft-at:v1:*`, cleared on sign-out), and only a real change moves it: closing the editor or switching language saves the same code and does not. **Code equal to the starter is no longer stored as a draft**, so opening a problem and leaving stores nothing and never counts as work left unfinished. Drafts saved before this have no edit time and are never reported.
 
+### Fixed (deploys)
+- **Deploys stop failing on GitHub's side.** Three of four deploys on 2026-11-25 failed and needed a re-run, the site staying a version behind until then. Two failed with "No artifacts named github-pages were found": the deploy ran in the same job a second after the upload, before the artifact was listed. The deploy now has its own job after the build (GitHub's own Pages layout). The third was Pages answering "Deployment failed, try again later": the deploy job now tries once more after 30 seconds. A newer push also waits for a running deploy instead of cancelling it halfway. `tests/ci.test.js` holds the layout in place.
+
+### Added (themes, owner's request)
+- **A sun/moon switch in the header**: one click switches light and dark (and saves it, so it also leaves System). Its icon is the theme a click gives, and screen readers hear "Switch to light theme". On a narrow phone (420 px and below) the header keeps its room for the page title, so the same switch is in the account sheet instead, with its words.
+- **The four new code themes are named**: Midnight Berger, Terminal Berger, High Contrast Berger and Berger Mint, in the pattern of Dark Berger and Berger Light.
+
+### Changed (themes, owner's request)
+- **A softer light theme**: the first one was too bright. Nothing is white any more: the cards and the editor are warm paper (relative luminance 0.84, was 0.97) on a slightly darker ground, with every colour retuned so text, status and difficulty still pass the same contrast checks.
+- **Four more code themes**: **Midnight Berger** (deep navy), **Terminal Berger** (green phosphor on black), **High Contrast Berger** (black, white and bright colours, for glare, projectors and low vision) and **Berger Mint** (soft sage paper), next to Dark Berger, Berger Light and Shuvat Light Pink. Each is one block of tokens in `app.css`; the contrast tests cover them like the rest.
+
 ### Added (themes, owner's request)
 - **Light theme for the whole site**: Dark (the default), Light, or System, which follows the device as it changes. Set in Profile (Appearance) or from the command palette ("Theme: Light"); kept per device. The page starts in the saved theme with no flash of the other one, and the browser bar follows it. Every screen keeps its meanings: green solved, coral tried, amber what to do now.
 - **Code themes for the editor**, as in VS Code: **Dark Berger**, **Berger Light** and **Shuvat Light Pink**, or Match site (the default, Dark Berger on the dark site and Berger Light on the light one). Set in Profile, from a menu next to the language in the editor toolbar (not on a phone, where the toolbar stays one row), or from the palette ("Code theme: ..."). A chosen code theme stays whatever the site does, so a pink editor works on a dark page.

@@ -89,9 +89,9 @@ Easing: `--ease` (out, default), `--ease-in-out` (things that move across the sc
 
 Owner's request (2026-11-25): a light theme for the whole site, and code themes for the editor, as in VS Code. Only colours change between themes; every meaning stays (green solved, coral tried, amber what to do now), and both site themes pass the same contrast checks.
 
-**Site theme**: Dark (the default), Light, or System (follows the device, live). Profile (Appearance) or the command palette ("Theme: ..."). A device preference (`lfb:theme`), not account data. `src/js/theme-boot.js`, a classic script in the `<head>` of every page before the stylesheet, sets `data-theme` on `<html>` before the first paint and keeps the browser bar (`theme-color`) on `--bg`.
+**Site theme**: Dark (the default), Light, or System (follows the device, live). Profile (Appearance), the command palette ("Theme: ..."), or the **sun/moon switch** (owner's request): one click switches light and dark and saves that choice. It is the first control in the header, a ghost icon button whose icon is the theme a click gives and whose name says so ("Switch to light theme"; no `aria-pressed`, which would draw it filled in one theme only). At 420 px and below the header keeps its room for the page title (an e2e rule), so the same switch, with its words, sits in the account sheet above "Profile and settings". One factory makes both (`lfbTheme.button()` in `theme-boot.js`). A device preference (`lfb:theme`), not account data. `src/js/theme-boot.js`, a classic script in the `<head>` of every page before the stylesheet, sets `data-theme` on `<html>` before the first paint and keeps the browser bar (`theme-color`) on `--bg`.
 
-**Code theme** (the editor only): Match site (the default), **Dark Berger**, **Berger Light**, **Shuvat Light Pink** (names are the owner's easter eggs). Profile, the workspace toolbar (next to the language; not on a phone, where the editor needs the height) or the palette ("Code theme: ..."). A device preference (`lfb:code-theme`). Match site shows Dark Berger on the dark site and Berger Light on the light one; a chosen theme stays whatever the site does, so a pink editor can sit on a dark page.
+**Code theme** (the editor only): Match site (the default), **Dark Berger**, **Berger Light**, **Shuvat Light Pink** (the owner's easter eggs), **Midnight Berger**, **Terminal Berger**, **High Contrast Berger** and **Berger Mint** (named in the same pattern: a dark theme is "X Berger", a light one "Berger X"). Ids are saved per device and never change; only labels do. Profile, the workspace toolbar (next to the language; not on a phone, where the editor needs the height) or the palette ("Code theme: ..."). A device preference (`lfb:code-theme`). Match site shows Dark Berger on the dark site and Berger Light on the light one; a chosen theme stays whatever the site does, so a pink editor can sit on a dark page.
 
 **Each colour is written once.** The colour tokens come in three layers in `app.css`:
 
@@ -107,13 +107,13 @@ Owner's request (2026-11-25): a light theme for the whole site, and code themes 
 
 | Token | Value | Note |
 |---|---|---|
-| `--bg` / `--panel` / `--panel-2` / `--panel-3` / `--panel-hover` | `#f5f1ea` / `#fdfbf8` / `#f0eae0` / `#e7dfd2` / `#ddd3c4` | Warm paper; cards are lighter than the ground |
-| `--border` / `--border-strong` / `--border-control` | `#e3dbce` / `#d0c5b3` / `#8b806f` | Control edges 3:1 or more |
-| `--text` / `--text-2` / `--muted` | `#1d1913` / `#463e33` / `#665c4e` | Muted at least 4.9:1 on `--panel-3` |
-| `--accent` / `--accent-hover` / `--accent-ink` / `--accent-text` / `--focus` | `#bf7400` / `#d08516` / `#1d1203` / `#8c5300` / `#a86200` | Bright lamp with dark ink; darker amber as text and focus |
-| `--ok` / `--bad` / `--warn` / `--info` | `#1a7343` / `#b83a2b` / `#896300` / `#2b5fae` | Darker, so they read as text on paper |
-| `--easy` / `--medium` / `--hard` | `#0b766a` / `#7d6200` / `#be2456` | Same hues as dark |
-| `--hex-new` / `--hex-locked` / `--hex-tried` | `#e2d9ca` / `#ece6dc` / `#d9634f` | |
+| `--bg` / `--panel` / `--panel-2` / `--panel-3` / `--panel-hover` | `#e8e2d6` / `#f1ece2` / `#e5ded1` / `#dbd2c3` / `#d1c7b6` | Warm, soft paper; cards are lighter than the ground but nothing is white (owner: the first light theme was too bright). The brightest surface, the cards and the editor, sits at relative luminance 0.84, not 0.97 |
+| `--border` / `--border-strong` / `--border-control` | `#d6cdbe` / `#c3b7a3` / `#7f7462` | Control edges 3:1 or more |
+| `--text` / `--text-2` / `--muted` | `#201b14` / `#433b30` / `#5c5244` | Muted at least 4.5:1 on `--panel-3` |
+| `--accent` / `--accent-hover` / `--accent-ink` / `--accent-text` / `--focus` | `#b56d00` / `#c97e10` / `#1d1203` / `#7f4b00` / `#9a5a00` | Bright lamp with dark ink; darker amber as text and focus |
+| `--ok` / `--bad` / `--warn` / `--info` | `#17683c` / `#a93426` / `#7a5800` / `#28569e` | Darker, so they read as text on paper |
+| `--easy` / `--medium` / `--hard` | `#0a6a5f` / `#715800` / `#ad1f4d` | Same hues as dark |
+| `--hex-new` / `--hex-locked` / `--hex-tried` | `#d8cfbf` / `#e2dbcf` / `#d9634f` | |
 | Shadows | warm brown at 6% to 38% | Black shadows read as dirt on paper |
 
 ### Code themes
@@ -121,8 +121,12 @@ Owner's request (2026-11-25): a light theme for the whole site, and code themes 
 | Theme | Surface | Keyword / string / type / comment |
 |---|---|---|
 | Dark Berger | the dark palette | `#e59a7f` / `#aac98e` / `#93c1d4` / `#8a8174` |
-| Berger Light | the light palette | `#a33b20` / `#3d7420` / `#1d6585` / `#766a59` |
+| Berger Light | the light palette | `#9a361c` / `#376a1c` / `#1a5c79` / `#6b5f4e` |
 | Shuvat Light Pink | `#fff3f8`, ink `#4a2238`, cursor `#e0457f` | `#c2185b` raspberry / `#23735f` mint / `#7440ad` lavender / `#8b5a72` |
+| Midnight Berger | navy `#161b29`, ink `#d6deeb`, cursor `#ffcb6b` | `#c792ea` / `#c3e88d` / `#82aaff` / `#8490ad` |
+| Terminal Berger | black-green `#0b120c`, phosphor ink `#b8f2b8` | `#7dff7d` / `#e6ff9e` / `#8ce8ff` / `#76a679` |
+| High Contrast Berger | black `#000000`, white ink, yellow cursor | `#ffd400` / `#9ef0a0` / `#6fdcff` / `#c8c8c8` (text and line numbers at 7:1 or more, WCAG AAA, held by the test through `contrast: 7` on the theme; in practice 9.9:1 and up) |
+| Berger Mint | sage `#e9f1eb`, ink `#1c2b23` | `#9c2c55` / `#2d6528` / `#1b5783` / `#5a7163` |
 
 ## Components
 

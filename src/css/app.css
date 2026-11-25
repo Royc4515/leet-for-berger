@@ -194,70 +194,71 @@
 }
 
 /* Layer 1, light palette (owner's request): the same map on warm paper. Only colours change; every
-   meaning stays (green solved, coral tried, amber what to do now). */
+   meaning stays (green solved, coral tried, amber what to do now). Soft on purpose: no surface is
+   brighter than the cards (relative luminance 0.84), so the big panels and the editor never glare. */
 [data-theme='light'] {
   color-scheme: light;
 
-  --bg: #f5f1ea;
-  --panel: #fdfbf8;
-  --panel-2: #f0eae0;
-  --panel-3: #e7dfd2;
-  --panel-hover: #ddd3c4;
+  --bg: #e8e2d6;
+  --panel: #f1ece2;
+  --panel-2: #e5ded1;
+  --panel-3: #dbd2c3;
+  --panel-hover: #d1c7b6;
   --scrim: rgba(38, 30, 20, 0.42);
 
-  --border: #e3dbce;
-  --border-strong: #d0c5b3;
-  --border-control: #8b806f;
+  --border: #d6cdbe;
+  --border-strong: #c3b7a3;
+  --border-control: #7f7462;
 
-  --text: #1d1913;
-  --text-2: #463e33;
-  --muted: #665c4e;
+  --text: #201b14;
+  --text-2: #433b30;
+  --muted: #5c5244;
 
   /* Dark ink on amber stays; as text the amber darkens to read on paper */
-  --accent: #bf7400;
-  --accent-hover: #d08516;
+  --accent: #b56d00;
+  --accent-hover: #c97e10;
   --accent-ink: #1d1203;
   --accent-dim: #e0b36a;
-  --accent-text: #8c5300;
-  --focus: #a86200;
+  --accent-text: #7f4b00;
+  --focus: #9a5a00;
 
-  --ok: #1a7343;
-  --bad: #b83a2b;
+  --ok: #17683c;
+  --bad: #a93426;
   --bad-solid: #c63a2c;
   --bad-ink: #ffffff;
-  --warn: #896300;
-  --info: #2b5fae;
+  --warn: #7a5800;
+  --info: #28569e;
 
-  --easy: #0b766a;
-  --medium: #7d6200;
-  --hard: #be2456;
+  --easy: #0a6a5f;
+  --medium: #715800;
+  --hard: #ad1f4d;
 
-  --hex-new: #e2d9ca;
-  --hex-locked: #ece6dc;
+  --hex-new: #d8cfbf;
+  --hex-locked: #e2dbcf;
   --hex-tried: #d9634f;
-  --road: #cbc0ae;
-  --road-lit: #9a8d78;
-  --logo-plate: #ffffff;
+  --road: #c0b49f;
+  --road-lit: #8f826c;
+  --logo-plate: #fbf9f5;
   --logo-ink: #3a352d;
-  --logo-edge: #ddd5c8;
+  --logo-edge: #d3cab9;
 
   --shadow-1: 0 1px 0 rgba(60, 44, 24, 0.06), 0 10px 24px -14px rgba(60, 44, 24, 0.3);
   --shadow-2: 0 2px 0 rgba(60, 44, 24, 0.06), 0 24px 60px -18px rgba(60, 44, 24, 0.38);
 
   /* Code (Berger Light) */
-  --code-comment: #766a59;
-  --code-keyword: #a33b20;
-  --code-string: #3d7420;
-  --code-number: #855600;
-  --code-type: #1d6585;
-  --code-delimiter: #5a5246;
+  --code-comment: #6b5f4e;
+  --code-keyword: #9a361c;
+  --code-string: #376a1c;
+  --code-number: #7a4f00;
+  --code-type: #1a5c79;
+  --code-delimiter: #544c41;
   --code-identifier: #2a241c;
-  --code-selection: #f3dfb8;
-  --code-selection-inactive: #efe5d3;
-  --code-bracket-match: #efe2c8;
-  --code-bracket-1: #8f5f00;
-  --code-bracket-2: #8e3fa8;
-  --code-bracket-3: #2b5fae;
+  --code-selection: #ead3a6;
+  --code-selection-inactive: #e6dccb;
+  --code-bracket-match: #e8dcc4;
+  --code-bracket-1: #835700;
+  --code-bracket-2: #813a99;
+  --code-bracket-3: #27559c;
 }
 
 /* Layer 2, derived from the active palette */
@@ -319,6 +320,122 @@
   --code-bracket-1: #b8236f;
   --code-bracket-2: #7440ad;
   --code-bracket-3: #23735f;
+}
+
+/* Layer 3, code theme Midnight Berger: deep navy, cool and calm for night sessions */
+[data-code-theme='midnight'] {
+  --code-bg: #161b29;
+  --code-fg: #d6deeb;
+  --code-line: #1c2233;
+  --code-gutter: #66728f;
+  --code-gutter-active: #b4bfd6;
+  --code-cursor: #ffcb6b;
+  --code-bracket-border: #66728f;
+  --code-widget: #1c2233;
+  --code-widget-border: #33405f;
+  --code-widget-selected: #28314b;
+  --code-indent: #232a3d;
+  --code-indent-active: #3a4563;
+  --code-comment: #8490ad;
+  --code-keyword: #c792ea;
+  --code-string: #c3e88d;
+  --code-number: #f78c6c;
+  --code-type: #82aaff;
+  --code-delimiter: #9aa6c0;
+  --code-identifier: #dce4f2;
+  --code-selection: #2e3a5a;
+  --code-selection-inactive: #252e47;
+  --code-bracket-match: #2a3350;
+  --code-bracket-1: #ffd479;
+  --code-bracket-2: #c792ea;
+  --code-bracket-3: #7fdbff;
+}
+
+/* Layer 3, code theme Terminal Berger: green phosphor on black, an old monitor */
+[data-code-theme='terminal'] {
+  --code-bg: #0b120c;
+  --code-fg: #b8f2b8;
+  --code-line: #111c12;
+  --code-gutter: #4f8253;
+  --code-gutter-active: #9fe09f;
+  --code-cursor: #7dff7d;
+  --code-bracket-border: #4f8253;
+  --code-widget: #111c12;
+  --code-widget-border: #27452c;
+  --code-widget-selected: #1b321f;
+  --code-indent: #16261a;
+  --code-indent-active: #2a4a30;
+  --code-comment: #76a679;
+  --code-keyword: #7dff7d;
+  --code-string: #e6ff9e;
+  --code-number: #9effd8;
+  --code-type: #8ce8ff;
+  --code-delimiter: #94c497;
+  --code-identifier: #c8f5c8;
+  --code-selection: #21422a;
+  --code-selection-inactive: #19321f;
+  --code-bracket-match: #1d3822;
+  --code-bracket-1: #d7ff8a;
+  --code-bracket-2: #8affd5;
+  --code-bracket-3: #f0e68c;
+}
+
+/* Layer 3, code theme High Contrast Berger: pure black and bright colours, for glare, projectors and low vision */
+[data-code-theme='high-contrast'] {
+  --code-bg: #000000;
+  --code-fg: #ffffff;
+  --code-line: #161616;
+  --code-gutter: #b4b4b4;
+  --code-gutter-active: #ffffff;
+  --code-cursor: #ffd400;
+  --code-bracket-border: #ffd400;
+  --code-widget: #0c0c0c;
+  --code-widget-border: #6fc3df;
+  --code-widget-selected: #1f1f1f;
+  --code-indent: #383838;
+  --code-indent-active: #8a8a8a;
+  --code-comment: #c8c8c8;
+  --code-keyword: #ffd400;
+  --code-string: #9ef0a0;
+  --code-number: #b5ceff;
+  --code-type: #6fdcff;
+  --code-delimiter: #e6e6e6;
+  --code-identifier: #ffffff;
+  --code-selection: #004b8f;
+  --code-selection-inactive: #00315e;
+  --code-bracket-match: #333333;
+  --code-bracket-1: #ffd400;
+  --code-bracket-2: #ff8ad8;
+  --code-bracket-3: #6fdcff;
+}
+
+/* Layer 3, code theme Berger Mint: soft sage paper, as easy on the eyes as Berger Light */
+[data-code-theme='mint-light'] {
+  --code-bg: #e9f1eb;
+  --code-fg: #1c2b23;
+  --code-line: #dde9e1;
+  --code-gutter: #687f71;
+  --code-gutter-active: #2f4a3b;
+  --code-cursor: #1f7a52;
+  --code-bracket-border: #687f71;
+  --code-widget: #e2ece5;
+  --code-widget-border: #b6cdbe;
+  --code-widget-selected: #d1e4d7;
+  --code-indent: #d2e2d7;
+  --code-indent-active: #b2cabb;
+  --code-comment: #5a7163;
+  --code-keyword: #9c2c55;
+  --code-string: #2d6528;
+  --code-number: #7f4410;
+  --code-type: #1b5783;
+  --code-delimiter: #475a4e;
+  --code-identifier: #1c2b23;
+  --code-selection: #c2e0cc;
+  --code-selection-inactive: #d5e7db;
+  --code-bracket-match: #cde3d5;
+  --code-bracket-1: #7f5200;
+  --code-bracket-2: #753a94;
+  --code-bracket-3: #1d5996;
 }
 
 /* ---------- Base ---------- */
@@ -531,6 +648,29 @@ textarea {
   display: flex;
   align-items: center;
   gap: var(--s-2);
+}
+
+/* Sun/moon button (theme-boot.js): the icon is the theme a click switches to. In the header where
+   it has room; on a narrow phone the header keeps its title, and the switch is in the account sheet. */
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+:root[data-theme='light'] .theme-toggle .icon-sun,
+:root:not([data-theme='light']) .theme-toggle .icon-moon,
+.account-menu .theme-toggle {
+  display: none;
+}
+
+@media (max-width: 420px) {
+  .header-right > .theme-toggle {
+    display: none;
+  }
+
+  .account-menu .theme-toggle {
+    display: inline-flex;
+  }
 }
 
 .palette-trigger {

@@ -26,7 +26,7 @@ src/css/app.css            all styles; Atlas design tokens at the top, colours i
 src/fonts/                 self-hosted Bricolage Grotesque (display), Inter, JetBrains Mono woff2 fonts (README.md, ADR 0009)
 src/brand/                 logo, favicon, social preview (scripts/design/social-preview.mjs); companies/<slug>.webp = company logos (scripts/content/fetch-logos.mjs, rules in logo-pick.mjs, sources in content/company-domains.json)
 src/js/main.js             bootstrap + hash router (every view returns a cleanup fn)
-src/js/theme-boot.js       classic script before the stylesheet: applies the site theme (data-theme on <html>) before the first paint; window.lfbTheme
+src/js/theme-boot.js       classic script before the stylesheet: applies the site theme (data-theme on <html>) before the first paint; window.lfbTheme; the sun/moon switch (header, and the account sheet on a narrow phone)
 src/js/engine/             PURE judging logic + execution
   harness.js               buildSuite (15 cases), judge, deepEqual, preview
   codegen.js               8 languages, neutral signature (function or class) -> names, types, starter code

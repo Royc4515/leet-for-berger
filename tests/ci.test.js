@@ -24,6 +24,22 @@ test('Pages publishes every top-level HTML page', async () => {
   for (const f of html) assert.match(pages, new RegExp(`cp [^\\n]*\\b${f.replace('.', '\\.')}\\b`), `${f} is not copied into the Pages site`);
 });
 
+test('Pages deploys in its own job after the build, and tries once more when Pages fails', () => {
+  const yml = readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8');
+  const job = (name) => yml.match(new RegExp(`^  ${name}:\\n([\\s\\S]*?)(?=^  \\S|(?![\\s\\S]))`, 'm'))?.[1] ?? '';
+  const build = job('build');
+  const deploy = job('deploy');
+  // Deploying in the upload's own job failed with "No artifacts named github-pages were found".
+  assert.match(build, /actions\/upload-pages-artifact@/, 'the build job uploads the site');
+  assert.doesNotMatch(build, /actions\/deploy-pages@/, 'the build job must not deploy');
+  assert.match(deploy, /^\s+needs: build$/m, 'the deploy job waits for the build job');
+  // "Deployment failed, try again later" from Pages: the first try may fail, a second one runs.
+  assert.equal(deploy.match(/actions\/deploy-pages@/g)?.length, 2, 'a first try and one retry');
+  assert.match(deploy, /continue-on-error: true/);
+  assert.match(deploy, /if: steps\.deployment\.outcome == 'failure'\n\s+uses: actions\/deploy-pages@/);
+  assert.match(yml, /cancel-in-progress: false/, 'a newer push must not cancel a deploy halfway');
+});
+
 test('CI runs the native program builder tests when the selection picks them, and it picks them for all they import', () => {
   const yml = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
   assert.match(yml, /if: contains\(needs\.changes\.outputs\.tests, 'tests\/programs\.test\.js'\)\n\s+run: node --test tests\/programs\.test\.js/);

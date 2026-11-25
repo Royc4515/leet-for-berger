@@ -11,16 +11,25 @@
 export const MATCH_SITE = 'site';
 
 /**
- * @typedef {{ id: string, label: string, scheme: 'dark'|'light', site?: boolean }} CodeTheme
+ * @typedef {{ id: string, label: string, scheme: 'dark'|'light', site?: boolean, contrast?: number }} CodeTheme
  * `scheme` is the site palette the theme is drawn on (the editor host's data-theme), which also
- * picks Monaco's base theme; `site` marks the theme that is that palette itself (Match site).
+ * picks Monaco's base theme; `site` marks the theme that is that palette itself (Match site);
+ * `contrast` raises the least contrast its text must reach (default 4.5:1, tests/design-tokens.test.js).
  */
 
-/** Every code theme; the names are the owner's easter eggs. @type {CodeTheme[]} */
+/**
+ * Every code theme. The names are easter eggs: the owner's first three, and the rest in their
+ * pattern (a dark theme is "X Berger", a light one "Berger X"). Ids never change: they are saved.
+ * @type {CodeTheme[]}
+ */
 export const CODE_THEMES = [
   { id: 'dark-berger', label: 'Dark Berger', scheme: 'dark', site: true },
   { id: 'berger-light', label: 'Berger Light', scheme: 'light', site: true },
   { id: 'shuvat-light-pink', label: 'Shuvat Light Pink', scheme: 'light' },
+  { id: 'midnight', label: 'Midnight Berger', scheme: 'dark' },
+  { id: 'terminal', label: 'Terminal Berger', scheme: 'dark' },
+  { id: 'high-contrast', label: 'High Contrast Berger', scheme: 'dark', contrast: 7 }, // WCAG AAA: the name is a promise
+  { id: 'mint-light', label: 'Berger Mint', scheme: 'light' },
 ];
 
 /** The choices offered: Match site first (the default), then every theme. */
