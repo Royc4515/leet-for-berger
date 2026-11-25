@@ -1046,6 +1046,19 @@ body.lockdown .app-header {
   margin: 0 0 0 auto;
 }
 
+/* LinkedIn and GitHub carry their mark before the word, in the link's own colour. */
+.site-links-credit a[data-credit] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.site-links-icon {
+  flex: none;
+  width: 1.1em;
+  height: 1.1em;
+}
+
 /* The name is the one link a recruiter looks for: a step brighter than the rest of the footer. */
 .site-links-credit a[data-credit='portfolio'] {
   color: var(--text-2);

@@ -271,6 +271,21 @@ export function siteFooter({ note = '' } = {}) {
   );
 }
 
+/** A credit link's mark: decorative (the word beside it names the link), in the link's colour. */
+function creditIcon(d) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'site-links-icon');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill', 'currentColor');
+  svg.append(path);
+  return svg;
+}
+
 /**
  * The author credit at the end of the shared footer (owner's request): "Built by" and the name,
  * which links to the portfolio, then LinkedIn and GitHub. Quiet like the rest of the footer, so it
@@ -281,7 +296,7 @@ export function siteFooter({ note = '' } = {}) {
  */
 export function siteCredit() {
   const [portfolio, ...rest] = AUTHOR_LINKS;
-  const link = (l, text) => h('a', { href: l.href, ...EXTERNAL_LINK, 'aria-label': creditLinkName(l), dataset: { credit: l.id } }, text);
+  const link = (l, text) => h('a', { href: l.href, ...EXTERNAL_LINK, 'aria-label': creditLinkName(l), dataset: { credit: l.id } }, l.icon ? creditIcon(l.icon) : null, text);
   return h(
     'div.site-links-credit',
     {},

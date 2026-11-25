@@ -21,6 +21,11 @@ test('the credit links are exactly the owner\'s three, over https, in order', ()
   assert.ok(Object.isFrozen(AUTHOR_LINKS) && AUTHOR_LINKS.every(Object.isFrozen));
 });
 
+test('LinkedIn and GitHub carry a mark; the name does not', () => {
+  assert.deepEqual(AUTHOR_LINKS.map((l) => Boolean(l.icon)), [false, true, true]);
+  for (const l of AUTHOR_LINKS.filter((x) => x.icon)) assert.match(l.icon, /^M[\d.\s,a-zA-Z-]+$/);
+});
+
 test('external links open a new tab with no opener and no referrer', () => {
   assert.equal(EXTERNAL_LINK.target, '_blank');
   assert.deepEqual(EXTERNAL_LINK.rel.split(' ').sort(), ['noopener', 'noreferrer']);
@@ -61,10 +66,16 @@ test('privacy.html carries the same credit markup as the shared footer', async (
   const credit = html.match(/<div class="site-links-credit">([\s\S]*?)<\/div>/)?.[1];
   assert.ok(credit, 'privacy.html has a credit line');
   assert.match(credit, /Built by/);
-  const anchors = [...credit.matchAll(/<a ([^>]*)>([^<]*)<\/a>/g)];
+  const anchors = [...credit.matchAll(/<a ([^>]*)>((?:<svg[\s\S]*?<\/svg>)?)([^<]*)<\/a>/g)];
   assert.equal(anchors.length, AUTHOR_LINKS.length);
   AUTHOR_LINKS.forEach((l, i) => {
-    const [, attrs, text] = anchors[i];
+    const [, attrs, svg, text] = anchors[i];
+    // The same mark as the shared footer, decorative, or none for the name.
+    if (l.icon) {
+      assert.ok(svg.includes(`d="${l.icon}"`), `${l.id} mark`);
+      assert.match(svg, /aria-hidden="true"/);
+      assert.match(svg, /fill="currentColor"/);
+    } else assert.equal(svg, '');
     assert.match(attrs, new RegExp(`href="${l.href.replace(/[.?]/g, '\\$&')}"`));
     assert.match(attrs, /target="_blank"/);
     assert.match(attrs, /rel="noopener noreferrer"/);
