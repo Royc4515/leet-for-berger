@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added (themes, owner's request)
+- **Light theme for the whole site**: Dark (the default), Light, or System, which follows the device as it changes. Set in Profile (Appearance) or from the command palette ("Theme: Light"); kept per device. The page starts in the saved theme with no flash of the other one, and the browser bar follows it. Every screen keeps its meanings: green solved, coral tried, amber what to do now.
+- **Code themes for the editor**, as in VS Code: **Dark Berger**, **Berger Light** and **Shuvat Light Pink**, or Match site (the default, Dark Berger on the dark site and Berger Light on the light one). Set in Profile, from a menu next to the language in the editor toolbar (not on a phone, where the toolbar stays one row), or from the palette ("Code theme: ..."). A chosen code theme stays whatever the site does, so a pink editor works on a dark page.
+
+### Changed (themes)
+- **Colour tokens in layers, each colour written once** (`src/css/app.css`, `docs/DESIGN.md` "Themes"): palettes (dark, light), derived tokens computed from them (tints with `color-mix`, status aliases, the editor's surfaces) and code themes. Monaco now reads its colours from the CSS instead of a copy of them in `ui/editor.js`. Amber as text has its own token, `--accent-text`. `tests/design-tokens.test.js` checks the layers and runs every contrast check on both site themes and all three code themes; `tests/themes.test.js` covers the theme choices and the boot script.
+
 ### Changed (README showcase, owner's request)
 - **README redesigned as a landing page**: a hero banner in the Atlas style (`docs/assets/banner.jpg`), a 10-second demo GIF recorded from the running app (submit, Accepted 15/15, then the Problem Map zooming in), a row of real numbers (225 problems, 8 languages, 15 tests a run, 26 topics, 193 companies, 526 quiz questions), a six-screen feature gallery, a "how a submission is judged" sequence diagram, branded badges, and collapsible sections for tests, configuration and structure. `docs/assets/social-preview.jpg` (1280x640) is ready for the repo's social preview. Screenshots are 1600 px JPEGs (the PNGs they replace are removed).
 

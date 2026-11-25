@@ -29,70 +29,8 @@
   src: url('../fonts/jetbrains-mono-latin.woff2') format('woff2');
 }
 
+/* Theme-independent tokens: type, space, radii, size, motion. Colours are in the theme layers below. */
 :root {
-  color-scheme: dark;
-
-  /* Ground and surfaces: warm graphite, hue biased toward the lamp */
-  --bg: #100f0d;
-  --panel: #171512;
-  --panel-2: #1e1c18;
-  --panel-3: #27241f;
-  --panel-hover: #312d27;
-  --scrim: rgba(8, 7, 6, 0.72);
-
-  /* Lines */
-  --border: #2c2823;
-  --border-strong: #3d3831;
-  --border-control: #6f675b;
-
-  /* Ink */
-  --text: #f2ece2;
-  --text-2: #cbc2b5;
-  --muted: #a1988a;
-
-  /* Lamp: the next thing to do, the primary action, where you are; also focus. Never a status. */
-  --accent: #f3a93c;
-  --accent-hover: #ffbc58;
-  --accent-ink: #1d1203;
-  --accent-soft: rgba(243, 169, 60, 0.13);
-  --accent-line: rgba(243, 169, 60, 0.42);
-  --accent-glow: rgba(243, 169, 60, 0.32);
-  --accent-dim: #8f6a33;
-  --focus: #ffc874;
-
-  /* Semantic: test results and status, never decoration */
-  --ok: #5fc98f;
-  --ok-soft: rgba(95, 201, 143, 0.13);
-  --bad: #f07163;
-  --bad-solid: #c63a2c;
-  --bad-ink: #ffffff;
-  --bad-soft: rgba(240, 113, 99, 0.13);
-  --warn: #e9bd4f;
-  --warn-soft: rgba(233, 189, 79, 0.13);
-  --info: #86b8ff;
-  --info-soft: rgba(134, 184, 255, 0.12);
-
-  /* Difficulty: word + pips, colour only reinforces. Teal and rose, so it never reads as a status. */
-  --easy: #3ec5b4;
-  --medium: #e4b955;
-  --hard: #ff6b94;
-
-  /* Problem status, everywhere a problem appears: green solved, a green ring solved with help,
-     coral tried and not solved yet, grey not started (the owner asked for success and failure
-     at a glance). */
-  --hex-new: #2d2a24;
-  --hex-locked: #1f1d19;
-  --hex-solved: var(--ok);
-  --hex-assisted: var(--ok);
-  --hex-tried: #d9634f;
-  --solved-soft: rgba(95, 201, 143, 0.16);
-  --road: #4b453b;
-  --road-lit: #7d7261;
-  /* Company logo tiles: a warm light plate so every brand's own colours read on the dark ground. */
-  --logo-plate: #f3eee6;
-  --logo-ink: #3a352d;
-  --logo-edge: #d9d1c4;
-
   /* Type */
   --display: 'Bricolage Grotesque', 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -129,11 +67,6 @@
   --r-lg: 18px;
   --r-pill: 999px;
 
-  /* Elevation */
-  --shadow-1: 0 1px 0 rgba(0, 0, 0, 0.35), 0 10px 24px -14px rgba(0, 0, 0, 0.7);
-  --shadow-2: 0 2px 0 rgba(0, 0, 0, 0.35), 0 24px 60px -18px rgba(0, 0, 0, 0.85);
-  --shadow-lamp: 0 0 0 1px var(--accent-line), 0 0 22px -4px var(--accent-glow);
-
   /* Control heights */
   --ctl-sm: 30px;
   --ctl-md: 38px;
@@ -167,6 +100,225 @@
     --ctl-md: 44px;
     --fs-md: 15px;
   }
+}
+
+/* ---------- Colour themes (docs/DESIGN.md "Themes") ----------
+   Three layers, so each colour is written once:
+   1. Palettes: the raw colours of a theme. Dark is the default; [data-theme='light'] replaces every
+      one of them (tests/design-tokens.test.js checks both name the same tokens and pass the same
+      contrast checks).
+   2. Derived: tints, status aliases and the code editor's surfaces, computed from whichever palette
+      is active on the element.
+   3. Code themes: a code theme that is not a site palette replaces the --code-* tokens only.
+   data-theme works on any element, not just <html>: the editor host carries its own, so a light
+   code theme can sit on a dark page (ui/editor.js reads the editor's colours from there).
+   theme-boot.js sets <html data-theme> before the first paint. */
+
+/* Layer 1, dark palette: warm graphite, hue biased toward the lamp */
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Ground and surfaces */
+  --bg: #100f0d;
+  --panel: #171512;
+  --panel-2: #1e1c18;
+  --panel-3: #27241f;
+  --panel-hover: #312d27;
+  --scrim: rgba(8, 7, 6, 0.72);
+
+  /* Lines */
+  --border: #2c2823;
+  --border-strong: #3d3831;
+  --border-control: #6f675b;
+
+  /* Ink */
+  --text: #f2ece2;
+  --text-2: #cbc2b5;
+  --muted: #a1988a;
+
+  /* Lamp: the next thing to do, the primary action, where you are; also focus. Never a status.
+     --accent-text is amber as text: the lamp itself on graphite, a darker amber on paper. */
+  --accent: #f3a93c;
+  --accent-hover: #ffbc58;
+  --accent-ink: #1d1203;
+  --accent-dim: #8f6a33;
+  --accent-text: var(--accent);
+  --focus: #ffc874;
+
+  /* Semantic: test results and status, never decoration */
+  --ok: #5fc98f;
+  --bad: #f07163;
+  --bad-solid: #c63a2c;
+  --bad-ink: #ffffff;
+  --warn: #e9bd4f;
+  --info: #86b8ff;
+
+  /* Difficulty: word + pips, colour only reinforces. Teal and rose, so it never reads as a status. */
+  --easy: #3ec5b4;
+  --medium: #e4b955;
+  --hard: #ff6b94;
+
+  /* Problem status, everywhere a problem appears: green solved, a green ring solved with help,
+     coral tried and not solved yet, grey not started (the owner asked for success and failure
+     at a glance). Solved is --ok (layer 2). */
+  --hex-new: #2d2a24;
+  --hex-locked: #1f1d19;
+  --hex-tried: #d9634f;
+  --road: #4b453b;
+  --road-lit: #7d7261;
+  /* Company logo tiles: a warm light plate so every brand's own colours read on the ground. */
+  --logo-plate: #f3eee6;
+  --logo-ink: #3a352d;
+  --logo-edge: #d9d1c4;
+
+  /* Elevation */
+  --shadow-1: 0 1px 0 rgba(0, 0, 0, 0.35), 0 10px 24px -14px rgba(0, 0, 0, 0.7);
+  --shadow-2: 0 2px 0 rgba(0, 0, 0, 0.35), 0 24px 60px -18px rgba(0, 0, 0, 0.85);
+
+  /* Code (Dark Berger): warm, low-chroma syntax that sits on graphite for hours without glare;
+     the lamp amber is the cursor only. Bracket pairs keep Monaco's own dark colours. */
+  --code-comment: #8a8174;
+  --code-keyword: #e59a7f;
+  --code-string: #aac98e;
+  --code-number: #dcbc76;
+  --code-type: #93c1d4;
+  --code-delimiter: #b3aa9c;
+  --code-identifier: #ece5d9;
+  --code-selection: #4a3b25;
+  --code-selection-inactive: #3a3125;
+  --code-bracket-match: #3d3426;
+  --code-bracket-1: #ffd700;
+  --code-bracket-2: #da70d6;
+  --code-bracket-3: #179fff;
+}
+
+/* Layer 1, light palette (owner's request): the same map on warm paper. Only colours change; every
+   meaning stays (green solved, coral tried, amber what to do now). */
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f5f1ea;
+  --panel: #fdfbf8;
+  --panel-2: #f0eae0;
+  --panel-3: #e7dfd2;
+  --panel-hover: #ddd3c4;
+  --scrim: rgba(38, 30, 20, 0.42);
+
+  --border: #e3dbce;
+  --border-strong: #d0c5b3;
+  --border-control: #8b806f;
+
+  --text: #1d1913;
+  --text-2: #463e33;
+  --muted: #665c4e;
+
+  /* Dark ink on amber stays; as text the amber darkens to read on paper */
+  --accent: #bf7400;
+  --accent-hover: #d08516;
+  --accent-ink: #1d1203;
+  --accent-dim: #e0b36a;
+  --accent-text: #8c5300;
+  --focus: #a86200;
+
+  --ok: #1a7343;
+  --bad: #b83a2b;
+  --bad-solid: #c63a2c;
+  --bad-ink: #ffffff;
+  --warn: #896300;
+  --info: #2b5fae;
+
+  --easy: #0b766a;
+  --medium: #7d6200;
+  --hard: #be2456;
+
+  --hex-new: #e2d9ca;
+  --hex-locked: #ece6dc;
+  --hex-tried: #d9634f;
+  --road: #cbc0ae;
+  --road-lit: #9a8d78;
+  --logo-plate: #ffffff;
+  --logo-ink: #3a352d;
+  --logo-edge: #ddd5c8;
+
+  --shadow-1: 0 1px 0 rgba(60, 44, 24, 0.06), 0 10px 24px -14px rgba(60, 44, 24, 0.3);
+  --shadow-2: 0 2px 0 rgba(60, 44, 24, 0.06), 0 24px 60px -18px rgba(60, 44, 24, 0.38);
+
+  /* Code (Berger Light) */
+  --code-comment: #766a59;
+  --code-keyword: #a33b20;
+  --code-string: #3d7420;
+  --code-number: #855600;
+  --code-type: #1d6585;
+  --code-delimiter: #5a5246;
+  --code-identifier: #2a241c;
+  --code-selection: #f3dfb8;
+  --code-selection-inactive: #efe5d3;
+  --code-bracket-match: #efe2c8;
+  --code-bracket-1: #8f5f00;
+  --code-bracket-2: #8e3fa8;
+  --code-bracket-3: #2b5fae;
+}
+
+/* Layer 2, derived from the active palette */
+:root,
+[data-theme],
+[data-code-theme] {
+  --accent-soft: color-mix(in srgb, var(--accent) 13%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 42%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 32%, transparent);
+  --ok-soft: color-mix(in srgb, var(--ok) 13%, transparent);
+  --bad-soft: color-mix(in srgb, var(--bad) 13%, transparent);
+  --warn-soft: color-mix(in srgb, var(--warn) 13%, transparent);
+  --info-soft: color-mix(in srgb, var(--info) 12%, transparent);
+  --solved-soft: color-mix(in srgb, var(--ok) 16%, transparent);
+  --hex-solved: var(--ok);
+  --hex-assisted: var(--ok);
+  --shadow-lamp: 0 0 0 1px var(--accent-line), 0 0 22px -4px var(--accent-glow);
+
+  /* The code editor is the same surface as the panes around it */
+  --code-bg: var(--panel);
+  --code-fg: var(--text);
+  --code-line: var(--panel-2);
+  --code-gutter: var(--border-control);
+  --code-gutter-active: var(--text-2);
+  --code-cursor: var(--accent);
+  --code-bracket-border: var(--border-control);
+  --code-widget: var(--panel-2);
+  --code-widget-border: var(--border-strong);
+  --code-widget-selected: var(--panel-3);
+  --code-indent: var(--border);
+  --code-indent-active: var(--border-strong);
+}
+
+/* Layer 3, code theme Shuvat Light Pink (owner's easter egg): soft pink paper, raspberry keywords,
+   mint strings, lavender types */
+[data-code-theme='shuvat-light-pink'] {
+  --code-bg: #fff3f8;
+  --code-fg: #4a2238;
+  --code-line: #ffe7f1;
+  --code-gutter: #b4738f;
+  --code-gutter-active: #7a3d58;
+  --code-cursor: #e0457f;
+  --code-bracket-border: #e48fb3;
+  --code-widget: #ffeaf3;
+  --code-widget-border: #f2bcd3;
+  --code-widget-selected: #fcd6e6;
+  --code-indent: #f7d6e4;
+  --code-indent-active: #ebb5cc;
+  --code-comment: #8b5a72;
+  --code-keyword: #c2185b;
+  --code-string: #23735f;
+  --code-number: #a3492a;
+  --code-type: #7440ad;
+  --code-delimiter: #7a4a62;
+  --code-identifier: #4a2238;
+  --code-selection: #fbcfe1;
+  --code-selection-inactive: #fde1ed;
+  --code-bracket-match: #fbd9e8;
+  --code-bracket-1: #b8236f;
+  --code-bracket-2: #7440ad;
+  --code-bracket-3: #23735f;
 }
 
 /* ---------- Base ---------- */
@@ -450,7 +602,7 @@ kbd,
 }
 
 .streak-chip.is-active .streak-count {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .streak-chip:hover {
@@ -534,7 +686,7 @@ kbd,
   }
 
   .tab-bar a[aria-current='page'] svg {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .tab-bar a[aria-current='page']::before {
@@ -1043,7 +1195,7 @@ body.lockdown .app-header {
   background: none;
   border: 0;
   border-radius: var(--r-tag);
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: inherit;
   font-weight: 500;
   text-decoration: underline;
@@ -1093,7 +1245,7 @@ body.lockdown .app-header {
 
 .chip[aria-pressed='true']::before {
   content: '\2713' / '';
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: var(--fs-xs);
   font-weight: 700;
 }
@@ -1191,7 +1343,7 @@ a.company-tag:hover {
 
 .tag-lamp {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .il-mark {
@@ -1456,7 +1608,7 @@ textarea.mentor-input {
 }
 
 .problem-link:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* The title link stretches over the whole row, so the row is one click target. */
@@ -2195,7 +2347,7 @@ body.lockdown .toast-host {
 }
 
 .ml-num {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .map-label.is-district {
@@ -2285,7 +2437,7 @@ body.lockdown .toast-host {
 
 .map-ctl:hover {
   background: var(--panel-hover);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .map-ctl:focus-visible {
@@ -2339,7 +2491,7 @@ body.lockdown .toast-host {
 }
 
 .map-crumbs a:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .map-crumbs [aria-current] {
@@ -3025,7 +3177,7 @@ body.lockdown .toast-host {
 }
 
 .topic-link:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .topic-link .hexmark {
@@ -3170,7 +3322,7 @@ body.lockdown .toast-host {
 }
 
 .brief-link:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .path-flag {
@@ -3278,7 +3430,7 @@ body.lockdown .toast-host {
 
 .state-tag.is-mastered {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .state-tag.is-locked {
@@ -3463,7 +3615,7 @@ body.lockdown .toast-host {
 }
 
 .daily-no {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .today-main {
@@ -3545,7 +3697,7 @@ body.lockdown .toast-host {
 }
 
 .week-day.is-today .week-label {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .today-streak {
@@ -3607,7 +3759,7 @@ body.lockdown .toast-host {
   padding: var(--s-1) var(--s-2);
   border: 1px solid var(--accent-line);
   border-radius: var(--r-pill);
-  color: var(--accent);
+  color: var(--accent-text);
   font-family: var(--mono);
   font-size: var(--fs-sm);
 }
@@ -3672,7 +3824,7 @@ body.lockdown .toast-host {
 }
 
 .weak-map-link:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .dashboard-controls {
@@ -3951,7 +4103,7 @@ body.lockdown .toast-host {
 }
 
 .past-no {
-  color: var(--accent);
+  color: var(--accent-text);
   font-family: var(--mono);
   font-size: var(--fs-xs);
 }
@@ -3973,7 +4125,7 @@ body.lockdown .toast-host {
 }
 
 .past-title:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 @media (max-width: 900px) {
@@ -4404,7 +4556,7 @@ body.resizing-y * {
 }
 
 .problem-crumb a:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .problem-crumb .hexmark {
@@ -4833,7 +4985,8 @@ body.resizing-y * {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background: var(--panel); /* the Monaco theme's background, so there is no flash while it boots */
+  /* The code theme's surface, so there is no flash while Monaco boots (ui/editor.js sets data-theme) */
+  background: var(--code-bg);
 }
 
 .editor-loading {
@@ -4854,8 +5007,9 @@ body.resizing-y * {
   border: 0;
   padding: var(--s-3);
   resize: none;
-  background: var(--panel);
-  color: var(--text);
+  background: var(--code-bg);
+  color: var(--code-fg);
+  caret-color: var(--code-cursor);
   font-family: var(--mono);
   font-size: var(--fs-md);
   line-height: var(--lh-body);
@@ -5402,6 +5556,11 @@ body.resizing-y * {
     color: var(--text);
   }
 
+  /* One toolbar row keeps the editor tall on a phone; the code theme is in Profile and the palette. */
+  .toolbar .code-theme-select {
+    display: none;
+  }
+
   .ws-actions {
     display: flex;
     gap: var(--s-2);
@@ -5631,7 +5790,7 @@ body.resizing-y * {
 }
 
 .tier-num {
-  color: var(--accent);
+  color: var(--accent-text);
   font-family: var(--mono);
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -6102,7 +6261,7 @@ body.resizing-y * {
 }
 
 .asks-topic:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .asks-count {
@@ -6607,7 +6766,7 @@ body.resizing-y * {
 }
 
 .option-card-meta {
-  color: var(--accent);
+  color: var(--accent-text);
   font-family: var(--mono);
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -6759,7 +6918,7 @@ body.resizing-y * {
 }
 
 .setup-bar-meta {
-  color: var(--accent);
+  color: var(--accent-text);
   font-family: var(--mono);
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -7574,7 +7733,7 @@ body.resizing-y * {
 }
 
 .legal a:not(.btn):not(.back-link) {
-  color: var(--accent);
+  color: var(--accent-text);
   text-underline-offset: 3px;
   border-radius: var(--r-tag);
 }
@@ -7699,7 +7858,7 @@ body.resizing-y * {
 }
 
 .quiz-preview-row.is-lit .quiz-preview-key {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .quiz-preview-row.is-lit .quiz-preview-line {
@@ -7819,7 +7978,7 @@ body.resizing-y * {
 
 .quiz-topic[aria-pressed='true'] .quiz-topic-title::before {
   content: '\2713  ';
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .quiz-topic-blurb {
@@ -8080,7 +8239,7 @@ body.resizing-y * {
 
 .quiz-ref {
   justify-self: start;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: var(--fs-sm);
 }
 
@@ -8134,7 +8293,7 @@ body.resizing-y * {
 
 .quiz-big {
   margin: 0;
-  color: var(--accent);
+  color: var(--accent-text);
   font-family: var(--display);
   font-size: var(--fs-display);
   line-height: var(--lh-tight);
@@ -8315,7 +8474,7 @@ body.resizing-y * {
 }
 
 .quiz-board-you {
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: var(--fs-sm);
 }
 

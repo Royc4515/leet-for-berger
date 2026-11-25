@@ -364,17 +364,17 @@ try {
 
   if (!skipPython) {
     await check('Python via Pyodide: reveal + submit is Accepted', async () => {
-      await page.selectOption('.toolbar select', 'python');
+      await page.selectOption('.toolbar select[aria-label="Language"]', 'python');
       await revealSolution();
       await page.click('button:has-text("Submit")');
       await expectText('.result-head', /Accepted/, 90000);
-      await page.selectOption('.toolbar select', 'javascript');
+      await page.selectOption('.toolbar select[aria-label="Language"]', 'javascript');
     });
   }
 
   // TypeScript is type-checked and transpiled by Monaco's TypeScript service, then runs as JavaScript.
   await check('TypeScript: reveal + submit is Accepted 15/15 on a function problem', async () => {
-    await page.selectOption('.toolbar select', 'typescript');
+    await page.selectOption('.toolbar select[aria-label="Language"]', 'typescript');
     await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 60000);
@@ -388,14 +388,14 @@ try {
     await expectText('.case-detail', /Line 2: Char 9: error TS2322: Type 'string' is not assignable to type 'number'/);
     await expectText('.case-detail', /type error is a Compile Error/);
     await shot('13-ts-compile-error');
-    await page.selectOption('.toolbar select', 'javascript');
+    await page.selectOption('.toolbar select[aria-label="Language"]', 'javascript');
   });
 
   await check('Java is editor-only with an honest verdict', async () => {
-    await page.selectOption('.toolbar select', 'java');
+    await page.selectOption('.toolbar select[aria-label="Language"]', 'java');
     await page.click('button[data-action="run"]');
     await expectText('.result-head', /Language Not Supported Yet/);
-    await page.selectOption('.toolbar select', 'javascript');
+    await page.selectOption('.toolbar select[aria-label="Language"]', 'javascript');
   });
 
   await check('dashboard reflects the solve', async () => {
@@ -428,9 +428,9 @@ try {
       }, `http://localhost:${PORT + 100}`);
       await remote.goto(`${BASE}#/problem/pair-sum-target`);
       await remote.waitForSelector('.monaco-editor', { timeout: 30000 });
-      const label = await remote.locator('.toolbar select option[value="java"]').textContent();
+      const label = await remote.locator('.toolbar select[aria-label="Language"] option[value="java"]').textContent();
       if (/editor only/.test(label)) throw new Error(`Java still editor-only: ${label}`);
-      await remote.selectOption('.toolbar select', 'java');
+      await remote.selectOption('.toolbar select[aria-label="Language"]', 'java');
       if (!(await remote.locator('.runner-note').isVisible())) throw new Error('no "Runs on the server" note');
       await revealSolution(remote);
       await remote.click('button:has-text("Submit")');
@@ -465,13 +465,13 @@ try {
   });
 
   await check('design problem (Min Stack): TypeScript reveal + submit is Accepted through the JavaScript adapter', async () => {
-    await page.selectOption('.toolbar select', 'typescript');
+    await page.selectOption('.toolbar select[aria-label="Language"]', 'typescript');
     await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('class MinStack') && m.getValue().includes(': number')));
     await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 60000);
     await expectText('.result-head', /15 \/ 15/);
-    await page.selectOption('.toolbar select', 'javascript');
+    await page.selectOption('.toolbar select[aria-label="Language"]', 'javascript');
   });
 
   // RandomListNode (copy checked by node identity) and the randomized-set judge mode, in the browser.
@@ -491,11 +491,11 @@ try {
       await check(`Python via Pyodide: ${id} (special input type) reveal + submit is Accepted`, async () => {
         await page.goto(`${BASE}#/problem/${id}`);
         await page.waitForSelector('.monaco-editor', { timeout: 30000 });
-        await page.selectOption('.toolbar select', 'python');
+        await page.selectOption('.toolbar select[aria-label="Language"]', 'python');
         await revealSolution();
         await page.click('button:has-text("Submit")');
         await expectText('.result-head', /Accepted/, 90000);
-        await page.selectOption('.toolbar select', 'javascript');
+        await page.selectOption('.toolbar select[aria-label="Language"]', 'javascript');
       });
     }
   }
@@ -640,14 +640,14 @@ try {
   });
 
   await check('growth estimate: TypeScript Pair Sum Target is timed as its transpiled JavaScript', async () => {
-    await page.selectOption('.toolbar select', 'typescript');
+    await page.selectOption('.toolbar select[aria-label="Language"]', 'typescript');
     await revealSolution();
     await page.click('button:has-text("Submit")');
     await expectText('.result-head', /Accepted/, 60000);
     const text = await growthHeadline();
     console.log(`  # ${text}`);
     if (/unavailable|slower than target/.test(text)) throw new Error(text);
-    await page.selectOption('.toolbar select', 'javascript');
+    await page.selectOption('.toolbar select[aria-label="Language"]', 'javascript');
   });
 
   // A timing estimate is statistical: a JIT tier change can leave one size uniformly slow and the
@@ -691,14 +691,14 @@ try {
     await check('growth estimate: Python Pair Sum Target gets an estimate through Pyodide', async () => {
       await page.goto(`${BASE}#/problem/pair-sum-target`);
       await page.waitForSelector('.monaco-editor', { timeout: 30000 });
-      await page.selectOption('.toolbar select', 'python');
+      await page.selectOption('.toolbar select[aria-label="Language"]', 'python');
       await revealSolution();
       await page.click('button:has-text("Submit")');
       await expectText('.result-head', /Accepted/, 90000);
       const text = await growthHeadline();
       console.log(`  # ${text}`);
       if (/unavailable|slower than target/.test(text)) throw new Error(text);
-      await page.selectOption('.toolbar select', 'javascript');
+      await page.selectOption('.toolbar select[aria-label="Language"]', 'javascript');
     });
   }
 
@@ -706,11 +706,11 @@ try {
     await check('linked list problem (Reverse List): Python reveal + submit is Accepted', async () => {
       await page.goto(`${BASE}#/problem/reverse-list`);
       await page.waitForSelector('.monaco-editor', { timeout: 30000 });
-      await page.selectOption('.toolbar select', 'python');
+      await page.selectOption('.toolbar select[aria-label="Language"]', 'python');
       await revealSolution();
       await page.click('button:has-text("Submit")');
       await expectText('.result-head', /Accepted/, 90000);
-      await page.selectOption('.toolbar select', 'javascript');
+      await page.selectOption('.toolbar select[aria-label="Language"]', 'javascript');
     });
   }
 
@@ -719,7 +719,7 @@ try {
     await page.goto(`${BASE}#/problem/address-lookup`);
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     await page.waitForFunction(() => window.monaco.editor.getModels().some((m) => m.getValue().includes('-- Write your query here')));
-    const options = await page.locator('.toolbar select option').evaluateAll((os) => os.map((o) => o.value));
+    const options = await page.locator('.toolbar select[aria-label="Language"] option').evaluateAll((os) => os.map((o) => o.value));
     if (options.join() !== 'sql') throw new Error(`language options: ${options}`);
     await setCode('DELETE FROM Person RETURNING firstName, lastName, firstName AS city, lastName AS state');
     await page.click('button[data-action="run"]');
@@ -1507,11 +1507,11 @@ try {
     await offline.route(/monaco-editor@/, (route) => route.abort());
     await offline.goto(`${BASE}#/problem/smallest-base-segment`);
     await offline.waitForSelector('textarea.fallback-editor', { timeout: 30000 });
-    await offline.selectOption('.toolbar select', 'typescript');
+    await offline.selectOption('.toolbar select[aria-label="Language"]', 'typescript');
     await offline.click('button[data-action="run"]');
     await offline.waitForFunction(() => /Language Not Supported Yet/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 15000 });
     await offline.waitForFunction(() => /could not load/.test(document.querySelector('.case-detail')?.textContent ?? ''));
-    await offline.selectOption('.toolbar select', 'javascript');
+    await offline.selectOption('.toolbar select[aria-label="Language"]', 'javascript');
     await offline.close();
     if (offlineErrors.length) throw new Error(offlineErrors.join(' | '));
   });
@@ -1802,7 +1802,7 @@ try {
     await acct.waitForSelector('.profile-name:has-text("Ada")');
     await acct.waitForSelector('#profile-nickname:has-text("Shown as Ada")');
     const prof = await acct.evaluate(() => ({ sections: [...document.querySelectorAll('.profile-section-title')].map((e) => e.textContent), note: /quiz progress sync to your account/.test(document.querySelector('#profile-progress').textContent), guide: Boolean(document.querySelector('.site-links-tour')), menuOpen: !document.querySelector('.account-menu')?.hidden }));
-    if (JSON.stringify(prof.sections) !== '["Your progress","Leaderboard name","Preferences","GitHub sync","Your data"]' || !prof.note || prof.guide || prof.menuOpen) throw new Error(`profile signed in: ${JSON.stringify(prof)}`);
+    if (JSON.stringify(prof.sections) !== '["Your progress","Leaderboard name","Appearance","Preferences","GitHub sync","Your data"]' || !prof.note || prof.guide || prof.menuOpen) throw new Error(`profile signed in: ${JSON.stringify(prof)}`);
     await acct.click('#profile-nickname button:has-text("Change")');
     await acct.waitForFunction(() => document.activeElement?.id === 'profile-nickname-input');
     await acct.fill('#profile-nickname-input', 'x');
@@ -2372,9 +2372,9 @@ try {
     await pp.goto(`${BASE}#/me`);
     await pp.waitForSelector('.profile-page');
     const before = await pp.evaluate(() => ({ title: document.getElementById('header-title').textContent, solved: document.querySelector('.profile-stats .stat-value').textContent, accuracy: [...document.querySelectorAll('.profile-stats .stat-cell')].find((c) => /Accuracy/.test(c.textContent))?.querySelector('.stat-value').textContent, sections: [...document.querySelectorAll('.profile-section-title')].map((e) => e.textContent), guide: Boolean(document.querySelector('.site-links-tour')), overflow: document.documentElement.scrollWidth - innerWidth }));
-    if (before.title !== 'Profile' || before.solved !== '1' || before.accuracy !== '50%' || JSON.stringify(before.sections) !== '["Your progress","Preferences","Your data"]' || before.guide || before.overflow > 0) throw new Error(`profile signed out: ${JSON.stringify(before)}`);
+    if (before.title !== 'Profile' || before.solved !== '1' || before.accuracy !== '50%' || JSON.stringify(before.sections) !== '["Your progress","Appearance","Preferences","Your data"]' || before.guide || before.overflow > 0) throw new Error(`profile signed out: ${JSON.stringify(before)}`);
     // The quiz language set here is the one the quiz uses.
-    await pp.click('.profile-field .segmented-btn[data-value="he"]');
+    await pp.click('#profile-preferences .segmented-btn[data-value="he"]');
     if ((await pp.evaluate(() => localStorage.getItem('lfb:quiz-lang'))) !== 'he') throw new Error('profile did not set the quiz language');
     await pp.click('.profile-delete');
     await pp.click('dialog[open] button:has-text("Delete")');
@@ -2435,6 +2435,70 @@ try {
     await page.keyboard.press('Escape');
     await page.waitForSelector('dialog.palette', { state: 'detached' });
     if (!(await page.evaluate(() => document.activeElement?.id === 'palette-trigger'))) throw new Error('focus did not return to the palette trigger');
+  });
+
+  await check('themes: Profile sets the light site theme before the first paint; code themes from Profile, the toolbar and the palette; Match site follows the site', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 } });
+    const tp = await ctx.newPage();
+    tp.on('console', (m) => m.type() === 'error' && errors.push(`console (themes): ${m.text()}`));
+    tp.on('pageerror', (e) => errors.push(`pageerror (themes): ${e.message}`));
+    await tp.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await tp.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+      // The theme as the first frame sees it: set by theme-boot.js in <head>, never by a later module.
+      requestAnimationFrame(() => (window.__firstFrameTheme = document.documentElement.dataset.theme));
+    });
+    const look = () =>
+      tp.evaluate(() => ({
+        theme: document.documentElement.dataset.theme,
+        first: window.__firstFrameTheme,
+        bg: getComputedStyle(document.body).backgroundColor,
+        bar: document.querySelector('meta[name="theme-color"]').content,
+        saved: localStorage.getItem('lfb:theme'),
+      }));
+    const editor = () =>
+      tp.evaluate(() => {
+        const ed = document.querySelector('.monaco-editor');
+        return { bg: getComputedStyle(ed).backgroundColor, base: ed.classList.contains('vs-dark') ? 'vs-dark' : ed.classList.contains('vs') ? 'vs' : '?', host: document.querySelector('.editor-host').dataset.codeTheme, select: document.querySelector('.toolbar .code-theme-select').value };
+      });
+
+    await tp.goto(`${BASE}#/me`);
+    await tp.waitForSelector('#profile-appearance');
+    const dark = await look();
+    if (dark.theme !== 'dark' || dark.bg !== 'rgb(16, 15, 13)') throw new Error(`default theme: ${JSON.stringify(dark)}`);
+    await tp.click('#profile-appearance .segmented-btn[data-value="light"]');
+    await tp.waitForFunction(() => document.documentElement.dataset.theme === 'light');
+    const light = await look();
+    if (light.bg !== 'rgb(245, 241, 234)' || light.bar !== '#f5f1ea' || light.saved !== 'light') throw new Error(`light theme: ${JSON.stringify(light)}`);
+    await tp.reload();
+    await tp.waitForSelector('#profile-appearance');
+    const reloaded = await look();
+    if (reloaded.first !== 'light' || reloaded.bg !== 'rgb(245, 241, 234)') throw new Error(`light theme after reload, first frame included: ${JSON.stringify(reloaded)}`);
+    if ((await tp.getAttribute('#profile-appearance .segmented-btn[data-value="light"]', 'aria-pressed')) !== 'true') throw new Error('Profile does not show the saved theme');
+
+    // Shuvat Light Pink chosen in Profile is the editor's theme on the problem page.
+    await tp.selectOption('#profile-code-theme', 'shuvat-light-pink');
+    await tp.goto(`${BASE}#/problem/pair-sum-target`);
+    await tp.waitForSelector('.monaco-editor .view-line');
+    const pink = await editor();
+    if (pink.bg !== 'rgb(255, 243, 248)' || pink.base !== 'vs' || pink.host !== 'shuvat-light-pink' || pink.select !== 'shuvat-light-pink') throw new Error(`Shuvat Light Pink: ${JSON.stringify(pink)}`);
+    // The toolbar switches it in place: Dark Berger on the light page.
+    await tp.selectOption('.toolbar .code-theme-select', 'dark-berger');
+    await tp.waitForFunction(() => getComputedStyle(document.querySelector('.monaco-editor')).backgroundColor === 'rgb(23, 21, 18)');
+    if ((await editor()).base !== 'vs-dark') throw new Error('Dark Berger is not drawn on vs-dark');
+    // Match site follows the site theme, here changed from the palette.
+    await tp.selectOption('.toolbar .code-theme-select', 'site');
+    await tp.waitForFunction(() => getComputedStyle(document.querySelector('.monaco-editor')).backgroundColor === 'rgb(253, 251, 248)');
+    await tp.click('#palette-trigger'); // Ctrl+K inside Monaco is the start of its own chords
+    await tp.waitForSelector('dialog.palette[open] .palette-input');
+    await tp.keyboard.type('Theme: Dark');
+    await tp.waitForFunction(() => document.querySelector('.palette-item[aria-selected="true"] .palette-label')?.textContent === 'Theme: Dark');
+    await tp.keyboard.press('Enter');
+    await tp.waitForFunction(() => document.documentElement.dataset.theme === 'dark' && getComputedStyle(document.querySelector('.monaco-editor')).backgroundColor === 'rgb(23, 21, 18)');
+    const after = { ...(await look()), ...(await editor()) };
+    if (after.saved !== 'dark' || after.base !== 'vs-dark' || after.host !== 'dark-berger' || after.select !== 'site') throw new Error(`palette to Dark with Match site: ${JSON.stringify(after)}`);
+    await ctx.close();
   });
 
   await check('guided tours: every page explains itself once, the first one with a welcome; replays from the footer, the palette and How it works; the mentor on first open', async () => {

@@ -21,11 +21,12 @@ Local e2e on a machine with Chrome but no Playwright browsers: `PW_CHANNEL=chrom
 ## Architecture map
 
 ```
-index.html                 shell: header, <main id="view">, loads src/js/main.js
-src/css/app.css            all styles; Atlas design tokens at the top (docs/DESIGN.md)
+index.html                 shell: header, <main id="view">, loads src/js/theme-boot.js (in <head>) and src/js/main.js
+src/css/app.css            all styles; Atlas design tokens at the top, colours in theme layers: palettes, derived, code themes (docs/DESIGN.md "Themes")
 src/fonts/                 self-hosted Bricolage Grotesque (display), Inter, JetBrains Mono woff2 fonts (README.md, ADR 0009)
 src/brand/                 logo, favicon, social preview (scripts/design/social-preview.mjs); companies/<slug>.webp = company logos (scripts/content/fetch-logos.mjs, rules in logo-pick.mjs, sources in content/company-domains.json)
 src/js/main.js             bootstrap + hash router (every view returns a cleanup fn)
+src/js/theme-boot.js       classic script before the stylesheet: applies the site theme (data-theme on <html>) before the first paint; window.lfbTheme
 src/js/engine/             PURE judging logic + execution
   harness.js               buildSuite (15 cases), judge, deepEqual, preview
   codegen.js               8 languages, neutral signature (function or class) -> names, types, starter code
@@ -61,6 +62,7 @@ src/js/data/map-layout.js  Problem Map model: topic and subtopic states, lock re
 src/js/data/map-world.js   the continuous map: one world layout, camera maths (fit, zoom at a point, clamp, smooth flight), zoom levels, label placement (ADR 0010 amendment 2)
 src/js/data/problem-topics.js taxonomy topic per shipped problem (-> problem-topics.json, build-meta.mjs)
 src/js/data/palette-search.js command palette ranking
+src/js/data/themes.js      code themes (Dark Berger, Berger Light, Shuvat Light Pink), Match site, monacoTheme from the --code-* tokens; ui/theme.js = choices and their controls (Profile, toolbar, palette)
 src/js/data/profile.js     profile numbers and the leaderboard nickname rule (shared with the quiz board)
 src/js/data/share.js       what each share button sends (spoiler-free texts and links); ui/share.js = the button (share sheet or copy)
 src/js/data/tours.js       guided tour content (one per page + welcome + mentor), validateTour; tour-routes.js = route to tour (startup); tour-layout.js = card and spotlight placement (pure)

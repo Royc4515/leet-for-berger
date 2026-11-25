@@ -60,11 +60,12 @@ test('store.reset returns to an empty guest state and notifies subscribers', () 
 // as user data or named here as a device preference.
 test('every persisted lfb: key is user data or a known device preference', () => {
   // lfb:tours:v1 records which guided tours this device has shown (state/tours.js).
-  // lfb:quiz-lang is the language the quiz is shown in.
+  // lfb:quiz-lang is the language the quiz is shown in; lfb:theme and lfb:code-theme are the site and
+  // code themes (theme-boot.js, ui/theme.js).
   // lfb:map-view (Map or List) is a layout choice; lfb:seen-solved is a sessionStorage number the
   // Problems page ticks up from, gone when the tab closes and reset to the guest's 0 after sign-out.
   // lfb:return-to is the route a sign-in started from, read once when the provider sends the user back.
-  const DEVICE_PREFS = ['lfb:lang', 'lfb:split:x', 'lfb:split:y', 'lfb:about-open', 'lfb:map-view', 'lfb:seen-solved', 'lfb:tours:v1', 'lfb:quiz-lang', 'lfb:return-to'];
+  const DEVICE_PREFS = ['lfb:lang', 'lfb:theme', 'lfb:code-theme', 'lfb:split:x', 'lfb:split:y', 'lfb:about-open', 'lfb:map-view', 'lfb:seen-solved', 'lfb:tours:v1', 'lfb:quiz-lang', 'lfb:return-to'];
   const files = [];
   const walk = (dir) => {
     for (const f of readdirSync(dir)) {
