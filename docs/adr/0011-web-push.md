@@ -24,7 +24,7 @@ Constraints found:
 
 1. **Opt in per device, signed in only.** A "Notifications on this device" switch in the
    Reminders section of `#/me`. It asks for permission from that click and subscribes with the
-   site's VAPID public key (in `src/js/config.js`, public by design). Signed out, it says to sign
+   site's VAPID public key (from the function's `GET /key`, public by design). Signed out, it says to sign
    in; where the browser has no Push API it says so.
 2. **iPhone: a guide, not a dead end.** In Safari on an iPhone the switch opens a three-step guide
    instead: tap Share, tap Add to Home Screen, open the site from its icon and tap the switch
@@ -64,9 +64,12 @@ Constraints found:
    when the copies are stale.
 8. **Drafts never leave the device**, so on the phone "a problem left unsolved" means one that
    was submitted and not solved; a problem only opened or typed into is never pushed.
-9. **Secrets**: the VAPID private key and the cron header secret are Edge Function secrets, never
-   in the repository or the client. The owner approved generating the keys in a session and storing
-   the private one through the Supabase connector.
+9. **Secrets that no person handles** (changed in part B, 2026-11-25: the connector's secret tool
+   asks a person to type the value, so it would have passed through a chat): the function makes the
+   VAPID key pair on first use and keeps it in `push_keys`, a table only the service role reads, and
+   serves the public half at `GET /key`; the cron header secret is generated inside the database, in
+   Vault, and the function reads it through `push_cron_secret()`, which only the service role may
+   call. Nothing secret is in the repository, the client, an Edge Function secret or a chat.
 
 ## Consequences
 

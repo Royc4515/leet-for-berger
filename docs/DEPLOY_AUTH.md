@@ -101,3 +101,40 @@ After any change to the question bank, `node scripts/content/build-quiz.mjs` reb
 answers match the site. New questions join the daily quiz two days after that build
 (`content/quiz/daily-pool.json`), so the function only has to be deployed before then; a change
 to an existing question's answer must be deployed with the site.
+
+## 8. Web Push reminders
+
+Pushes at the user's send hours (ADR 0011) need four tables, an hourly job and one Edge Function.
+No secret is typed in by hand: the function makes its VAPID key pair on first use and keeps it in a
+table only the service role reads, and the migration makes the job's secret inside Vault. About
+five minutes, after the steps above.
+
+1. **SQL Editor**: store the job's address in Vault (once per project; it is not a secret):
+
+   ```
+   select vault.create_secret('https://<your project ref>.supabase.co/functions/v1/push/run', 'push_run_url');
+   ```
+
+   Then paste `deploy/supabase/migrations/20261125_push.sql` and **Run**: the tables with row level
+   security (`push_keys` has no policy at all), the job's secret in Vault with `push_cron_secret()`
+   to read it (service role only), and the `push-run` job at minute 0 of every hour (pg_cron, pg_net).
+2. Deploy the function, with JWT verification off (the hourly job sends its own secret; the other
+   routes check the session). It reads `SITE_URL`, already set for the other functions:
+
+   ```
+   npx supabase functions deploy push --use-api --no-verify-jwt --project-ref <your project ref>
+   ```
+
+3. Verify: `https://<ref>.supabase.co/functions/v1/push/key` answers `{"publicKey":"B..."}` (the
+   first call makes the key pair; **Table Editor > push_keys** then has one row, and the key stays
+   the same on every later call). `POST .../push/run` without the secret answers `401`. After the
+   next full hour, **Integrations > Cron > push-run** shows a successful run, and
+   `select status_code, content from net._http_response order by created desc limit 1;` shows
+   `200` and `{"checked":0,"sent":0,"dropped":0}` until someone turns reminders on.
+
+Never delete the `push_keys` row: a new key pair cuts off every device subscribed with the old one.
+
+After a change to the reminder rules (`src/js/data/notifications.js`, `push-plan.js`, `daily.js`,
+`state/progress.js`) or to a problem title, `node scripts/content/build-push.mjs` rebuilds
+`deploy/supabase/functions/push/lib/`; deploy the function again so the phone and the bell agree
+(`tests/push-server.test.js` fails until the copies match).

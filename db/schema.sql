@@ -215,6 +215,48 @@ create table quiz_daily_results (
 );
 create index quiz_daily_results_day_idx on quiz_daily_results (day);
 
+-- Web Push reminders (ADR 0011). Settings and the send log are per user, subscriptions per device
+-- (a phone and a laptop of the same user share the daily count). Written only by the push Edge
+-- Function (service role); a user reads their own rows.
+create table push_settings (
+  user_id     uuid primary key references auth.users on delete cascade,
+  hours       smallint[] not null default '{16,20}' check (cardinality(hours) <= 6),  -- local send hours
+  off         text[] not null default '{}',                                            -- kinds never pushed
+  time_zone   text not null default 'UTC' check (char_length(time_zone) between 1 and 64),
+  updated_at  timestamptz not null default now()
+);
+
+create table push_subscriptions (
+  id          bigint generated always as identity primary key,
+  user_id     uuid not null references auth.users on delete cascade,
+  endpoint    text not null unique check (char_length(endpoint) <= 1024),
+  p256dh      text not null,
+  auth        text not null,
+  failures    smallint not null default 0,
+  created_at  timestamptz not null default now()
+);
+create index push_subscriptions_user_idx on push_subscriptions (user_id);
+
+-- The VAPID key pair, made by the push function on first use; only the service role reads it.
+create table push_keys (
+  id           smallint primary key check (id = 1),
+  public_jwk   jsonb not null,
+  private_jwk  jsonb not null,
+  created_at   timestamptz not null default now()
+);
+
+-- One row per push sent: the primary key makes "at most one push per send hour" hold even if the
+-- hourly job runs twice.
+create table push_log (
+  user_id  uuid not null references auth.users on delete cascade,
+  day      date not null,
+  hour     smallint not null check (hour between 0 and 23),
+  kind     text not null,
+  key      text not null,
+  sent_at  timestamptz not null default now(),
+  primary key (user_id, day, hour)
+);
+
 create table solves (
   user_id            uuid not null references profiles on delete cascade,
   problem_slug       text not null references problem_content,
@@ -246,6 +288,10 @@ alter table solves enable row level security;
 alter table user_state enable row level security;
 alter table github_links enable row level security;
 alter table quiz_daily_results enable row level security;
+alter table push_settings enable row level security;
+alter table push_subscriptions enable row level security;
+alter table push_log enable row level security;
+alter table push_keys enable row level security;  -- no policy: service role only
 
 -- Catalog and content are public to read; only the sync job (service role) writes them.
 create policy read_all on topics for select using (true);
@@ -272,6 +318,9 @@ create policy own_solves on solves for select using (user_id = auth.uid());
 create policy own_state on user_state for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy own_github_link on github_links for select using (user_id = auth.uid());
 create policy own_read on quiz_daily_results for select using (user_id = auth.uid());
+create policy own_read on push_settings for select using (user_id = auth.uid());
+create policy own_read on push_subscriptions for select using (user_id = auth.uid());
+create policy own_read on push_log for select using (user_id = auth.uid());
 
 -- "Reveal Solution": the only client path to a solution. Marks the problem assisted, then returns
 -- the code. security definer so it can read the solutions table that clients cannot.
