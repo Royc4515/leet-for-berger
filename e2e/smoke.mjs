@@ -1947,6 +1947,11 @@ try {
     const slider = await acct.evaluate(() => { const b = document.querySelector('.dial-knob'); return { role: b.getAttribute('role'), text: b.getAttribute('aria-valuetext'), name: b.getAttribute('aria-label') }; });
     if (slider.role !== 'slider' || slider.text !== '16:00' || slider.name !== 'Reminder at 16:00') throw new Error(`clock hex semantics: ${JSON.stringify(slider)}`);
     await acct.waitForSelector('.dial-next:has-text("Next")');
+    // Toasts from the steps above (sign-in, the nickname, notifications on) stack at the top centre
+    // and take clicks: one can cover the clock's upper hours, so they leave before it is touched.
+    await acct.waitForFunction(() => !document.querySelector('.toast'), null, { timeout: 10000 });
+    // The element under a point on the clock, for a clear failure when something covers a hex.
+    const under = (pt) => acct.evaluate(({ x, y }) => { const e = document.elementFromPoint(x, y); return e?.closest('.dial-knob')?.getAttribute('aria-valuenow') ?? e?.getAttribute('class') ?? null; }, pt);
     // The switch turns the clock to the day face; its counts say how many each half holds.
     await acct.click('.clock-face-btn[data-face="day"]');
     await acct.waitForSelector('.hour-clock.is-day');
@@ -1960,6 +1965,7 @@ try {
     if (JSON.stringify(pushServer.hours) !== '[9,16,20]') throw new Error(`hours not saved: ${JSON.stringify(pushServer.hours)}`);
     // Dragged past the 6 at the bottom, 16:00 goes on to 17:00 and then 18:00: the clock turns to night.
     const from = await onClock(4);
+    if ((await under(from)) !== '16') throw new Error(`the 16:00 hex is not under the pointer: ${await under(from)}`);
     await acct.mouse.move(from.x, from.y);
     await acct.mouse.down();
     const five = await onClock(5);
