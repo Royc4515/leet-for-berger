@@ -104,40 +104,35 @@ to an existing question's answer must be deployed with the site.
 
 ## 8. Web Push reminders
 
-Pushes at the user's send hours (ADR 0011) need three tables, an hourly job, one Edge Function and
-four secrets. About fifteen minutes, after the steps above.
+Pushes at the user's send hours (ADR 0011) need four tables, an hourly job and one Edge Function.
+No secret is typed in by hand: the function makes its VAPID key pair on first use and keeps it in a
+table only the service role reads, and the migration makes the job's secret inside Vault. About
+five minutes, after the steps above.
 
-1. **VAPID keys**, once: in a terminal with Node 20 or later,
-
-   ```
-   node --input-type=module -e "const k=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);const j={publicKey:await crypto.subtle.exportKey('jwk',k.publicKey),privateKey:await crypto.subtle.exportKey('jwk',k.privateKey)};console.log(JSON.stringify(j));console.error('public key for config.js:',Buffer.from(await crypto.subtle.exportKey('raw',k.publicKey)).toString('base64url'))"
-   ```
-
-   The JSON line is the `VAPID_KEYS` secret. The public key line goes in `src/js/config.js`
-   (`PUSH.vapidPublicKey`); it is public by design. A new pair cuts off every device subscribed
-   with the old one, so generate it once.
-2. **Edge Functions > Secrets**: `VAPID_KEYS` (the JSON line), `VAPID_SUBJECT`
-   (`mailto:LeetForBerger@gmail.com`), `PUSH_CRON_SECRET` (a long random string, for example
-   `openssl rand -hex 32`); `SITE_URL` is already there.
-3. **SQL Editor**: store the job's address and secret in Vault, then run the migration:
+1. **SQL Editor**: store the job's address in Vault (once per project; it is not a secret):
 
    ```
    select vault.create_secret('https://<your project ref>.supabase.co/functions/v1/push/run', 'push_run_url');
-   select vault.create_secret('<the PUSH_CRON_SECRET value>', 'push_cron_secret');
    ```
 
-   Then paste `deploy/supabase/migrations/20261125_push.sql` and **Run**: the three tables with
-   row level security, and the `push-run` job at minute 0 of every hour (pg_cron and pg_net).
-4. Deploy the function, with JWT verification off (the hourly job sends its own secret; the other
-   routes check the session):
+   Then paste `deploy/supabase/migrations/20261125_push.sql` and **Run**: the tables with row level
+   security (`push_keys` has no policy at all), the job's secret in Vault with `push_cron_secret()`
+   to read it (service role only), and the `push-run` job at minute 0 of every hour (pg_cron, pg_net).
+2. Deploy the function, with JWT verification off (the hourly job sends its own secret; the other
+   routes check the session). It reads `SITE_URL`, already set for the other functions:
 
    ```
    npx supabase functions deploy push --use-api --no-verify-jwt --project-ref <your project ref>
    ```
 
-5. Verify: `curl -X POST -H "x-push-secret: <PUSH_CRON_SECRET>" https://<ref>.supabase.co/functions/v1/push/run`
-   answers `{"checked":0,"sent":0,"dropped":0}` before anyone subscribes; without the header,
-   `401`. **Integrations > Cron** lists `push-run`, and its runs succeed every hour.
+3. Verify: `https://<ref>.supabase.co/functions/v1/push/key` answers `{"publicKey":"B..."}` (the
+   first call makes the key pair; **Table Editor > push_keys** then has one row, and the key stays
+   the same on every later call). `POST .../push/run` without the secret answers `401`. After the
+   next full hour, **Integrations > Cron > push-run** shows a successful run, and
+   `select status_code, content from net._http_response order by created desc limit 1;` shows
+   `200` and `{"checked":0,"sent":0,"dropped":0}` until someone turns reminders on.
+
+Never delete the `push_keys` row: a new key pair cuts off every device subscribed with the old one.
 
 After a change to the reminder rules (`src/js/data/notifications.js`, `push-plan.js`, `daily.js`,
 `state/progress.js`) or to a problem title, `node scripts/content/build-push.mjs` rebuilds

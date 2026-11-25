@@ -23,7 +23,8 @@ function fakeServer({ now = AT_1400Z, sendResult = () => 'ok' } = {}) {
     now: () => now,
     getUser: async (jwt) => users[jwt] ?? null,
     siteUrl: SITE,
-    cronSecret: 'cron-secret-123',
+    cronSecret: async () => 'cron-secret-123',
+    publicKey: async () => 'BPublicKey',
     titles: { 'pair-sum-target': 'Pair Sum Target' },
     send: async (sub, payload) => {
       sent.push({ endpoint: sub.endpoint, payload });
@@ -183,7 +184,8 @@ test('run: a device the push service no longer knows is dropped; one that keeps 
   assert.equal(db.subs.length, 0);
 });
 
-test('unknown routes answer 404', async () => {
+test('unknown routes answer 404; the public key is public', async () => {
   const { call } = fakeServer();
   assert.equal((await call('GET', '/nope')).status, 404);
+  assert.deepEqual(await call('GET', '/key'), { status: 200, body: { publicKey: 'BPublicKey' } });
 });

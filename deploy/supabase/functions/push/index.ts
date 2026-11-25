@@ -1,12 +1,13 @@
 // Supabase Edge Function: Web Push reminders (ADR 0011). The logic is in core.js (unit-tested in
 // Node); this file wires it to Deno, Supabase Auth, the push tables, the push library and CORS.
 //
-// Secrets (Supabase dashboard > Edge Functions > Secrets, never in the repository):
-//   SITE_URL          the site, for CORS and the links a push opens
-//   VAPID_KEYS        {"publicKey": JWK, "privateKey": JWK}, ECDSA P-256 (docs/DEPLOY_AUTH.md)
-//   VAPID_SUBJECT     mailto: address push services may contact
-//   PUSH_CRON_SECRET  the header the hourly pg_cron job sends to /run
-// Provided by Supabase: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+// No secret is typed in by hand, and none passes through a person or a chat:
+//   the VAPID key pair is generated here on first use and kept in push_keys, a table only the
+//   service role reads (ADR 0011); browsers get the public key from GET /key;
+//   the cron secret is generated inside the database, in Vault, and read through push_cron_secret(),
+//   a function only the service role may call (deploy/supabase/migrations/20261125_push.sql).
+// Secrets: SITE_URL (the site, for CORS and the links a push opens), already set for the other
+// functions. Provided by Supabase: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
 // Deploy with JWT verification off (`--no-verify-jwt`): /run is called by pg_cron with its own
 // secret, and the other routes check the session themselves.
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
@@ -22,28 +23,58 @@ const env = (name: string) => {
 
 /** A reminder delivered more than 4 hours late is no longer about today's streak. */
 const PUSH_TTL_S = 4 * 3600;
-
-const admin = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } });
-const siteUrl = env('SITE_URL');
-const allowed = new Set([new URL(siteUrl).origin, 'http://localhost:5173']);
-const vapidKeys = await webpush.importVapidKeys(JSON.parse(env('VAPID_KEYS')), { extractable: false });
-const appServer = await webpush.ApplicationServer.new({ contactInformation: env('VAPID_SUBJECT'), vapidKeys });
+/** Who push services may contact about these pushes: the site's public address (privacy.html). */
+const VAPID_SUBJECT = 'mailto:LeetForBerger@gmail.com';
 
 const must = <T>(r: { data: T; error: { message: string } | null }) => {
   if (r.error) throw new Error(r.error.message);
   return r.data;
 };
 
+const admin = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } });
+const siteUrl = env('SITE_URL');
+const allowed = new Set([new URL(siteUrl).origin, 'http://localhost:5173']);
+/**
+ * The one VAPID key pair, made on first use. Every device subscribes with its public half, so a new
+ * pair would cut them all off: two first calls racing insert under the same id, and both then read
+ * the row that won.
+ */
+async function loadVapidKeys() {
+  const read = async () => must(await admin.from('push_keys').select('public_jwk, private_jwk').eq('id', 1).maybeSingle()) as { public_jwk: JsonWebKey; private_jwk: JsonWebKey } | null;
+  let row = await read();
+  if (!row) {
+    const made = await webpush.exportVapidKeys(await webpush.generateVapidKeys({ extractable: true }));
+    const { error } = await admin.from('push_keys').insert({ id: 1, public_jwk: made.publicKey, private_jwk: made.privateKey });
+    if (error && error.code !== '23505') throw new Error(error.message);
+    row = await read();
+  }
+  if (!row) throw new Error('No VAPID keys');
+  return webpush.importVapidKeys({ publicKey: row.public_jwk, privateKey: row.private_jwk }, { extractable: false });
+}
+
+let ready: Promise<{ appServer: webpush.ApplicationServer; publicKey: string }> | null = null;
+/** Keys and the application server, once per instance; a failure is retried on the next call. */
+const server = () =>
+  (ready ??= (async () => {
+    const vapidKeys = await loadVapidKeys();
+    return { appServer: await webpush.ApplicationServer.new({ contactInformation: VAPID_SUBJECT, vapidKeys }), publicKey: await webpush.exportApplicationServerKey(vapidKeys) };
+  })().catch((err) => {
+    ready = null;
+    throw err;
+  }));
+
 const handle = createHandler({
   siteUrl,
-  cronSecret: env('PUSH_CRON_SECRET'),
   titles: TITLES,
+  cronSecret: async () => String(must(await admin.rpc('push_cron_secret')) ?? ''),
+  publicKey: async () => (await server()).publicKey,
   async getUser(jwt: string) {
     const { data, error } = await admin.auth.getUser(jwt);
     return error ? null : data.user;
   },
   async send(sub, payload) {
     try {
+      const { appServer } = await server();
       await appServer.subscribe({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }).pushTextMessage(JSON.stringify(payload), { ttl: PUSH_TTL_S, urgency: webpush.Urgency.Normal });
       return 'ok';
     } catch (err) {

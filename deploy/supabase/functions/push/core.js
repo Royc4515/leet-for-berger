@@ -7,6 +7,7 @@
  * one push, sent to every device they turned it on for.
  *
  * Routes:
+ *   GET  /key                  the VAPID public key a browser subscribes with (public by design)
  *   GET  /settings             the caller's send hours, kinds off, time zone and device count
  *   POST /settings { hours?, off?, timeZone? }      what is not sent stays as it was
  *   POST /subscribe { subscription: { endpoint, keys: { p256dh, auth } }, timeZone, hours?, off? }
@@ -63,7 +64,8 @@ function sameSecret(a, b) {
  *   getUser: (jwt: string) => Promise<{ id: string }|null>,
  *   now?: () => number,
  *   siteUrl: string,
- *   cronSecret: string,
+ *   cronSecret: () => Promise<string>,
+ *   publicKey: () => Promise<string>,
  *   titles?: Record<string, string>,
  *   send: (sub: SubscriptionRow, payload: { title: string, body: string, url: string, tag: string }) => Promise<'ok'|'gone'|'failed'>,
  *   db: {
@@ -81,7 +83,7 @@ function sameSecret(a, b) {
  * }} deps
  * @returns {(req: Request) => Promise<Response>}
  */
-export function createHandler({ getUser, now = () => Date.now(), siteUrl, cronSecret, titles = {}, send, db }) {
+export function createHandler({ getUser, now = () => Date.now(), siteUrl, cronSecret, publicKey, titles = {}, send, db }) {
   const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
   async function userOf(req) {
@@ -152,9 +154,10 @@ export function createHandler({ getUser, now = () => Date.now(), siteUrl, cronSe
       const url = new URL(req.url);
       const route = url.pathname.replace(/^.*\/push/, '') || '/';
       if (req.method === 'POST' && route === '/run') {
-        if (!sameSecret(req.headers.get('x-push-secret') ?? '', cronSecret)) return json(401, { error: 'Not allowed' });
+        if (!sameSecret(req.headers.get('x-push-secret') ?? '', await cronSecret())) return json(401, { error: 'Not allowed' });
         return json(200, await run());
       }
+      if (req.method === 'GET' && route === '/key') return json(200, { publicKey: await publicKey() });
       const user = await userOf(req);
       if (!user && ['/settings', '/subscribe', '/unsubscribe'].includes(route)) return json(401, { error: 'Sign in to get reminders on this device' });
       if (req.method === 'GET' && route === '/settings') return json(200, await view(user.id));

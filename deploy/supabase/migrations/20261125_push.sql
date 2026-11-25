@@ -29,6 +29,16 @@ create table if not exists push_log (
   primary key (user_id, day, hour)
 );
 
+-- The VAPID key pair, made by the push function on first use (ADR 0011). No policy: only the
+-- service role reads it, and no person or chat ever sees the private half.
+create table if not exists push_keys (
+  id           smallint primary key check (id = 1),
+  public_jwk   jsonb not null,
+  private_jwk  jsonb not null,
+  created_at   timestamptz not null default now()
+);
+alter table push_keys enable row level security;
+
 alter table push_settings enable row level security;
 alter table push_subscriptions enable row level security;
 alter table push_log enable row level security;
@@ -39,10 +49,29 @@ create policy own_read on push_subscriptions for select using (auth.uid() = user
 drop policy if exists own_read on push_log;
 create policy own_read on push_log for select using (auth.uid() = user_id);
 
--- The hourly run: pg_cron calls the function at minute 0 through pg_net. Its address and the shared
--- secret are read from Vault, created once by hand and never kept in git (docs/DEPLOY_AUTH.md):
+-- The secret the hourly job sends, made here in Vault so no person ever sees it. The function reads
+-- it through push_cron_secret(), which only the service role may call.
+do $$
+begin
+  if not exists (select 1 from vault.secrets where name = 'push_cron_secret') then
+    perform vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'push_cron_secret', 'x-push-secret header of the push-run job (ADR 0011)');
+  end if;
+end $$;
+
+create or replace function public.push_cron_secret()
+returns text
+language sql
+security definer
+set search_path = ''
+as $$
+  select decrypted_secret from vault.decrypted_secrets where name = 'push_cron_secret'
+$$;
+revoke all on function public.push_cron_secret() from public, anon, authenticated;
+grant execute on function public.push_cron_secret() to service_role;
+
+-- The hourly run: pg_cron calls the function at minute 0 through pg_net. Its address is a Vault
+-- entry made once per project (not a secret, but not in git either: a fork has its own):
 --   select vault.create_secret('https://<project ref>.supabase.co/functions/v1/push/run', 'push_run_url');
---   select vault.create_secret('<the PUSH_CRON_SECRET value>', 'push_cron_secret');
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 select cron.unschedule('push-run') where exists (select 1 from cron.job where jobname = 'push-run');

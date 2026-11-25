@@ -237,6 +237,14 @@ create table push_subscriptions (
 );
 create index push_subscriptions_user_idx on push_subscriptions (user_id);
 
+-- The VAPID key pair, made by the push function on first use; only the service role reads it.
+create table push_keys (
+  id           smallint primary key check (id = 1),
+  public_jwk   jsonb not null,
+  private_jwk  jsonb not null,
+  created_at   timestamptz not null default now()
+);
+
 -- One row per push sent: the primary key makes "at most one push per send hour" hold even if the
 -- hourly job runs twice.
 create table push_log (
@@ -283,6 +291,7 @@ alter table quiz_daily_results enable row level security;
 alter table push_settings enable row level security;
 alter table push_subscriptions enable row level security;
 alter table push_log enable row level security;
+alter table push_keys enable row level security;  -- no policy: service role only
 
 -- Catalog and content are public to read; only the sync job (service role) writes them.
 create policy read_all on topics for select using (true);
