@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added (author credit, owner's request)
+- **The site says who built it.** The shared footer, on every browse page and the privacy page, ends with "Built by Roy Carmelli": the name links to the portfolio, then LinkedIn and GitHub, each with a small monochrome mark in the text's colour. Quiet like the rest of the footer, never in the workspace or an interview, mock OA or battle. Each link opens a new tab with `rel="noopener noreferrer"` and says so in its accessible name. The command palette finds them too ("author", "built by", "portfolio") and opens them in a new tab. Both HTML shells carry `<meta name="author">`. One source for the links: `src/js/data/credit.js` (`tests/credit.test.js`, and an e2e step in both themes at laptop and phone width).
+
 ### Added (Web Push: a test push)
 - **A test push right after notifications are turned on** (owner's request), and a "Send a test" button on the device card for later: the push function's new `POST /test` sends one to the caller's own device the whole way a reminder goes (server, push service, device), at most once in 30 seconds. It reads "Radio check: loud and clear. Reminders now reach this device. The real ones come at 16:00 and 20:00, only when something is due, and never on Saturday", with the user's own hours and rest day, and opens the profile. A device the push service no longer knows is dropped, and the card then shows it off.
 

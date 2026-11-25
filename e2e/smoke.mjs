@@ -860,6 +860,7 @@ try {
     await page.waitForSelector('.session-banner.interview');
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     if (await page.locator('.app-header').isVisible()) throw new Error('nav visible during lockdown');
+    if (await page.locator('.site-links-credit').count()) throw new Error('author credit shown inside an interview session');
     if (!(await page.locator('button[data-action="reveal"]').isDisabled())) throw new Error('reveal enabled during interview');
     if ((await page.getAttribute('.problem-switcher button:first-child', 'data-status')) !== 'todo') {
       throw new Error('problem 1 should start as todo in problem switcher');
@@ -1033,6 +1034,7 @@ try {
     await page.waitForSelector('.session-banner.battle .race-row');
     await page.waitForSelector('.monaco-editor', { timeout: 30000 });
     if (await page.locator('.app-header').isVisible()) throw new Error('nav visible during battle race');
+    if (await page.locator('.site-links-credit').count()) throw new Error('author credit shown inside a battle');
     const race = await page.evaluate(() => {
       const rows = [...document.querySelectorAll('.race-row')];
       const track = document.querySelector('.race-track');
@@ -1114,6 +1116,12 @@ try {
       if (r.footer && (await page.locator('footer.site-links a[href="privacy.html"]').count()) !== 1) {
         throw new Error(`${r.url} missing shared privacy footer`);
       }
+      // The author credit rides on the footer: on every browse page (and the privacy page), never in
+      // the workspace; on a phone its links stay inside the viewport.
+      const credit = await page.evaluate(() => [...document.querySelectorAll('.site-links-credit a')].map((a) => { const b = a.getBoundingClientRect(); return { left: b.left, right: b.right }; }));
+      const wantCredit = r.footer || r.name === '390-privacy';
+      if (credit.length !== (wantCredit ? 3 : 0)) throw new Error(`${r.url}: ${credit.length} author credit links at 390px`);
+      if (credit.some((b) => b.left < 0 || b.right > innerWidth)) throw new Error(`${r.url}: author credit links leave the 390px viewport ${JSON.stringify(credit)}`);
       await shot(r.name);
     }
 
@@ -2098,10 +2106,121 @@ try {
     await page.goto(`${BASE}#/`);
   });
 
+  await check('author credit: the footer names who built the site with three safe external links, on browse pages and the privacy page, never in the workspace; the palette opens them in a new tab; both themes at laptop and phone width', async () => {
+    const WANT = [
+      ['portfolio', 'https://roy-carmelli-portfolio.vercel.app/', 'Roy Carmelli', "Roy Carmelli's portfolio (opens in a new tab)"],
+      ['linkedin', 'https://www.linkedin.com/in/roy-carmelli', 'LinkedIn', 'Roy Carmelli on LinkedIn (opens in a new tab)'],
+      ['github', 'https://github.com/Royc4515', 'GitHub', 'Roy Carmelli on GitHub (opens in a new tab)'],
+    ];
+    const readCredit = (p) =>
+      p.evaluate(() => {
+        const box = document.querySelector('footer.site-links .site-links-credit');
+        if (!box) return null;
+        const links = [...box.querySelectorAll('a')];
+        const muted = getComputedStyle(document.querySelector('footer.site-links .site-links-nav a')).color;
+        return {
+          text: box.textContent.replace(/\s+/g, ' ').trim(),
+          links: links.map((a) => [a.dataset.credit, a.href, a.textContent, a.getAttribute('aria-label'), a.target, a.rel, a.tabIndex]),
+          mutedLinks: links.slice(1).every((a) => getComputedStyle(a).color === muted),
+          fontPx: Math.min(...links.map((a) => parseFloat(getComputedStyle(a).fontSize))),
+        };
+      });
+    const assertCredit = (got, where) => {
+      if (!got) throw new Error(`${where}: no author credit`);
+      if (got.text !== 'Built by Roy Carmelli LinkedIn GitHub') throw new Error(`${where}: credit text "${got.text}"`);
+      got.links.forEach(([id, href, text, name, target, rel, tab], i) => {
+        const [wid, whref, wtext, wname] = WANT[i];
+        if (id !== wid || href !== whref || text !== wtext || name !== wname) throw new Error(`${where}: credit link ${i} ${JSON.stringify(got.links[i])}`);
+        if (target !== '_blank' || rel.split(' ').sort().join(' ') !== 'noopener noreferrer') throw new Error(`${where}: ${id} not a safe new-tab link (${target}, ${rel})`);
+        if (tab < 0) throw new Error(`${where}: ${id} not keyboard reachable`);
+      });
+      if (got.links.length !== 3) throw new Error(`${where}: ${got.links.length} credit links`);
+      if (!got.mutedLinks) throw new Error(`${where}: LinkedIn and GitHub are not as quiet as the footer links`);
+      if (got.fontPx < 12) throw new Error(`${where}: credit text under the 12 px floor`);
+    };
+
+    // Every browse page ends with it (the footer is shared); the workspace has none.
+    for (const [hash, wait] of [['#/', '.problem-table tbody tr a.problem-link'], ['#/path', '.path-tier'], ['#/companies', '.company-card'], ['#/modes', '.mode-card'], ['#/me', '.profile-section-title']]) {
+      await page.goto(`${BASE}${hash}`);
+      await page.waitForSelector(wait, { timeout: 30000 });
+      assertCredit(await readCredit(page), hash);
+    }
+    await page.goto(`${BASE}#/problem/smallest-base-segment`);
+    await page.waitForSelector('.monaco-editor', { timeout: 30000 });
+    if (await page.locator('.site-links-credit').count()) throw new Error('author credit shown in the editor workspace');
+    await page.goto(`${BASE}privacy.html`);
+    await page.waitForSelector('article.legal h1');
+    assertCredit(await readCredit(page), 'privacy.html');
+
+    // Keyboard: Tab from the last footer link before the credit lands on the name, then LinkedIn, then GitHub.
+    await page.goto(`${BASE}#/path`);
+    await page.waitForSelector('.path-tier');
+    await page.focus('footer.site-links a[href="privacy.html"]');
+    const order = [];
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press('Tab');
+      order.push(await page.evaluate(() => document.activeElement?.dataset.credit ?? document.activeElement?.textContent));
+    }
+    if (order.join() !== 'portfolio,linkedin,github') throw new Error(`credit tab order: ${order}`);
+    const ring = await page.evaluate(() => getComputedStyle(document.activeElement).outlineStyle);
+    if (ring === 'none') throw new Error('focused credit link shows no focus ring');
+
+    // The palette finds the author and opens the page in a new tab, without leaving the route.
+    await page.evaluate(() => {
+      window.__opened = [];
+      window.open = (...a) => (window.__opened.push(a), null);
+    });
+    await page.click('#palette-trigger');
+    await page.waitForSelector('dialog.palette[open] .palette-input');
+    await page.keyboard.type('built by');
+    await page.waitForFunction(() => document.querySelector('.palette-item[aria-selected="true"] .palette-label')?.textContent === 'Roy Carmelli');
+    await expectText('.palette-item[aria-selected="true"] .palette-kind', /^Author$/);
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('dialog.palette', { state: 'detached' });
+    const opened = await page.evaluate(() => ({ calls: window.__opened, hash: location.hash }));
+    if (JSON.stringify(opened.calls) !== JSON.stringify([['https://roy-carmelli-portfolio.vercel.app/', '_blank', 'noopener,noreferrer']]) || opened.hash !== '#/path') {
+      throw new Error(`palette author entry: ${JSON.stringify(opened)}`);
+    }
+
+    // Screenshots of the footer in both site themes, at laptop and phone width.
+    for (const [w, hgt, label] of [[1440, 900, 'desktop'], [390, 844, 'phone']]) {
+      for (const theme of ['dark', 'light']) {
+        const ctx = await browser.newContext({ viewport: { width: w, height: hgt }, ...(w < 500 ? { isMobile: true, hasTouch: true } : {}) });
+        const tp = await ctx.newPage();
+        tp.on('console', (m) => m.type() === 'error' && errors.push(`console (credit ${label} ${theme}): ${m.text()}`));
+        tp.on('pageerror', (e) => errors.push(`pageerror (credit ${label} ${theme}): ${e.message}`));
+        await tp.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+        await tp.addInitScript((t) => {
+          window.LFB_REMOTE_RUNNER_URL = '';
+          window.LFB_SUPABASE_URL = '';
+          localStorage.setItem('lfb:theme', t);
+        }, theme);
+        await tp.goto(`${BASE}#/path`);
+        await tp.waitForSelector('.path-tier', { timeout: 30000 });
+        if ((await tp.evaluate(() => document.documentElement.dataset.theme)) !== theme) throw new Error(`credit shot: theme ${theme} not applied`);
+        assertCredit(await readCredit(tp), `${label} ${theme}`);
+        const fit = await tp.evaluate(() => ({ over: document.documentElement.scrollWidth - innerWidth, minH: Math.min(...[...document.querySelectorAll('.site-links-credit a')].map((a) => a.getBoundingClientRect().height)) }));
+        if (fit.over > 0) throw new Error(`${label} ${theme}: page scrolls sideways by ${fit.over}px`);
+        if (w < 500 && fit.minH < 44) throw new Error(`${label} ${theme}: credit link ${fit.minH}px tall on touch`);
+        await tp.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+        await tp.waitForTimeout(500);
+        if (shotsDir) await tp.screenshot({ path: `${shotsDir}/40-credit-${label}-${theme}.png` });
+        await ctx.close();
+      }
+    }
+    await page.goto(`${BASE}#/`);
+    // don't touch / a fresh document: this step loaded views/path.js, and the next steps break a view
+    // by stubbing its URL, which a module already in the page's module map would never fetch again.
+    await page.reload();
+    await page.waitForSelector('.problem-table tbody tr a.problem-link');
+  });
+
   await check('unknown route shows shared .state not found block', async () => {
     await page.goto(`${BASE}#/nope`);
     await page.waitForSelector('.page .state .state-title');
     await expectText('.page .state', /Not found/);
+    // The footer is not a startup module: main.js loads it after the block, the credit with it.
+    await page.waitForSelector('.page footer.site-links .site-links-credit a[data-credit="portfolio"]');
   });
 
   await check('unknown problem id shows not found; a problem module that fails to load shows could not load', async () => {

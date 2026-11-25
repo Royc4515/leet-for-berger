@@ -5,7 +5,8 @@
  */
 import { shareButton } from '../share.js';
 import { dailyShare } from '../../data/share.js';
-import { h, mount, difficulty, stateBlock, loadingState, siteFooter, hexMark } from '../dom.js';
+import { h, mount, difficulty, stateBlock, loadingState, hexMark } from '../dom.js';
+import { siteFooter } from '../footer.js';
 import { catalogEntry } from '../../problems/index.js';
 import { dailyProblem, dailyCandidates } from '../../data/recommend.js';
 import { calendarWeeks, bestStreak, activeInWindow, shiftDay, dailyNumber, parseDay, msUntilNextDaily, formatCountdown } from '../../data/daily.js';

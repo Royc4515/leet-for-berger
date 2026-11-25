@@ -3,7 +3,6 @@
  * deployable to GitHub Pages as-is and keeps Claude Code edits easy to review.
  */
 import { glide } from './motion.js';
-import { tourForRoute } from '../data/tour-routes.js';
 
 /**
  * Hyperscript-style element factory. Children that are strings become text nodes,
@@ -238,34 +237,6 @@ export function loadingState({ label = 'Loading...', rows = 6 } = {}) {
     h('div.skeleton-title', { 'aria-hidden': 'true' }),
     h('div.skeleton-meta', { 'aria-hidden': 'true' }),
     h('div.skeleton-list', {}, skeletonRows),
-  );
-}
-
-/**
- * Shared footer for browse pages: the main destinations, a replay of this page's guide, and the
- * privacy policy.
- * @param {{ note?: string }} [opts] note: one extra line (company pages carry the trademark note)
- * @returns {HTMLElement}
- */
-export function siteFooter({ note = '' } = {}) {
-  return h(
-    'footer.site-links',
-    {},
-    h('span.site-links-brand', {}, h('span.hexmark.solved', { 'aria-hidden': 'true' }), h('span.site-links-copy', {}, 'Leet-For-Berger')),
-    h(
-      'nav.site-links-nav',
-      { 'aria-label': 'Footer' },
-      h('a', { href: '#/map' }, 'Map'),
-      h('a', { href: '#/daily' }, 'Daily'),
-      h('a', { href: '#/path' }, 'Path'),
-      // main.js owns tours (they outlive a view); the footer only asks for one, and only on a page
-      // that has one (the profile, the daily quiz and its leaderboard do not: the button did nothing).
-      tourForRoute(globalThis.location?.hash ?? '')
-        ? h('button.site-links-tour', { type: 'button', 'aria-haspopup': 'dialog', onClick: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) }, 'Guide for this page')
-        : null,
-      h('a', { href: 'privacy.html' }, 'Privacy Policy'),
-    ),
-    note ? h('p.site-links-note', {}, note) : null,
   );
 }
 

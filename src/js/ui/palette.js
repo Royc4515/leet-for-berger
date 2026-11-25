@@ -8,6 +8,7 @@
  */
 import { h, mount, miniLogo } from './dom.js';
 import { searchPalette } from '../data/palette-search.js';
+import { authorPaletteItems } from '../data/credit.js';
 import { availableEntries } from '../problems/index.js';
 import { TOPICS } from '../data/taxonomy.js';
 import { loadSets, loadCompanyLogos, companyLogo } from '../data/company-loader.js';
@@ -29,9 +30,11 @@ const PAGES = [
   // An action, not a page: main.js replays the guide of the page you are on.
   { kind: 'action', id: 'page-guide', label: 'Guide for this page', keywords: 'tour help walkthrough onboarding how explain', run: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) },
   ...themePaletteItems(),
+  // Who built the site: opens the author's pages in a new tab, never in place of the practice.
+  ...authorPaletteItems((href) => window.open(href, '_blank', 'noopener,noreferrer')),
 ];
 
-const KIND_LABEL = { page: 'Page', action: 'Guide', setting: 'Setting', problem: 'Problem', topic: 'Topic', company: 'Company' };
+const KIND_LABEL = { page: 'Page', action: 'Guide', setting: 'Setting', link: 'Author', problem: 'Problem', topic: 'Topic', company: 'Company' };
 
 /** Company entries for search, with their logos; the data loads once, shared with the companies pages. */
 const loadCompanies = () =>

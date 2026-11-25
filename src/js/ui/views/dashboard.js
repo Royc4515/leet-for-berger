@@ -2,7 +2,8 @@
  * Dashboard: progress stats + filterable problem bank. Reads only the catalog: no problem module
  * loads here (docs/adr/0008-lazy-problem-modules.md).
  */
-import { h, mount, difficulty, chipGroup, stateBlock, siteFooter, hexMark } from '../dom.js';
+import { h, mount, difficulty, chipGroup, stateBlock, hexMark } from '../dom.js';
+import { siteFooter } from '../footer.js';
 import { catalog, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import { stats, restDayOf } from '../../state/progress.js';
 import { weakSpots } from '../../data/recommend.js';

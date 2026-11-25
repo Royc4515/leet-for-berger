@@ -5,7 +5,8 @@
  */
 import { shareButton } from '../share.js';
 import { companyShare } from '../../data/share.js';
-import { h, mount, difficulty, chip, chipGroup, segmented, ilMark, stateBlock, loadingState, siteFooter, hexMark, companyMark } from '../dom.js';
+import { h, mount, difficulty, chip, chipGroup, segmented, ilMark, stateBlock, loadingState, hexMark, companyMark } from '../dom.js';
+import { siteFooter } from '../footer.js';
 import { loadSets, loadProblemTopics, loadCompanyLogos, companyLogo } from '../../data/company-loader.js';
 import { TOPICS } from '../../data/taxonomy.js';
 import { expandRows, companyProgress, monogram, frequencyLevel } from '../../data/company-sets.js';

@@ -1038,6 +1038,45 @@ body.lockdown .app-header {
   gap: var(--s-1) var(--s-4);
 }
 
+.site-links-credit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-4);
+  margin: 0 0 0 auto;
+}
+
+/* LinkedIn and GitHub carry their mark before the word, in the link's own colour. */
+.site-links-credit a[data-credit] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.site-links-icon {
+  flex: none;
+  width: 1.1em;
+  height: 1.1em;
+}
+
+/* The name is the one link a recruiter looks for: a step brighter than the rest of the footer. */
+.site-links-credit a[data-credit='portfolio'] {
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.site-links-credit a[data-credit='portfolio']:hover {
+  color: var(--text);
+}
+
+/* On a phone it takes its own row, left-aligned with the rest instead of pushed to the right. */
+@media (max-width: 640px) {
+  .site-links-credit {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+}
+
 .site-links-note {
   flex-basis: 100%;
   color: var(--muted);
@@ -8718,7 +8757,7 @@ body.resizing-y * {
   padding-left: var(--s-5);
 }
 
-.legal a:not(.btn):not(.back-link) {
+.legal a:not(.btn):not(.back-link):not(.site-links a) {
   color: var(--accent-text);
   text-underline-offset: 3px;
   border-radius: var(--r-tag);
