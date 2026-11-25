@@ -101,3 +101,45 @@ After any change to the question bank, `node scripts/content/build-quiz.mjs` reb
 answers match the site. New questions join the daily quiz two days after that build
 (`content/quiz/daily-pool.json`), so the function only has to be deployed before then; a change
 to an existing question's answer must be deployed with the site.
+
+## 8. Web Push reminders
+
+Pushes at the user's send hours (ADR 0011) need three tables, an hourly job, one Edge Function and
+four secrets. About fifteen minutes, after the steps above.
+
+1. **VAPID keys**, once: in a terminal with Node 20 or later,
+
+   ```
+   node --input-type=module -e "const k=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);const j={publicKey:await crypto.subtle.exportKey('jwk',k.publicKey),privateKey:await crypto.subtle.exportKey('jwk',k.privateKey)};console.log(JSON.stringify(j));console.error('public key for config.js:',Buffer.from(await crypto.subtle.exportKey('raw',k.publicKey)).toString('base64url'))"
+   ```
+
+   The JSON line is the `VAPID_KEYS` secret. The public key line goes in `src/js/config.js`
+   (`PUSH.vapidPublicKey`); it is public by design. A new pair cuts off every device subscribed
+   with the old one, so generate it once.
+2. **Edge Functions > Secrets**: `VAPID_KEYS` (the JSON line), `VAPID_SUBJECT`
+   (`mailto:LeetForBerger@gmail.com`), `PUSH_CRON_SECRET` (a long random string, for example
+   `openssl rand -hex 32`); `SITE_URL` is already there.
+3. **SQL Editor**: store the job's address and secret in Vault, then run the migration:
+
+   ```
+   select vault.create_secret('https://<your project ref>.supabase.co/functions/v1/push/run', 'push_run_url');
+   select vault.create_secret('<the PUSH_CRON_SECRET value>', 'push_cron_secret');
+   ```
+
+   Then paste `deploy/supabase/migrations/20261125_push.sql` and **Run**: the three tables with
+   row level security, and the `push-run` job at minute 0 of every hour (pg_cron and pg_net).
+4. Deploy the function, with JWT verification off (the hourly job sends its own secret; the other
+   routes check the session):
+
+   ```
+   npx supabase functions deploy push --use-api --no-verify-jwt --project-ref <your project ref>
+   ```
+
+5. Verify: `curl -X POST -H "x-push-secret: <PUSH_CRON_SECRET>" https://<ref>.supabase.co/functions/v1/push/run`
+   answers `{"checked":0,"sent":0,"dropped":0}` before anyone subscribes; without the header,
+   `401`. **Integrations > Cron** lists `push-run`, and its runs succeed every hour.
+
+After a change to the reminder rules (`src/js/data/notifications.js`, `push-plan.js`, `daily.js`,
+`state/progress.js`) or to a problem title, `node scripts/content/build-push.mjs` rebuilds
+`deploy/supabase/functions/push/lib/`; deploy the function again so the phone and the bell agree
+(`tests/push-server.test.js` fails until the copies match).
