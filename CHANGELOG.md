@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed (deploys)
+- **Deploys stop failing on GitHub's side.** Three of four deploys on 2026-11-25 failed and needed a re-run, the site staying a version behind until then. Two failed with "No artifacts named github-pages were found": the deploy ran in the same job a second after the upload, before the artifact was listed. The deploy now has its own job after the build (GitHub's own Pages layout). The third was Pages answering "Deployment failed, try again later": the deploy job now tries once more after 30 seconds. A newer push also waits for a running deploy instead of cancelling it halfway. `tests/ci.test.js` holds the layout in place.
+
 ### Added (themes, owner's request)
 - **A sun/moon switch in the header**: one click switches light and dark (and saves it, so it also leaves System). Its icon is the theme a click gives, and screen readers hear "Switch to light theme". On a narrow phone (420 px and below) the header keeps its room for the page title, so the same switch is in the account sheet instead, with its words.
 - **The four new code themes are named**: Midnight Berger, Terminal Berger, High Contrast Berger and Berger Mint, in the pattern of Dark Berger and Berger Light.
