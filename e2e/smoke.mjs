@@ -1626,6 +1626,7 @@ try {
       const body = req.postData() ? JSON.parse(req.postData()) : null;
       pushCalls.push({ route, method: req.method(), auth: req.headers().authorization ?? null, body });
       if (route === '/key') return r.fulfill({ headers: cors, contentType: 'application/json', body: '{"publicKey":"BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U"}' });
+      if (route === '/test') return r.fulfill({ headers: cors, contentType: 'application/json', body: '{"sent":true}' });
       if (route === '/subscribe') pushServer.devices = 1;
       if (route === '/unsubscribe') pushServer.devices = 0;
       if (body?.hours) pushServer.hours = body.hours;
@@ -1925,6 +1926,12 @@ try {
     const sub = pushCalls.find((c) => c.route === '/subscribe');
     if (!sub || sub.auth !== 'Bearer jwt' || sub.body.subscription.endpoint !== 'https://push.example/e2e-device' || !sub.body.timeZone || !Array.isArray(sub.body.off)) throw new Error(`subscribe call: ${JSON.stringify(sub)}`);
     if (!pushCalls.some((c) => c.route === '/key') || pushCalls.findIndex((c) => c.route === '/key') > pushCalls.findIndex((c) => c.route === '/subscribe')) throw new Error(`the key is fetched before subscribing: ${JSON.stringify(pushCalls.map((c) => c.route))}`);
+    // A test push follows at once, to this device's own endpoint: proof the whole way works.
+    await acct.waitForSelector('.toast:has-text("A test is on its way")');
+    for (let i = 0; i < 40 && !pushCalls.some((c) => c.route === '/test'); i++) await acct.waitForTimeout(50);
+    const firstTest = pushCalls.find((c) => c.route === '/test');
+    if (!firstTest || firstTest.body.endpoint !== 'https://push.example/e2e-device' || firstTest.auth !== 'Bearer jwt') throw new Error(`no test push after turning on: ${JSON.stringify(pushCalls.map((c) => c.route))}`);
+    if (!(await acct.isVisible('.push-test'))) throw new Error('"Send a test" missing while notifications are on');
     await acct.waitForFunction(() => navigator.serviceWorker.controller?.scriptURL.endsWith('/sw.js'), null, { timeout: 10000 }).catch(() => {
       throw new Error('sw.js did not register and take control');
     });
@@ -2002,6 +2009,10 @@ try {
     await acct.click('label[for="reminder-away"]');
     if (!(await serverHas(() => JSON.stringify(pushServer.off) === '[]'))) throw new Error(`kind turned back on not saved: ${JSON.stringify(pushServer.off)}`);
     if (!(await serverHas(() => JSON.stringify(pushServer.hours) === '[16,20]'))) throw new Error(`dial changes not saved: ${JSON.stringify(pushServer.hours)}`);
+    // "Send a test" rings this device again, later on.
+    await acct.click('.push-test');
+    await acct.waitForSelector('.toast:has-text("Test sent")');
+    if (pushCalls.filter((c) => c.route === '/test').length !== 2) throw new Error(`Send a test: ${JSON.stringify(pushCalls.map((c) => c.route))}`);
     if (shotsDir) await acct.locator('#profile-reminders').screenshot({ path: `${shotsDir}/33-profile-notifications.png` });
     // Quiz progress rides in the account record: a quiz save on this device schedules a sync, and
     // the upload carries it next to problem progress (with the daily play stored above).

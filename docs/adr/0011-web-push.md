@@ -60,7 +60,8 @@ Constraints found:
    phone and a laptop never double the count. RLS: a user reads and deletes their own rows; writes
    go through the function.
 7. **One Edge Function, `push`**: `POST /subscribe`, `POST /unsubscribe`, `POST /settings` (with
-   the user's session), and `POST /run`, called hourly by **pg_cron** through pg_net with a secret
+   the user's session), `POST /test` (a test push to the caller's own device, right after it is
+   turned on and from "Send a test", at most once in 30 seconds), and `POST /run`, called hourly by **pg_cron** through pg_net with a secret
    header. `/run` takes the users whose local hour is a send hour with nothing logged for it today,
    reads their synced record (`user_state`: progress with the rest day, and quiz), turns `now` and
    stored timestamps into their wall-clock time (`toWallClock`, so the rules see their calendar),

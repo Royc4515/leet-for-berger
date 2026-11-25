@@ -70,7 +70,9 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
   const guideId = 'push-guide';
   const howButton = h('button.btn.btn-secondary.btn-sm.push-how', { type: 'button', 'aria-expanded': 'false', 'aria-controls': guideId }, 'Show me how');
   const control = support === 'install' ? howButton : support === 'ready' ? h('label.switch.switch-lg.push-switch', { for: input.id }, input, h('span.sr-only', {}, 'Notifications on this device')) : null;
-  const card = h(`div.push-device${support === 'install' ? '.has-button' : ''}`, {}, h('span.push-device-icon', { 'aria-hidden': 'true' }, icon('bell')), h('span.push-device-title', {}, 'Notifications on this device'), status, control);
+  // A test push the whole way (server, push service, this device), for "is it working?" later on.
+  const testButton = h('button.btn.btn-ghost.btn-sm.push-test', { type: 'button', hidden: true }, 'Send a test');
+  const card = h(`div.push-device${support === 'install' ? '.has-button' : ''}`, {}, h('span.push-device-icon', { 'aria-hidden': 'true' }, icon('bell')), h('span.push-device-title', {}, 'Notifications on this device'), status, control, testButton);
 
   /* ---------- The iPhone guide: three taps, one screen, where the button is ---------- */
   const step = (n, art, title, line) => h('li.push-step', {}, h('span.push-step-num', { 'aria-hidden': 'true' }, String(n)), h('span.push-step-art', { 'aria-hidden': 'true' }, art), h('span.push-step-copy', {}, h('strong', {}, title), h('span', {}, line)));
@@ -153,6 +155,7 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
   function update() {
     if (disposed) return;
     card.classList.toggle('is-on', st.on);
+    testButton.hidden = !st.on || st.busy;
     status.textContent = statusText();
     input.checked = st.on;
     input.disabled = st.busy || !signedIn() || !st.checked || (!st.on && client.permission() === 'denied');
@@ -197,7 +200,9 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
             st.view = res.view;
             savedHours = res.view.hours;
             dial?.set(res.view.hours);
-            toast('Notifications are on for this device', 'success');
+            toast('Notifications are on. A test is on its way.', 'success');
+            // The first push comes now, not at the next send hour: proof the whole way works.
+            client.test().catch(() => {});
           } else if (res.reason === 'denied') toast('Notifications are blocked for this site in your browser', 'warn');
         })
         .catch((err) => toast(err?.message || 'Reminders are unavailable right now', 'error'))
@@ -222,6 +227,26 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
         st.busy = false;
         update();
         input.focus({ preventScroll: true });
+      });
+  });
+
+  let testing = false;
+  testButton.addEventListener('click', () => {
+    if (testing) return;
+    testing = true;
+    client
+      .test()
+      .then((r) => {
+        if (r.sent) toast('Test sent. It should arrive in a few seconds.', 'success');
+        else {
+          // The push service no longer knows this device: the server dropped it, so show it off.
+          toast('The test did not get through. Turn notifications off and on again.', 'warn');
+          check();
+        }
+      })
+      .catch((err) => toast(err?.message || 'Could not send a test right now', 'error'))
+      .finally(() => {
+        testing = false;
       });
   });
 

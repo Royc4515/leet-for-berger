@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createHandler, cleanSubscription, MAX_FAILURES } from '../deploy/supabase/functions/push/core.js';
+import { createHandler, cleanSubscription, MAX_FAILURES, TEST_EVERY_MS, testCopy } from '../deploy/supabase/functions/push/core.js';
 import { pushLibFiles, PUSH_LIB } from '../scripts/content/build-push.mjs';
 
 const SITE = 'https://royc4515.github.io/leet-for-berger/';
@@ -15,12 +15,13 @@ const SUB = (n) => ({ endpoint: `https://push.example/send/${n}`, keys: { p256dh
 const STREAK_STATE = { version: 1, activeDays: ['2026-11-23', '2026-11-24'], problems: {}, totals: { submissions: 2, accepted: 2 }, quiz: { questions: {}, daily: {}, best: {} } };
 
 function fakeServer({ now = AT_1400Z, sendResult = () => 'ok' } = {}) {
+  const clock = { t: now };
   const db = { settings: new Map(), subs: [], log: [], state: new Map() };
   let nextId = 1;
   const sent = [];
   const users = { 'tok-ana': { id: 'u-ana' }, 'tok-ben': { id: 'u-ben' } };
   const handle = createHandler({
-    now: () => now,
+    now: () => clock.t,
     getUser: async (jwt) => users[jwt] ?? null,
     siteUrl: SITE,
     cronSecret: async () => 'cron-secret-123',
@@ -67,7 +68,7 @@ function fakeServer({ now = AT_1400Z, sendResult = () => 'ok' } = {}) {
   const call = (method, path, { token, body, headers = {} } = {}) =>
     handle(new Request(`https://x.supabase.co/functions/v1/push${path}`, { method, headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), 'Content-Type': 'application/json', ...headers }, body: body ? JSON.stringify(body) : undefined })).then(async (r) => ({ status: r.status, body: await r.json() }));
   const run = () => call('POST', '/run', { headers: { 'x-push-secret': 'cron-secret-123' } });
-  return { call, run, db, sent };
+  return { call, run, db, sent, clock };
 }
 
 test('the rules copied into the function match src/js (run node scripts/content/build-push.mjs)', () => {
@@ -182,6 +183,45 @@ test('run: a device the push service no longer knows is dropped; one that keeps 
   db.log.length = 0;
   assert.deepEqual((await run()).body, { checked: 1, sent: 0, dropped: 1 });
   assert.equal(db.subs.length, 0);
+});
+
+test('test push: to the caller\'s own device only, with their hours and rest day, at most once in TEST_EVERY_MS', async () => {
+  const { call, db, sent, clock } = fakeServer();
+  await call('POST', '/subscribe', { token: 'tok-ana', body: { subscription: SUB(1), timeZone: 'Asia/Jerusalem', hours: [9, 21] } });
+  await call('POST', '/subscribe', { token: 'tok-ben', body: { subscription: SUB(2), timeZone: 'UTC' } });
+  db.state.set('u-ana', { ...STREAK_STATE, restDay: { day: 5, at: '2026-11-20T10:00:00Z' } });
+  assert.equal((await call('POST', '/test', { body: { endpoint: SUB(1).endpoint } })).status, 401);
+  assert.equal((await call('POST', '/test', { token: 'tok-ana', body: {} })).status, 400);
+  // Someone else's device is not the caller's to ring.
+  assert.equal((await call('POST', '/test', { token: 'tok-ana', body: { endpoint: SUB(2).endpoint } })).status, 404);
+  assert.deepEqual(await call('POST', '/test', { token: 'tok-ana', body: { endpoint: SUB(1).endpoint } }), { status: 200, body: { sent: true } });
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].endpoint, SUB(1).endpoint);
+  assert.deepEqual(sent[0].payload, {
+    title: 'Radio check: loud and clear',
+    body: 'Reminders now reach this device. The real ones come at 09:00 and 21:00, only when something is due, and never on Friday.',
+    url: `${SITE}#/me`,
+    tag: 'test',
+  });
+  // A second press right away waits; after TEST_EVERY_MS it goes again.
+  assert.equal((await call('POST', '/test', { token: 'tok-ana', body: { endpoint: SUB(1).endpoint } })).status, 429);
+  clock.t += TEST_EVERY_MS;
+  assert.equal((await call('POST', '/test', { token: 'tok-ana', body: { endpoint: SUB(1).endpoint } })).status, 200);
+  assert.equal(sent.length, 2);
+});
+
+test('test push: a device the push service no longer knows is dropped and reported not sent', async () => {
+  const { call, db } = fakeServer({ sendResult: () => 'gone' });
+  await call('POST', '/subscribe', { token: 'tok-ana', body: { subscription: SUB(1), timeZone: 'UTC' } });
+  assert.deepEqual((await call('POST', '/test', { token: 'tok-ana', body: { endpoint: SUB(1).endpoint } })).body, { sent: false });
+  assert.equal(db.subs.length, 0);
+});
+
+test('testCopy: the default rest day is Saturday; one hour, none, and no rest day read right', () => {
+  assert.match(testCopy({ hours: [16, 20], restDay: 6 }).body, /at 16:00 and 20:00, only when something is due, and never on Saturday\.$/);
+  assert.match(testCopy({ hours: [9], restDay: null }).body, /at 09:00, only when something is due\.$/);
+  assert.match(testCopy({ hours: [], restDay: 6 }).body, /no reminder hours yet/);
+  for (const c of [testCopy({ hours: [16, 20], restDay: 6 }), testCopy({ hours: [], restDay: null })]) assert.doesNotMatch(c.title + c.body, /[\u2013\u2014!]/);
 });
 
 test('unknown routes answer 404; the public key is public', async () => {
