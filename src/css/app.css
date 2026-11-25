@@ -8032,6 +8032,622 @@ body.resizing-y * {
   justify-items: start;
 }
 
+/* ---------- Notifications on this device (#/me, ADR 0011, ui/push-panel.js) ---------- */
+.push-panel {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.push-sub {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.push-kinds {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--border);
+}
+
+.push-device {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'icon title control' 'icon status control';
+  align-items: center;
+  gap: var(--s-half) var(--s-4);
+  padding: var(--s-4);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: border-color var(--t-base) var(--ease);
+}
+
+.push-device.is-on {
+  border-color: var(--accent-line);
+}
+
+.push-device-icon {
+  grid-area: icon;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--panel-3);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  transition: background-color var(--t-base) var(--ease), color var(--t-base) var(--ease);
+}
+
+.push-device.is-on .push-device-icon {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.push-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.push-device > .switch,
+.push-how {
+  grid-area: control;
+}
+
+.push-device-title {
+  grid-area: title;
+  align-self: end;
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.push-device-status {
+  grid-area: status;
+  align-self: start;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+
+/* The device switch is the section's main control: a size up from the kind switches. */
+.switch-lg input {
+  width: 46px;
+  height: 28px;
+}
+
+.switch-lg input::after {
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+}
+
+.switch-lg input:checked::after {
+  transform: translateX(18px);
+}
+
+.switch input:disabled {
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+/* The iPhone guide: three numbered steps, each with the button it names. */
+.push-guide {
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  background: var(--panel);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-md);
+}
+
+.push-guide-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--fs-lg);
+}
+
+.push-steps {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.push-step {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.push-step-num {
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.push-step-art {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--panel-3);
+  border-radius: var(--r-sm);
+  color: var(--text);
+}
+
+.push-step-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.push-step-app {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-sm);
+}
+
+.push-step-copy {
+  display: grid;
+  gap: var(--s-half);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+
+.push-step-copy strong {
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.push-guide-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+}
+
+/* The hours: the reminder clock (ui/clock-dial.js), with how to use it and the add button beside it. */
+.push-hours {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.push-hours-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+}
+
+.push-hours-line {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.push-saved {
+  margin-inline-start: var(--s-2);
+  color: var(--ok);
+}
+
+.push-hours-body {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-5);
+}
+
+.push-hours-side {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+}
+
+.push-hours-side .hint-text {
+  margin: 0;
+}
+
+/* ---------- The reminder clock's shared parts: the frame, the centre, the hexes ---------- */
+.dial {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  /* The hexes ride the clock at a radius in cqw, so they stay on their hours at any size. */
+  container-type: inline-size;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dial-face {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.dial-center {
+  position: absolute;
+  inset: 30%;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.dial-summary,
+.dial-selection {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-half);
+}
+
+.dial-summary[hidden],
+.dial-selection[hidden] {
+  display: none;
+}
+
+.dial-selection {
+  gap: var(--s-2);
+}
+
+.dial-count {
+  color: var(--text);
+  font-family: var(--display);
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.dial-selection .dial-count {
+  font-size: var(--fs-2xl);
+}
+
+.dial-count-label {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.hour-clock .dial-count,
+.hour-clock .dial-count-label,
+.hour-clock .dial-next {
+  transition: color var(--t-slow) var(--ease);
+}
+
+.dial-next {
+  max-width: 13ch;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+}
+
+/* A reminder: a lit hex on its hour, set round the clock by --a (degrees from the top). */
+.dial-knob {
+  /* The middle of the ring: 120 of the face's 320. */
+  --r: 37.5cqw;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48px;
+  height: 52px;
+  margin: -26px 0 0 -24px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: grab;
+  touch-action: none;
+  transform: rotate(var(--a)) translateY(calc(-1 * var(--r))) rotate(calc(-1 * var(--a)));
+  transition: transform var(--t-base) var(--ease-spring);
+}
+
+.dial-knob-hex {
+  position: absolute;
+  /* 40 x 44: an hour of the clock is about 60 px wide, so neighbouring hexes never touch. */
+  inset: 4px;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  clip-path: var(--hex);
+  color: var(--accent-ink);
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  transition: transform var(--t-fast) var(--ease-spring), background-color var(--t-fast) var(--ease);
+}
+
+/* The hex behind it: a halo that says "picked" without colour alone (it is also bigger). */
+.dial-knob::before {
+  content: '';
+  position: absolute;
+  inset: 0 1px;
+  background: var(--accent-line);
+  clip-path: var(--hex);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease-spring);
+}
+
+.dial-knob.is-selected::before,
+.dial-knob.is-dragging::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.dial-knob.is-selected .dial-knob-hex,
+.dial-knob.is-dragging .dial-knob-hex {
+  transform: scale(1.12);
+}
+
+.dial-knob.is-dragging {
+  cursor: grabbing;
+  transition-duration: var(--t-fast);
+}
+
+.dial-knob:focus-visible {
+  outline: none;
+}
+
+.dial-knob:focus-visible::before {
+  opacity: 1;
+  transform: scale(1);
+  background: var(--focus);
+}
+
+/* A new hex rises onto the ring. */
+.dial-knob.is-new .dial-knob-hex {
+  transform: scale(0.4);
+  opacity: 0;
+}
+
+/* ---------- The reminder clock (ui/clock-dial.js): 12 hours, a day face and a night face ---------- */
+.clock-wrap {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  width: 100%;
+}
+
+.clock-cell {
+  /* By day the light rises toward noon (--light, 0 to 1, set per hour). */
+  fill: color-mix(in srgb, var(--accent) calc(10% + var(--light, 0) * 30%), var(--panel-3));
+  cursor: pointer;
+  transition: fill var(--t-slow) var(--ease);
+}
+
+.hour-clock.is-night .clock-cell {
+  fill: var(--panel-2);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-cell {
+  fill: color-mix(in srgb, var(--text) 24%, var(--panel-3));
+}
+
+.hour-clock .clock-cell:hover {
+  fill: var(--panel-hover);
+}
+
+.hour-clock.is-full .clock-cell {
+  cursor: not-allowed;
+}
+
+.clock-numbers text {
+  fill: var(--text-2);
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  transition: opacity var(--t-slow) var(--ease);
+}
+
+.hour-clock.is-day .clock-numbers.is-night,
+.hour-clock.is-night .clock-numbers.is-day {
+  opacity: 0;
+}
+
+.hour-clock.is-night .clock-numbers text {
+  fill: var(--muted);
+}
+
+/* The sky: a warm glow by day, the dark by night; one fades into the other. */
+.clock-disc.is-day {
+  fill: color-mix(in srgb, var(--accent) 9%, var(--panel));
+}
+
+.clock-disc.is-night {
+  fill: var(--bg);
+  opacity: 0;
+  transition: opacity var(--t-slow) var(--ease);
+}
+
+/* On paper the night is still dark: a deep ink sky with light text, the moon and stars on it. */
+[data-theme='light'] .clock-disc.is-night {
+  fill: var(--text);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-stars circle {
+  fill: var(--panel-2);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-moon {
+  stroke: var(--panel);
+}
+
+[data-theme='light'] .hour-clock.is-night .dial-count {
+  color: var(--panel);
+}
+
+[data-theme='light'] .hour-clock.is-night .dial-count-label {
+  color: var(--panel-2);
+}
+
+[data-theme='light'] .hour-clock.is-night .dial-next {
+  color: var(--panel-3);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-now line {
+  stroke: var(--panel);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-now circle {
+  fill: var(--panel);
+}
+
+[data-theme='light'] .hour-clock.is-night .clock-numbers text {
+  fill: var(--text);
+}
+
+.hour-clock.is-night .clock-disc.is-night {
+  opacity: 1;
+}
+
+.clock-stars circle {
+  fill: var(--text-2);
+}
+
+.clock-stars {
+  opacity: 0;
+  transition: opacity var(--t-slow) var(--ease);
+}
+
+.hour-clock.is-night .clock-stars {
+  opacity: 0.7;
+}
+
+/* The sun sets below the count and the moon rises in its place. */
+.clock-sun,
+.clock-moon {
+  transition: transform var(--t-stage) var(--ease-in-out), opacity var(--t-slow) var(--ease);
+}
+
+.clock-sun {
+  fill: none;
+  stroke: var(--accent-text);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+.clock-sun circle {
+  fill: var(--accent-soft);
+}
+
+.hour-clock.is-night .clock-sun {
+  opacity: 0;
+  transform: translateY(26px);
+}
+
+.clock-moon {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.7;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: translateY(26px);
+}
+
+.hour-clock.is-night .clock-moon {
+  opacity: 1;
+  transform: none;
+}
+
+.clock-now line {
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.clock-now circle {
+  fill: var(--text);
+}
+
+/* A hex of the other face leaves with its half of the day. */
+.hour-clock .dial-knob.is-away {
+  opacity: 0;
+  pointer-events: none;
+  transition: transform var(--t-base) var(--ease-spring), opacity var(--t-fast) var(--ease);
+}
+
+.hour-clock .dial-knob:not(.is-away) {
+  transition: transform var(--t-base) var(--ease-spring), opacity var(--t-base) var(--ease);
+}
+
+.clock-faces .clock-face-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.clock-face-icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.clock-face-count:not(:empty) {
+  min-width: 20px;
+  padding: 0 var(--s-1);
+  background: var(--accent-soft);
+  border-radius: var(--r-pill);
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  /* Phone: the title and the switch on one line, the status across the card under them. The icon
+     is decoration a phone has no room for; the switch and the lit edge carry the state. */
+  .push-device {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'title control' 'status status';
+    gap: var(--s-2) var(--s-3);
+  }
+
+  .push-device-icon {
+    display: none;
+  }
+
+  .push-device-title {
+    align-self: center;
+  }
+
+  /* iPhone in Safari: "Show me how" under the line that explains it. */
+  .push-device.has-button {
+    grid-template-areas: 'title title' 'status status' 'control control';
+  }
+
+  .push-how {
+    justify-self: start;
+    margin-top: var(--s-1);
+  }
+
+  /* The dial takes the width, the how-to and the add button under it. */
+  .push-hours-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-4);
+  }
+
+  .push-guide {
+    padding: var(--s-4);
+  }
+}
+
 @media (pointer: coarse) {
   .notify-toggle {
     width: 44px;

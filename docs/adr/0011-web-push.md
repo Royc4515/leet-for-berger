@@ -26,10 +26,12 @@ Constraints found:
    Reminders section of `#/me`. It asks for permission from that click and subscribes with the
    site's VAPID public key (from the function's `GET /key`, public by design). Signed out, it says to sign
    in; where the browser has no Push API it says so.
-2. **iPhone: a guide, not a dead end.** In Safari on an iPhone the switch opens a three-step guide
-   instead: tap Share, tap Add to Home Screen, open the site from its icon and tap the switch
-   there. Each step names the button and shows its icon; the guide is one screen, opens where the
-   switch is, and recognises when the site already runs from the Home Screen.
+2. **iPhone: a guide, not a dead end.** In Safari on an iPhone, where a tab has no Push API, a
+   "Show me how" button takes the switch's place (a switch that cannot turn on would mislead) and
+   opens a three-step guide: tap Share, tap Add to Home Screen, open the site from its icon, sign in
+   there and turn the switch on (a Home Screen app keeps its own sign-in). Each step names the
+   button and shows its icon; the guide is one screen, opens where the switch is, and the site
+   opened from the Home Screen gets the real switch.
 3. **A push-only service worker** (`sw.js` at the site root, scope `/leet-for-berger/`): it
    handles `push` (shows the notification) and `notificationclick` (focuses an open tab or opens
    the link). **No `fetch` handler**: it never caches, so a deploy is never hidden behind a stale
@@ -37,7 +39,12 @@ Constraints found:
 4. **When (owner's decision).** Two send hours a day by default, **16:00 and 20:00** in the user's
    time zone. The user chooses the hours, and so how many pushes a day (1 to 6, or none): **at most
    one push per send hour, so at most two a day** unless they choose more. **Nothing on the user's
-   rest day.**
+   rest day.** The hours are set on a **reminder clock** (owner's requests, part C: something
+   beautiful and quick, then "like a clock"): 12 hours with a day face (06 to 17) and a night face
+   (18 to 05); each send hour is a hex dragged round it, and past the 6 at the bottom the clock
+   turns from day to night or back; a Day / Night switch turns it too and counts each half. The
+   centre says how many a day and when the next can come (skipping the rest day). Each hex is a
+   slider for the keyboard and screen readers.
 5. **What (owner's decision), at each send hour, in this order:**
    - **Streaks that end tonight.** Both the coding and the quiz streak at risk: one push for each,
      the one not yet pushed today first. Only one at risk: that one at every send hour. Neither:

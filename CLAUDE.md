@@ -22,6 +22,7 @@ Local e2e on a machine with Chrome but no Playwright browsers: `PW_CHANNEL=chrom
 
 ```
 index.html                 shell: header, <main id="view">, loads src/js/theme-boot.js (in <head>) and src/js/main.js
+sw.js                      push-only service worker at the site root (no fetch handler: never caches); manifest.webmanifest = installable app, icons from scripts/design/app-icons.mjs (ADR 0011)
 src/css/app.css            all styles; Atlas design tokens at the top, colours in theme layers: palettes, derived, code themes (docs/DESIGN.md "Themes")
 src/fonts/                 self-hosted Bricolage Grotesque (display), Inter, JetBrains Mono woff2 fonts (README.md, ADR 0009)
 src/brand/                 logo, favicon, social preview (scripts/design/social-preview.mjs); companies/<slug>.webp = company logos (scripts/content/fetch-logos.mjs, rules in logo-pick.mjs, sources in content/company-domains.json)
@@ -58,6 +59,7 @@ src/js/data/company-sets.js practice by company: per-company problem lists, one 
 src/js/data/learning-path.js essential path: 131 problems by tier and topic, easy to hard (-> essential-path.json, same script)
 src/js/data/recommend.js   problem of the day, weak spots from progress
 src/js/data/notifications.js which reminders are due (streak, quiz streak, unfinished, away, restart) and their copy; channel-agnostic (stage F7)
+src/js/data/push-device.js Web Push on this device: support (the iPhone Home Screen case), the reminder clock's geometry (a day face and a night face), the next reminder; auth/push-client.js subscribes and talks to the push function; ui/push-panel.js + ui/clock-dial.js are the #/me controls
 src/js/data/push-plan.js   what a push says at a send hour: order, count, rest day, the user's wall clock on a UTC server (ADR 0011)
 src/js/data/daily.js       daily challenge maths: number, streaks, rolling count, 16-week calendar
 src/js/data/map-layout.js  Problem Map model: topic and subtopic states, lock reasons, tier order, keyboard neighbours, map level URLs (ADR 0010 + amendments); layoutMap draws the social preview

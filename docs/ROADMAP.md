@@ -71,7 +71,7 @@ Scope: every classic topic and every commonly asked company problem, with an eas
 - [ ] `RemoteMentor` behind `/api/mentor` (LLM key server-side, Socratic system prompt already in repo)
 - [ ] Real-time Battle: WebSocket rooms, `RemoteOpponent`, server-side judging
 - [ ] Interview analytics history and trends
-- [~] Notifications (`PLAN.md` F7): the rules, settings, draft edit times, the bell in the header and the streak rest day are done; Web Push (ADR 0011) is under way: the rules and the server are in, the page (service worker, settings, iPhone guide) is next
+- [x] Notifications (`PLAN.md` F7): the rules, settings, draft edit times, the bell in the header, the streak rest day, and Web Push (ADR 0011): the hourly server, the service worker, notifications per device with the hours on a reminder clock (day and night faces), and the iPhone Home Screen guide
 
 ## Open decisions
 
