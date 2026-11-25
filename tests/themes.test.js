@@ -127,13 +127,19 @@ test('boot: set() saves, applies, updates the browser bar and announces; System 
   assert.equal(page.root.dataset.theme, 'light');
   assert.equal(page.api.current(), 'light');
   assert.equal(page.meta.content, '#f5f1ea');
-  assert.equal(page.events.at(-1).type, 'theme:change');
+  // The redraw news first, then the user's choice (ui/theme-quips.js answers that one).
+  assert.deepEqual(page.events.slice(-2).map((e) => e.type), ['theme:change', 'theme:chosen']);
+  assert.deepEqual({ ...page.events.at(-1).detail }, { kind: 'site', from: 'dark', to: 'light' });
 
   page.api.set('system');
   assert.equal(page.root.dataset.theme, 'dark');
+  assert.deepEqual({ ...page.events.at(-1).detail }, { kind: 'site', from: 'light', to: 'system' });
+  const chosen = page.events.filter((e) => e.type === 'theme:chosen').length;
   page.media.matches = true;
   page.media.listeners.forEach((cb) => cb());
   assert.equal(page.root.dataset.theme, 'light', 'the device switched to light');
+  assert.equal(page.events.at(-1).type, 'theme:change');
+  assert.equal(page.events.filter((e) => e.type === 'theme:chosen').length, chosen, 'a device switch is not a choice: no quip');
 });
 
 test('boot: a new choice is announced even when the theme stays (System on a dark device to Dark)', () => {
@@ -141,7 +147,10 @@ test('boot: a new choice is announced even when the theme stays (System on a dar
   const before = page.events.length;
   page.api.set('dark');
   assert.equal(page.root.dataset.theme, 'dark');
-  assert.equal(page.events.length, before + 1, 'the controls showing the choice need the news');
+  const after = page.events.slice(before);
+  assert.equal(after.filter((e) => e.type === 'theme:change').length, 1, 'the controls showing the choice need the news');
+  // Chosen too, but nothing changed on screen, so data/theme-quips.js has nothing to say.
+  assert.deepEqual({ ...after.find((e) => e.type === 'theme:chosen').detail }, { kind: 'site', from: 'dark', to: 'dark' });
 });
 
 test('boot: with storage blocked a choice still holds for the page; another tab\'s choice applies here', () => {
