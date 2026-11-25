@@ -8011,7 +8011,8 @@ body.resizing-y * {
   .map-crumbs a,
   .path-prereqs a,
   .problem-crumb a,
-  .legal a:not(.btn) {
+  .legal a:not(.btn),
+  .switch {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
