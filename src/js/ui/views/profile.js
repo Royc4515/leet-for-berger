@@ -16,6 +16,7 @@ import { siteThemeControl, codeThemeSelect } from '../theme.js';
 import { dayKey, restDayOf, setRestDay } from '../../state/progress.js';
 import { NOTIFICATION_KINDS } from '../../data/notifications.js';
 import { loadNotificationState, saveNotificationState, setKindEnabled, isKindEnabled, NOTIFICATIONS_CHANGED_EVENT } from '../../state/notifications.js';
+import { createPushPanel } from '../push-panel.js';
 import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
 
 const SYNC_TEXT = { idle: '', syncing: 'Syncing your progress...', synced: 'Progress synced to your account', error: 'Sync failed. Your progress is safe on this device and syncs again on your next solve.' };
@@ -273,7 +274,32 @@ export function renderProfile(root, { store }) {
     );
   }
 
-  /** Which reminders the bell in the header shows (stage F7). Every kind starts on. */
+  /**
+   * Notifications on this device and the hours they come at (ADR 0011). Built once, like the
+   * selects above: it keeps its own state across redraws (ui/push-panel.js). Null without accounts.
+   */
+  const pushPanel = createPushPanel({
+    account,
+    restDay: () => restDayOf(store.get()),
+    offKinds: () => {
+      const state = loadNotificationState();
+      return NOTIFICATION_KINDS.filter((kind) => !isKindEnabled(state, kind));
+    },
+    // Reminders already reach a device of this account: its kinds are the ones those devices get.
+    onServerKinds: (off) => {
+      const before = loadNotificationState();
+      const after = NOTIFICATION_KINDS.reduce((s, kind) => setKindEnabled(s, kind, !off.includes(kind)), before);
+      if (NOTIFICATION_KINDS.every((kind) => isKindEnabled(before, kind) === isKindEnabled(after, kind))) return;
+      saveNotificationState(after);
+      dispatchEvent(new CustomEvent(NOTIFICATIONS_CHANGED_EVENT));
+      redraw();
+    },
+  });
+
+  /**
+   * Reminders (stage F7): this device's notifications, then which kinds come, for the header bell
+   * and the notifications alike. Every kind starts on.
+   */
   function remindersSection() {
     const state = loadNotificationState();
     const switches = NOTIFICATION_KINDS.map((kind) => {
@@ -281,14 +307,22 @@ export function renderProfile(root, { store }) {
       input.addEventListener('change', () => {
         saveNotificationState(setKindEnabled(loadNotificationState(), kind, input.checked));
         dispatchEvent(new CustomEvent(NOTIFICATIONS_CHANGED_EVENT));
+        pushPanel?.kindsChanged();
       });
       return h('label.switch', { for: input.id }, input, h('span', {}, REMINDER_LABELS[kind]));
     });
     return section(
       'reminders',
       'Reminders',
-      h('p.hint-text', {}, 'The bell in the header lists what needs you: a streak that ends tonight, the daily quiz, a problem you left. Only while this site is open.'),
-      h('div.profile-switches', {}, switches),
+      h(
+        'p.hint-text',
+        {},
+        pushPanel
+          ? 'A streak that ends tonight, the daily quiz, a problem you left. The bell in the header shows them while the site is open; notifications reach your devices when it is closed.'
+          : 'The bell in the header lists what needs you: a streak that ends tonight, the daily quiz, a problem you left. Only while this site is open.',
+      ),
+      pushPanel?.el,
+      h('div.profile-field.push-kinds', {}, h('h3.push-sub', {}, 'What to remind you about'), h('div.profile-switches', {}, switches)),
     );
   }
 
@@ -379,6 +413,7 @@ export function renderProfile(root, { store }) {
   const offStore = store.subscribe(redraw);
   return () => {
     disposed = true;
+    pushPanel?.destroy();
     themes.abort();
     offAccount();
     offGithub();

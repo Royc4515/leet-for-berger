@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "Leet-For-Berger",
+  "short_name": "Leet Berger",
+  "description": "Practice coding interview problems on a map of 26 topics, with a daily challenge and reminders that keep your streak.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#100f0d",
+  "theme_color": "#100f0d",
+  "icons": [
+    { "src": "src/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "src/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "src/brand/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1493,6 +1493,61 @@ try {
     await ctx.close();
   });
 
+  await check('iPhone in Safari: notifications explain the Home Screen in three steps; the manifest and its icons load', async () => {
+    // Safari in a tab has no Push API; only a site opened from the Home Screen gets one (ADR 0011).
+    const ctx = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1',
+    });
+    const ip = await ctx.newPage();
+    ip.on('console', (m) => m.type() === 'error' && errors.push(`console (iPhone page): ${m.text()}`));
+    ip.on('pageerror', (e) => errors.push(`pageerror (iPhone page): ${e.message}`));
+    await ip.route('**/@supabase/supabase-js@*/+esm', (r) =>
+      r.fulfill({ contentType: 'text/javascript', body: 'export function createClient() { return { auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({}) } }; }' }),
+    );
+    await ip.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await ip.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = 'https://example.supabase.co';
+      window.LFB_SUPABASE_ANON_KEY = 'public-anon-key';
+      delete window.PushManager;
+      delete window.Notification;
+    });
+    await ip.goto(`${BASE}#/me`);
+    await ip.waitForSelector('#push-device-status:has-text("Home Screen")');
+    if (await ip.locator('.push-switch').count()) throw new Error('an iPhone tab shows a switch it cannot honour');
+    const how = ip.locator('.push-how');
+    if ((await how.getAttribute('aria-expanded')) !== 'false' || !(await ip.isHidden('#push-guide'))) throw new Error('the guide must start closed');
+    await how.click();
+    await ip.waitForSelector('#push-guide:not([hidden])');
+    const guide = await ip.evaluate(() => ({
+      steps: [...document.querySelectorAll('.push-step strong')].map((e) => e.textContent),
+      expanded: document.querySelector('.push-how').getAttribute('aria-expanded'),
+      label: document.querySelector('.push-how').textContent,
+      targets: [...document.querySelectorAll('.push-how, .push-guide button')].map((b) => b.getBoundingClientRect().height),
+      appIcon: document.querySelector('.push-step-app')?.naturalWidth ?? 0,
+      overflow: document.documentElement.scrollWidth - innerWidth,
+    }));
+    if (JSON.stringify(guide.steps) !== '["Tap Share","Tap Add to Home Screen","Open Leet Berger from your Home Screen"]' || guide.expanded !== 'true' || guide.label !== 'Hide the steps' || guide.appIcon !== 180 || guide.overflow > 0) throw new Error(`iPhone guide: ${JSON.stringify(guide)}`);
+    if (guide.targets.some((t) => t < 43.5)) throw new Error(`guide buttons under 44px: ${JSON.stringify(guide.targets)}`);
+    if (shotsDir) await ip.locator('#profile-reminders').screenshot({ path: `${shotsDir}/390-iphone-guide.png` });
+    await ip.click('.push-guide button:has-text("Close")');
+    await ip.waitForSelector('#push-guide', { state: 'hidden' });
+    if ((await ip.evaluate(() => document.activeElement?.className)) !== 'btn btn-secondary btn-sm push-how') throw new Error('closing the guide must return focus to its button');
+    // What Add to Home Screen reads: the manifest (standalone, this site) and the icons it names.
+    const shell = await ip.evaluate(async () => {
+      const link = document.querySelector('link[rel="manifest"]');
+      const res = await fetch(link.href);
+      const m = await res.json();
+      const icons = await Promise.all([...m.icons.map((i) => new URL(i.src, link.href).href), document.querySelector('link[rel="apple-touch-icon"]').href].map(async (u) => (await fetch(u)).status));
+      return { type: res.headers.get('content-type'), display: m.display, icons, worker: (await fetch('sw.js')).status };
+    });
+    if (!/manifest\+json/.test(shell.type) || shell.display !== 'standalone' || shell.icons.some((s) => s !== 200) || shell.worker !== 200) throw new Error(`web app shell: ${JSON.stringify(shell)}`);
+    await ctx.close();
+  });
+
   // Its own page: the blocked CDN request is logged as a failed resource, which is the point here.
   await check('without Monaco, TypeScript reports honestly that it needs the editor and nothing crashes', async () => {
     const offline = await browser.newPage();
@@ -1560,12 +1615,48 @@ try {
       }
       return r.fulfill({ contentType: 'application/json', headers: cors, body: linked ? '{"linked":true,"repo":"ada/practice","autoSync":true}' : '{"linked":false,"githubUser":true}' });
     });
+    // A fake push Edge Function (ADR 0011): remembers the account's hours, kinds off and devices.
+    const pushCalls = [];
+    const pushServer = { hours: [16, 20], off: [], timeZone: 'UTC', devices: 0 };
+    await acct.route('https://example.supabase.co/functions/v1/push/**', async (r) => {
+      const req = r.request();
+      const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type' };
+      if (req.method() === 'OPTIONS') return r.fulfill({ status: 204, headers: cors });
+      const route = new URL(req.url()).pathname.replace(/^.*\/push/, '');
+      const body = req.postData() ? JSON.parse(req.postData()) : null;
+      pushCalls.push({ route, method: req.method(), auth: req.headers().authorization ?? null, body });
+      if (route === '/key') return r.fulfill({ headers: cors, contentType: 'application/json', body: '{"publicKey":"BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U"}' });
+      if (route === '/subscribe') pushServer.devices = 1;
+      if (route === '/unsubscribe') pushServer.devices = 0;
+      if (body?.hours) pushServer.hours = body.hours;
+      if (body?.off) pushServer.off = body.off;
+      if (body?.timeZone) pushServer.timeZone = body.timeZone;
+      return r.fulfill({ headers: cors, contentType: 'application/json', body: JSON.stringify(pushServer) });
+    });
     await acct.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
     await acct.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = 'https://example.supabase.co';
       window.LFB_SUPABASE_ANON_KEY = 'public-anon-key';
       window.LFB_GITHUB_APP_SLUG = 'lfb-sync';
+      // Headless Chromium has no push service to subscribe with, and reports notifications as denied
+      // even when granted: a stand-in permission prompt (it says yes) and subscription, kept in
+      // storage so they outlive a reload like real ones. The service worker itself is real (sw.js).
+      Object.defineProperty(Notification, 'permission', { configurable: true, get: () => localStorage.getItem('__e2ePermission') ?? 'default' });
+      Notification.requestPermission = async () => (localStorage.setItem('__e2ePermission', 'granted'), 'granted');
+      const KEY = '__e2eSubscription';
+      const make = () => ({
+        endpoint: 'https://push.example/e2e-device',
+        options: {},
+        toJSON: () => ({ endpoint: 'https://push.example/e2e-device', keys: { p256dh: 'B'.repeat(87), auth: 'a'.repeat(22) } }),
+        unsubscribe: async () => (localStorage.removeItem(KEY), true),
+      });
+      PushManager.prototype.getSubscription = async () => (localStorage.getItem(KEY) ? make() : null);
+      PushManager.prototype.subscribe = async (opts) => {
+        if (!opts.userVisibleOnly || opts.applicationServerKey.length !== 65) throw new Error('bad subscribe options');
+        localStorage.setItem(KEY, '1');
+        return make();
+      };
     });
     await acct.goto(`${BASE}#/`);
     // Signed out and no auth callback: the menu renders from config alone, supabase-js is not fetched yet.
@@ -1824,6 +1915,80 @@ try {
     await acct.waitForSelector('#profile-nickname:has-text("Shown as Countess Ada")');
     if (JSON.stringify(nameCalls) !== '["Ace","","Countess Ada"]') throw new Error(`profile name calls: ${JSON.stringify(nameCalls)}`);
     if (shotsDir) await acct.screenshot({ path: `${shotsDir}/32-profile.png`, fullPage: true });
+    // Notifications on this device (ADR 0011): off, then on with one click; the hours appear with
+    // the default 16:00 and 20:00; a picked hour and a kind turned off reach the account.
+    await acct.waitForSelector('#push-device-status:has-text("Off.")');
+    if (await acct.isVisible('.push-hours')) throw new Error('hours shown before any device has notifications');
+    await acct.click('.push-switch');
+    await acct.waitForSelector('.push-device.is-on');
+    await acct.waitForSelector('#push-device-status:has-text("On.")');
+    const sub = pushCalls.find((c) => c.route === '/subscribe');
+    if (!sub || sub.auth !== 'Bearer jwt' || sub.body.subscription.endpoint !== 'https://push.example/e2e-device' || !sub.body.timeZone || !Array.isArray(sub.body.off)) throw new Error(`subscribe call: ${JSON.stringify(sub)}`);
+    if (!pushCalls.some((c) => c.route === '/key') || pushCalls.findIndex((c) => c.route === '/key') > pushCalls.findIndex((c) => c.route === '/subscribe')) throw new Error(`the key is fetched before subscribing: ${JSON.stringify(pushCalls.map((c) => c.route))}`);
+    await acct.waitForFunction(() => navigator.serviceWorker.controller?.scriptURL.endsWith('/sw.js'), null, { timeout: 10000 }).catch(() => {
+      throw new Error('sw.js did not register and take control');
+    });
+    // The day dial: a hex per send hour on a 24-hour ring (ui/day-dial.js).
+    const knobs = () => acct.evaluate(() => [...document.querySelectorAll('.dial-knob')].map((b) => Number(b.getAttribute('aria-valuenow'))));
+    // Where an hour sits on screen: noon at the top, clockwise, on the middle of the ring.
+    // Mouse clicks do not scroll: the dial is brought into view first.
+    const onRing = async (hour) =>
+      (await acct.locator('.dial').scrollIntoViewIfNeeded()) ??
+      acct.evaluate((hr) => {
+        const box = document.querySelector('.dial').getBoundingClientRect();
+        const a = ((hr - 12) * 15 * Math.PI) / 180;
+        const r = box.width * (117 / 320);
+        return { x: box.left + box.width / 2 + r * Math.sin(a), y: box.top + box.height / 2 - r * Math.cos(a) };
+      }, hour);
+    const hoursAre = (want) => acct.waitForFunction((w) => JSON.stringify([...document.querySelectorAll('.dial-knob')].map((b) => Number(b.getAttribute('aria-valuenow')))) === w, JSON.stringify(want), { timeout: 5000 }).catch(async () => {
+      throw new Error(`dial hours: want ${JSON.stringify(want)}, got ${JSON.stringify(await knobs())}`);
+    });
+    if (JSON.stringify(await knobs()) !== '[16,20]') throw new Error(`default hours: ${JSON.stringify(await knobs())}`);
+    const slider = await acct.evaluate(() => { const b = document.querySelector('.dial-knob'); return { role: b.getAttribute('role'), text: b.getAttribute('aria-valuetext'), name: b.getAttribute('aria-label') }; });
+    if (slider.role !== 'slider' || slider.text !== '16:00' || slider.name !== 'Reminder at 16:00') throw new Error(`dial hex semantics: ${JSON.stringify(slider)}`);
+    await acct.waitForSelector('.dial-next:has-text("Next")');
+    // A tap on the ring at 09:00 adds a reminder there; it is saved to the account.
+    const nine = await onRing(9);
+    await acct.mouse.click(nine.x, nine.y);
+    await hoursAre([9, 16, 20]);
+    await acct.waitForSelector('.push-saved:has-text("Saved")');
+    if (JSON.stringify(pushServer.hours) !== '[9,16,20]') throw new Error(`hours not saved: ${JSON.stringify(pushServer.hours)}`);
+    // Dragged round the ring, the 16:00 hex moves hour by hour to 18:00.
+    const from = await onRing(16);
+    const to = await onRing(18);
+    await acct.mouse.move(from.x, from.y);
+    await acct.mouse.down();
+    await acct.mouse.move((from.x + to.x) / 2 + 6, (from.y + to.y) / 2, { steps: 4 });
+    await acct.mouse.move(to.x, to.y, { steps: 6 });
+    await acct.mouse.up();
+    await hoursAre([9, 18, 20]);
+    // Keyboard: an arrow moves the focused hex an hour; Delete takes one off.
+    await acct.focus('.dial-knob[aria-valuenow="18"]');
+    await acct.keyboard.press('ArrowLeft');
+    await hoursAre([9, 17, 20]);
+    if ((await acct.evaluate(() => document.activeElement?.getAttribute('aria-valuenow'))) !== '17') throw new Error('the moved hex must keep focus');
+    await acct.focus('.dial-knob[aria-valuenow="9"]');
+    await acct.keyboard.press('Delete');
+    await hoursAre([17, 20]);
+    // A tap on a hex picks it; the centre then offers Remove.
+    const seventeen = await onRing(17);
+    await acct.mouse.click(seventeen.x, seventeen.y);
+    await acct.waitForSelector('.dial-selection:not([hidden]) strong:has-text("17:00")');
+    await acct.click('.dial-remove');
+    await hoursAre([20]);
+    await acct.click('.push-add');
+    await hoursAre([16, 20]);
+    // The fake function runs in this test, not the page: wait for its state.
+    const serverHas = async (check) => {
+      for (let i = 0; i < 100 && !check(); i++) await acct.waitForTimeout(50);
+      return check();
+    };
+    await acct.click('label[for="reminder-away"]');
+    if (!(await serverHas(() => JSON.stringify(pushServer.off) === '["away"]'))) throw new Error(`kinds not saved to the account: ${JSON.stringify(pushServer.off)}`);
+    await acct.click('label[for="reminder-away"]');
+    if (!(await serverHas(() => JSON.stringify(pushServer.off) === '[]'))) throw new Error(`kind turned back on not saved: ${JSON.stringify(pushServer.off)}`);
+    if (!(await serverHas(() => JSON.stringify(pushServer.hours) === '[16,20]'))) throw new Error(`dial changes not saved: ${JSON.stringify(pushServer.hours)}`);
+    if (shotsDir) await acct.locator('#profile-reminders').screenshot({ path: `${shotsDir}/33-profile-notifications.png` });
     // Quiz progress rides in the account record: a quiz save on this device schedules a sync, and
     // the upload carries it next to problem progress (with the daily play stored above).
     await acct.evaluate(async () => {
@@ -1872,6 +2037,10 @@ try {
     await acct.click('.account-menu button:has-text("Sign out")');
     await acct.click('dialog.modal button:has-text("Sign out")');
     await acct.waitForSelector('#account button:has-text("Sign in")');
+    // The device's notifications ended with the session: the server was told while it still worked.
+    const gone = pushCalls.find((c) => c.route === '/unsubscribe');
+    if (!gone || gone.auth !== 'Bearer jwt' || gone.body.endpoint !== 'https://push.example/e2e-device') throw new Error(`sign-out did not forget this device: ${JSON.stringify(pushCalls.map((c) => c.route))}`);
+    if (await acct.evaluate(() => localStorage.getItem('__e2eSubscription'))) throw new Error('the browser subscription survived sign-out');
     const after = await stored();
     if (after.progress && Object.keys(after.progress.problems).length) throw new Error(`progress left on the device: ${JSON.stringify(after.progress).slice(0, 120)}`);
     if (after.drafts.length) throw new Error(`drafts left on the device: ${after.drafts}`);

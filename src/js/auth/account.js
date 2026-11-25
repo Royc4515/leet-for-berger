@@ -20,6 +20,9 @@ const QUIZ_EXTRA = {
 // don't touch / pinned like every CDN dependency (CLAUDE.md invariant 8); upgrading is a deliberate task.
 const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm';
 
+/** How long a sign-out waits for its "before" steps (forgetting this device's reminders): never longer. */
+export const LEAVE_WAIT_MS = 4000;
+
 /**
  * The Supabase project ref: the first label of the project host, which supabase-js uses in its
  * storage key (`sb-<ref>-auth-token`).
@@ -110,9 +113,10 @@ export function userInitials(user) {
 }
 
 /**
- * @param {{ store: any, config?: ReturnType<typeof authConfig>, loadClient?: (url: string, key: string) => Promise<any> }} opts
+ * @param {{ store: any, config?: ReturnType<typeof authConfig>, loadClient?: (url: string, key: string) => Promise<any>, leaveWaitMs?: number }} opts
+ *   `leaveWaitMs`: how long a sign-out waits for its before-steps (tests shorten it)
  */
-export function createAccount({ store, config = authConfig(), loadClient = defaultClient }) {
+export function createAccount({ store, config = authConfig(), loadClient = defaultClient, leaveWaitMs = LEAVE_WAIT_MS }) {
   /** @type {AccountState} */
   let state = { status: config.enabled ? 'loading' : 'off', user: null, sync: 'idle', error: null };
   const listeners = new Set();
@@ -124,6 +128,14 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
   let sync = null;
   let clearLocal = () => {};
   let apply = () => {};
+  /** Steps that must run while the session still works, before it ends (beforeSignOut). */
+  const leaving = new Set();
+  let signingOut = false;
+  async function runLeaving() {
+    const all = Promise.allSettled([...leaving].map((fn) => Promise.resolve().then(fn)));
+    // A slow or down service never holds the user in their account: past the wait, they leave anyway.
+    await Promise.race([all, new Promise((r) => setTimeout(r, leaveWaitMs))]);
+  }
 
   let starting = null;
   /** Loads the client once; a later call (the Sign in click) joins the same load, or retries after a failure. */
@@ -189,7 +201,11 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
     apply(data.session);
     // SIGNED_OUT also arrives when another tab signs out; this device must forget the user too.
     client.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' && state.user) clearLocal();
+      if (event === 'SIGNED_OUT' && state.user) {
+        // Signed out in another tab: the session is gone, so the steps do what they can locally.
+        if (!signingOut) runLeaving();
+        clearLocal();
+      }
       apply(session);
     });
   }
@@ -228,6 +244,17 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
     },
     config,
     /**
+     * Runs `fn` before every sign-out, while the session still works (ADR 0011: this device's push
+     * subscription is deleted first, so a shared phone never gets the previous user's reminders).
+     * A failing or slow step never blocks the sign-out (LEAVE_WAIT_MS).
+     * @param {() => Promise<void>|void} fn
+     * @returns {() => void} removes it
+     */
+    beforeSignOut(fn) {
+      leaving.add(fn);
+      return () => leaving.delete(fn);
+    },
+    /**
      * Signs out and removes this user's data from the device (ADR 0006). The latest progress is
      * pushed first; if that fails nothing is cleared and the user stays signed in, so no work is lost.
      * `force` skips the push after the user chose to sign out anyway (offline, service down), so a
@@ -241,7 +268,13 @@ export function createAccount({ store, config = authConfig(), loadClient = defau
         set({ error: 'Could not save your latest progress, so you are still signed in.' });
         return false;
       }
-      await client.auth.signOut();
+      signingOut = true;
+      try {
+        await runLeaving();
+        await client.auth.signOut();
+      } finally {
+        signingOut = false;
+      }
       clearLocal();
       apply({ user: null });
       return true;

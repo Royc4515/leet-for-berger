@@ -251,6 +251,9 @@ const github = createGitHubSync({ account });
 services.account = account;
 services.github = github.available ? github : null;
 mountAccountMenu(document.getElementById('account'), account, services.github);
+// Web Push (ADR 0011): signing out deletes this device's subscription first, so a shared phone never
+// gets the previous user's reminders. The client loads only then, not at startup.
+account.beforeSignOut(() => import('./auth/push-client.js').then((m) => m.forgetThisDevice({ account })));
 // supabase-js (9 CDN requests) loads now only for returning or mid-redirect users; everyone else
 // gets it when they click Sign in.
 account.startIfNeeded();

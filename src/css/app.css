@@ -8032,6 +8032,479 @@ body.resizing-y * {
   justify-items: start;
 }
 
+/* ---------- Notifications on this device (#/me, ADR 0011, ui/push-panel.js) ---------- */
+.push-panel {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.push-sub {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.push-kinds {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--border);
+}
+
+.push-device {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'icon title control' 'icon status control';
+  align-items: center;
+  gap: var(--s-half) var(--s-4);
+  padding: var(--s-4);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: border-color var(--t-base) var(--ease);
+}
+
+.push-device.is-on {
+  border-color: var(--accent-line);
+}
+
+.push-device-icon {
+  grid-area: icon;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--panel-3);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  transition: background-color var(--t-base) var(--ease), color var(--t-base) var(--ease);
+}
+
+.push-device.is-on .push-device-icon {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.push-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.push-device > .switch,
+.push-how {
+  grid-area: control;
+}
+
+.push-device-title {
+  grid-area: title;
+  align-self: end;
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.push-device-status {
+  grid-area: status;
+  align-self: start;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+
+/* The device switch is the section's main control: a size up from the kind switches. */
+.switch-lg input {
+  width: 46px;
+  height: 28px;
+}
+
+.switch-lg input::after {
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+}
+
+.switch-lg input:checked::after {
+  transform: translateX(18px);
+}
+
+.switch input:disabled {
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+/* The iPhone guide: three numbered steps, each with the button it names. */
+.push-guide {
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  background: var(--panel);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-md);
+}
+
+.push-guide-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--fs-lg);
+}
+
+.push-steps {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.push-step {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.push-step-num {
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.push-step-art {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--panel-3);
+  border-radius: var(--r-sm);
+  color: var(--text);
+}
+
+.push-step-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.push-step-app {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-sm);
+}
+
+.push-step-copy {
+  display: grid;
+  gap: var(--s-half);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+
+.push-step-copy strong {
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.push-guide-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+}
+
+/* The hours: the day dial (ui/day-dial.js), with how to use it and the add button beside it. */
+.push-hours {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.push-hours-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+}
+
+.push-hours-line {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.push-saved {
+  margin-inline-start: var(--s-2);
+  color: var(--ok);
+}
+
+.push-hours-body {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-5);
+}
+
+.push-hours-side {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+}
+
+.push-hours-side .hint-text {
+  margin: 0;
+}
+
+/* ---------- The day dial ---------- */
+.dial {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  /* The hexes ride the ring at a radius in cqw, so they stay on it at any size. */
+  container-type: inline-size;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dial-face {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Each hour of the ring; daylight hours glow amber like the sun's path (--light, 0 to 1). */
+.dial-seg {
+  fill: color-mix(in srgb, var(--accent) calc(var(--light) * 42%), var(--panel-3));
+  cursor: pointer;
+  transition: fill var(--t-fast) var(--ease);
+}
+
+/* Night is the darker side of the ring in both themes. */
+.dial-seg.is-night {
+  fill: var(--panel-2);
+}
+
+[data-theme='light'] .dial-seg.is-night {
+  fill: var(--panel-hover);
+}
+
+.dial-seg:hover {
+  fill: var(--panel-hover);
+}
+
+.dial.is-full .dial-seg:not(.is-on) {
+  cursor: not-allowed;
+}
+
+.dial-labels text {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  transition: opacity var(--t-fast) var(--ease);
+}
+
+/* A hex on 12:00 covers the "12" beside it less than it would crowd it: the label steps aside. */
+.dial-labels text.is-covered {
+  opacity: 0;
+}
+
+.dial-sun {
+  fill: none;
+  stroke: var(--accent-text);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.dial-sun circle {
+  fill: var(--accent-soft);
+}
+
+.dial-moon {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.dial-now line {
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.dial-now circle {
+  fill: var(--text);
+}
+
+.dial-center {
+  position: absolute;
+  inset: 30%;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.dial-summary,
+.dial-selection {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-half);
+}
+
+.dial-summary[hidden],
+.dial-selection[hidden] {
+  display: none;
+}
+
+.dial-selection {
+  gap: var(--s-2);
+}
+
+.dial-count {
+  color: var(--text);
+  font-family: var(--display);
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.dial-selection .dial-count {
+  font-size: var(--fs-2xl);
+}
+
+.dial-count-label {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.dial-next {
+  max-width: 13ch;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+}
+
+/* A reminder: a lit hex on the ring, set round the day by --a (degrees from the top). */
+.dial-knob {
+  --r: 36.6cqw;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 48px;
+  margin: -24px 0 0 -22px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: grab;
+  touch-action: none;
+  transform: rotate(var(--a)) translateY(calc(-1 * var(--r))) rotate(calc(-1 * var(--a)));
+  transition: transform var(--t-base) var(--ease-spring);
+}
+
+.dial-knob-hex {
+  position: absolute;
+  /* 28 x 32: one hour of the ring is about 30 px wide, so neighbouring hexes touch, never overlap. */
+  inset: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  clip-path: var(--hex);
+  color: var(--accent-ink);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  transition: transform var(--t-fast) var(--ease-spring), background-color var(--t-fast) var(--ease);
+}
+
+/* The hex behind it: a halo that says "picked" without colour alone (it is also bigger). */
+.dial-knob::before {
+  content: '';
+  position: absolute;
+  inset: 4px 5px;
+  background: var(--accent-line);
+  clip-path: var(--hex);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease-spring);
+}
+
+.dial-knob.is-selected::before,
+.dial-knob.is-dragging::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.dial-knob.is-selected .dial-knob-hex,
+.dial-knob.is-dragging .dial-knob-hex {
+  transform: scale(1.12);
+}
+
+.dial-knob.is-dragging {
+  cursor: grabbing;
+  transition-duration: var(--t-fast);
+}
+
+.dial-knob:focus-visible {
+  outline: none;
+}
+
+.dial-knob:focus-visible::before {
+  opacity: 1;
+  transform: scale(1);
+  background: var(--focus);
+}
+
+/* A new hex rises onto the ring. */
+.dial-knob.is-new .dial-knob-hex {
+  transform: scale(0.4);
+  opacity: 0;
+}
+
+@media (max-width: 640px) {
+  /* Phone: the title and the switch on one line, the status across the card under them. The icon
+     is decoration a phone has no room for; the switch and the lit edge carry the state. */
+  .push-device {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'title control' 'status status';
+    gap: var(--s-2) var(--s-3);
+  }
+
+  .push-device-icon {
+    display: none;
+  }
+
+  .push-device-title {
+    align-self: center;
+  }
+
+  /* iPhone in Safari: "Show me how" under the line that explains it. */
+  .push-device.has-button {
+    grid-template-areas: 'title title' 'status status' 'control control';
+  }
+
+  .push-how {
+    justify-self: start;
+    margin-top: var(--s-1);
+  }
+
+  /* The dial takes the width, the how-to and the add button under it. */
+  .push-hours-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-4);
+  }
+
+  .push-guide {
+    padding: var(--s-4);
+  }
+}
+
 @media (pointer: coarse) {
   .notify-toggle {
     width: 44px;
