@@ -7,7 +7,7 @@
 - Every streak counts with it: the header chip, Problems, the daily card, the Daily page (streak, best streak, quiz streak), the profile, the quiz pages and the reminders. On the rest day itself the chip says "today is your rest day" instead of asking for a solve, and no streak reminder comes.
 - The calendars mark it: a dot in the rest day's hex on the Daily page and in the daily card's week, with "Rest day" in the legend and in each cell's name.
 - The choice is part of your progress record (`restDay: { day, at }`), so it follows your account; the newest choice wins across devices.
-- The daily quiz leaderboard's streak takes it too (the client sends it; `rest` on `/board`, `restDay` on `/submit`), once the daily-quiz function is redeployed; until then that one number counts every day, as before.
+- The daily quiz leaderboard's streak takes it too: the client sends it (`rest` on `/board`, `restDay` on `/submit`), and the daily-quiz function that reads it is deployed (version 4). A client without it sends none and gets every day counted, as before.
 - The Privacy Policy lists the rest day among what an account stores.
 
 ### Added (reminders on the page, stage F7 step 2, owner's request)
