@@ -7,6 +7,10 @@ import { newRepoUrl } from '../auth/github-sync.js';
 import { userInitials } from '../auth/account.js';
 
 const MENU_ID = 'account-panel';
+
+// The sun/moon switch from theme-boot.js. app.css shows it here only on a narrow phone, where the
+// header has no room for it; null if the boot script did not run.
+const themeButton = () => globalThis.lfbTheme?.button?.({ text: true }) ?? null;
 const SYNC_LABEL = { idle: '', syncing: 'Syncing...', synced: 'Progress synced', error: 'Sync failed' };
 
 /**
@@ -148,6 +152,7 @@ export function mountAccountMenu(host, account, github = null) {
         h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => account.signIn('github') }, 'Continue with GitHub'),
         h('p.hint-text', {}, 'Signing in syncs your progress across devices. ', h('a', { href: 'privacy.html' }, 'Privacy Policy')),
         s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null,
+        themeButton(),
         h('a.btn.btn-ghost.btn-sm.account-profile-link', { href: '#/me' }, 'Profile and settings'),
       );
       const toggle = h('button.btn.btn-ghost.btn-sm.account-toggle', { type: 'button', 'aria-controls': MENU_ID, 'aria-expanded': String(open) }, 'Sign in');
@@ -175,6 +180,7 @@ export function mountAccountMenu(host, account, github = null) {
       me,
       ghSection(),
       s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null,
+      themeButton(),
       h('a.btn.btn-ghost.btn-sm.account-profile-link', { href: '#/me' }, 'Profile and settings'),
       h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: confirmSignOut }, 'Sign out'),
     );

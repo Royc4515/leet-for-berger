@@ -322,7 +322,7 @@
   --code-bracket-3: #23735f;
 }
 
-/* Layer 3, code theme Midnight: deep navy, cool and calm for night sessions */
+/* Layer 3, code theme Midnight Berger: deep navy, cool and calm for night sessions */
 [data-code-theme='midnight'] {
   --code-bg: #161b29;
   --code-fg: #d6deeb;
@@ -351,7 +351,7 @@
   --code-bracket-3: #7fdbff;
 }
 
-/* Layer 3, code theme Terminal: green phosphor on black, an old monitor */
+/* Layer 3, code theme Terminal Berger: green phosphor on black, an old monitor */
 [data-code-theme='terminal'] {
   --code-bg: #0b120c;
   --code-fg: #b8f2b8;
@@ -380,7 +380,7 @@
   --code-bracket-3: #f0e68c;
 }
 
-/* Layer 3, code theme High Contrast: pure black and bright colours, for glare, projectors and low vision */
+/* Layer 3, code theme High Contrast Berger: pure black and bright colours, for glare, projectors and low vision */
 [data-code-theme='high-contrast'] {
   --code-bg: #000000;
   --code-fg: #ffffff;
@@ -409,7 +409,7 @@
   --code-bracket-3: #6fdcff;
 }
 
-/* Layer 3, code theme Mint Light: soft sage paper, as easy on the eyes as Berger Light */
+/* Layer 3, code theme Berger Mint: soft sage paper, as easy on the eyes as Berger Light */
 [data-code-theme='mint-light'] {
   --code-bg: #e9f1eb;
   --code-fg: #1c2b23;
@@ -648,6 +648,29 @@ textarea {
   display: flex;
   align-items: center;
   gap: var(--s-2);
+}
+
+/* Sun/moon button (theme-boot.js): the icon is the theme a click switches to. In the header where
+   it has room; on a narrow phone the header keeps its title, and the switch is in the account sheet. */
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+:root[data-theme='light'] .theme-toggle .icon-sun,
+:root:not([data-theme='light']) .theme-toggle .icon-moon,
+.account-menu .theme-toggle {
+  display: none;
+}
+
+@media (max-width: 420px) {
+  .header-right > .theme-toggle {
+    display: none;
+  }
+
+  .account-menu .theme-toggle {
+    display: inline-flex;
+  }
 }
 
 .palette-trigger {
