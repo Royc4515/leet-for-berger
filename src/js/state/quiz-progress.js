@@ -106,13 +106,14 @@ export function topicProgress(p, bank) {
 
 /**
  * Consecutive days with a finished daily quiz, ending today (or yesterday, while today's is
- * still open), the same rule as the solve streak.
+ * still open), the same rule as the solve streak, rest day included.
  * @param {QuizProgress} p
  * @param {Date} now
+ * @param {number|null} [restDay] weekday, 0 Sunday to 6 Saturday; null: every day counts
  * @returns {number}
  */
-export function dailyQuizStreak(p, now) {
-  return computeStreak(Object.keys(p.daily), now);
+export function dailyQuizStreak(p, now, restDay = null) {
+  return computeStreak(Object.keys(p.daily), now, restDay);
 }
 
 /** @returns {QuizProgress} */

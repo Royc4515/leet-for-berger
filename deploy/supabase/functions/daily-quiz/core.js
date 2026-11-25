@@ -156,16 +156,21 @@ export function cleanName(raw) {
 
 /**
  * Consecutive played days ending on `day`, or on the day before while `day` is not played yet.
+ * A rest day never breaks it: playing on it counts, a day off is skipped. The same rule as the
+ * page's computeStreak (src/js/state/progress.js); tests/rest-day.test.js checks they agree.
  * @param {string[]} days played days, any order
  * @param {string} day
+ * @param {number|null} [restDay] weekday, 0 Sunday to 6 Saturday; null: every day counts
  */
-export function streakOn(days, day) {
+export function streakOn(days, day, restDay = null) {
   const set = new Set(days);
   let n = dayNumber(day);
   if (!set.has(day)) n -= 1;
   let streak = 0;
-  while (set.has(dayFromNumber(n))) {
-    streak++;
+  // Ends: a single weekday rests, so every week holds a day that is neither played nor rest.
+  for (;;) {
+    if (set.has(dayFromNumber(n))) streak++;
+    else if ((n + 4) % 7 !== restDay) break; // 1970-01-01 was a Thursday; 0 = Sunday, as in weekStart
     n--;
   }
   return streak;

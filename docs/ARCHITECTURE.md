@@ -62,7 +62,7 @@ Adding a language = a worker (or remote runner) implementing the protocol in `wo
 
 ## State
 
-- `state/progress.js`: pure reducers (`recordSubmission`, `markRevealed`, `computeStreak`, `stats`) + a tiny observable store persisted to `localStorage` key `lfb:progress:v1`. Versioned: an unknown version resets instead of crashing.
+- `state/progress.js`: pure reducers (`recordSubmission`, `markRevealed`, `computeStreak`, `stats`) + a tiny observable store persisted to `localStorage` key `lfb:progress:v1`. Versioned: an unknown version resets instead of crashing. `computeStreak` takes an optional rest day (a weekday that never breaks a streak; `data/daily.js` `DEFAULT_REST_DAY` is Saturday), mirrored by the daily-quiz server's `streakOn`.
 - `state/drafts.js`: per-problem, per-language code drafts in separate keys so autosave never rewrites the progress blob. Each draft has an edit time (`lfb:draft-at:v1:*`) that moves only when the code changes; code equal to the starter is not stored, so a problem that was only opened has no draft.
 - `data/notifications.js` + `state/notifications.js` (stage F7): which reminders are due from progress, quiz days and draft edits (`dueNotifications(facts, now, prefs)`), their copy, and the user's settings per kind and dismissed reminders (`lfb:notifications:v1`, cleared on sign-out). Channel-agnostic: the page and, later, Web Push ask the same rules.
 - Sessions (interview, battle) keep drafts in memory so a timed attempt never starts from practice code.

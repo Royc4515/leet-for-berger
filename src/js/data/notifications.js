@@ -4,8 +4,9 @@
  * the same on the page and on the phone; a channel decides only how and how often it delivers.
  *
  * Rules (thresholds below, each with its reason):
- * - streak: the coding streak is alive from yesterday and nothing is accepted today.
- * - quiz-streak: the daily quiz was played yesterday and not yet today.
+ * - streak: the coding streak is alive (through yesterday, or through the rest day before it) and
+ *   nothing is accepted today. Never on the rest day itself: nothing ends that night.
+ * - quiz-streak: the same for the daily quiz.
  * - unfinished: the most recently touched problem that is not solved, last submitted or edited
  *   UNFINISHED_MIN_DAYS to UNFINISHED_MAX_DAYS days ago.
  * - away: nothing done for AWAY_DAYS days or more. It carries the problem to resume and replaces
@@ -109,26 +110,24 @@ function lastActiveDay(facts, touched) {
  * The reminders due now, most pressing first (urgent first, then NOTIFICATION_KINDS order).
  * @param {Facts} facts
  * @param {Date} now
- * @param {{ settings?: Partial<Record<NotificationKind, boolean>>, dismissed?: Record<string, string> }} [prefs]
+ * @param {{ settings?: Partial<Record<NotificationKind, boolean>>, dismissed?: Record<string, string>, restDay?: number|null }} [prefs]
  *   `settings`: a kind set to false is off (absent means on); `dismissed`: keys the user closed
- *   (state/notifications.js)
+ *   (state/notifications.js); `restDay`: the user's streak rest day (data/daily.js DEFAULT_REST_DAY)
  * @returns {Notification[]}
  */
-export function dueNotifications(facts, now, { settings = {}, dismissed = {} } = {}) {
+export function dueNotifications(facts, now, { settings = {}, dismissed = {}, restDay = null } = {}) {
   const today = dayKey(now);
-  const yesterday = dayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
   const msLeft = msUntilNextDaily(now);
   const urgent = msLeft <= STREAK_URGENT_MS;
+  const restToday = now.getDay() === restDay;
   const out = [];
 
-  const coding = new Set(facts.activeDays ?? []);
-  if (!coding.has(today) && coding.has(yesterday)) {
-    out.push({ kind: 'streak', key: `streak:${today}`, urgent, data: { streak: computeStreak([...coding], now), msLeft } });
-  }
-  const quiz = new Set(facts.quizDays ?? []);
-  if (!quiz.has(today) && quiz.has(yesterday)) {
-    out.push({ kind: 'quiz-streak', key: `quiz-streak:${today}`, urgent, data: { streak: computeStreak([...quiz], now), msLeft } });
-  }
+  // Today not done yet, so a streak above 0 is the one that ends at midnight.
+  const atRisk = (days) => (restToday || days.includes(today) ? 0 : computeStreak(days, now, restDay));
+  const coding = atRisk(facts.activeDays ?? []);
+  if (coding > 0) out.push({ kind: 'streak', key: `streak:${today}`, urgent, data: { streak: coding, msLeft } });
+  const quiz = atRisk(facts.quizDays ?? []);
+  if (quiz > 0) out.push({ kind: 'quiz-streak', key: `quiz-streak:${today}`, urgent, data: { streak: quiz, msLeft } });
 
   const touched = touches(facts);
   const last = lastActiveDay(facts, touched);
