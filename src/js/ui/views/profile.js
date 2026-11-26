@@ -3,7 +3,7 @@
  * setting in one place: the leaderboard nickname, the themes, the quiz language, the page guides,
  * the reminders, GitHub sync, signing out and your data. Works signed out too, for the progress kept in this browser.
  */
-import { h, mount, segmented, confirmDialog, toast, tp, siteLang } from '../dom.js';
+import { h, mount, segmented, confirmDialog, toast, tp, siteLang, pageLang } from '../dom.js';
 import { siteFooter } from '../footer.js';
 import { services } from '../../auth/services.js';
 import { userInitials } from '../../auth/account.js';
@@ -124,8 +124,8 @@ export function renderProfile(root, { store }) {
   function progressSection(signedIn) {
     const n = profileNumbers({ progress: store.get(), quiz: loadQuizProgress(), now: new Date() });
     const last = readLast();
-    const interview = formatLastInterview(last.interview);
-    const battle = formatLastBattle(last.battle);
+    const interview = formatLastInterview(last.interview, pageLang());
+    const battle = formatLastBattle(last.battle, pageLang());
     const cell = (value, label) => h('div.stat-cell', {}, h('div.stat-value', {}, value), h('div.stat-label', {}, label));
     const days = (d) => tp(`${d} ${d === 1 ? 'day' : 'days'}`, d === 1 ? 'יום אחד' : `${d} ימים`);
     return section(

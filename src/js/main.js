@@ -62,11 +62,11 @@ const routes = [
   [/^#\/companies\/([\w-]+)$/, async (_, [, slug]) => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompany(root, { store, slug }); }, 'companies', () => tr('Companies', 'חברות'), true],
   [/^#\/modes$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderModesHub(root); }, 'modes', () => tr('Modes', 'אימונים'), true],
   [/^#\/interview$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderInterview(root, { store }); }, 'modes', () => tr('Interview', 'ראיון'), true],
-  [/^#\/quiz$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizHub(root); }, 'modes', () => tr('Quiz', 'חידון')],
-  [/^#\/quiz\/board$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizBoard(root); }, 'modes', () => tr('Leaderboard', 'טבלת המובילים')],
-  [/^#\/quiz\/daily$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderDailyQuiz(root); }, 'modes', () => tr('Daily quiz', 'החידון היומי')],
+  [/^#\/quiz$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizHub(root); }, 'modes', () => tr('Quiz', 'חידון'), true],
+  [/^#\/quiz\/board$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizBoard(root); }, 'modes', () => tr('Leaderboard', 'טבלת המובילים'), true],
+  [/^#\/quiz\/daily$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderDailyQuiz(root); }, 'modes', () => tr('Daily quiz', 'החידון היומי'), true],
   [/^#\/battle$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderBattle(root, { store }); }, 'modes', () => tr('1v1 Battle', 'קרב 1 על 1'), true],
-  [/^#\/me$/, async () => { const m = await import('./ui/views/profile.js'); return (root) => m.renderProfile(root, { store }); }, null, () => tr('Profile', 'פרופיל')],
+  [/^#\/me$/, async () => { const m = await import('./ui/views/profile.js'); return (root) => m.renderProfile(root, { store }); }, null, () => tr('Profile', 'פרופיל'), true],
 ];
 
 /** The workspace view and the problem module load in parallel (ADR 0008). */

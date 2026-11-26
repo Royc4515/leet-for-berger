@@ -350,3 +350,14 @@ test('beforeSignOut: a sign-out in another tab runs the steps too (locally: the 
   assert.deepEqual(log, ['forget device']);
   assert.equal(acc.get().status, 'signed-out');
 });
+
+test('describeNext and describeHours in Hebrew; English unchanged', () => {
+  assert.equal(describeNext({ hour: 20, days: 0 }, 'he'), 'הבאה ב-20:00');
+  assert.equal(describeNext({ hour: 9, days: 1 }, 'he'), 'הבאה מחר ב-09:00');
+  assert.equal(describeNext({ hour: 16, days: 2, weekday: 'Sunday' }, 'he'), 'הבאה ביום ראשון ב-16:00');
+  assert.equal(describeHours([16], 'he'), 'לכל היותר אחת ביום, ב-16:00');
+  assert.equal(describeHours([9, 16, 20], 'he'), 'לכל היותר 3 ביום, ב-09:00, 16:00 ו-20:00');
+  assert.equal(describeHours([], 'he'), 'אין התראות. כדי לקבל אותן שוב, צריך להוסיף שעה.');
+  assert.equal(describeNext({ hour: 20, days: 0 }), 'Next at 20:00');
+  assert.equal(describeHours([]), 'No notifications. Add an hour to get them again.');
+});

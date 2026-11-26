@@ -3154,6 +3154,8 @@ try {
       ['#/modes', '.mode-card', 'אימונים', '44-he-modes'],
       ['#/interview', '.setup-card', null, '44-he-interview-setup'],
       ['#/battle', '.pick-row', null, '44-he-battle-setup'],
+      ['#/quiz', '.quiz-topic', null, '44-he-quiz'],
+      ['#/me', '.profile-section-title', null, '44-he-profile'],
     ]) {
       await hp.goto(`${BASE}${hash}`);
       await hp.waitForSelector(wait, { timeout: 30000 });
