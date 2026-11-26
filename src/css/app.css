@@ -2632,6 +2632,7 @@ body.lockdown .toast-host {
 }
 
 .map-label.is-tier {
+  width: max-content;
   color: var(--muted);
   font-family: var(--mono);
   font-weight: 600;
@@ -9793,6 +9794,19 @@ body.resizing-y * {
 [dir='rtl'] .extra-card:not([open]) > summary::before,
 [dir='rtl'] .path-topic-toggle:not([aria-expanded='true']) .path-chevron {
   transform: rotate(135deg);
+}
+
+[dir='rtl'] .map-crumbs li + li::before {
+  content: '\2039';
+}
+
+[dir='rtl'] .map-tip {
+  direction: rtl;
+  text-align: start;
+}
+
+[dir='rtl'] .map-label.is-tier {
+  direction: rtl;
 }
 
 /* An English problem title inside a Hebrew page ("1. Two Sum") takes its direction from its own

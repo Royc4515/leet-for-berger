@@ -26,12 +26,12 @@
  */
 import { shareButton } from '../share.js';
 import { mapShare } from '../../data/share.js';
-import { h, mount, difficulty, segmented, stateBlock, loadingState, companyMark } from '../dom.js';
+import { h, mount, difficulty, segmented, stateBlock, loadingState, companyMark, tp, pageLang } from '../dom.js';
 import { siteFooter } from '../footer.js';
 import { availableEntries, catalogEntry } from '../../problems/index.js';
 import { TOPICS } from '../../data/taxonomy.js';
-import { TIER_TITLES, pathProgress, conceptLabel } from '../../data/learning-path.js';
-import { topicStates, conceptStates, neighbours, problemStatus, parseMapLevel, mapLevelHash, parentLevel, READY_SOLVES } from '../../data/map-layout.js';
+import { TIER_TITLES, TIER_TITLES_HE, pathProgress, conceptLabel } from '../../data/learning-path.js';
+import { topicStates, conceptStates, neighbours, problemStatus, parseMapLevel, mapLevelHash, parentLevel, READY_SOLVES, lockReason, topicStateText } from '../../data/map-layout.js';
 import { WORLD, layoutWorld, fitCamera, zoomAround, clampCamera, flightPath, lodOf, placeLabels, worldToScreen, hexBox, LOD_SUBTOPICS, LOD_PROBLEMS } from '../../data/map-world.js';
 import { loadPath } from '../../data/path-loader.js';
 import { monogram } from '../../data/company-sets.js';
@@ -42,11 +42,24 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const VIEW_KEY = 'lfb:map-view';
 /** Tier labels short enough for a map column; the full names are on the Path page. */
 const TIER_SHORT = ['Vocabulary', 'First patterns', 'Built on patterns', 'Core structures', 'Deeper structures', 'Advanced'];
+const TIER_SHORT_HE = ['אוצר מילים', 'דפוסים ראשונים', 'דפוסים מתקדמים', 'מבני נתונים', 'מבנים מורכבים', 'מתקדם'];
 const STATE_WORD = { locked: 'Locked', open: 'Open', started: 'In progress', mastered: 'Mastered' };
+const STATE_WORD_HE = { locked: 'נעול', open: 'פתוח', started: 'בתהליך', mastered: 'הושלם' };
 const STATUS_WORD = { new: 'Not started', attempted: 'Tried', solved: 'Solved', assisted: 'Solved with help' };
+const STATUS_WORD_HE = { new: 'עוד לא התחלת', attempted: 'ניסית', solved: 'נפתרה', assisted: 'נפתרה עם עזרה' };
 const CONCEPT_WORD = { new: 'Not started', started: 'In progress', done: 'Done' };
+const CONCEPT_WORD_HE = { new: 'עוד לא התחלת', started: 'בתהליך', done: 'הושלם' };
 const CONCEPT_HEX = { new: 'new', started: 't-started', done: 'solved' };
 const TOP = { topic: null, concept: null, problem: null };
+const stateWord = (k) => tp(STATE_WORD, STATE_WORD_HE)[k];
+const statusWord = (k) => tp(STATUS_WORD, STATUS_WORD_HE)[k];
+const conceptWord = (k) => tp(CONCEPT_WORD, CONCEPT_WORD_HE)[k];
+const tierTitle = (i) => tp(TIER_TITLES, TIER_TITLES_HE)[i] ?? '';
+const tierShort = (i) => tp(TIER_SHORT, TIER_SHORT_HE)[i] ?? '';
+const problemsHe = (n) => (n === 1 ? 'בעיה אחת' : `${n} בעיות`);
+const subtopicsHe = (n) => (n === 1 ? 'תת-נושא אחד' : `${n} תתי-נושאים`);
+/** Isolates an English name inside a Hebrew sentence so punctuation never scrambles. */
+const iso = (s) => `\u2066${s}\u2069`;
 /** Shorter topic names for when the full one does not fit its district at this zoom. */
 const SHORT = [
   ['Dynamic Programming', 'DP'],
@@ -121,7 +134,7 @@ export function renderMap(root, { store, parts = [] }) {
   let disposed = false;
   let api = null;
   let pending = parts;
-  mount(root, h('div.page.page-wide', {}, loadingState({ label: 'Loading the map...' })));
+  mount(root, h('div.page.page-wide', {}, loadingState({ label: tp('Loading the map...', 'טוען את המפה…') })));
 
   Promise.all([loadProblemTopics(), loadPath()]).then(([placed, path]) => {
     if (disposed) return;
@@ -131,7 +144,13 @@ export function renderMap(root, { store, parts = [] }) {
         h(
           'div.page.page-narrow',
           {},
-          stateBlock({ title: 'Could not load the map', body: 'The map data did not load. Check your connection and reload.', kind: 'error', headingTag: 'h1', action: { label: 'Reload', onClick: () => location.reload() } }),
+          stateBlock({
+            title: tp('Could not load the map', 'לא הצלחנו לטעון את המפה'),
+            body: tp('The map data did not load. Check your connection and reload.', 'נתוני המפה לא נטענו. כדאי לבדוק את החיבור ולטעון מחדש.'),
+            kind: 'error',
+            headingTag: 'h1',
+            action: { label: tp('Reload', 'לטעון מחדש'), onClick: () => location.reload() },
+          }),
           siteFooter(),
         ),
       );
@@ -230,10 +249,10 @@ function mountMap(root, { store, placed, path, parts }) {
   /* ---------- Static frame ---------- */
   const summary = h('p.page-sub.map-summary');
   const viewToggle = segmented({
-    label: 'Show as',
+    label: tp('Show as', 'תצוגה'),
     options: [
-      { value: 'map', label: 'Map' },
-      { value: 'list', label: 'List' },
+      { value: 'map', label: tp('Map', 'מפה') },
+      { value: 'list', label: tp('List', 'רשימה') },
     ],
     value: view,
     onChange: (v) => {
@@ -244,11 +263,11 @@ function mountMap(root, { store, placed, path, parts }) {
   });
   viewToggle.classList.add('map-view-toggle');
   const lensControl = segmented({
-    label: 'Colour hexes by',
+    label: tp('Colour hexes by', 'צבע משושים לפי'),
     options: [
-      { value: 'status', label: 'Status' },
-      { value: 'difficulty', label: 'Difficulty' },
-      { value: 'company', label: 'Company' },
+      { value: 'status', label: tp('Status', 'מצב') },
+      { value: 'difficulty', label: tp('Difficulty', 'רמת קושי') },
+      { value: 'company', label: tp('Company', 'חברה') },
     ],
     value: lens,
     onChange: (v) => {
@@ -259,24 +278,24 @@ function mountMap(root, { store, placed, path, parts }) {
       paintLens();
     },
   });
-  const companySelect = h('select.select.map-company', { 'aria-label': 'Company', hidden: true }, h('option', { value: '' }, 'Loading companies...'));
-  const toolbar = h('div.map-toolbar', {}, h('div.map-lens', { role: 'group', 'aria-label': 'Map lens' }, lensControl, companySelect), viewToggle);
+  const companySelect = h('select.select.map-company', { 'aria-label': tp('Company', 'חברה'), hidden: true }, h('option', { value: '' }, tp('Loading companies...', 'טוען חברות…')));
+  const toolbar = h('div.map-toolbar', {}, h('div.map-lens', { role: 'group', 'aria-label': tp('Map lens', 'תצוגת צבעים') }, lensControl, companySelect), viewToggle);
   const body = h('div.map-body');
   const legend = h(
     'ul.map-legend',
-    { 'aria-label': 'Legend' },
-    h('li', {}, h('span.hexmark.solved', { 'aria-hidden': 'true' }), 'Solved'),
-    h('li', {}, h('span.hexmark.assisted', { 'aria-hidden': 'true' }), 'Solved with help'),
-    h('li', {}, h('span.hexmark.attempted', { 'aria-hidden': 'true' }), 'Tried, not solved yet'),
-    h('li', {}, h('span.hexmark', { 'aria-hidden': 'true' }), 'Not started'),
-    h('li', {}, h('span.hexmark.next', { 'aria-hidden': 'true' }), 'Your next problem'),
-    h('li', {}, h('span.legend-path', { 'aria-hidden': 'true' }), 'On the learning path'),
-    h('li', {}, h('span.legend-lock', { 'aria-hidden': 'true' }), `Locked: solve ${READY_SOLVES} in each topic before it`),
+    { 'aria-label': tp('Legend', 'מקרא') },
+    h('li', {}, h('span.hexmark.solved', { 'aria-hidden': 'true' }), tp('Solved', 'נפתרה')),
+    h('li', {}, h('span.hexmark.assisted', { 'aria-hidden': 'true' }), tp('Solved with help', 'נפתרה עם עזרה')),
+    h('li', {}, h('span.hexmark.attempted', { 'aria-hidden': 'true' }), tp('Tried, not solved yet', 'ניסית, עוד לא נפתרה')),
+    h('li', {}, h('span.hexmark', { 'aria-hidden': 'true' }), tp('Not started', 'עוד לא התחלת')),
+    h('li', {}, h('span.hexmark.next', { 'aria-hidden': 'true' }), tp('Your next problem', 'הבעיה הבאה שלך')),
+    h('li', {}, h('span.legend-path', { 'aria-hidden': 'true' }), tp('On the learning path', 'במסלול הלמידה')),
+    h('li', {}, h('span.legend-lock', { 'aria-hidden': 'true' }), tp(`Locked: solve ${READY_SOLVES} in each topic before it`, `נעול: יש לפתור ${READY_SOLVES} בכל נושא קודם`)),
   );
   const page = h(
     'div.page.page-wide.map-page',
     {},
-    h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, `${TOPICS.length} topics · ${ids.length} problems`), h('h1', {}, 'Map'), summary), toolbar),
+    h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, tp(`${TOPICS.length} topics · ${ids.length} problems`, `${TOPICS.length} נושאים · ${ids.length} בעיות`)), h('h1', {}, tp('Map', 'מפה')), summary), toolbar),
     body,
     legend,
     siteFooter(),
@@ -294,13 +313,13 @@ function mountMap(root, { store, placed, path, parts }) {
     companiesReady ??= Promise.all([loadSets(), loadLogoManifest()]).then(([sets, logos]) => {
       logoManifest = logos;
       if (!sets) {
-        mount(companySelect, h('option', { value: '' }, 'Companies did not load'));
+        mount(companySelect, h('option', { value: '' }, tp('Companies did not load', 'החברות לא נטענו')));
         return null;
       }
       const options = sets.companies
         .map((c) => ({ name: c.name, slug: c.slug, aliases: c.aliases.map((a) => a.slug), ids: new Set(c.rows.filter((r) => r[3] !== null).map((r) => sets.problems[r[3]].contentId).filter((id) => placed[id])) }))
         .filter((c) => c.ids.size);
-      mount(companySelect, h('option', { value: '' }, 'Pick a company'), options.map((c) => h('option', { value: c.slug }, c.name)));
+      mount(companySelect, h('option', { value: '' }, tp('Pick a company', 'בחירת חברה')), options.map((c) => h('option', { value: c.slug }, c.name)));
       if (company) companySelect.value = company.slug;
       companySelect.onchange = () => {
         company = options.find((x) => x.slug === companySelect.value) ?? null;
@@ -345,13 +364,18 @@ function mountMap(root, { store, placed, path, parts }) {
       'div.brief-company',
       {},
       companyMark({ letters: monogram(company.name), logo: companyLogoByName(logoManifest, company.name), tile: true, size: 'sm' }),
-      h('div.brief-company-text', {}, h('strong', {}, company.name), h('span.hint-text', {}, `${company.ids.size} problem${company.ids.size === 1 ? '' : 's'} in ${topics} topic${topics === 1 ? '' : 's'}`)),
-      h('a.btn-link.brief-company-set', { href: `#/companies/${company.slug}`, 'aria-label': `${company.name} practice set` }, 'Practice set'),
+      h(
+        'div.brief-company-text',
+        {},
+        h('strong', {}, company.name),
+        h('span.hint-text', {}, tp(`${company.ids.size} problem${company.ids.size === 1 ? '' : 's'} in ${topics} topic${topics === 1 ? '' : 's'}`, `${problemsHe(company.ids.size)} ${topics === 1 ? 'בנושא אחד' : `ב-${topics} נושאים`}`)),
+      ),
+      h('a.btn-link.brief-company-set', { href: `#/companies/${company.slug}`, 'aria-label': tp(`${company.name} practice set`, `סט התרגול של ${iso(company.name)}`) }, tp('Practice set', 'לסט התרגול')),
     );
   }
 
   /* ---------- Canvas: the world, its labels, the controls ---------- */
-  const crumbs = h('nav.map-crumbs', { 'aria-label': 'Map levels' });
+  const crumbs = h('nav.map-crumbs', { 'aria-label': tp('Map levels', 'רמות המפה') });
   // The camera: one SVG group whose transform is the only thing a move changes.
   const camG = s('g', { class: 'map-cam' });
   // Names: a clipping layer, and inside it one layer the camera's pan moves as a whole (a
@@ -366,13 +390,13 @@ function mountMap(root, { store, placed, path, parts }) {
   };
   const controls = h(
     'div.map-controls',
-    { role: 'group', 'aria-label': 'Zoom' },
-    ctl('Zoom in', '+', () => zoomBy(1.6), '+'),
-    ctl('Zoom out', '−', () => zoomBy(1 / 1.6), '-'),
-    ctl('Show all', fitIcon(), () => (level.topic ? go(TOP) : fly(homeCamera())), '0'),
+    { role: 'group', 'aria-label': tp('Zoom', 'זום') },
+    ctl(tp('Zoom in', 'להגדיל'), '+', () => zoomBy(1.6), '+'),
+    ctl(tp('Zoom out', 'להקטין'), '−', () => zoomBy(1 / 1.6), '-'),
+    ctl(tp('Show all', 'להציג את הכול'), fitIcon(), () => (level.topic ? go(TOP) : fly(homeCamera())), '0'),
   );
   const canvas = h('div.map-canvas', {}, labelClip, controls, tooltip);
-  const brief = h('aside.map-brief', { 'aria-live': 'polite', 'aria-label': 'Map panel' });
+  const brief = h('aside.map-brief', { 'aria-live': 'polite', 'aria-label': tp('Map panel', 'חלונית המפה') });
   const main = h('div.map-main', {}, crumbs, canvas);
   const layout = h('div.map-layout', {}, main, brief);
 
@@ -412,7 +436,18 @@ function mountMap(root, { store, placed, path, parts }) {
     camG.append(s('g', { class: 'bands', 'aria-hidden': 'true' }, bands), s('g', { class: 'roads', 'aria-hidden': 'true' }, roads), s('g', { class: 'districts' }, districts), nextRing);
     // The SVG is the canvas's size; the world moves inside it. A transform inside the SVG keeps
     // strokes non-scaling (app.css) and changes one attribute per frame, no style recalculation.
-    svg = s('svg', { class: 'map-svg', role: 'group', 'aria-label': `Problem map: ${TOPICS.length} topics in ${W.bands.length} tiers. Arrow keys move, Enter goes closer, Escape goes back out, plus and minus zoom.` }, camG);
+    svg = s(
+      'svg',
+      {
+        class: 'map-svg',
+        role: 'group',
+        'aria-label': tp(
+          `Problem map: ${TOPICS.length} topics in ${W.bands.length} tiers. Arrow keys move, Enter goes closer, Escape goes back out, plus and minus zoom.`,
+          `מפת הבעיות: ${TOPICS.length} נושאים ב-${W.bands.length} שלבים. מקשי החצים מזיזים, Enter מתקרב, Escape חוזר אחורה, פלוס ומינוס משנים זום.`,
+        ),
+      },
+      camG,
+    );
     canvas.prepend(svg);
   }
 
@@ -456,8 +491,10 @@ function mountMap(root, { store, placed, path, parts }) {
     canvas.dataset.lens = lens;
     canvas.classList.toggle('has-company', Boolean(company));
     hexEl.forEach((p, pid) => p.classList.toggle('in-company', Boolean(company?.ids.has(pid))));
-    if (lens === 'company' && company) summary.textContent = `${company.name}: ${[...company.ids].filter((id) => placed[id] && ids.includes(id)).length} of its problems are on the site. Highlighted below.`;
-    else renderSummary();
+    if (lens === 'company' && company) {
+      const count = [...company.ids].filter((id) => placed[id] && ids.includes(id)).length;
+      summary.textContent = tp(`${company.name}: ${count} of its problems are on the site. Highlighted below.`, `${iso(company.name)}: ${count} מהבעיות שלה באתר, מודגשות למטה.`);
+    } else renderSummary();
   }
 
   function markChain(id, cls) {
@@ -517,20 +554,35 @@ function mountMap(root, { store, placed, path, parts }) {
   }
 
   function accessibleName(key) {
+    const lang = pageLang();
     if (distEl.has(key)) {
       const st = states.get(key);
       const next = nextProblem();
-      return `${st.title}. ${STATE_WORD[st.state]}. ${st.solved} of ${st.total} solved.${st.state === 'locked' ? ` Opens after ${st.blockedBy.map((b) => b.title).join(' and ')}.` : ''}${next && placed[next.id]?.topic === key ? ' Your next problem is here.' : ''} Enter goes closer.`;
+      const locked = st.state === 'locked' ? ` ${lockReason(st.blockedBy, { detail: 'names', lang })}` : '';
+      const here = next && placed[next.id]?.topic === key;
+      return tp(
+        `${st.title}. ${STATE_WORD[st.state]}. ${st.solved} of ${st.total} solved.${locked}${here ? ' Your next problem is here.' : ''} Enter goes closer.`,
+        `${iso(st.title)}. ${STATE_WORD_HE[st.state]}. ${st.solved} מתוך ${st.total} נפתרו.${locked}${here ? ' הבעיה הבאה שלך כאן.' : ''} Enter מתקרב.`,
+      );
     }
     if (blockEl.has(key)) {
       const b = blockOf.get(key);
       const cs = concepts(b.topic);
       const c = cs.find((x) => x.id === b.concept);
-      if (!c) return `Other problems in ${states.get(b.topic).title}. Enter goes closer.`;
-      return `${c.title}. Subtopic ${b.order + 1} of ${cs.length}. ${CONCEPT_WORD[c.state]}, ${c.solved} of ${c.total} solved. Enter goes closer.`;
+      if (!c) return tp(`Other problems in ${states.get(b.topic).title}. Enter goes closer.`, `בעיות נוספות ב-${iso(states.get(b.topic).title)}. Enter מתקרב.`);
+      return tp(
+        `${c.title}. Subtopic ${b.order + 1} of ${cs.length}. ${CONCEPT_WORD[c.state]}, ${c.solved} of ${c.total} solved. Enter goes closer.`,
+        `${iso(c.title)}. תת-נושא ${b.order + 1} מתוך ${cs.length}. ${CONCEPT_WORD_HE[c.state]}, ${c.solved} מתוך ${c.total} נפתרו. Enter מתקרב.`,
+      );
     }
     const e = catalogEntry(key);
-    return `${e?.title ?? key}. ${e?.difficulty ?? ''}. ${STATUS_WORD[statusOf(key)]}.${key === level.problem ? ' Picked.' : ' Enter picks it.'}`;
+    const title = e?.title ?? key;
+    const diff = e?.difficulty ?? '';
+    const status = statusOf(key);
+    return tp(
+      `${title}. ${diff}. ${STATUS_WORD[status]}.${key === level.problem ? ' Picked.' : ' Enter picks it.'}`,
+      `${iso(title)}. ${diff}. ${STATUS_WORD_HE[status]}.${key === level.problem ? ' נבחרה.' : ' Enter לבחירה.'}`,
+    );
   }
 
   /* ---------- Camera ---------- */
@@ -702,7 +754,7 @@ function mountMap(root, { store, placed, path, parts }) {
     if (later.length) prime(later.splice(0));
   };
   function primeAll() {
-    const items = W.bands.map((b) => [`${b.tier + 1} \u00b7 ${TIER_SHORT[b.tier] ?? ''}`, 'tier']);
+    const items = W.bands.map((b) => [`${b.tier + 1} \u00b7 ${tierShort(b.tier)}`, 'tier']);
     for (const st of states.values()) {
       let short = st.title;
       for (const [from, to] of SHORT) short = short.replace(from, to);
@@ -753,7 +805,7 @@ function mountMap(root, { store, placed, path, parts }) {
       if (L !== 0) break;
       // A tier's name wraps onto two lines when its column is narrow on screen.
       const room = (b.w + WORLD.gutter * 0.8) * cam.k;
-      const text = `${b.tier + 1} \u00b7 ${TIER_SHORT[b.tier] ?? ''}`;
+      const text = `${b.tier + 1} \u00b7 ${tierShort(b.tier)}`;
       const full = textWidth(text, 'tier');
       const w = Math.min(full, room);
       const lines = full > room ? 2 : 1;
@@ -836,7 +888,7 @@ function mountMap(root, { store, placed, path, parts }) {
 
   /* ---------- Crumbs and panel ---------- */
   function renderCrumbs() {
-    const items = [{ label: 'All topics', lvl: TOP }];
+    const items = [{ label: tp('All topics', 'כל הנושאים'), lvl: TOP }];
     if (level.topic) items.push({ label: states.get(level.topic).title, lvl: { topic: level.topic, concept: null, problem: null } });
     if (level.concept) items.push({ label: conceptLabel(level.concept), lvl: { ...level, problem: null } });
     if (level.problem) items.push({ label: catalogEntry(level.problem)?.title ?? level.problem, lvl: level });
@@ -847,7 +899,9 @@ function mountMap(root, { store, placed, path, parts }) {
         {},
         items.map((it, i) => h('li', {}, i === items.length - 1 ? h('span', { 'aria-current': 'location' }, it.label) : h('a', { href: mapLevelHash(it.lvl) }, it.label))),
       ),
-      levelDepth(level) ? h('span.map-crumb-hint', { 'aria-hidden': 'true' }, h('kbd', {}, 'Esc'), ' back out') : h('span.map-crumb-hint', { 'aria-hidden': 'true' }, 'Scroll to zoom, drag to move'),
+      levelDepth(level)
+        ? h('span.map-crumb-hint', { 'aria-hidden': 'true' }, h('kbd', {}, 'Esc'), tp(' back out', ' לחזרה אחורה'))
+        : h('span.map-crumb-hint', { 'aria-hidden': 'true' }, tp('Scroll to zoom, drag to move', 'גלילה לזום, גרירה להזזה')),
     );
   }
 
@@ -857,28 +911,23 @@ function mountMap(root, { store, placed, path, parts }) {
       'div.brief-progress',
       {},
       h('span.progress-bar', { 'aria-hidden': 'true' }, h('span.progress-fill', { style: { width: `${total ? Math.round((solved / total) * 100) : 0}%` } })),
-      h('p.hint-text', {}, `${solved} of ${total} solved`, extra),
+      h('p.hint-text', {}, tp(`${solved} of ${total} solved`, `${solved} מתוך ${total} נפתרו`), extra),
     );
-  const nextCta = (pid, started) =>
-    pid ? h('a.btn.btn-primary.btn-block.brief-cta', { href: `#/problem/${pid}` }, `${started ? 'Continue' : 'Start'}: ${catalogEntry(pid)?.title ?? pid}`) : h('p.hint-text', {}, 'Every problem here is solved.');
+  const nextCta = (pid, started) => {
+    if (!pid) return h('p.hint-text', {}, tp('Every problem here is solved.', 'כל הבעיות כאן נפתרו.'));
+    const title = catalogEntry(pid)?.title ?? pid;
+    return h('a.btn.btn-primary.btn-block.brief-cta', { href: `#/problem/${pid}` }, tp(`${started ? 'Continue' : 'Start'}: ${title}`, `${started ? 'להמשיך' : 'להתחיל'}: ${iso(title)}`));
+  };
 
   function stateLine(st) {
-    const text =
-      st.state === 'locked'
-        ? `Opens after ${st.blockedBy.map((b) => `${b.title} (${b.have} of ${b.need} solved)`).join(' and ')}. You can still practice it now.`
-        : st.state === 'mastered'
-          ? 'Every learning path problem here is solved.'
-          : st.state === 'started'
-            ? `${st.essentialSolved} of ${st.essentialTotal} learning path problems solved.`
-            : 'Everything it builds on is in place.';
-    return h(`p.brief-state.is-${st.state}`, {}, h('strong', {}, `${STATE_WORD[st.state]}. `), text);
+    return h(`p.brief-state.is-${st.state}`, {}, h('strong', {}, `${stateWord(st.state)}. `), topicStateText(st, pageLang()));
   }
 
   function topicLinks(st) {
     const builds = st.prereqs.map((p) => states.get(p));
     const leads = dependantsOf(st.id).map((d) => states.get(d));
     if (!builds.length && !leads.length) return null;
-    return h('dl.brief-links', {}, builds.length ? [h('dt', {}, 'Builds on'), h('dd', {}, builds.map(topicLink))] : null, leads.length ? [h('dt', {}, 'Leads to'), h('dd', {}, leads.map(topicLink))] : null);
+    return h('dl.brief-links', {}, builds.length ? [h('dt', {}, tp('Builds on', 'נשען על')), h('dd', {}, builds.map(topicLink))] : null, leads.length ? [h('dt', {}, tp('Leads to', 'מוביל אל')), h('dd', {}, leads.map(topicLink))] : null);
   }
 
   function renderBrief() {
@@ -897,13 +946,13 @@ function mountMap(root, { store, placed, path, parts }) {
     mount(
       brief,
       companyHead(),
-      h('span.eyebrow', {}, `Tier ${st.tier + 1} · ${TIER_TITLES[st.tier] ?? ''}`),
+      h('span.eyebrow', {}, tp(`Tier ${st.tier + 1} · ${TIER_TITLES[st.tier] ?? ''}`, `שלב ${st.tier + 1} · ${tierTitle(st.tier)}`)),
       h('h2.brief-title', {}, st.title),
-      progressBlock(st.solved, st.total, companyCount !== null ? ` · ${companyCount} asked by ${company.name}` : ''),
+      progressBlock(st.solved, st.total, companyCount !== null ? tp(` · ${companyCount} asked by ${company.name}`, ` · ${companyCount} נשאלות ב-${iso(company.name)}`) : ''),
       stateLine(st),
       topicLinks(st),
       nextCta(st.next, st.solved || st.attempted),
-      h('a.btn.btn-secondary.btn-block.brief-zoom', { href: mapLevelHash({ topic: st.id, concept: null, problem: null }) }, `Zoom in: ${cs.length} subtopics`),
+      h('a.btn.btn-secondary.btn-block.brief-zoom', { href: mapLevelHash({ topic: st.id, concept: null, problem: null }) }, tp(`Zoom in: ${cs.length} subtopics`, `להתמקד: ${subtopicsHe(cs.length)}`)),
     );
   }
 
@@ -913,7 +962,7 @@ function mountMap(root, { store, placed, path, parts }) {
       'div.brief-title-row',
       {},
       h('h2.brief-title', {}, title),
-      shareButton({ compact: true, name: `Share ${title} on the map`, get: (lang) => mapShare({ level, hash: mapLevelHash(level), name: title, where, problems, lang }) }),
+      shareButton({ compact: true, name: tp(`Share ${title} on the map`, `לשתף את ${iso(title)} במפה`), get: (lang) => mapShare({ level, hash: mapLevelHash(level), name: title, where, problems, lang }) }),
     );
 
   function briefTopic() {
@@ -922,7 +971,7 @@ function mountMap(root, { store, placed, path, parts }) {
     mount(
       brief,
       companyHead(),
-      h('span.eyebrow', {}, `Tier ${st.tier + 1} · ${TIER_TITLES[st.tier] ?? ''}`),
+      h('span.eyebrow', {}, tp(`Tier ${st.tier + 1} · ${TIER_TITLES[st.tier] ?? ''}`, `שלב ${st.tier + 1} · ${tierTitle(st.tier)}`)),
       titleRow(st.title, { problems: st.total }),
       progressBlock(st.solved, st.total),
       stateLine(st),
@@ -930,13 +979,13 @@ function mountMap(root, { store, placed, path, parts }) {
       nextCta(st.next, st.solved || st.attempted),
       h(
         'ol.brief-concepts',
-        { 'aria-label': `${st.title} subtopics, in learning order` },
+        { 'aria-label': tp(`${st.title} subtopics, in learning order`, `תתי-הנושאים של ${iso(st.title)}, בסדר הלמידה`) },
         cs.map((c, i) =>
           h(
             `li.brief-row${placed[st.next]?.concept === c.id ? '.is-highlight' : ''}`,
             {},
             h('span.hexmark', { class: CONCEPT_HEX[c.state], 'aria-hidden': 'true' }),
-            h('a.brief-link', { href: mapLevelHash({ topic: st.id, concept: c.id, problem: null }) }, `${i + 1}. ${c.title}`, h('span.sr-only', {}, `, ${CONCEPT_WORD[c.state]}`)),
+            h('a.brief-link', { href: mapLevelHash({ topic: st.id, concept: c.id, problem: null }) }, pageLang() === 'he' ? iso(`${i + 1}. ${c.title}`) : `${i + 1}. ${c.title}`, h('span.sr-only', {}, `, ${conceptWord(c.state)}`)),
             h('span.brief-count', {}, `${c.solved}/${c.total}`),
           ),
         ),
@@ -948,15 +997,16 @@ function mountMap(root, { store, placed, path, parts }) {
   const problemRows = (c, current = null) =>
     h(
       'ol.brief-concepts.brief-problems',
-      { 'aria-label': `${c.title}: ${c.total} ${c.total === 1 ? 'problem' : 'problems'}` },
+      { 'aria-label': tp(`${c.title}: ${c.total} ${c.total === 1 ? 'problem' : 'problems'}`, `${iso(c.title)}: ${c.total === 1 ? 'בעיה אחת' : `${c.total} בעיות`}`) },
       c.problems.map((pid) => {
         const status = statusOf(pid);
         const e = catalogEntry(pid);
+        const title = e?.title ?? pid;
         return h(
           `li.brief-row${pid === current ? '.is-highlight' : ''}`,
           {},
           h('span.hexmark', { class: status, 'aria-hidden': 'true' }),
-          h('a.brief-link', { href: mapLevelHash({ topic: level.topic, concept: c.id, problem: pid }), 'aria-current': pid === current ? 'true' : null }, e?.title ?? pid, h('span.sr-only', {}, `, ${STATUS_WORD[status]}`)),
+          h('a.brief-link', { href: mapLevelHash({ topic: level.topic, concept: c.id, problem: pid }), 'aria-current': pid === current ? 'true' : null }, pageLang() === 'he' ? iso(title) : title, h('span.sr-only', {}, `, ${statusWord(status)}`)),
           difficulty(e?.difficulty ?? 'Easy'),
         );
       }),
@@ -971,10 +1021,10 @@ function mountMap(root, { store, placed, path, parts }) {
     mount(
       brief,
       companyHead(),
-      h('span.eyebrow', {}, `${st.title} · Subtopic ${i + 1} of ${cs.length}`),
+      h('span.eyebrow', {}, tp(`${st.title} · Subtopic ${i + 1} of ${cs.length}`, `${iso(st.title)} · תת-נושא ${i + 1} מתוך ${cs.length}`)),
       titleRow(c.title, { where: st.title, problems: c.total }),
       progressBlock(c.solved, c.total),
-      pick ? h('p.brief-state', {}, h('strong', {}, 'The path picks '), `${pick} here: start with it.`) : null,
+      pick ? h('p.brief-state', {}, h('strong', {}, tp('The path picks ', 'המסלול בוחר כאן את ')), tp(`${pick} here: start with it.`, `${iso(pick)}: כדאי להתחיל איתה.`)) : null,
       nextCta(c.next, c.solved || c.attempted),
       problemRows(c),
     );
@@ -989,15 +1039,22 @@ function mountMap(root, { store, placed, path, parts }) {
     const status = statusOf(pid);
     const j = c.problems.indexOf(pid);
     const after = c.problems[j + 1] ?? null;
+    const afterTitle = after ? (catalogEntry(after)?.title ?? after) : '';
     const asked = h('div.brief-asked', {}, h('p.hint-text', {}, ' '));
     mount(
       brief,
-      h('span.eyebrow', {}, `${st.title} · ${c.title}`),
+      h('span.eyebrow', {}, pageLang() === 'he' ? `${iso(st.title)} · ${iso(c.title)}` : `${st.title} · ${c.title}`),
       titleRow(e?.title ?? pid, { where: `${st.title}, ${c.title}` }),
-      h('div.brief-meta', {}, difficulty(e?.difficulty ?? 'Easy'), h(`span.status-word.is-${status}`, {}, h('span.hexmark', { class: status, 'aria-hidden': 'true' }), STATUS_WORD[status]), placed[pid].essential ? h('span.tag.tag-muted.path-flag', {}, 'On the learning path') : null),
+      h(
+        'div.brief-meta',
+        {},
+        difficulty(e?.difficulty ?? 'Easy'),
+        h(`span.status-word.is-${status}`, {}, h('span.hexmark', { class: status, 'aria-hidden': 'true' }), statusWord(status)),
+        placed[pid].essential ? h('span.tag.tag-muted.path-flag', {}, tp('On the learning path', 'במסלול הלמידה')) : null,
+      ),
       asked,
-      h('a.btn.btn-primary.btn-block.brief-cta', { href: `#/problem/${pid}` }, status === 'solved' || status === 'assisted' ? 'Open it again' : status === 'attempted' ? 'Continue it' : 'Open problem'),
-      after ? h('a.btn.btn-secondary.btn-block', { href: mapLevelHash({ ...level, problem: after }) }, `Next: ${catalogEntry(after)?.title ?? after}`) : null,
+      h('a.btn.btn-primary.btn-block.brief-cta', { href: `#/problem/${pid}` }, status === 'solved' || status === 'assisted' ? tp('Open it again', 'לפתוח שוב') : status === 'attempted' ? tp('Continue it', 'להמשיך לפתור') : tp('Open problem', 'לפתוח את הבעיה')),
+      after ? h('a.btn.btn-secondary.btn-block', { href: mapLevelHash({ ...level, problem: after }) }, tp(`Next: ${afterTitle}`, `הבאה: ${iso(afterTitle)}`)) : null,
       c.problems.length > 1 ? problemRows(c, pid) : null,
     );
     // Where it is asked comes from problem-meta.json, loaded once and only at this level.
@@ -1015,11 +1072,15 @@ function mountMap(root, { store, placed, path, parts }) {
    * (only companies with a set can be lit), then their names. Hovering a logo says what it does.
    */
   function askedAt(all, logos, bySlug) {
-    if (!all.length) return h('p.hint-text', {}, 'No company data for this one.');
+    if (!all.length) return h('p.hint-text', {}, tp('No company data for this one.', 'אין נתוני חברות לבעיה הזו.'));
     // Israeli companies first, as on the problem page (ui/problem-context.js), then by frequency.
     const list = [...all.filter((x) => x.israeli), ...all.filter((x) => !x.israeli)];
     const names = list.map((x) => x.name);
-    const text = `Asked at ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` and ${names.length - 3} more` : ''}.`;
+    const more = names.length - 3;
+    const text = tp(
+      `Asked at ${names.slice(0, 3).join(', ')}${more > 0 ? ` and ${more} more` : ''}.`,
+      `נשאלה ב-${names.slice(0, 3).map(iso).join(', ')}${more > 0 ? (more === 1 ? ' ובחברה נוספת' : ` וב-${more} חברות נוספות`) : ''}.`,
+    );
     const caption = h('p.hint-text.brief-asked-text', {}, text);
     const faces = list
       .map((x) => bySlug?.get(slugifyCompany(x.name)))
@@ -1029,9 +1090,12 @@ function mountMap(root, { store, placed, path, parts }) {
     const say = (t) => () => (caption.textContent = t);
     const pile = h(
       'div.brief-faces',
-      { role: 'group', 'aria-label': 'Show a company\'s problems on the map' },
+      { role: 'group', 'aria-label': tp("Show a company's problems on the map", 'להציג את הבעיות של חברה על המפה') },
       faces.map((c) => {
-        const label = `Light up ${c.name}'s ${c.ids.size} problem${c.ids.size === 1 ? '' : 's'} on the map`;
+        const label = tp(
+          `Light up ${c.name}'s ${c.ids.size} problem${c.ids.size === 1 ? '' : 's'} on the map`,
+          `להאיר במפה את ${c.ids.size === 1 ? 'הבעיה' : `${c.ids.size} הבעיות`} של ${iso(c.name)}`,
+        );
         const mark = companyMark({ letters: monogram(c.name), logo: companyLogoByName(logos, c.name), tile: true, size: 'sm' });
         return h('button.brief-face', { type: 'button', 'aria-label': label, title: c.name, onClick: () => spotlight(c), onPointerenter: say(label), onFocus: say(label), onPointerleave: say(text), onBlur: say(text) }, mark);
       }),
@@ -1044,7 +1108,11 @@ function mountMap(root, { store, placed, path, parts }) {
     const solved = all.reduce((n, t) => n + t.solved, 0);
     const open = all.filter((t) => t.state !== 'locked').length;
     const next = nextProblem();
-    summary.textContent = `${solved} of ${ids.length} solved · ${open} of ${all.length} topics open${next ? ` · Next on the path: ${catalogEntry(next.id)?.title ?? next.id}` : ''}`;
+    const nextTitle = next ? (catalogEntry(next.id)?.title ?? next.id) : null;
+    summary.textContent = tp(
+      `${solved} of ${ids.length} solved · ${open} of ${all.length} topics open${nextTitle ? ` · Next on the path: ${nextTitle}` : ''}`,
+      `${solved} מתוך ${ids.length} נפתרו · ${open} מתוך ${all.length} נושאים פתוחים${nextTitle ? ` · הבאה במסלול: ${iso(nextTitle)}` : ''}`,
+    );
   }
 
   /** Overview: the panel follows the pointer and the keyboard; a click or Enter flies in. */
@@ -1058,6 +1126,7 @@ function mountMap(root, { store, placed, path, parts }) {
 
   /* ---------- List view (accessible alternative) ---------- */
   function renderList() {
+    const lang = pageLang();
     const tiers = [...new Set(TOPICS.map((t) => t.tier))].sort((a, b) => a - b);
     return h(
       'div.map-list',
@@ -1066,27 +1135,28 @@ function mountMap(root, { store, placed, path, parts }) {
         h(
           'section.map-list-tier',
           { 'aria-labelledby': `map-tier-${tier}` },
-          h('h2.map-list-tier-title', { id: `map-tier-${tier}` }, h('span.eyebrow', {}, `Tier ${tier + 1}`), TIER_TITLES[tier] ?? ''),
+          h('h2.map-list-tier-title', { id: `map-tier-${tier}` }, h('span.eyebrow', {}, tp(`Tier ${tier + 1}`, `שלב ${tier + 1}`)), tierTitle(tier)),
           TOPICS.filter((t) => t.tier === tier).map((t) => {
             const st = states.get(t.id);
             return h(
               'details.map-list-topic',
               { open: t.id === level.topic },
-              h('summary', {}, h('span.map-list-name', {}, t.title), h(`span.state-tag.is-${st.state}`, {}, STATE_WORD[st.state]), h('span.map-list-count', {}, `${st.solved} of ${st.total} solved`)),
-              st.state === 'locked' ? h('p.hint-text', {}, `Opens after ${st.blockedBy.map((b) => `${b.title} (${b.have} of ${b.need})`).join(' and ')}.`) : null,
+              h('summary', {}, h('span.map-list-name', {}, t.title), h(`span.state-tag.is-${st.state}`, {}, stateWord(st.state)), h('span.map-list-count', {}, tp(`${st.solved} of ${st.total} solved`, `${st.solved} מתוך ${st.total} נפתרו`))),
+              st.state === 'locked' ? h('p.hint-text', {}, lockReason(st.blockedBy, { detail: 'short', lang })) : null,
               h(
                 'ul.map-list-problems',
                 {},
                 st.problems.map((pid) => {
                   const e = catalogEntry(pid);
                   const status = statusOf(pid);
+                  const title = e?.title ?? pid;
                   return h(
                     'li',
                     {},
                     h('span.hexmark', { class: status, 'aria-hidden': 'true' }),
-                    h('a.brief-link', { href: `#/problem/${pid}` }, e?.title ?? pid),
+                    h('a.brief-link', { href: `#/problem/${pid}` }, lang === 'he' ? iso(title) : title),
                     h('span.hint-text', {}, conceptLabel(placed[pid].concept ?? '')),
-                    h('span.sr-only', {}, STATUS_WORD[status]),
+                    h('span.sr-only', {}, statusWord(status)),
                     difficulty(e?.difficulty ?? 'Easy'),
                   );
                 }),
@@ -1301,7 +1371,9 @@ function mountMap(root, { store, placed, path, parts }) {
     }
     const pid = cell.dataset.pid;
     const entry = catalogEntry(pid);
-    mount(tooltip, h('strong', {}, entry?.title ?? pid), h('span', {}, `${entry?.difficulty ?? ''} · ${STATUS_WORD[statusOf(pid)]}`));
+    const diff = entry?.difficulty ?? '';
+    const stWord = statusWord(statusOf(pid));
+    mount(tooltip, h('strong', {}, pageLang() === 'he' ? iso(entry?.title ?? pid) : (entry?.title ?? pid)), h('span', {}, pageLang() === 'he' ? `${iso(diff)} · ${stWord}` : `${diff} · ${stWord}`));
     const p = local(e);
     tooltip.style.transform = `translate(${Math.round(Math.min(p.x + 14, vp.width - 200))}px, ${Math.round(p.y + 14)}px)`;
     tooltip.hidden = false;
