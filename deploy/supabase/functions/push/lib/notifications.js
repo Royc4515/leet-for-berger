@@ -172,7 +172,7 @@ export function dueNotifications(facts, now, { settings = {}, dismissed = {}, re
  * @param {Notification} n
  * @param {{ problemTitle?: (problemId: string) => string|null|undefined, lang?: 'en'|'he' }} [opts]
  *   problemTitle: the catalog's title for a problem (titles stay in English in both languages);
- *   lang: the copy's language (the bell passes the site language; the push server uses English)
+ *   lang: the copy's language (the bell passes the site language; the push server passes the user's stored language)
  * @returns {{ title: string, body: string, href: string, action: string }|null} null when it would
  *   name a problem the catalog does not have (the caller shows nothing rather than an id)
  */

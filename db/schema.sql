@@ -223,6 +223,7 @@ create table push_settings (
   hours       smallint[] not null default '{16,20}' check (cardinality(hours) <= 6),  -- local send hours
   off         text[] not null default '{}',                                            -- kinds never pushed
   time_zone   text not null default 'UTC' check (char_length(time_zone) between 1 and 64),
+  lang        text not null default 'en' check (lang in ('en', 'he')),
   updated_at  timestamptz not null default now()
 );
 

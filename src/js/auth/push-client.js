@@ -13,13 +13,13 @@ import { pushSupport, isAppleMobile, keyBytes, sameKey, pushFunctionUrl } from '
 export const SW_PATH = 'sw.js';
 
 /**
- * @typedef {{ hours: number[], off: string[], timeZone: string, devices: number }} PushView
+ * @typedef {{ hours: number[], off: string[], timeZone: string, lang?: 'en'|'he', devices: number }} PushView
  * What the push function answers for the signed-in user (GET /settings).
  */
 
 /**
  * @param {{ account: { config: { supabaseUrl: string, supabaseAnonKey: string, enabled: boolean }, accessToken: () => Promise<string|null> }, scope?: any, fetchImpl?: typeof fetch }} deps
- *   `scope` stands in for the browser globals in tests (navigator, Notification, PushManager, matchMedia)
+ *   `scope` stands in for the browser globals in tests (navigator, Notification, PushManager, matchMedia, lfbLang)
  */
 export function createPushClient({ account, scope = globalThis, fetchImpl = (...a) => fetch(...a) }) {
   const { supabaseUrl, supabaseAnonKey, enabled } = account.config;
@@ -55,6 +55,9 @@ export function createPushClient({ account, scope = globalThis, fetchImpl = (...
     }
   }
 
+  /** The site language on this device: the server writes reminders in it (docs/I18N.md). */
+  const lang = () => (scope.lfbLang?.current?.() === 'he' ? 'he' : 'en');
+
   /** This browser's push subscription, or null (none, or no Web Push here). */
   async function current() {
     if (support() !== 'ready') return null;
@@ -66,6 +69,7 @@ export function createPushClient({ account, scope = globalThis, fetchImpl = (...
     available: Boolean(enabled),
     support,
     timeZone,
+    lang,
     /** 'granted', 'denied' or 'default' (not asked yet, or the prompt was closed). */
     permission: () => scope.Notification?.permission ?? 'default',
     /** True when this browser has a push subscription. */
@@ -75,7 +79,7 @@ export function createPushClient({ account, scope = globalThis, fetchImpl = (...
      * Turns push on for this device and stores it with the user's settings.
      * Call it straight from the click: browsers show the permission prompt only in answer to a
      * gesture (Safari is strict about it), so the prompt is requested before anything is awaited.
-     * @param {{ hours?: number[], off?: string[] }} [settings] sent with the subscription
+     * @param {{ hours?: number[], off?: string[], lang?: 'en'|'he' }} [settings] sent with the subscription
      * @returns {Promise<{ ok: true, view: PushView }|{ ok: false, reason: 'denied'|'dismissed' }>}
      */
     async enable(settings = {}) {
@@ -95,7 +99,7 @@ export function createPushClient({ account, scope = globalThis, fetchImpl = (...
       }
       sub ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
       try {
-        const view = await call('/subscribe', { subscription: sub.toJSON(), timeZone: timeZone(), ...settings });
+        const view = await call('/subscribe', { subscription: sub.toJSON(), timeZone: timeZone(), lang: lang(), ...settings });
         return { ok: true, view };
       } catch (err) {
         // The server does not know this device, so it would never get a push: say off, honestly.
@@ -127,15 +131,16 @@ export function createPushClient({ account, scope = globalThis, fetchImpl = (...
       return call('/test', { endpoint: sub.endpoint });
     },
 
-    /** @returns {Promise<PushView>} the signed-in user's send hours, kinds off and device count */
+    /** @returns {Promise<PushView>} the signed-in user's send hours, kinds off, language and device count */
     settings: () => call('/settings'),
     /**
-     * Saves part of the settings; what is left out stays. The time zone rides along, so a user who
-     * moved gets their pushes on their new clock.
-     * @param {{ hours?: number[], off?: string[] }} patch
+     * Saves part of the settings; what is left out stays. The time zone and site language ride
+     * along, so a user who moved or switched language gets their pushes on their new clock and in
+     * their language.
+     * @param {{ hours?: number[], off?: string[], lang?: 'en'|'he' }} patch
      * @returns {Promise<PushView>}
      */
-    save: (patch) => call('/settings', { ...patch, timeZone: timeZone() }),
+    save: (patch) => call('/settings', { timeZone: timeZone(), lang: lang(), ...patch }),
   };
 }
 
