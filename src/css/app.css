@@ -2046,6 +2046,106 @@ textarea.mentor-input {
   margin-top: var(--s-5);
 }
 
+/* ---------- Offers: sign in, reminders (ui/nudges.js, data/nudges.js) ----------
+   The owner's one exception to "dialogs are for decisions": a one-time offer at a natural pause, in
+   the middle of the screen so it is seen. The lamp hex says "the thing to do now". */
+.nudge .modal-card {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-2);
+  padding: var(--s-6) var(--s-5) var(--s-5);
+}
+
+.nudge h2 {
+  font-family: var(--display);
+  font-size: var(--fs-2xl);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
+}
+
+.nudge p {
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
+}
+
+/* Stacked at full width, the main action first: the offer is one clear choice, on any screen. */
+.nudge-actions {
+  flex-direction: column-reverse;
+  justify-self: stretch;
+}
+
+.nudge-actions .btn {
+  width: 100%;
+}
+
+.nudge-mark {
+  flex: none;
+  width: 28px;
+  height: 32px;
+  background: var(--accent);
+  clip-path: var(--hex);
+  box-shadow: var(--shadow-lamp);
+}
+
+.nudge-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-lg);
+  background: var(--accent-soft);
+  animation: page-in var(--t-base) var(--ease) both;
+}
+
+.nudge-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.nudge-banner h2 {
+  font-family: var(--display);
+  font-size: var(--fs-xl);
+  line-height: var(--lh-snug);
+}
+
+.nudge-banner p {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.nudge-banner-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* On a phone the action takes the full width under the text, the X stays in the corner. */
+@media (max-width: 640px) {
+  .nudge-banner {
+    position: relative;
+    flex-wrap: wrap;
+    padding-right: var(--s-7);
+  }
+
+  .nudge-banner-actions {
+    flex-basis: 100%;
+  }
+
+  .nudge-banner-actions .btn-primary {
+    flex: 1;
+  }
+
+  .nudge-hide {
+    position: absolute;
+    top: var(--s-2);
+    right: var(--s-2);
+  }
+
+}
+
 /* ---------- Toast ---------- */
 .toast-host {
   position: fixed;

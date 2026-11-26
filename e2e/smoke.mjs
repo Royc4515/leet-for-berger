@@ -44,6 +44,9 @@ await page.addInitScript(() => {
 // the tour steps starts with them seen, so a tour never covers what a step is testing.
 const ALL_TOURS_SEEN = JSON.stringify(Object.fromEntries(Object.keys(TOURS).map((id) => [id, '2026-01-01'])));
 const SEEN_TOURS = (seen) => localStorage.setItem('lfb:tours:v1', seen);
+// Sign-in and reminders offers (ui/nudges.js) come after an Accepted solve; contexts that test
+// something else with accounts on start with every offer already spent, so no dialog covers them.
+const NUDGES_SPENT = () => localStorage.setItem('lfb:nudges:v1', JSON.stringify({ signin: { count: 9, at: 1 }, push: { count: 9, at: 1 }, bannerHiddenUntil: { signin: 9e15, push: 9e15 } }));
 // Share buttons (ui/share.js): headless Chromium has no share sheet, so they copy; the copy is
 // caught here instead of touching the real clipboard.
 const stubShare = () =>
@@ -1644,6 +1647,7 @@ try {
       return r.fulfill({ headers: cors, contentType: 'application/json', body: JSON.stringify(pushServer) });
     });
     await acct.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await acct.addInitScript(NUDGES_SPENT);
     await acct.addInitScript(() => {
       window.LFB_REMOTE_RUNNER_URL = '';
       window.LFB_SUPABASE_URL = 'https://example.supabase.co';
@@ -2639,6 +2643,7 @@ try {
       localStorage.setItem('lfb:quiz-lang', 'en');
     });
     await bp.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await bp.addInitScript(NUDGES_SPENT);
     // The daily-quiz Edge Function lives on Supabase; the smoke test serves a fixed board instead,
     // so it never depends on the network and a missing function cannot log a CORS error.
     const FAKE_BOARD = (day) => ({
@@ -2952,6 +2957,150 @@ try {
     await editorShows('dark-berger');
     const after = { ...(await look()), ...(await editor()) };
     if (after.saved !== 'dark' || after.bright || after.base !== 'vs-dark' || after.select !== 'site') throw new Error(`palette to Dark with Match site: ${JSON.stringify(after)}`);
+    await ctx.close();
+  });
+
+  await check('offers: after an Accepted solve a guest is asked to sign in in the middle of the screen; back signed in, reminders are offered and turn on in one tap; the Problems page banner offers them until they are on', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const np = await ctx.newPage();
+    np.on('console', (m) => m.type() === 'error' && errors.push(`console (offers): ${m.text()}`));
+    np.on('pageerror', (e) => errors.push(`pageerror (offers): ${e.message}`));
+    let signedIn = false;
+    await np.route('**/@supabase/supabase-js@*/+esm', (r) =>
+      r.fulfill({
+        contentType: 'text/javascript',
+        body: `export function createClient() {
+          const user = ${signedIn ? "{ id: 'u2', email: 'grace@example.com', user_metadata: { full_name: 'Grace' } }" : 'null'};
+          const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: null, error: null }), upsert: async () => ({ error: null }) };
+          return { auth: { getSession: async () => ({ data: { session: user ? { user, access_token: 'jwt' } : null } }), onAuthStateChange: () => ({}), signInWithOAuth: async (o) => { window.__oauth = o; return {}; } }, from: () => chain };
+        }`,
+      }),
+    );
+    // A signed-in header asks GitHub sync whether a repository is linked: not linked.
+    await np.route('https://example.supabase.co/functions/v1/github-sync/**', (r) =>
+      r.request().method() === 'OPTIONS'
+        ? r.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type' } })
+        : r.fulfill({ contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '{"linked":false,"githubUser":false}' }),
+    );
+    const pushCalls = [];
+    await np.route('https://example.supabase.co/functions/v1/push/**', async (r) => {
+      const req = r.request();
+      const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type' };
+      if (req.method() === 'OPTIONS') return r.fulfill({ status: 204, headers: cors });
+      const route = new URL(req.url()).pathname.replace(/^.*\/push/, '');
+      pushCalls.push(route);
+      if (route === '/key') return r.fulfill({ headers: cors, contentType: 'application/json', body: '{"publicKey":"BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U"}' });
+      if (route === '/test') return r.fulfill({ headers: cors, contentType: 'application/json', body: '{"sent":true}' });
+      return r.fulfill({ headers: cors, contentType: 'application/json', body: '{"hours":[16,20],"off":[],"timeZone":"UTC","devices":1}' });
+    });
+    await np.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await np.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = 'https://example.supabase.co';
+      window.LFB_SUPABASE_ANON_KEY = 'public-anon-key';
+      // Headless Chromium has no push service: a stand-in permission prompt and subscription (as in the accounts step).
+      Object.defineProperty(Notification, 'permission', { configurable: true, get: () => localStorage.getItem('__e2ePermission') ?? 'default' });
+      Notification.requestPermission = async () => (localStorage.setItem('__e2ePermission', 'granted'), 'granted');
+      const KEY = '__e2eSubscription';
+      const make = () => ({ endpoint: 'https://push.example/offer-device', options: {}, toJSON: () => ({ endpoint: 'https://push.example/offer-device', keys: { p256dh: 'B'.repeat(87), auth: 'a'.repeat(22) } }), unsubscribe: async () => (localStorage.removeItem(KEY), true) });
+      PushManager.prototype.getSubscription = async () => (localStorage.getItem(KEY) ? make() : null);
+      PushManager.prototype.subscribe = async () => (localStorage.setItem(KEY, '1'), make());
+    });
+
+    // A first visit asks nothing: no dialog, no banner.
+    await np.goto(`${BASE}#/`);
+    await np.waitForSelector('.problem-table tbody tr a.problem-link');
+    await np.waitForTimeout(1500);
+    if (await np.locator('dialog.nudge').count()) throw new Error('an offer on arrival');
+    if (await np.locator('.nudge-banner').count()) throw new Error('a banner before anything was done');
+
+    // An Accepted solve: the sign-in offer opens in the middle of the screen, after the burst.
+    const solve = async (id) => {
+      await np.goto(`${BASE}#/problem/${id}`);
+      await np.waitForSelector('.monaco-editor', { timeout: 30000 });
+      await revealSolution(np);
+      await np.click('button:has-text("Submit")');
+      await np.waitForFunction(() => /Accepted/.test(document.querySelector('.result-head')?.textContent ?? ''), null, { timeout: 30000 });
+    };
+    await solve('pair-sum-target');
+    await np.waitForSelector('dialog.nudge[data-nudge="signin"][open]', { timeout: 5000 });
+    const dlg = await np.evaluate(() => {
+      const card = document.querySelector('dialog.nudge .modal-card').getBoundingClientRect();
+      return {
+        title: document.getElementById('nudge-title').textContent,
+        buttons: [...document.querySelectorAll('dialog.nudge button')].map((b) => b.textContent),
+        focused: document.activeElement?.textContent,
+        modal: document.querySelector('dialog.nudge').matches(':modal'),
+        centre: [Math.round(card.left + card.width / 2), Math.round(card.top + card.height / 2)],
+      };
+    });
+    if (dlg.title !== 'Save your progress' || dlg.buttons.join() !== 'Not now,Continue with GitHub,Continue with Google' || dlg.focused !== 'Continue with Google' || !dlg.modal) throw new Error(`sign-in offer: ${JSON.stringify(dlg)}`);
+    const order = await np.evaluate(() => [...document.querySelectorAll('dialog.nudge button')].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top).map((b) => b.textContent));
+    if (order.join() !== 'Continue with Google,Continue with GitHub,Not now') throw new Error(`the main action comes first, stacked: ${order}`);
+    if (Math.abs(dlg.centre[0] - 720) > 40 || Math.abs(dlg.centre[1] - 450) > 120) throw new Error(`the offer must sit in the middle of the screen: ${dlg.centre}`);
+    if (shotsDir) await np.waitForTimeout(400), await np.screenshot({ path: `${shotsDir}/42-offer-signin.png` });
+    // Escape says not now; a second solve the same day asks nothing (3 days apart).
+    await np.keyboard.press('Escape');
+    await np.waitForSelector('dialog.nudge', { state: 'detached' });
+    await solve('two-wall-tank');
+    await np.waitForTimeout(2200);
+    if (await np.locator('dialog.nudge').count()) throw new Error('asked twice in a row');
+
+    // The guest now has something to save: the Problems page offers sign-in in a banner.
+    await np.goto(`${BASE}#/`);
+    await np.waitForSelector('.nudge-banner[data-nudge="signin"]');
+    // Its button opens the sign-in offer; Continue with Google starts the sign-in and remembers the offer.
+    await np.click('.nudge-banner .btn-primary');
+    await np.waitForSelector('dialog.nudge[data-nudge="signin"][open]');
+    await np.click('dialog.nudge button:has-text("Continue with Google")');
+    await np.waitForFunction(() => window.__oauth?.provider === 'google' && sessionStorage.getItem('lfb:nudge-signin') === '1');
+
+    // Back from the provider, signed in: reminders are offered at once, and one tap turns them on.
+    signedIn = true;
+    await np.evaluate(() => localStorage.setItem('sb-example-auth-token', '{}'));
+    await np.reload();
+    await np.waitForSelector('dialog.nudge[data-nudge="push"][open]', { timeout: 15000 });
+    const pushDlg = await np.evaluate(() => ({ title: document.getElementById('nudge-title').textContent, buttons: [...document.querySelectorAll('dialog.nudge button')].map((b) => b.textContent), focused: document.activeElement?.textContent }));
+    if (pushDlg.title !== "Don't lose your streak" || pushDlg.buttons.join() !== 'Not now,Turn on reminders' || pushDlg.focused !== 'Turn on reminders') throw new Error(`reminders offer: ${JSON.stringify(pushDlg)}`);
+    if (await np.evaluate(() => sessionStorage.getItem('lfb:nudge-signin'))) throw new Error('the after-sign-in flag must be used once');
+    if (shotsDir) await np.waitForTimeout(400), await np.screenshot({ path: `${shotsDir}/42-offer-push.png` });
+    // Not now, then the banner on the Problems page is the other way in.
+    await np.click('dialog.nudge button:has-text("Not now")');
+    await np.waitForSelector('.nudge-banner[data-nudge="push"]');
+    if (shotsDir) await np.screenshot({ path: `${shotsDir}/42-banner-push.png` });
+    await np.click('.nudge-banner .btn-primary');
+    await np.waitForSelector('.toast:has-text("Reminders on")');
+    await np.waitForFunction(() => !document.querySelector('.nudge-banner'));
+    if (!pushCalls.includes('/subscribe') || !pushCalls.includes('/test')) throw new Error(`turning reminders on must subscribe and send a test: ${pushCalls}`);
+    // On, nothing is offered any more: not after a solve, not on the Problems page.
+    await solve('smallest-base-segment');
+    await np.waitForTimeout(2200);
+    if (await np.locator('dialog.nudge').count()) throw new Error('reminders offered although they are on');
+
+    // A phone: the offer is a full-width card, its main action first; the banner fits the screen.
+    await np.evaluate(() => (localStorage.removeItem('__e2eSubscription'), localStorage.removeItem('lfb:nudges:v1')));
+    await np.setViewportSize({ width: 390, height: 844 });
+    await np.goto(`${BASE}#/`);
+    await np.waitForSelector('.nudge-banner[data-nudge="push"]');
+    const phone = await np.evaluate(() => ({ over: document.documentElement.scrollWidth - innerWidth, banner: document.querySelector('.nudge-banner').getBoundingClientRect().right <= innerWidth }));
+    if (phone.over > 0 || !phone.banner) throw new Error(`banner at 390: ${JSON.stringify(phone)}`);
+    if (shotsDir) await np.waitForTimeout(3600), await np.screenshot({ path: `${shotsDir}/390-banner-push.png` }); // after the page cross-fade and the toasts
+    // The X hides it for a week.
+    await np.click('.nudge-hide');
+    await np.waitForFunction(() => !document.querySelector('.nudge-banner'));
+    await np.reload();
+    await np.waitForSelector('.problem-table tbody tr a.problem-link');
+    await np.waitForTimeout(800);
+    if (await np.locator('.nudge-banner').count()) throw new Error('a hidden banner came back');
+    // The phone workspace hides the editor behind its Code tab: solve at laptop width, then look at
+    // the offer at phone width (the layout follows the width live).
+    await np.setViewportSize({ width: 1440, height: 900 });
+    await solve('bracket-check');
+    await np.setViewportSize({ width: 390, height: 844 });
+    await np.waitForSelector('dialog.nudge[data-nudge="push"][open]', { timeout: 5000 });
+    const stacked = await np.evaluate(() => [...document.querySelectorAll('dialog.nudge button')].map((b) => Math.round(b.getBoundingClientRect().top)));
+    if (!(stacked[1] < stacked[0])) throw new Error(`on a phone the main action comes first: ${stacked}`);
+    if (shotsDir) await np.waitForTimeout(400), await np.screenshot({ path: `${shotsDir}/390-offer-push.png` });
     await ctx.close();
   });
 

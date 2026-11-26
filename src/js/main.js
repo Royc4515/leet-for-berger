@@ -242,6 +242,12 @@ firstRoute.finally(() =>
     .then((m) => m.mountNotifyBell(document.getElementById('notify'), { store }))
     .catch(() => {}),
 );
+// Sign-in and reminders offers after a solve or a quiz (owner's request); after the first page too.
+firstRoute.finally(() =>
+  import('./ui/nudges.js')
+    .then((m) => m.installNudges({ account: services.account }))
+    .catch(() => {}),
+);
 // Theme switches get a line (owner's request); loaded after the first page, not a startup module.
 firstRoute.finally(() =>
   import('./ui/theme-quips.js')

@@ -559,6 +559,7 @@ export function renderQuizHub(root) {
       onDone: (finished) => {
         const before = loadQuizProgress();
         saveQuizProgress(recordSession(before, finished));
+        dispatchEvent(new CustomEvent('practice:done', { detail: { kind: 'quiz' } }));
         stopPlay = renderResults(root, {
           session: finished,
           lang: playLang,
@@ -610,6 +611,7 @@ export function renderDailyQuiz(root) {
             const first = !before.daily[today];
             const play = { answers: authoredChoices(finished), ms: Math.max(0, (finished.endedAt ?? Date.now()) - finished.startedAt) };
             saveQuizProgress(recordSession(before, finished, play));
+            dispatchEvent(new CustomEvent('practice:done', { detail: { kind: 'quiz' } }));
             const results = finished.answers.map((a) => a.correct);
             // Only the first play of the day goes to the server; a replay is practice, but it still
             // delivers the stored first play if the server never got it.

@@ -66,6 +66,7 @@ src/js/data/map-layout.js  Problem Map model: topic and subtopic states, lock re
 src/js/data/map-world.js   the continuous map: one world layout, camera maths (fit, zoom at a point, clamp, smooth flight), zoom levels, label placement (ADR 0010 amendment 2)
 src/js/data/problem-topics.js taxonomy topic per shipped problem (-> problem-topics.json, build-meta.mjs)
 src/js/data/palette-search.js command palette ranking
+src/js/data/nudges.js      when to offer sign-in (guest) and reminders (member): after a solve or quiz, spaced, never on arrival; ui/nudges.js = the centred dialog and the Problems page banner
 src/js/data/theme-quips.js what a theme switch says (approved lines, random, no repeats); ui/theme-quips.js shows them as a toast
 src/js/data/themes.js      code themes (Dark Berger, Berger Light, Shuvat Light Pink), Match site, monacoTheme from the --code-* tokens; ui/theme.js = choices and their controls (Profile, toolbar, palette)
 src/js/data/credit.js      the author credit (name, portfolio, LinkedIn, GitHub): shared footer, palette, privacy.html
