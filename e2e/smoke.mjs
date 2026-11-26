@@ -3160,13 +3160,15 @@ try {
       await hp.goto(`${BASE}${hash}`);
       await hp.waitForSelector(wait, { timeout: 30000 });
       const page = await look();
-      if (page.viewDir !== null || page.over > 0 || (h1 && page.h1 !== h1) || !/[\u0590-\u05FF]/.test(page.h1 ?? '')) throw new Error(`${hash} in Hebrew: ${JSON.stringify(page)}`);
+      // A company page's heading is the company's name, in English; the page around it is Hebrew.
+      const hebrew = await hp.evaluate(() => /[\u0590-\u05FF]/.test(document.querySelector('#view .page-head, #view header, #view')?.textContent ?? ''));
+      if (page.viewDir !== null || page.over > 0 || (h1 && page.h1 !== h1) || !hebrew) throw new Error(`${hash} in Hebrew: ${JSON.stringify(page)}`);
       if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/${shotName}.png`, fullPage: hash === '#/modes' });
     }
 
     // A running interview is the exam room: English and left to right, its dialogs too.
     await hp.goto(`${BASE}#/interview`);
-    await hp.click('.setup-card .btn-primary');
+    await hp.click('button:has-text("להתחיל את הראיון")');
     await hp.waitForSelector('.session-banner.interview');
     await hp.waitForSelector('.monaco-editor', { timeout: 30000 });
     const session = await hp.evaluate(() => {

@@ -246,8 +246,8 @@ export function renderProfile(root, { store }) {
   const appearance = section(
     'appearance',
     tp('Appearance', 'מראה'),
-    h('div.profile-field', {}, h('span.quiz-label', {}, tp('Site theme', 'מראה האתר')), siteThemeControl(themes.signal), h('p.hint-text', {}, tp('System follows your device.', '"לפי המערכת" פועל לפי הגדרות המכשיר.'))),
-    h('div.profile-field', {}, h('label.quiz-label', { for: codeSelect.id }, tp('Code theme', 'צבעי הקוד')), codeSelect, h('p.hint-text', {}, tp('The editor\'s colours. Match site follows the site theme.', 'הצבעים של עורך הקוד. "כמו האתר" פועל לפי מראה האתר.'))),
+    h('div.profile-field', {}, h('span.quiz-label', {}, tp('Site theme', 'מראה האתר')), siteThemeControl(themes.signal), h('p.hint-text', {}, tp('System follows your device.', 'System פועל לפי הגדרות המכשיר.'))),
+    h('div.profile-field', {}, h('label.quiz-label', { for: codeSelect.id }, tp('Code theme', 'צבעי הקוד')), codeSelect, h('p.hint-text', {}, tp('The editor\'s colours. Match site follows the site theme.', 'הצבעים של עורך הקוד. Match site פועל לפי מראה האתר.'))),
     // The site language (lang-boot.js): each option in its own language, so anyone can find theirs.
     globalThis.lfbLang
       ? h(
