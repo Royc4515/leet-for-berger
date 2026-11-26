@@ -207,7 +207,7 @@ export function nextReminder({ hours, now, restDay = null }) {
  */
 export function describeNext(next, lang = 'en') {
   if (lang === 'he') {
-    if (!next) return 'נגיעה בטבעת מוסיפה תזכורת';
+    if (!next) return 'לחיצה על הטבעת מוסיפה תזכורת';
     const at = formatHour(next.hour);
     if (next.days === 0) return `הבאה ב-${at}`;
     if (next.days === 1) return `הבאה מחר ב-${at}`;

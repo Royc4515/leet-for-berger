@@ -4308,7 +4308,8 @@ body.lockdown .toast-host {
   --cal-cell: 22px;
 }
 
-/* On a phone the grid can overflow: right-to-left scrolling opens it on this week. */
+/* On a phone the grid can overflow: right-to-left scrolling opens it on this week. Hebrew mirrors
+   both the grid and this trick (the right-to-left section at the end). */
 .cal-scroll {
   overflow-x: auto;
   padding-bottom: var(--s-2);
@@ -9810,6 +9811,24 @@ body.resizing-y * {
 
 [dir='rtl'] .palette-input {
   background-position: right 18px center;
+}
+
+/* The 16-week calendar runs right to left in Hebrew: weekdays on the right, the oldest week beside
+   them, this week at the far left. The scroller mirrors the English trick: on a phone a left-to-right
+   scroller opens at its left end, which is now this week; on a wide screen the grid fits, and a
+   right-to-left scroller keeps it on the page's start side. */
+[dir='rtl'] .cal {
+  direction: rtl;
+}
+
+[dir='rtl'] .cal-scroll {
+  direction: ltr;
+}
+
+@media (min-width: 900px) {
+  [dir='rtl'] .cal-scroll {
+    direction: rtl;
+  }
 }
 
 /* Hebrew type. JetBrains Mono has no Hebrew letters, and its wide space pulls Hebrew words apart:

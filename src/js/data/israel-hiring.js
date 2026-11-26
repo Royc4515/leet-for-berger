@@ -22,7 +22,7 @@ export const ISRAEL_FILTERS = [
 export const DEFAULT_ISRAEL_FILTER = 'hiring';
 
 const BADGES = { major: 'Major in Israel', present: 'Israel office', none: '' };
-const BADGES_HE = { major: 'נוכחות גדולה בישראל', present: 'משרד בישראל', none: '' };
+const BADGES_HE = { major: 'מרכז פיתוח גדול בישראל', present: 'מגייסת מהנדסים בישראל', none: '' };
 const FILTER_LABELS_HE = { hiring: 'מגייסות בישראל', jobs: 'משרות בישראל', top: 'מובילות בישראל', all: 'הכול' };
 
 /**

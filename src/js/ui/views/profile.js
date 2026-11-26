@@ -96,7 +96,7 @@ export function renderProfile(root, { store }) {
         h(
           'div.profile-id-copy',
           {},
-          h('strong.profile-name', {}, tp('Not signed in', 'אין חיבור לחשבון')),
+          h('strong.profile-name', {}, tp('Not signed in', 'עוד לא התחברת')),
           h('span.hint-text', {}, tp('Your progress is saved in this browser only. Sign in to keep it on every device and join the daily quiz leaderboard.', 'ההתקדמות נשמרת רק בדפדפן הזה. אחרי התחברות היא נשמרת בכל מכשיר, ואפשר להצטרף לטבלת המובילים של החידון היומי.')),
         ),
         h(
@@ -157,9 +157,9 @@ export function renderProfile(root, { store }) {
       h(
         'div.profile-links',
         {},
-        h('a.btn.btn-ghost.btn-sm', { href: '#/daily' }, tp('Calendar', 'לוח שנה')),
-        h('a.btn.btn-ghost.btn-sm', { href: '#/map' }, tp('Map', 'מפה')),
-        h('a.btn.btn-ghost.btn-sm', { href: '#/quiz' }, tp('Quiz topics', 'נושאי החידון')),
+        h('a.btn.btn-ghost.btn-sm', { href: '#/daily' }, tp('Calendar', 'ללוח השנה')),
+        h('a.btn.btn-ghost.btn-sm', { href: '#/map' }, tp('Map', 'למפה')),
+        h('a.btn.btn-ghost.btn-sm', { href: '#/quiz' }, tp('Quiz topics', 'לנושאי החידון')),
       ),
     );
   }
@@ -210,7 +210,7 @@ export function renderProfile(root, { store }) {
         h('div.profile-links', {}, h('button.btn.btn-primary.btn-sm', { type: 'submit' }, tp('Save', 'לשמור')), h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => { editing = false; draw(); } }, tp('Cancel', 'ביטול'))),
       );
     }
-    return section('nickname', tp('Leaderboard name', 'השם בטבלת המובילים'), body);
+    return section('nickname', tp('Leaderboard name', 'הכינוי בטבלת המובילים'), body);
   }
 
   async function loadNickname() {
@@ -232,9 +232,9 @@ export function renderProfile(root, { store }) {
       if (disposed) return;
       nickname = { state: 'ready', name: saved?.name ?? name, custom: saved?.custom ?? Boolean(name) };
       editing = false;
-      toast(tp('Name saved', 'השם נשמר'), 'success');
+      toast(tp('Name saved', 'הכינוי נשמר'), 'success');
     } catch {
-      toast(tp('Could not save the name. Try again.', 'לא ניתן לשמור את השם. כדאי לנסות שוב.'), 'error');
+      toast(tp('Could not save the name. Try again.', 'לא הצלחנו לשמור את הכינוי. כדאי לנסות שוב.'), 'error');
     }
     draw();
   }
@@ -274,7 +274,7 @@ export function renderProfile(root, { store }) {
   restSelect.addEventListener('change', () => {
     const day = restSelect.value === 'none' ? null : Number(restSelect.value);
     store.update((s) => setRestDay(s, day, new Date()));
-    toast(day === null ? tp('Every day now counts for your streaks', 'מעכשיו כל יום נספר ברצפים') : tp(`Your streaks rest on ${REST_DAYS[day]}`, `הרצפים נחים ב${REST_DAYS_HE[day]}`), 'success');
+    toast(day === null ? tp('Every day now counts for your streaks', 'מעכשיו כל יום נספר ברצפים') : tp(`Your streaks rest on ${REST_DAYS[day]}`, `יום המנוחה מהרצפים: ${REST_DAYS_HE[day]}`), 'success');
     restSelect.focus({ preventScroll: true });
   });
   const restField = h(
@@ -419,7 +419,7 @@ export function renderProfile(root, { store }) {
       h(
         'p.hint-text',
         {},
-        tp('Your progress, drafts, quiz results and last sessions are kept in this browser only. ', 'ההתקדמות, הטיוטות, תוצאות החידון והאימונים האחרונים נשמרים רק בדפדפן הזה. '),
+        tp('Your progress, drafts, quiz results and last sessions are kept in this browser only. ', 'ההתקדמות, הטיוטות, תוצאות החידון והסשנים האחרונים נשמרים רק בדפדפן הזה. '),
         h('a', { href: 'privacy.html' }, tp('Privacy Policy', 'מדיניות הפרטיות')),
       ),
       h('div.profile-links', {}, h('button.btn.btn-secondary.btn-sm.profile-delete', { type: 'button', onClick: deleteLocal }, tp('Delete progress on this device', 'למחוק את ההתקדמות במכשיר הזה'))),
@@ -437,7 +437,7 @@ export function renderProfile(root, { store }) {
     if (!account.get().user) return;
     const anyway = await confirmDialog({
       title: tp('Sign out without saving?', 'להתנתק בלי לשמור?'),
-      body: tp('Your latest progress could not be saved to your account. Signing out now removes it from this device.', 'לא ניתן היה לשמור בחשבון את ההתקדמות האחרונה. התנתקות עכשיו תמחק אותה מהמכשיר הזה.'),
+      body: tp('Your latest progress could not be saved to your account. Signing out now removes it from this device.', 'לא הצלחנו לשמור בחשבון את ההתקדמות האחרונה. התנתקות עכשיו תמחק אותה מהמכשיר הזה.'),
       confirmLabel: tp('Sign out anyway', 'להתנתק בכל זאת'),
       danger: true,
     });
@@ -449,7 +449,7 @@ export function renderProfile(root, { store }) {
       title: tp('Delete progress on this device?', 'למחוק את ההתקדמות במכשיר הזה?'),
       body: tp(
         'Solved problems, streaks, drafts, quiz results and last sessions are removed from this browser. This cannot be undone.',
-        'בעיות שנפתרו, רצפים, טיוטות, תוצאות החידון והאימונים האחרונים יימחקו מהדפדפן הזה. אי אפשר לבטל את זה.',
+        'בעיות שנפתרו, רצפים, טיוטות, תוצאות החידון והסשנים האחרונים יימחקו מהדפדפן הזה. אי אפשר לבטל את זה.',
       ),
       confirmLabel: tp('Delete', 'למחוק'),
       danger: true,

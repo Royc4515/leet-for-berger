@@ -51,7 +51,7 @@ test('every payload, in both languages: a title naming the site, one line, a pre
 
 test('Hebrew texts are Hebrew, and keep names, languages and numbers as they are', () => {
   for (const p of all('he')) assert.match(p.text, /[֐-׿]/, p.text);
-  assert.equal(solveShare({ id: 'x', title: 'Pair Sum Target', difficulty: 'Medium', language: 'Python 3', firstSolve: true, lang: 'he' }).text, 'פתרתי עכשיו את Pair Sum Target (בינונית) ב-Python 3: עברו 15 מתוך 15 טסטים. תורך.');
+  assert.equal(solveShare({ id: 'x', title: 'Pair Sum Target', difficulty: 'Medium', language: 'Python 3', firstSolve: true, lang: 'he' }).text, 'פתרתי עכשיו את Pair Sum Target (בינונית) ב-Python 3: עברו 15 מתוך 15 בדיקות. תורך.');
   assert.equal(dailyShare({ number: 40, title: 'T', solved: true, streak: 5, lang: 'he' }).text, 'אתגר יומי #40: T. פתרתי, 5 ימים ברצף. אותה שאלה לכולם היום, מה איתך?');
   assert.match(mapShare({ level: { topic: 't' }, hash: '#/map/t', name: 'Graphs', problems: 1, lang: 'he' }).text, /Graphs, שאלה אחת:/);
 });

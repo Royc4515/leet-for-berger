@@ -201,7 +201,7 @@ export function renderCompanies(root, { store }) {
         count,
         jobsNote,
         grid,
-        h('p.hint-text.company-source', {}, tp('Company tags are crowdsourced from public datasets (content/SOURCES.md). Treat them as a trend, not a promise. Israel hiring labels: content/israel-hiring.md.', 'השיוך לחברות נאסף ממאגרי מידע ציבוריים שהקהילה מעדכנת (content/SOURCES.md). כדאי לקרוא אותו כמגמה, לא כהבטחה. תוויות הגיוס בישראל: content/israel-hiring.md.')),
+        h('p.hint-text.company-source', {}, tp('Company tags are crowdsourced from public datasets (content/SOURCES.md). Treat them as a trend, not a promise. Israel hiring labels: content/israel-hiring.md.', 'המידע על החברות ששאלו כל בעיה נאסף ממאגרי מידע ציבוריים שהקהילה מעדכנת (content/SOURCES.md). כדאי לקרוא אותו כמגמה, לא כהבטחה. תוויות הגיוס בישראל: content/israel-hiring.md.')),
         siteFooter({ note: trademarkNote() }),
       ),
     );
@@ -300,7 +300,7 @@ export function renderCompany(root, { store, slug }) {
     const prog = companyProgress(all, isSolvedIn(state));
     summary.textContent = tp(
       `${company.total} tagged problems. ${prog.onSite} of the top ${all.length} can be practiced here, ${prog.solved} solved.`,
-      `${company.total} בעיות משויכות. אפשר לתרגל כאן ${prog.onSite} מתוך ${all.length} המובילות, ${prog.solved} נפתרו.`,
+      `${company.total} בעיות בסך הכול. ${prog.onSite} מתוך ${all.length} המובילות זמינות כאן לתרגול, ו-${prog.solved} מהן נפתרו.`,
     );
     mount(headProgress, h('span.company-progress-text', {}, solvedText(prog)), progressBar(prog.solved, prog.onSite));
     renderBriefing();
@@ -457,14 +457,14 @@ export function renderCompany(root, { store, slug }) {
             // site (content/company-careers.json, checked by check-careers.mjs).
             careersLink(company),
             shareButton({
-              name: tp(`Share ${company.name}'s practice set`, `לשתף את סט התרגול של ${company.name}`),
+              name: tp(`Share ${company.name}'s practice set`, `לשתף את רשימת התרגול של ${company.name}`),
               get: (lang) => companyShare({ ...company, ...companyProgress(expandRows(sets, company), isSolvedIn(store.get())), lang }),
             }),
           ),
         ),
         facts,
         asks,
-        h('h2.section-title.company-list-title', {}, tp('The problems, most asked first', 'הבעיות, מהנשאלת ביותר')),
+        h('h2.section-title.company-list-title', {}, tp('The problems, most asked first', 'הבעיות לפי תדירות, מהנפוצה ביותר')),
         h('div.filters.company-filters', {}, diff, onSite),
         tableWrap,
         emptyHost,

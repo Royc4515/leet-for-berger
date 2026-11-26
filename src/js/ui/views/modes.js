@@ -113,7 +113,7 @@ export function renderModesHub(root) {
     h(
       'div.page',
       {},
-      h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, tp('Under pressure', 'תחת לחץ')), h('h1', {}, tp('Modes', 'אימונים')), h('p.page-sub', {}, tp('Practice the way it feels on the day: a timed exam room, a race against a bot, or a quick multiple-choice quiz.', 'אימון שמרגיש כמו היום עצמו: חדר מבחן עם שעון, מרוץ מול בוט או חידון אמריקאי קצר.')))),
+      h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, tp('Under pressure', 'תחת לחץ')), h('h1', {}, tp('Modes', 'אימונים')), h('p.page-sub', {}, tp('Practice the way it feels on the day: a timed exam room, a race against a bot, or a quick multiple-choice quiz.', 'אימון שמרגיש כמו ביום הראיון: חדר מבחן עם שעון, מרוץ מול בוט או חידון אמריקאי קצר.')))),
       h(
         'div.mode-grid',
         {},
@@ -146,7 +146,7 @@ export function renderModesHub(root) {
               `${BOT_LEVELS.length} opponents, from ${BOT_LEVELS[0].label.replace(' bot', '')} to ${BOT_LEVELS.at(-1).label.replace(' bot', '')}`,
               `${BOT_LEVELS.length} יריבים, מ${botLabel(BOT_LEVELS[0].id, 'he').replace('בוט ', '')} ועד ${botLabel(BOT_LEVELS.at(-1).id, 'he').replace('בוט ', '')}`,
             ),
-            tp('Two lanes show tests passed out of 15, live', 'שני מסלולים מראים בזמן אמת כמה טסטים עברו מתוך 15'),
+            tp('Two lanes show tests passed out of 15, live', 'שני מסלולים מראים בזמן אמת כמה בדיקות עברו מתוך 15'),
             tp('Bots only: there are no live races against people', 'בוטים בלבד: אין מרוצים חיים מול אנשים'),
           ],
           lastBattle ? h(`p.mode-last${lastBattle.won ? '.is-win' : ''}`, {}, lastBattle.text) : h('p.mode-last.is-empty', {}, tp('No race yet.', 'עוד לא היה מרוץ.')),
@@ -167,7 +167,7 @@ export function renderModesHub(root) {
           ],
           quizToday
             ? h('p.mode-last', {}, tp(`Daily quiz done today: ${quizToday.correct} / ${quizToday.total}`, `החידון היומי הושלם היום: ${quizToday.correct} / ${quizToday.total}`))
-            : h('p.mode-last.is-empty', {}, h('a', { href: '#/quiz/daily' }, tp('Today\'s daily quiz is open.', 'החידון היומי של היום פתוח.')), dailyQuizNeedsSignIn() ? tp(' Sign in to play.', ' כדי לשחק צריך להתחבר.') : null),
+            : h('p.mode-last.is-empty', {}, h('a', { href: '#/quiz/daily' }, tp('Today\'s daily quiz is open.', 'החידון של היום פתוח.')), dailyQuizNeedsSignIn() ? tp(' Sign in to play.', ' כדי לשחק צריך להתחבר.') : null),
           h('a.btn.btn-secondary', { href: '#/quiz' }, tp('Start a quiz', 'להתחיל חידון')),
         ),
       ),
@@ -177,8 +177,8 @@ export function renderModesHub(root) {
         h(
           'div.mentor-note-copy',
           {},
-          h('div.mentor-note-head', {}, h('h2', {}, 'AI Mentor'), h('span.tag.tag-muted', {}, tp('Scripted', 'מתוסרט'))),
-          h('p', {}, tp('A side panel in every practice problem that asks guiding questions instead of handing out the answer. It runs an offline hint ladder for now.', 'חלונית צד בכל בעיה בתרגול, ששואלת שאלות מכוונות במקום לתת את התשובה. בינתיים היא עובדת עם סולם רמזים אופליין.')),
+          h('div.mentor-note-head', {}, h('h2', {}, 'AI Mentor'), h('span.tag.tag-muted', {}, tp('Scripted', 'רמזים מוכנים מראש'))),
+          h('p', {}, tp('A side panel in every practice problem that asks guiding questions instead of handing out the answer. It runs an offline hint ladder for now.', 'חלונית צד בכל בעיה בתרגול, ששואלת שאלות מכוונות במקום לתת את התשובה. בינתיים היא נותנת רמזים מדורגים, בלי AI.')),
         ),
         firstProblem ? h('a.btn.btn-secondary.btn-sm', { href: `#/problem/${firstProblem.id}` }, tp('Try it in a problem', 'לנסות בבעיה')) : null,
       ),
@@ -235,7 +235,9 @@ const MIN_COMPANY_PROBLEMS = 3;
 function formatMix(slots) {
   const counts = new Map();
   for (const s of slots) counts.set(s, (counts.get(s) ?? 0) + 1);
-  return [...counts.entries()].map(([diff, n]) => `${n} ${diff}`).join(' + ');
+  const mix = [...counts.entries()].map(([diff, n]) => `${n} ${diff}`).join(' + ');
+  // don't touch / LRI + PDI keep "1 Medium + 1 Easy" one left-to-right run inside Hebrew text; without them RTL reorders the numbers and the plus signs
+  return pageLang() === 'he' ? `\u2066${mix}\u2069` : mix;
 }
 
 function renderInterviewSetup(root, { store }) {
@@ -304,7 +306,7 @@ function renderInterviewSetup(root, { store }) {
     alwaysIncludeIds: [''],
     keepSelectedOutsideFilter: true,
     scope: {
-      label: tp('Show companies', 'חברות להצגה'),
+      label: tp('Show companies', 'אילו חברות להציג'),
       // "Jobs in Israel" is for finding where to apply (the Companies page), not for picking practice.
       options: ISRAEL_FILTERS.filter((f) => f.id !== 'jobs').map((f) => ({ value: f.id, label: israelFilterLabel(f.id, lang) })),
       value: DEFAULT_ISRAEL_FILTER,
@@ -320,7 +322,7 @@ function renderInterviewSetup(root, { store }) {
     formatCount: ({ matched }) =>
       tp(
         `${matched} ${matched === 1 ? 'company' : 'companies'} with enough problems on the site. Optional: draws from that company's list.`,
-        `${companiesHe(matched)} עם מספיק בעיות באתר. לא חובה: הבעיות ייבחרו מהרשימה של החברה.`,
+        `${companiesHe(matched)} עם מספיק בעיות באתר. בחירת חברה מגבילה את הבעיות לרשימה שלה.`,
       ),
     formatSelected: (item) =>
       item
@@ -623,7 +625,7 @@ function renderInterviewActive(root, { store }) {
 function renderInterviewReport(root) {
   const a = Interview.analytics(interview, undefined, pageLang());
   const statCell = (label, value) => h('div.stat-cell', {}, h('div.stat-value', {}, value), h('div.stat-label', {}, label));
-  const again = h('button.btn.btn-primary', { type: 'button' }, tp('New interview', 'ראיון חדש'));
+  const again = h('button.btn.btn-primary', { type: 'button' }, tp('New interview', 'להתחיל ראיון חדש'));
   again.addEventListener('click', () => {
     interview = null;
     interviewProblems = null;
@@ -634,7 +636,7 @@ function renderInterviewReport(root) {
     h(
       'div.page.page-narrow',
       {},
-      h('header.page-head', {}, h('h1', {}, tp('Interview Report', 'דוח הראיון')), h('p.page-sub', {}, tp('Coverage dominates the score; speed is a bonus; tab switches cost 5 points each (max 20).', 'הציון נקבע בעיקר לפי הטסטים שעברו; מהירות נותנת בונוס; כל מעבר לשונית מוריד 5 נקודות (עד 20).'))),
+      h('header.page-head', {}, h('h1', {}, tp('Interview Report', 'דוח הראיון')), h('p.page-sub', {}, tp('Coverage dominates the score; speed is a bonus; tab switches cost 5 points each (max 20).', 'הציון נקבע בעיקר לפי הבדיקות שעברו. מהירות מוסיפה בונוס. כל מעבר לשונית מוריד 5 נקודות, עד 20 בסך הכול.'))),
       h(
         'div.report-score',
         {},
@@ -642,7 +644,7 @@ function renderInterviewReport(root) {
           `div.score-ring.band-${a.band.band}`,
           { style: { '--pct': a.score }, 'data-band': a.band.band },
           h('span.score-value', {}, String(a.score)),
-          h('small', {}, '/ 100'),
+          h('small', {}, tp('/ 100', 'מתוך 100')),
         ),
         h(`span.score-band.band-${a.band.band}`, {}, a.band.label),
       ),
@@ -688,7 +690,7 @@ function renderInterviewReport(root) {
                   {},
                   tp(
                     `${Math.round(p.coverage * 100)}% tests${p.solved ? ` · solved at ${Interview.formatClock(p.solveTimeMs)}` : ''}`,
-                    `${Math.round(p.coverage * 100)}% מהטסטים${p.solved ? ` · נפתרה ב-${Interview.formatClock(p.solveTimeMs)}` : ''}`,
+                    `${Math.round(p.coverage * 100)}% מהבדיקות עברו${p.solved ? ` · נפתרה ב-${Interview.formatClock(p.solveTimeMs)}` : ''}`,
                   ),
                 ),
               ),
@@ -740,7 +742,7 @@ export function renderBattle(root, { store }) {
     mount(
       barSummary,
       h('div.setup-bar-title', {}, h('strong', {}, p?.title ?? problemId), p ? difficulty(p.difficulty) : null),
-      h('div.hint-text.setup-bar-sub', {}, tp(`${bot} · Bot opponent. Reveal and Mentor stay off.`, `${bot} · יריב בוט. בלי חשיפת הפתרון ובלי Mentor.`)),
+      h('div.hint-text.setup-bar-sub', {}, tp(`${bot} · Bot opponent. Reveal and Mentor stay off.`, `${bot} · בלי חשיפת הפתרון ובלי Mentor.`)),
     );
   };
 
@@ -768,7 +770,7 @@ export function renderBattle(root, { store }) {
 
   const diffGroup = chipGroup({
     label: tp('Difficulty', 'רמת קושי'),
-    options: ['all', ...DIFFICULTIES].map((d) => ({ value: d, label: d === 'all' ? tp('All difficulties', 'כל רמות הקושי') : d, attrs: { 'data-difficulty': d } })),
+    options: ['all', ...DIFFICULTIES].map((d) => ({ value: d, label: d === 'all' ? tp('All difficulties', 'כל הרמות') : d, attrs: { 'data-difficulty': d } })),
     value: pf.difficulty,
     onChange: (d) => {
       pf.difficulty = d;

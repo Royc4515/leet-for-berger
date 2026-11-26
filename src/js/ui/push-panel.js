@@ -84,8 +84,8 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
       'ol.push-steps',
       {},
       // iOS 16.4 to 18 show Share in the toolbar, iOS 26 under the three dots, Chrome in the address bar.
-      step(1, icon('share', 'push-step-icon'), tp('Tap Share', 'לגעת ב-Share (שיתוף)'), tp('The square with an arrow, in the toolbar or the address bar. Not there? Tap the three dots first.', 'הריבוע עם החץ, בסרגל הכלים או בשורת הכתובת. לא מופיע? קודם לגעת בשלוש הנקודות.')),
-      step(2, icon('add', 'push-step-icon'), tp('Tap Add to Home Screen', 'לגעת ב-Add to Home Screen (הוספה למסך הבית)'), tp('Scroll the list down if you do not see it, then tap Add.', 'אם זה לא מופיע, לגלול את הרשימה למטה, ואז לגעת ב-Add (הוספה).')),
+      step(1, icon('share', 'push-step-icon'), tp('Tap Share', 'ללחוץ על "שיתוף" (Share)'), tp('The square with an arrow, in the toolbar or the address bar. Not there? Tap the three dots first.', 'הריבוע עם החץ, בסרגל הכלים או בשורת הכתובת. לא מופיע? קודם ללחוץ על שלוש הנקודות.')),
+      step(2, icon('add', 'push-step-icon'), tp('Tap Add to Home Screen', 'ללחוץ על "הוספה למסך הבית" (Add to Home Screen)'), tp('Scroll the list down if you do not see it, then tap Add.', 'אם זה לא מופיע, לגלול את הרשימה למטה, ואז ללחוץ על "הוספה" (Add).')),
       step(3, h('img.push-step-app', { src: 'src/brand/apple-touch-icon.png', alt: '', width: 40, height: 40 }), tp('Open Leet Berger from your Home Screen', 'לפתוח את Leet Berger ממסך הבית'), tp('Sign in there and turn on notifications on this page.', 'להתחבר שם ולהפעיל התראות בעמוד הזה.')),
     ),
     h('div.push-guide-foot', {}, h('span.hint-text', {}, tp('You do this once. It takes under a minute.', 'עושים את זה פעם אחת. זה לוקח פחות מדקה.')), h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => setGuide(false) }, tp('Close', 'לסגור'))),
@@ -104,7 +104,7 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
   const saved = h('span.push-saved');
   const dialHost = h('div.push-dial-host');
   const addButton = h('button.btn.btn-secondary.btn-sm.push-add', { type: 'button', onClick: () => dial?.add(suggestHour(st.view.hours)) }, tp('Add a reminder', 'להוסיף תזכורת'));
-  const howTo = h('p.hint-text.push-howto', {}, tp('Drag a hex round the clock to move it; past the 6 at the bottom, day turns to night. Tap an hour to add one; tap a hex, then Remove, to take it off.', 'גוררים משושה סביב השעון כדי להזיז אותו; אחרי ה-6 בתחתית, היום מתחלף בלילה. נגיעה בשעה מוסיפה תזכורת; נגיעה במשושה ואז "להסיר" מורידה אותה.'));
+  const howTo = h('p.hint-text.push-howto', {}, tp('Drag a hex round the clock to move it; past the 6 at the bottom, day turns to night. Tap an hour to add one; tap a hex, then Remove, to take it off.', 'גוררים משושה סביב השעון כדי להזיז אותו; אחרי ה-6 בתחתית, היום מתחלף בלילה. לחיצה על שעה מוסיפה תזכורת; לחיצה על משושה ואז על "להסיר" מורידה אותה.'));
   const hoursHint = h('p.hint-text.push-hours-hint');
   const hours = h(
     'div.push-hours',
@@ -140,7 +140,7 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
 
   function statusText() {
     const he = pageLang() === 'he';
-    if (support === 'install') return he ? 'ב-iPhone וב-iPad ההתראות עובדות אחרי שהאתר נוסף למסך הבית. שלוש נגיעות.' : 'On iPhone and iPad, notifications work once this site is on your Home Screen. Three taps.';
+    if (support === 'install') return he ? 'ב-iPhone וב-iPad ההתראות עובדות אחרי שהאתר נוסף למסך הבית. שלוש לחיצות.' : 'On iPhone and iPad, notifications work once this site is on your Home Screen. Three taps.';
     if (support === 'update') return he ? 'התראות ב-iPhone וב-iPad דורשות iOS 16.4 ומעלה. אחרי עדכון iOS אפשר להפעיל אותן כאן.' : 'Notifications on iPhone and iPad need iOS 16.4 or later. Update iOS, then turn this on.';
     if (support === 'unsupported') return he ? 'הדפדפן הזה לא יכול להציג התראות. Chrome, Edge, Firefox ו-Safari יכולים.' : 'This browser cannot show notifications. Chrome, Edge, Firefox and Safari can.';
     if (!signedIn()) return he ? 'כדי להפעיל, צריך להתחבר. התזכורות עוברות עם החשבון לכל מכשיר שבו הן פועלות.' : 'Sign in to turn this on. Reminders follow your account to each device you turn on.';
@@ -149,11 +149,11 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
     const others = (st.view?.devices ?? 0) - (st.on ? 1 : 0);
     const othersHe = others === 1 ? 'במכשיר אחד נוסף' : `ב-${others} מכשירים נוספים`;
     if (st.on) {
-      if (he) return `פועל. התזכורות מגיעות בשעות שלמטה, גם כשהאתר סגור.${others > 0 ? ` פועל גם ${othersHe}.` : ''}`;
+      if (he) return `מופעל. התזכורות מגיעות בשעות שמופיעות למטה, גם כשהאתר סגור.${others > 0 ? ` פועל גם ${othersHe}.` : ''}`;
       return `On. Reminders come at your hours below, even when the site is closed.${others > 0 ? ` Also on ${others === 1 ? '1 other device' : `${others} other devices`}.` : ''}`;
     }
     if (client.permission() === 'denied') return he ? 'חסום בדפדפן. צריך לאשר התראות לאתר הזה בהגדרות הדפדפן, ואז להפעיל כאן.' : 'Blocked by your browser. Allow notifications for this site in its settings, then turn this on.';
-    if (he) return `כבוי. אפשר להפעיל כדי לקבל כאן תזכורות, גם כשהאתר סגור.${others > 0 ? ` פועל ${othersHe}.` : ''}`;
+    if (he) return `מכובה. אפשר להפעיל כדי לקבל כאן תזכורות, גם כשהאתר סגור.${others > 0 ? ` פועל ${othersHe}.` : ''}`;
     return `Off. Turn it on to get reminders here, even when the site is closed.${others > 0 ? ` On for ${others === 1 ? '1 other device' : `${others} other devices`}.` : ''}`;
   }
 
@@ -179,7 +179,7 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
     const zone = st.view.timeZone && st.view.timeZone !== 'UTC' ? st.view.timeZone : client.timeZone();
     hoursHint.textContent = tp(
       `Your time, ${zone}. ${rest === null ? '' : `Nothing on your rest day, ${WEEKDAYS[rest]}. `}${full ? `${MAX_PUSH_HOURS} a day at most.` : `Up to ${MAX_PUSH_HOURS} a day.`}`,
-      `לפי השעון שלך, ${zone}. ${rest === null ? '' : `שום דבר ביום המנוחה, ${rest === 6 ? 'שבת' : `יום ${WEEKDAYS_HE[rest]}`}. `}${full ? `לכל היותר ${MAX_PUSH_HOURS} ביום.` : `עד ${MAX_PUSH_HOURS} ביום.`}`,
+      `לפי השעון שלך, ${zone}. ${rest === null ? '' : `ביום המנוחה (${rest === 6 ? 'שבת' : `יום ${WEEKDAYS_HE[rest]}`}) אין תזכורות. `}${full ? `לכל היותר ${MAX_PUSH_HOURS} ביום.` : `עד ${MAX_PUSH_HOURS} ביום.`}`,
     );
   }
 
@@ -253,7 +253,7 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
           check();
         }
       })
-      .catch((err) => toast(err?.message || tp('Could not send a test right now', 'לא ניתן לשלוח בדיקה כרגע'), 'error'))
+      .catch((err) => toast(err?.message || tp('Could not send a test right now', 'לא הצלחנו לשלוח בדיקה כרגע'), 'error'))
       .finally(() => {
         testing = false;
       });

@@ -15,14 +15,14 @@ const topicTitle = (id) => TOPICS.find((t) => t.id === id)?.title ?? id;
 const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
 const STATUS_LABEL_HE = { solved: 'נפתרה', assisted: 'נפתרה עם עזרה', attempted: 'ניסית' };
 // By tier index, beside the English in essential-path.json and TIER_SUMMARIES (data/learning-path.js).
-const TIER_TITLES_HE = ['אוצר מילים', 'דפוסים ראשונים', 'דפוסים על גבי דפוסים', 'מבני נתונים מרכזיים', 'מבנים על גבי מבנים', 'מתקדם'];
+const TIER_TITLES_HE = ['אוצר מילים', 'דפוסים ראשונים', 'דפוסים מתקדמים', 'מבני נתונים מרכזיים', 'מבנים מורכבים', 'מתקדם'];
 const TIER_SUMMARIES_HE = [
   'אפשר לשמור, לספור ולחפש במעבר אחד, ולקרוא שאילתת SQL בסיסית.',
-  'הדפוסים הראשונים עם שם כבר מוכרים: two pointers, מחסניות, סכומי קידומת, מיון, ביטים ורקורסיה.',
-  'אפשר לבנות על הדפוסים האלה: sliding window, חיפוש בינארי, מניפולציות על רשימות מקושרות ובחירות חמדניות.',
-  'אפשר לעבוד עם עצים, לחפש עם backtracking ולכתוב תכנות דינמי חד-ממדי.',
-  'אפשר להשתמש בערימות וב-tries, לסרוק גרפים ולכתוב תכנות דינמי דו-ממדי.',
-  'הכלים המתקדמים כבר בידיים: union find, אלגוריתמים מתקדמים על גרפים ושאילתות טווח.',
+  'הדפוסים הראשונים עם שם כבר מוכרים: Two Pointers, Stack, Prefix Sum, Sorting & Intervals, Bit Manipulation ו-Recursion.',
+  'אפשר לבנות על הדפוסים האלה: Sliding Window, Binary Search, Linked List ו-Greedy.',
+  'אפשר לעבוד עם Trees, לחפש עם Backtracking ולכתוב 1D Dynamic Programming.',
+  'אפשר להשתמש ב-Heap וב-Tries, לעבור על Graphs ולכתוב 2D Dynamic Programming.',
+  'הכלים המתקדמים כבר בידיים: Union Find, Advanced Graphs ו-Range Queries.',
 ];
 const pct = (done, total) => (total ? Math.round((done / total) * 100) : 0);
 
@@ -196,7 +196,7 @@ export function renderPath(root, { store }) {
                 {},
                 h('h2.path-tier-title', { id: `tier-${tier.tier}` }, h('span.tier-num', {}, tp(`Tier ${tier.tier + 1}`, `שלב ${tier.tier + 1}`)), tp(tier.title, TIER_TITLES_HE[tier.tier] ?? tier.title), h('span.path-count', {}, `${ts.done} / ${ts.total}`)),
                 TIER_SUMMARIES[tier.tier]
-                  ? h('p.path-tier-desc', {}, h('span.checkpoint', {}, tp('Checkpoint', 'נקודת ביקורת')), ` ${tp(TIER_SUMMARIES[tier.tier], TIER_SUMMARIES_HE[tier.tier] ?? TIER_SUMMARIES[tier.tier])}`)
+                  ? h('p.path-tier-desc', {}, h('span.checkpoint', {}, tp('Checkpoint', 'בסוף השלב')), ` ${tp(TIER_SUMMARIES[tier.tier], TIER_SUMMARIES_HE[tier.tier] ?? TIER_SUMMARIES[tier.tier])}`)
                   : null,
                 h('div.path-topics', {}, tier.topics.map((t) => topicSection(t, state, overall))),
               ),

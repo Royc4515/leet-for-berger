@@ -125,7 +125,7 @@ export function renderDaily(root, { store }) {
           ),
           dailyFor(today)
             ? shareButton({
-                name: tp("Share today's daily challenge", 'לשתף את האתגר היומי של היום'),
+                name: tp("Share today's daily challenge", 'לשתף את האתגר של היום'),
                 get: (lang) => dailyShare({ number: dailyNumber(today), title: catalogEntry(dailyFor(today))?.title ?? dailyFor(today), solved: isSolved(dailyFor(today)), streak, lang }),
               })
             : null,
@@ -208,10 +208,10 @@ export function renderDaily(root, { store }) {
           'p.hint-text',
           {},
           done
-            ? tp(`Done: ${done.correct} / ${done.total} correct. ${streak}-day quiz streak.`, `הושלם: ${done.correct} / ${done.total} נכונות. רצף חידונים של ${heDays(streak)}.`)
+            ? tp(`Done: ${done.correct} / ${done.total} correct. ${streak}-day quiz streak.`, `הושלם: ${done.correct} / ${done.total} נכונות. רצף חידון של ${heDays(streak)}.`)
             : tp(
                 `${DAILY_QUIZ_SIZE} multiple-choice questions from ${DAILY_QUIZ_SIZE} topics, about two minutes.${streak ? ` ${streak}-day quiz streak, keep it going.` : ''}`,
-                `${DAILY_QUIZ_SIZE} שאלות אמריקאיות מ-${DAILY_QUIZ_SIZE} נושאים, בערך 2 דקות.${streak ? ` רצף חידונים של ${heDays(streak)}, כדאי להמשיך.` : ''}`,
+                `${DAILY_QUIZ_SIZE} שאלות אמריקאיות מ-${DAILY_QUIZ_SIZE} נושאים, בערך 2 דקות.${streak ? ` רצף חידון של ${heDays(streak)}, כדאי להמשיך.` : ''}`,
               ),
         ),
       ),

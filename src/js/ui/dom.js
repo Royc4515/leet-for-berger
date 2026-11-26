@@ -200,7 +200,8 @@ export function difficulty(d) {
  * @returns {HTMLElement}
  */
 export function ilMark() {
-  return h('span.il-mark', { title: 'Israeli company' }, h('span', { 'aria-hidden': 'true' }, 'IL'), h('span.sr-only', {}, ' (Israeli company)'));
+  const label = tp('Israeli company', 'חברה ישראלית');
+  return h('span.il-mark', { title: label }, h('span', { 'aria-hidden': 'true' }, 'IL'), h('span.sr-only', {}, ` (${label})`));
 }
 
 /**

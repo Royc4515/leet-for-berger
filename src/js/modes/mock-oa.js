@@ -16,7 +16,7 @@ export const OA_FORMATS = [
   { id: 'hard-oa', label: 'Hard OA', minutes: 90, slots: ['Medium', 'Medium', 'Hard'], note: '2 Medium + 1 Hard, 90 minutes' },
 ];
 
-const FORMAT_LABELS_HE = { screen: 'ראיון טלפוני', oa: 'מבחן אונליין', 'hard-oa': 'מבחן אונליין קשה' };
+const FORMAT_LABELS_HE = { screen: 'ראיון טלפוני', oa: 'מבחן OA', 'hard-oa': 'מבחן OA קשה' };
 
 /**
  * A format's name in the page language. Takes the format or its stored English label (the last
