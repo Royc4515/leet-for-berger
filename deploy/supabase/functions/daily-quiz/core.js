@@ -18,7 +18,7 @@
  * `choice` is the index of the chosen option in the question's AUTHORED order (the browser
  * shuffles options for display and maps the choice back), so scoring needs no shuffle here.
  */
-import { QUIZ_ROWS, DAILY_QUIZ_EPOCH, DAILY_QUIZ_SIZE } from './bank.js';
+import { QUIZ_ROWS, DAILY_QUIZ_EPOCH, DAILY_QUIZ_SIZE, DAILY_LANG_CAP_SINCE, DAILY_LANG_CAP, DAILY_CAPPED_TOPICS } from './bank.js';
 
 /** Rows shown per leaderboard; the caller's own row is added when it falls below. */
 export const BOARD_SIZE = 50;
@@ -67,14 +67,22 @@ function shuffled(list, rand) {
  */
 export function dailyIds(day) {
   const rand = mulberry32(hashString(`quiz:${day}`));
-  // Only questions in the daily pool by `day` (their `since` day), as in the browser.
-  const sorted = QUIZ_ROWS.filter((r) => r[4] <= day).map(([id, topic]) => ({ id, topic })).sort((a, b) => (a.id < b.id ? -1 : 1));
+  // Only questions in the daily pool by `day` (since <= day) and not exited yet (day < until).
+  // don't touch / the pool filter, sort and language cap must match dailyQuizIds in src/js/modes/quiz.js
+  const sorted = QUIZ_ROWS
+    .filter((r) => r[4] <= day && (!r[5] || day < r[5]))
+    .map(([id, topic]) => ({ id, topic }))
+    .sort((a, b) => (a.id < b.id ? -1 : 1));
   const topics = shuffled([...new Set(sorted.map((q) => q.topic))].sort(), rand);
+  const capLang = day >= DAILY_LANG_CAP_SINCE;
+  let capped = 0;
   const picks = [];
   for (const t of topics) {
     if (picks.length === DAILY_QUIZ_SIZE) break;
+    if (capLang && DAILY_CAPPED_TOPICS.has(t) && capped >= DAILY_LANG_CAP) continue;
     const inTopic = sorted.filter((q) => q.topic === t);
     picks.push(inTopic[Math.floor(rand() * inTopic.length)].id);
+    if (DAILY_CAPPED_TOPICS.has(t)) capped++;
   }
   const rest = shuffled(sorted.filter((q) => !picks.includes(q.id)), rand);
   while (picks.length < DAILY_QUIZ_SIZE && rest.length) picks.push(rest.shift().id);

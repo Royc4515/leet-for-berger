@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed (daily quiz focus on concepts, owner's request)
+- **Daily quiz retires syntax/trivia questions and caps programming-language topics from `2026-11-27` on.** 59 retired questions leave the daily quiz via an append-only `content/quiz/daily-exits.json` (while remaining in topic practice, sprint and survival), and at most 1 question per day comes from `java`, `python`, `javascript` or `c-cpp` (`bits` stays exempt). `scripts/content/build-quiz.mjs` enforces the append-only exit guard against the committed `deploy/supabase/functions/daily-quiz/bank.js` and emits the cap constants and exit days into `src/js/data/quiz-index.js` and `bank.js` so browser and server pick identically while keeping `2026-11-23` through `2026-11-26` unchanged (verified by snapshot, 420-day parity and 365-day cap tests).
+
 ### Added (Hebrew, stage 1 of 4, owner's request)
 - **The site speaks Hebrew, right to left.** A Hebrew device opens it in Hebrew; a language button in the header (the account sheet on a narrow phone) switches, saved per device (`lfb:site-lang`). `src/js/lang-boot.js` sets `lang` and `dir` before the first paint, like the theme.
 - **Translated in this stage:** the header, the tab bar, the footer, the account menu, the palette, the reminders bell, the sign-in and reminders offers, toasts and dialogs, and the Problems page. Other pages stay English and left to right inside the Hebrew shell until their stage (`docs/I18N.md`).
