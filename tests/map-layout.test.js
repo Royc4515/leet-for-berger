@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { topicStates, problemStatus, READY_SOLVES, layoutMap, hexCells, orderTiers, neighbours, NARROW_WIDTH } from '../src/js/data/map-layout.js';
+import { topicStates, problemStatus, READY_SOLVES, lockReason, topicStateText, layoutMap, hexCells, orderTiers, neighbours, NARROW_WIDTH } from '../src/js/data/map-layout.js';
+import { TIER_TITLES, TIER_TITLES_HE } from '../src/js/data/learning-path.js';
 import { TOPICS } from '../src/js/data/taxonomy.js';
 import { availableEntries } from '../src/js/problems/index.js';
 
@@ -173,3 +174,36 @@ test('neighbours: arrow keys reach every district and move the way the map looks
     if (down) assert.ok(L.byId.get(down).y > d.y, `${d.id} -> ${down} goes down`);
   }
 });
+
+test('lockReason and topicStateText: English is byte-identical, Hebrew isolates English topic titles and has no em dashes or exclamation marks', () => {
+  const one = [{ id: 'two-pointers', title: 'Two Pointers', have: 1, need: 2 }];
+  const two = [
+    { id: 'arrays-hashing', title: 'Arrays & Hashing', have: 0, need: 2 },
+    { id: 'two-pointers', title: 'Two Pointers', have: 1, need: 2 },
+  ];
+  assert.equal(lockReason([]), '');
+  assert.equal(lockReason([], { lang: 'he' }), '');
+  assert.equal(lockReason(one), 'Opens after Two Pointers (1 of 2 solved). You can still practice it now.');
+  assert.equal(lockReason(two), 'Opens after Arrays & Hashing (0 of 2 solved) and Two Pointers (1 of 2 solved). You can still practice it now.');
+  assert.equal(lockReason(one, { detail: 'short' }), 'Opens after Two Pointers (1 of 2).');
+  assert.equal(lockReason(two, { detail: 'names' }), 'Opens after Arrays & Hashing and Two Pointers.');
+
+  assert.equal(lockReason(one, { lang: 'he' }), 'נפתח אחרי \u2066Two Pointers\u2069 (1 מתוך 2 נפתרו). אפשר לתרגל את הנושא גם עכשיו.');
+  assert.equal(lockReason(two, { lang: 'he' }), 'נפתח אחרי \u2066Arrays & Hashing\u2069 (0 מתוך 2 נפתרו) ו-\u2066Two Pointers\u2069 (1 מתוך 2 נפתרו). אפשר לתרגל את הנושא גם עכשיו.');
+  assert.equal(lockReason(one, { detail: 'short', lang: 'he' }), 'נפתח אחרי \u2066Two Pointers\u2069 (1 מתוך 2).');
+  assert.equal(lockReason(two, { detail: 'names', lang: 'he' }), 'נפתח אחרי \u2066Arrays & Hashing\u2069 ו-\u2066Two Pointers\u2069.');
+
+  assert.equal(topicStateText({ state: 'open', blockedBy: [], essentialSolved: 0, essentialTotal: 4 }), 'Everything it builds on is in place.');
+  assert.equal(topicStateText({ state: 'started', blockedBy: [], essentialSolved: 2, essentialTotal: 4 }), '2 of 4 learning path problems solved.');
+  assert.equal(topicStateText({ state: 'mastered', blockedBy: [], essentialSolved: 4, essentialTotal: 4 }), 'Every learning path problem here is solved.');
+  assert.equal(topicStateText({ state: 'locked', blockedBy: one, essentialSolved: 0, essentialTotal: 4 }), lockReason(one));
+
+  for (const state of ['open', 'started', 'mastered', 'locked']) {
+    const he = topicStateText({ state, blockedBy: one, essentialSolved: 2, essentialTotal: 4 }, 'he');
+    assert.match(he, /[\u0590-\u05FF]/, `${state} has Hebrew`);
+    assert.doesNotMatch(he, /[\u2014!]/, `${state} has no em dash or exclamation mark`);
+  }
+  assert.equal(TIER_TITLES_HE.length, TIER_TITLES.length);
+  for (const t of TIER_TITLES_HE) assert.match(t, /[\u0590-\u05FF]/);
+});
+

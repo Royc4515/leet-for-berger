@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added (Hebrew, stage 3a of 4: the Map)
+- **The Problem Map in Hebrew (`#/map`):** the side panel (topic, subtopic and problem cards, lock reasons, counts, progress, links, actions and company spotlight), breadcrumbs, Map / List switch, lens controls, List view, legend, tooltips, zoom controls and accessible names for focusable districts, subtopics and hexes are drawn in Hebrew via `tp()`, with English topic/subtopic/problem/company names isolated (`\u2066...\u2069`) inside Hebrew sentences.
+- **LTR map canvas preserved:** `.map-canvas` stays left to right with English topic, subtopic and problem labels; tier headings read in Hebrew (`שלב 1`..`6`) with `dir="rtl"`. Zoom buttons remain bottom right.
+- Pure formatting helpers `lockReason(blockedBy, { detail, lang })` and `topicStateText(st, lang)` in `src/js/data/map-layout.js` (English byte-identical, unit-tested in `tests/map-layout.test.js`); shared `TIER_TITLES_HE` exported from `src/js/data/learning-path.js` and reused by both Map and Path.
+- Marked `#/map` as a Hebrew route in `src/js/main.js` (every browse page is now Hebrew; only the exam room stays English) and updated the Hebrew e2e smoke step for the Map at 1440 px and 390 px.
+
 ### Added (Hebrew, stage 2 of 4)
 - **Every browse page in Hebrew:** the Daily challenge (its 16-week calendar mirrored, weeks from Sunday), the Learning Path, Companies and each company page, the Modes hub with the Interview, Mock OA and Battle setups and the interview report, Profile with the notifications card and the reminder clock, and the Quiz (hub, results, daily quiz, leaderboard). Only the map stays English until stage 3.
 - **The exam room stays English:** a running interview, mock OA or battle, its banner, its dialogs and toasts, are English and left to right on the Hebrew site; the report after it is Hebrew. A dialog speaks the language of what opened it.

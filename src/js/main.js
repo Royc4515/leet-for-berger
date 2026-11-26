@@ -55,7 +55,7 @@ const routes = [
   [/^#?\/?$/, async () => { const m = await import('./ui/views/dashboard.js'); return (root) => m.renderDashboard(root, { store }); }, 'problems', () => tr('Problems', 'בעיות'), true],
   [/^#\/problem\/([\w-]+)$/, loadProblemRoute, 'problems', ([, id]) => catalogEntry(id)?.title ?? 'Problem'],
   // Map levels (#/map/<topic>/<subtopic>/<problem>) zoom inside one mounted view: see `update` in route().
-  [/^#\/map(?:\/([\w-]+)(?:\/([\w-]+)(?:\/([\w-]+))?)?)?$/, async (_, [, ...parts]) => { const m = await import('./ui/views/map.js'); return (root) => m.renderMap(root, { store, parts }); }, 'map', () => tr('Map', 'מפה')],
+  [/^#\/map(?:\/([\w-]+)(?:\/([\w-]+)(?:\/([\w-]+))?)?)?$/, async (_, [, ...parts]) => { const m = await import('./ui/views/map.js'); return (root) => m.renderMap(root, { store, parts }); }, 'map', () => tr('Map', 'מפה'), true],
   [/^#\/daily$/, async () => { const m = await import('./ui/views/daily.js'); return (root) => m.renderDaily(root, { store }); }, 'problems', () => tr('Daily challenge', 'האתגר היומי'), true],
   [/^#\/path$/, async () => { const m = await import('./ui/views/path.js'); return (root) => m.renderPath(root, { store }); }, 'path', () => tr('Learning Path', 'מסלול הלמידה'), true],
   [/^#\/companies$/, async () => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompanies(root, { store }); }, 'companies', () => tr('Companies', 'חברות'), true],

@@ -15,6 +15,9 @@ const DIFFICULTY_RANK = { Easy: 0, Medium: 1, Hard: 2 };
 /** Tier names, matching the section comments in taxonomy.js. */
 export const TIER_TITLES = ['Vocabulary', 'First patterns', 'Patterns built on patterns', 'Core data structures', 'Structures on structures', 'Advanced'];
 
+/** Hebrew tier names, matching TIER_TITLES order. */
+export const TIER_TITLES_HE = ['אוצר מילים', 'דפוסים ראשונים', 'דפוסים מתקדמים', 'מבני נתונים מרכזיים', 'מבנים מורכבים', 'מתקדם'];
+
 /** What finishing each tier means, one line each, in TIER_TITLES order. */
 export const TIER_SUMMARIES = [
   'You can store, count and look things up in one pass, and read a basic SQL query.',

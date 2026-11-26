@@ -106,6 +106,53 @@ export function topicStates({ topics, placed, ids, progress }) {
   return out;
 }
 
+const joinHe = (parts) => (parts.length < 2 ? (parts[0] ?? '') : `${parts.slice(0, -1).join(', ')} ו-${parts.at(-1)}`);
+
+/**
+ * Formats why a topic is locked in English or Hebrew. Topic titles stay in English and are
+ * isolated with LRI/PDI inside Hebrew sentences so mixed punctuation never scrambles.
+ * @param {Blocker[]} blockedBy
+ * @param {{ detail?: 'full'|'short'|'names', lang?: 'en'|'he' }} [opts]
+ *   full: panel ("Opens after Two Pointers (1 of 2 solved). You can still practice it now.")
+ *   short: list view ("Opens after Two Pointers (1 of 2).")
+ *   names: district accessible name ("Opens after Two Pointers.")
+ * @returns {string}
+ */
+export function lockReason(blockedBy, { detail = 'full', lang = 'en' } = {}) {
+  if (!blockedBy?.length) return '';
+  if (lang === 'he') {
+    const part = (b) =>
+      detail === 'names'
+        ? `\u2066${b.title}\u2069`
+        : detail === 'short'
+          ? `\u2066${b.title}\u2069 (${b.have} מתוך ${b.need})`
+          : `\u2066${b.title}\u2069 (${b.have} מתוך ${b.need} נפתרו)`;
+    const tail = detail === 'full' ? ' אפשר לתרגל את הנושא גם עכשיו.' : '';
+    return `נפתח אחרי ${joinHe(blockedBy.map(part))}.${tail}`;
+  }
+  const part = (b) => (detail === 'names' ? b.title : detail === 'short' ? `${b.title} (${b.have} of ${b.need})` : `${b.title} (${b.have} of ${b.need} solved)`);
+  const tail = detail === 'full' ? ' You can still practice it now.' : '';
+  return `Opens after ${blockedBy.map(part).join(' and ')}.${tail}`;
+}
+
+/**
+ * One-line panel explanation for a topic's state, in English or Hebrew.
+ * @param {Pick<TopicState, 'state'|'blockedBy'|'essentialSolved'|'essentialTotal'>} st
+ * @param {'en'|'he'} [lang]
+ * @returns {string}
+ */
+export function topicStateText(st, lang = 'en') {
+  if (st.state === 'locked') return lockReason(st.blockedBy, { detail: 'full', lang });
+  if (lang === 'he') {
+    if (st.state === 'mastered') return 'כל הבעיות של מסלול הלמידה כאן נפתרו.';
+    if (st.state === 'started') return `${st.essentialSolved} מתוך ${st.essentialTotal} בעיות ממסלול הלמידה נפתרו.`;
+    return 'כל נושאי הבסיס כבר מוכנים.';
+  }
+  if (st.state === 'mastered') return 'Every learning path problem here is solved.';
+  if (st.state === 'started') return `${st.essentialSolved} of ${st.essentialTotal} learning path problems solved.`;
+  return 'Everything it builds on is in place.';
+}
+
 /* ---------- Layout ---------- */
 
 /** Below this width the map stacks tiers as rows; above it tiers are columns read left to right. */
