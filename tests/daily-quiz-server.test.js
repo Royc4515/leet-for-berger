@@ -4,15 +4,49 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHandler, dailyIds, scoreDaily, isPlayableDay, weekStart, streakOn, rank, weeklyTotals, cleanName } from '../deploy/supabase/functions/daily-quiz/core.js';
-import { QUIZ_ROWS } from '../deploy/supabase/functions/daily-quiz/bank.js';
-import { dailyQuizIds } from '../src/js/modes/quiz.js';
+import {
+  QUIZ_ROWS,
+  DAILY_LANG_CAP_SINCE as SERVER_CAP_SINCE,
+  DAILY_LANG_CAP as SERVER_CAP,
+  DAILY_CAPPED_TOPICS as SERVER_CAPPED_TOPICS,
+} from '../deploy/supabase/functions/daily-quiz/bank.js';
+import {
+  dailyQuizIds,
+  DAILY_LANG_CAP_SINCE,
+  DAILY_LANG_CAP,
+  DAILY_CAPPED_TOPICS,
+} from '../src/js/modes/quiz.js';
 import { QUIZ_INDEX } from '../src/js/data/quiz-index.js';
 import { readBank } from '../scripts/content/build-quiz.mjs';
 
 const BANK = new Map(readBank().map((q) => [q.id, q]));
+const INDEX_BY_ID = new Map(QUIZ_INDEX.map((e) => [e.id, e]));
 const NOW = Date.parse('2026-11-24T10:00:00Z');
 const addDays = (day, n) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
 const perfect = (day) => dailyIds(day).map((id) => ({ id, choice: BANK.get(id).answer }));
+
+// Exact daily picks captured from main before daily exits and the language cap were introduced.
+const PAST_DAYS_SNAPSHOT = {
+  '2026-11-23': ['operating-systems-kernel-checks-user-pointer', 'design-patterns-singleton-good-fit', 'java-remove-inside-for-each', 'solid-lsp-stronger-precondition', 'data-structures-visited-set-in-graphs'],
+  '2026-11-24': ['databases-choose-left-join', 'python-tuple-holding-list', 'c-cpp-array-decays-to-pointer', 'security-innerhtml-event-handler', 'java-stringbuilder-in-loop'],
+  '2026-11-25': ['python-generator-runs-lazily', 'networking-https-what-network-sees', 'algorithms-first-occurrence', 'solid-cc-coincidental-duplication', 'system-design-scale-up-vs-out'],
+  '2026-11-26': ['javascript-nan-never-equals', 'bits-unsigned-wraparound', 'algorithms-states-times-work', 'python-int-no-overflow', 'solid-ocp-rule-list'],
+};
+
+test('past days (2026-11-23 through 2026-11-26) never change in either picker', () => {
+  for (const [day, expected] of Object.entries(PAST_DAYS_SNAPSHOT)) {
+    assert.deepEqual(dailyQuizIds(QUIZ_INDEX, day), expected, `browser picker changed ${day}`);
+    assert.deepEqual(dailyIds(day), expected, `server picker changed ${day}`);
+  }
+});
+
+test('server bank cap constants match src/js/modes/quiz.js and use Sets', () => {
+  assert.equal(SERVER_CAP_SINCE, DAILY_LANG_CAP_SINCE);
+  assert.equal(SERVER_CAP, DAILY_LANG_CAP);
+  assert.ok(DAILY_CAPPED_TOPICS instanceof Set);
+  assert.ok(SERVER_CAPPED_TOPICS instanceof Set);
+  assert.deepEqual([...SERVER_CAPPED_TOPICS].sort(), [...DAILY_CAPPED_TOPICS].sort());
+});
 
 test('the server picks the same daily questions as the browser, every day for over a year', () => {
   for (let i = 0; i < 420; i++) {
@@ -23,9 +57,10 @@ test('the server picks the same daily questions as the browser, every day for ov
 
 test('the server answer key matches the bank', () => {
   assert.equal(QUIZ_ROWS.length, BANK.size);
-  for (const [id, topic, answer, count] of QUIZ_ROWS) {
+  for (const [id, topic, answer, count, since, until] of QUIZ_ROWS) {
     const q = BANK.get(id);
-    assert.deepEqual([topic, answer, count], [q.topic, q.answer, q.options.length], id);
+    const idx = INDEX_BY_ID.get(id);
+    assert.deepEqual([topic, answer, count, since, until], [q.topic, q.answer, q.options.length, idx.since, idx.until], id);
   }
 });
 
