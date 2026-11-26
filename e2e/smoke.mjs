@@ -3169,6 +3169,38 @@ try {
     await hp.click('.map-view-toggle button[data-value="map"]');
     await hp.waitForSelector('.map-canvas .district');
 
+    // Stage 3b: a guided tour on a Hebrew page is RTL and Hebrew, its card stays on screen.
+    await hp.evaluate(() => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })));
+    await hp.waitForSelector('dialog.tour[open] .tour-card');
+    await hp.waitForTimeout(320);
+    const heTour = await hp.evaluate(() => {
+      const c = document.querySelector('dialog.tour .tour-card');
+      const r = c.getBoundingClientRect();
+      return {
+        dir: c.getAttribute('dir'),
+        lang: c.getAttribute('lang'),
+        eyebrow: c.querySelector('.tour-eyebrow')?.textContent?.trim(),
+        title: c.querySelector('.tour-title')?.textContent?.trim(),
+        next: c.querySelector('.tour-next')?.textContent?.trim(),
+        skip: c.querySelector('.tour-skip')?.textContent?.trim(),
+        onScreen: r.left >= 0 && r.top >= 0 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1,
+      };
+    });
+    if (heTour.dir !== 'rtl' || heTour.lang !== 'he' || !/מפה · 1 מתוך/.test(heTour.eyebrow ?? '') || heTour.next !== 'הבא' || heTour.skip !== 'לדלג' || !heTour.onScreen) {
+      throw new Error(`Hebrew tour at 1440: ${JSON.stringify(heTour)}`);
+    }
+    if (shotsDir) {
+      await hp.screenshot({ path: `${shotsDir}/46-he-tour.png` });
+      await hp.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+      await hp.waitForTimeout(150);
+      await hp.screenshot({ path: `${shotsDir}/46-he-tour-light.png` });
+      await hp.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    }
+    await hp.click('dialog.tour .tour-next');
+    await hp.waitForFunction(() => document.querySelector('dialog.tour .tour-eyebrow')?.textContent?.includes('2 מתוך'));
+    await hp.click('dialog.tour .tour-skip');
+    await hp.waitForFunction(() => !document.querySelector('dialog.tour[open]'));
+
     // Stage 2: these pages are drawn in Hebrew, mirrored, and fit the screen; each has its shot.
     for (const [hash, wait, h1, shotName] of [
       ['#/daily', '.cal-grid, .calendar, .daily-page', 'האתגר היומי', '44-he-daily'],
@@ -3210,20 +3242,57 @@ try {
     if (!(await hp.evaluate(() => /[\u0590-\u05FF]/.test(document.querySelector('#view h1, #view h2')?.textContent ?? '')))) throw new Error('the interview report should be in Hebrew');
     if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/44-he-interview-report.png` });
 
-    // The exam room: the problem screen is English and left to right, whatever the site language.
+    // The exam room: the problem screen (and its tour) stays English and left to right, whatever the site language.
     await hp.goto(`${BASE}#/problem/pair-sum-target`);
     await hp.waitForSelector('.monaco-editor', { timeout: 30000 });
     const exam = await hp.evaluate(() => ({ dir: document.querySelector('.view-workspace')?.getAttribute('dir'), lang: document.querySelector('.view-workspace')?.getAttribute('lang'), submit: document.querySelector('button[data-action="submit"]')?.textContent.trim(), over: document.documentElement.scrollWidth - innerWidth }));
     if (exam.dir !== 'ltr' || exam.lang !== 'en' || !/Submit/.test(exam.submit ?? '') || exam.over > 0) throw new Error(`the exam room must stay English: ${JSON.stringify(exam)}`);
+    await hp.evaluate(() => dispatchEvent(new CustomEvent('tour:open', { detail: 'workspace' })));
+    await hp.waitForSelector('dialog.tour[open] .tour-card');
+    const examTour = await hp.evaluate(() => ({
+      dir: document.querySelector('dialog.tour .tour-card')?.getAttribute('dir'),
+      lang: document.querySelector('dialog.tour .tour-card')?.getAttribute('lang'),
+      next: document.querySelector('dialog.tour .tour-next')?.textContent?.trim(),
+    }));
+    if (examTour.dir !== 'ltr' || examTour.lang !== 'en' || examTour.next !== 'Next') throw new Error(`exam-room tour must stay English: ${JSON.stringify(examTour)}`);
+    await hp.keyboard.press('Escape');
+    await hp.waitForFunction(() => !document.querySelector('dialog.tour[open]'));
     if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/43-he-problem.png` });
 
-    // A phone: the Hebrew Problems and Map pages fit; the language button moves out of the narrow header.
+    // A phone: the Hebrew Problems, Map and guided tour fit; the language button moves out of the narrow header.
     await hp.setViewportSize({ width: 390, height: 844 });
     await hp.goto(`${BASE}#/`);
     await hp.waitForSelector('.problem-table tbody tr a.problem-link, .problem-list a.problem-link');
     const phone = await look();
     if (phone.over > 0) throw new Error(`Hebrew Problems page at 390 scrolls sideways by ${phone.over}px`);
     if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/390-he-problems.png` });
+    await hp.evaluate(() => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })));
+    await hp.waitForSelector('dialog.tour[open] .tour-card');
+    await hp.waitForTimeout(320);
+    const phoneTour = await hp.evaluate(() => {
+      const c = document.querySelector('dialog.tour .tour-card');
+      const r = c.getBoundingClientRect();
+      return {
+        dir: c.getAttribute('dir'),
+        lang: c.getAttribute('lang'),
+        mode: c.dataset.mode,
+        onScreen: r.left >= 0 && r.top >= 0 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1,
+        over: document.documentElement.scrollWidth - innerWidth,
+      };
+    });
+    if (phoneTour.dir !== 'rtl' || phoneTour.lang !== 'he' || phoneTour.mode !== 'sheet' || !phoneTour.onScreen || phoneTour.over > 0) {
+      throw new Error(`Hebrew tour at 390: ${JSON.stringify(phoneTour)}`);
+    }
+    if (shotsDir) {
+      await hp.screenshot({ path: `${shotsDir}/390-he-tour.png` });
+      await hp.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+      await hp.waitForTimeout(150);
+      await hp.screenshot({ path: `${shotsDir}/390-he-tour-light.png` });
+      await hp.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    }
+    await hp.click('dialog.tour .tour-skip');
+    await hp.waitForFunction(() => !document.querySelector('dialog.tour[open]'));
+
     await hp.goto(`${BASE}#/map`);
     await hp.waitForSelector('.map-canvas .district');
     const phoneMap = await look();

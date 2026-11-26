@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added (Hebrew, stage 3b of 4: guided tours)
+- **Guided tours in Hebrew (`src/js/data/tours.js`, `src/js/ui/tour.js`):** Hebrew copy for every browse and setup tour (`welcome`, `problems`, `map`, `path`, `daily`, `companies`, `company`, `modes`, `quiz`, `interview`, `battle`) within the 24/80-character limits, with `tourCopy(id, lang)` and bilingual `validateTour(tour)`. The exam-room tours (`workspace`, `mentor`) stay English and left to right on any site language.
+- **RTL tour card and placement (`src/js/data/tour-layout.js`, `src/js/ui/tour.js`):** replaced the hardcoded LTR placeholder with the tour's resolved language (`pageLang()`), translated controls (`הבא`, `חזרה`, `לדלג`, `סיום`, step counter and live status) via `tp()`, mirrored keyboard arrow direction in RTL, and mirrored beside-target tie-breaking in `placeCard(..., { dir })` (unit-tested in `tests/tours.test.js`, e2e-verified at 1440 px and 390 px).
+
 ### Added (Hebrew, stage 3a of 4: the Map)
 - **The Problem Map in Hebrew (`#/map`):** the side panel (topic, subtopic and problem cards, lock reasons, counts, progress, links, actions and company spotlight), breadcrumbs, Map / List switch, lens controls, List view, legend, tooltips, zoom controls and accessible names for focusable districts, subtopics and hexes are drawn in Hebrew via `tp()`, with English topic/subtopic/problem/company names isolated (`\u2066...\u2069`) inside Hebrew sentences.
 - **LTR map canvas preserved:** `.map-canvas` stays left to right with English topic, subtopic and problem labels; tier headings read in Hebrew (`שלב 1`..`6`) with `dir="rtl"`. Zoom buttons remain bottom right.

@@ -8,8 +8,8 @@
  * purpose: a stray click must not end an explanation half way. Skip, Esc and Done all close it,
  * and every way of closing marks the tour as seen (state/tours.js).
  */
-import { h } from './dom.js';
-import { TOURS, WELCOME, WELCOME_ALIASES } from '../data/tours.js';
+import { h, tp, pageLang } from './dom.js';
+import { TOURS, WELCOME, WELCOME_ALIASES, tourCopy } from '../data/tours.js';
 import { placeCard, spotRect, sheetScroll } from '../data/tour-layout.js';
 import { loadSeen, saveSeen, markSeen, hasSeen } from '../state/tours.js';
 
@@ -88,11 +88,14 @@ export function startTourIfDue(id, { delay = 350, wait = 4000 } = {}) {
  * @returns {() => void} closes the tour if it is still open
  */
 export function startTour(id, { onClose, withWelcome = false } = {}) {
-  const tour = TOURS[id];
+  const tour = tourCopy(id, pageLang());
   if (!tour) return () => {};
   active?.close('closed');
 
-  const steps = [...(withWelcome ? TOURS[WELCOME].steps : []), ...tour.steps].filter((s) => !s.optional || findTarget(s.target));
+  const isHe = tour.lang === 'he';
+  const dir = isHe ? 'rtl' : 'ltr';
+  const welcome = withWelcome ? tourCopy(WELCOME, tour.lang) : null;
+  const steps = [...(welcome ? welcome.steps : []), ...tour.steps].filter((s) => !s.optional || findTarget(s.target));
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   let index = 0;
   let target = null;
@@ -104,16 +107,13 @@ export function startTour(id, { onClose, withWelcome = false } = {}) {
   const title = h('h2.tour-title', { id: `tour-title-${id}` });
   const body = h('p.tour-body', { id: `tour-body-${id}` });
   const pips = h('span.tour-pips', { 'aria-hidden': 'true' }, ...steps.map(() => h('span.tour-pip')));
-  const skip = h('button.btn.btn-ghost.btn-sm.tour-skip', { type: 'button' }, 'Skip');
-  const back = h('button.btn.btn-secondary.btn-sm', { type: 'button' }, 'Back');
-  const next = h('button.btn.btn-primary.btn-sm.tour-next', { type: 'button' }, 'Next');
+  const skip = h('button.btn.btn-ghost.btn-sm.tour-skip', { type: 'button' }, isHe ? tp('Skip', 'לדלג') : 'Skip');
+  const back = h('button.btn.btn-secondary.btn-sm', { type: 'button' }, isHe ? tp('Back', 'חזרה') : 'Back');
+  const next = h('button.btn.btn-primary.btn-sm.tour-next', { type: 'button' }, isHe ? tp('Next', 'הבא') : 'Next');
   const live = h('p.sr-only', { role: 'status' });
-  // The tour content is English in this stage (docs/I18N.md), so the whole card, controls included,
-  // stays English and left to right on the Hebrew site rather than English in a mirrored layout.
-  // Stage 3 translates tours: then the controls take tp() and the card follows pageLang().
   const card = h(
     'section.tour-card',
-    { dir: 'ltr', lang: 'en' },
+    { dir, lang: tour.lang },
     eyebrow,
     title,
     body,
@@ -128,7 +128,7 @@ export function startTour(id, { onClose, withWelcome = false } = {}) {
     const viewport = { width: document.documentElement.clientWidth, height: innerHeight };
     const rect = target?.isConnected ? target.getBoundingClientRect() : null;
     const visible = rect && rect.bottom > 0 && rect.top < viewport.height && rect.width > 0;
-    const place = placeCard({ target: visible ? rect : null, card: { width: card.offsetWidth, height: card.offsetHeight }, viewport });
+    const place = placeCard({ target: visible ? rect : null, card: { width: card.offsetWidth, height: card.offsetHeight }, viewport, dir });
     dialog.classList.toggle('is-center', place.mode === 'center');
     card.dataset.mode = place.mode;
     card.style.setProperty('--tour-x', `${Math.round(place.left)}px`);
@@ -151,14 +151,14 @@ export function startTour(id, { onClose, withWelcome = false } = {}) {
     const last = i === steps.length - 1;
     target = findTarget(step.target);
     if (target && !inView(target.getBoundingClientRect())) target.scrollIntoView({ block: 'center', inline: 'nearest' });
-    eyebrow.textContent = `${tour.label} · ${i + 1} of ${steps.length}`;
+    eyebrow.textContent = isHe ? tp(`${tour.label} · ${i + 1} of ${steps.length}`, `${tour.label} · ${i + 1} מתוך ${steps.length}`) : `${tour.label} · ${i + 1} of ${steps.length}`;
     title.textContent = step.title;
     body.textContent = step.body;
     pips.querySelectorAll('.tour-pip').forEach((p, j) => p.classList.toggle('is-on', j <= i));
     back.hidden = i === 0;
     skip.hidden = last;
-    next.textContent = last ? 'Done' : 'Next';
-    live.textContent = `Step ${i + 1} of ${steps.length}. ${step.title}. ${step.body}`;
+    next.textContent = last ? (isHe ? tp('Done', 'סיום') : 'Done') : isHe ? tp('Next', 'הבא') : 'Next';
+    live.textContent = isHe ? tp(`Step ${i + 1} of ${steps.length}. ${step.title}. ${step.body}`, `שלב ${i + 1} מתוך ${steps.length}. ${step.title}. ${step.body}`) : `Step ${i + 1} of ${steps.length}. ${step.title}. ${step.body}`;
     card.classList.remove('is-entering');
     void card.offsetWidth; // restart the entrance animation for the new step
     card.classList.add('is-entering');
@@ -196,9 +196,11 @@ export function startTour(id, { onClose, withWelcome = false } = {}) {
     e.preventDefault();
     close('skipped');
   });
+  const nextKey = isHe ? 'ArrowLeft' : 'ArrowRight';
+  const prevKey = isHe ? 'ArrowRight' : 'ArrowLeft';
   dialog.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' && index < steps.length - 1) show(index + 1);
-    else if (e.key === 'ArrowLeft' && index > 0) show(index - 1);
+    if (e.key === nextKey && index < steps.length - 1) show(index + 1);
+    else if (e.key === prevKey && index > 0) show(index - 1);
   });
   addEventListener('resize', queue);
   addEventListener('scroll', queue, true);
