@@ -52,6 +52,35 @@ const CODE = {
 export const THEME_QUIPS = Object.freeze({ toLight: TO_LIGHT, toDark: TO_DARK, system: SYSTEM, code: CODE });
 
 /**
+ * The same lines in Hebrew, each approved by the owner (2026-11-26). Mode and theme names stay in
+ * English inside them (owner's request), as the switches show them.
+ */
+export const THEME_QUIPS_HE = Object.freeze({
+  toLight: ['Light mode. העיניים שלך דיווחו על באג.', 'Light mode? מי פגע בך?', 'Light mode הופעל. איפשהו בעולם מתכנת senior הרגיש שיש באג במציאות.'],
+  toDark: ['Dark mode. עכשיו אתה נראה כמו מישהו שיודע מה זה segfault.', 'ברוכים השבים לצד האפל. אין לנו cookies, יש קפה.', 'Dark mode חזר. העיניים יצטרכו תיקון, ובטח גם הקוד שלך.'],
+  system: ['נותנים למערכת להחליט. זה מהלך של מתכנת senior.'],
+  code: {
+    'shuvat-light-pink': [
+      'עורך ורוד. גרייס הופר מצאה את הבאג הראשון במחשב. באג אמיתי. עכשיו תורך.',
+      'Shuvat Light Pink. הקוד של מרגרט המילטון הנחית את אפולו על הירח. שלך צריך לעבור רק 15 בדיקות.',
+      'ורוד. עדה לאבלייס כתבה אלגוריתמים לפני שהיו מחשבים. לך יש מחשב. אין תירוצים.',
+    ],
+    terminal: ['ירוק על שחור. מצב האקר ברגר הופעל: מעכשיו מקלידים 30% יותר מהר. מקור: כל סרט סייבר.'],
+    'high-contrast': ['High Contrast. כל נקודה-פסיק חסרה נראית עכשיו מהחלל.'],
+    midnight: ['Midnight Berger. אנרגיה של 2 בלילה, בכל שעה.'],
+    'mint-light': ['Berger Mint. קוד רענן. עדיין צריך בדיקות.'],
+    'berger-light': ['Berger Light. כמו המבורגר דיאט: טכנית אותו דבר, רוחנית חסר.', 'Berger Light. עורך בהיר. משאבי אנוש עודכנו.'],
+    'dark-berger': [
+      'Dark Berger. עשוי היטב, הדרך היחידה להגיש אותו.',
+      'Dark Berger. מנת הבית. נשיקת שף.',
+      'Dark Berger. מדיום רייר זה לסטייקים. הערכה שלך עשויה היטב.',
+      'Dark Berger. ככה ברגר אמיתי מכין: עשוי היטב. כותב כמו senior, משחרר כמו senior.',
+    ],
+    site: ['Match site. עקביות. ה-code reviewer העתידי שלך מאשר.'],
+  },
+});
+
+/**
  * Picks a line from a list at random, never `last` again when there is another.
  * @param {string[]} lines
  * @param {() => number} random in [0, 1)
@@ -70,16 +99,18 @@ export function pickLine(lines, random, last) {
  * @param {{ kind: 'site'|'code', from: string, to: string }} change
  * @param {() => number} random in [0, 1)
  * @param {string} [last] the line shown last time, so it does not come twice in a row
+ * @param {'en'|'he'} [lang] the site language: the Hebrew lines on the Hebrew site
  * @returns {{ text: string, undo?: { label: string, value: string } } | null}
  */
-export function themeQuip({ kind, from, to }, random, last) {
+export function themeQuip({ kind, from, to }, random, last, lang = 'en') {
+  const Q = lang === 'he' ? THEME_QUIPS_HE : THEME_QUIPS;
   if (kind === 'code') {
-    const lines = from === to ? null : CODE[to];
+    const lines = from === to ? null : Q.code[to];
     return lines ? { text: pickLine(lines, random, last) } : null;
   }
-  if (to === 'system') return { text: pickLine(SYSTEM, random, last) };
+  if (to === 'system') return { text: pickLine(Q.system, random, last) };
   if (from === to) return null;
-  if (to === 'light') return { text: pickLine(TO_LIGHT, random, last), undo: { label: 'Back to dark', value: 'dark' } };
-  if (to === 'dark') return { text: pickLine(TO_DARK, random, last) };
+  if (to === 'light') return { text: pickLine(Q.toLight, random, last), undo: { label: lang === 'he' ? 'חזרה ל-Dark mode' : 'Back to dark', value: 'dark' } };
+  if (to === 'dark') return { text: pickLine(Q.toDark, random, last) };
   return null;
 }

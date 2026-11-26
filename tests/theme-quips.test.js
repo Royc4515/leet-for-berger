@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { THEME_QUIPS, themeQuip, pickLine } from '../src/js/data/theme-quips.js';
+import { THEME_QUIPS, THEME_QUIPS_HE, themeQuip, pickLine } from '../src/js/data/theme-quips.js';
 import { CODE_THEME_OPTIONS } from '../src/js/data/themes.js';
 
 const all = [...THEME_QUIPS.toLight, ...THEME_QUIPS.toDark, ...THEME_QUIPS.system, ...Object.values(THEME_QUIPS.code).flat()];
@@ -67,4 +67,21 @@ test('lines rotate at random and never repeat back to back', () => {
   assert.equal(pickLine(['only'], seq(0.9), 'only'), 'only');
   // random() at the edge never reads past the list.
   assert.ok(lines.includes(pickLine(lines, () => 0.9999999)));
+});
+
+test('the Hebrew lines: one list for every English list, each Hebrew, no dashes or exclamation marks; the Hebrew site gets them', () => {
+  assert.deepEqual(Object.keys(THEME_QUIPS_HE.code).sort(), Object.keys(THEME_QUIPS.code).sort());
+  for (const k of ['toLight', 'toDark', 'system']) assert.ok(THEME_QUIPS_HE[k].length >= 1, k);
+  const heAll = [...THEME_QUIPS_HE.toLight, ...THEME_QUIPS_HE.toDark, ...THEME_QUIPS_HE.system, ...Object.values(THEME_QUIPS_HE.code).flat()];
+  for (const line of heAll) {
+    assert.match(line, /[\u0590-\u05FF]/, line);
+    assert.ok(!/[\u2014\u2013!]/.test(line), line);
+    assert.ok(line.length <= 110, line);
+  }
+  const light = themeQuip({ kind: 'site', from: 'dark', to: 'light' }, () => 0, undefined, 'he');
+  assert.ok(THEME_QUIPS_HE.toLight.includes(light.text));
+  assert.deepEqual(light.undo, { label: 'חזרה ל-Dark mode', value: 'dark' });
+  assert.ok(THEME_QUIPS_HE.code.terminal.includes(themeQuip({ kind: 'code', from: 'site', to: 'terminal' }, () => 0, undefined, 'he').text));
+  // English is untouched.
+  assert.equal(themeQuip({ kind: 'site', from: 'dark', to: 'light' }, () => 0).undo.label, 'Back to dark');
 });
