@@ -60,3 +60,11 @@ test('calendarWeeks: 16 Monday-first weeks ending with the week that holds today
   assert.equal(new Set(flat).size, 112);
   assert.deepEqual(flat, [...flat].sort());
 });
+
+test('formatCountdown in Hebrew: hours and minutes in Hebrew abbreviations; English is unchanged', () => {
+  const ms = 9 * 3600000 + 42 * 60000;
+  assert.equal(formatCountdown(ms, 'he'), '9 שע׳ 42 דק׳');
+  assert.equal(formatCountdown(59 * 60000, 'he'), '59 דק׳');
+  assert.equal(formatCountdown(ms, 'en'), '9 h 42 min');
+  assert.equal(formatCountdown(ms), '9 h 42 min');
+});

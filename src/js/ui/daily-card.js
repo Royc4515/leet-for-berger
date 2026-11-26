@@ -4,14 +4,17 @@
  * the next one, and this week as seven hexes. Everything comes from local data: the deterministic
  * pick (data/recommend.js) and the user's own active days.
  */
-import { h, difficulty } from './dom.js';
+import { h, difficulty, tp, pageLang } from './dom.js';
 import { catalogEntry } from '../problems/index.js';
 import { dailyProblem, dailyCandidates } from '../data/recommend.js';
 import { dailyNumber, msUntilNextDaily, formatCountdown, calendarWeeks, bestStreak } from '../data/daily.js';
 import { dayKey, computeStreak, restDayOf } from '../state/progress.js';
 
-const DATE_FMT = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+const DATE_OPTS = { weekday: 'short', day: 'numeric', month: 'short' };
 const WEEKDAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+// Monday first, as WEEKDAY: the full name for screen readers, the letter Hebrew calendars print.
+const WEEKDAY_HE = ['יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת', 'יום ראשון'];
+const WEEKDAY_HE_LETTER = ['ב', 'ג', 'ד', 'ה', 'ו', 'ש', 'א'];
 
 /**
  * Topic title of a path problem, from the essential path.
@@ -52,16 +55,23 @@ export function dailyCard({ path, state, now, compact = false, headingId = 'dail
   const week = calendarWeeks({ today, weeks: 1, activeDays: state.activeDays, dailyFor: (d) => dailyProblem(dailyCandidates(path), d), isSolved: (id) => state.problems[id]?.status === 'solved', restDay: rest })[0];
   const streak = computeStreak(state.activeDays, now, rest);
   const best = bestStreak(state.activeDays, rest);
+  const lang = pageLang();
+  // Made per render: the page language can differ between the Problems page and the Daily page.
+  const dateFmt = new Intl.DateTimeFormat(lang === 'he' ? 'he-IL' : 'en-GB', DATE_OPTS);
+  const dayState = (d) =>
+    d.future ? 'still to come' : d.active ? 'solved something' : d.rest ? 'your streak rests' : d.today ? 'nothing solved yet' : 'no solve';
+  const dayStateHe = (d) =>
+    d.future ? 'עוד לא הגיע' : d.active ? 'נפתרה בעיה' : d.rest ? 'הרצף נח' : d.today ? 'עוד לא נפתרה בעיה' : 'בלי פתרון';
   const weekRow = h(
     'ol.week-row',
-    { 'aria-label': 'This week' },
+    { 'aria-label': tp('This week', 'השבוע') },
     week.map((d, i) =>
       h(
         `li.week-day${d.active ? '.is-active' : ''}${d.today ? '.is-today' : ''}${d.future ? '.is-future' : ''}${d.rest ? '.is-rest' : ''}`,
         {},
         h('span.week-hex', { 'aria-hidden': 'true' }),
-        h('span.week-label', { 'aria-hidden': 'true' }, WEEKDAY[i][0]),
-        h('span.sr-only', {}, `${WEEKDAY[i]}${d.rest ? ', rest day' : ''}: ${d.future ? 'still to come' : d.active ? 'solved something' : d.rest ? 'your streak rests' : d.today ? 'nothing solved yet' : 'no solve'}`),
+        h('span.week-label', { 'aria-hidden': 'true' }, tp(WEEKDAY[i][0], WEEKDAY_HE_LETTER[i])),
+        h('span.sr-only', {}, tp(`${WEEKDAY[i]}${d.rest ? ', rest day' : ''}: ${dayState(d)}`, `${WEEKDAY_HE[i]}${d.rest ? ', יום מנוחה' : ''}: ${dayStateHe(d)}`)),
       ),
     ),
   );
@@ -71,24 +81,26 @@ export function dailyCard({ path, state, now, compact = false, headingId = 'dail
     h(
       'div.today-daily-copy',
       {},
-      h('div.today-kicker', { id: headingId }, h('span.daily-no', {}, `Daily No. ${daily.number}`), h('span', {}, ` · ${DATE_FMT.format(now)}`)),
+      h('div.today-kicker', { id: headingId }, h('span.daily-no', {}, tp(`Daily No. ${daily.number}`, `אתגר יומי מס׳ ${daily.number}`)), h('span', {}, ` · ${dateFmt.format(now)}`)),
       h('h2.today-main', {}, h('a.problem-link', { href: `#/problem/${daily.id}` }, daily.entry.title)),
       h(
         'div.today-meta',
         {},
         difficulty(daily.entry.difficulty),
         topic ? h('span', {}, topic) : null,
-        done ? h('span.tag.tag-lamp', {}, 'Solved today') : null,
-        h('span.today-countdown', {}, `Next in ${formatCountdown(msUntilNextDaily(now))}`),
+        done ? h('span.tag.tag-lamp', {}, tp('Solved today', 'נפתרה היום')) : null,
+        h('span.today-countdown', {}, tp(`Next in ${formatCountdown(msUntilNextDaily(now))}`, `הבאה בעוד ${formatCountdown(msUntilNextDaily(now), 'he')}`)),
       ),
-      h('div.today-actions', {}, h('a.btn.btn-primary.today-cta', { href: `#/problem/${daily.id}` }, done ? 'Review' : 'Solve today'), compact ? h('a.btn.btn-ghost.btn-sm', { href: '#/daily' }, 'Calendar') : null),
+      h('div.today-actions', {}, h('a.btn.btn-primary.today-cta', { href: `#/problem/${daily.id}` }, done ? tp('Review', 'לחזור לבעיה') : tp('Solve today', 'לפתור היום')), compact ? h('a.btn.btn-ghost.btn-sm', { href: '#/daily' }, tp('Calendar', 'לוח שנה')) : null),
     ),
     h(
       'div.today-week',
       {},
       weekRow,
-      h('p.today-streak', {}, h('strong', {}, `${streak}`), '-day streak', h('span', {}, ` · best ${best}`)),
-      h('p.hint-text', {}, 'The same problem for everyone today.'),
+      lang === 'he'
+        ? h('p.today-streak', {}, h('strong', {}, `${streak}`), streak === 1 ? ' יום ברצף' : ' ימים ברצף', h('span', {}, ` · שיא ${best}`))
+        : h('p.today-streak', {}, h('strong', {}, `${streak}`), '-day streak', h('span', {}, ` · best ${best}`)),
+      h('p.hint-text', {}, tp('The same problem for everyone today.', 'היום כולם פותרים את אותה בעיה.')),
     ),
   );
 }
