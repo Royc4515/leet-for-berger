@@ -44,7 +44,7 @@ const VIEW_KEY = 'lfb:map-view';
 const TIER_SHORT = ['Vocabulary', 'First patterns', 'Built on patterns', 'Core structures', 'Deeper structures', 'Advanced'];
 const TIER_SHORT_HE = ['אוצר מילים', 'דפוסים ראשונים', 'דפוסים מתקדמים', 'מבני נתונים', 'מבנים מורכבים', 'מתקדם'];
 const STATE_WORD = { locked: 'Locked', open: 'Open', started: 'In progress', mastered: 'Mastered' };
-const STATE_WORD_HE = { locked: 'נעול', open: 'פתוח', started: 'בתהליך', mastered: 'הושלם' };
+const STATE_WORD_HE = { locked: 'נעול', open: 'פתוח', started: 'בתהליך', mastered: 'שליטה מלאה' };
 const STATUS_WORD = { new: 'Not started', attempted: 'Tried', solved: 'Solved', assisted: 'Solved with help' };
 const STATUS_WORD_HE = { new: 'עוד לא התחלת', attempted: 'ניסית', solved: 'נפתרה', assisted: 'נפתרה עם עזרה' };
 const CONCEPT_WORD = { new: 'Not started', started: 'In progress', done: 'Done' };
@@ -290,7 +290,7 @@ function mountMap(root, { store, placed, path, parts }) {
     h('li', {}, h('span.hexmark', { 'aria-hidden': 'true' }), tp('Not started', 'עוד לא התחלת')),
     h('li', {}, h('span.hexmark.next', { 'aria-hidden': 'true' }), tp('Your next problem', 'הבעיה הבאה שלך')),
     h('li', {}, h('span.legend-path', { 'aria-hidden': 'true' }), tp('On the learning path', 'במסלול הלמידה')),
-    h('li', {}, h('span.legend-lock', { 'aria-hidden': 'true' }), tp(`Locked: solve ${READY_SOLVES} in each topic before it`, `נעול: יש לפתור ${READY_SOLVES} בכל נושא קודם`)),
+    h('li', {}, h('span.legend-lock', { 'aria-hidden': 'true' }), tp(`Locked: solve ${READY_SOLVES} in each topic before it`, `נעול: נפתח אחרי ${READY_SOLVES} בעיות בכל נושא קודם`)),
   );
   const page = h(
     'div.page.page-wide.map-page',
@@ -370,7 +370,7 @@ function mountMap(root, { store, placed, path, parts }) {
         h('strong', {}, company.name),
         h('span.hint-text', {}, tp(`${company.ids.size} problem${company.ids.size === 1 ? '' : 's'} in ${topics} topic${topics === 1 ? '' : 's'}`, `${problemsHe(company.ids.size)} ${topics === 1 ? 'בנושא אחד' : `ב-${topics} נושאים`}`)),
       ),
-      h('a.btn-link.brief-company-set', { href: `#/companies/${company.slug}`, 'aria-label': tp(`${company.name} practice set`, `סט התרגול של ${iso(company.name)}`) }, tp('Practice set', 'לסט התרגול')),
+      h('a.btn-link.brief-company-set', { href: `#/companies/${company.slug}`, 'aria-label': tp(`${company.name} practice set`, `רשימת התרגול של ${iso(company.name)}`) }, tp('Practice set', 'לרשימת התרגול')),
     );
   }
 
@@ -952,7 +952,7 @@ function mountMap(root, { store, placed, path, parts }) {
       stateLine(st),
       topicLinks(st),
       nextCta(st.next, st.solved || st.attempted),
-      h('a.btn.btn-secondary.btn-block.brief-zoom', { href: mapLevelHash({ topic: st.id, concept: null, problem: null }) }, tp(`Zoom in: ${cs.length} subtopics`, `להתמקד: ${subtopicsHe(cs.length)}`)),
+      h('a.btn.btn-secondary.btn-block.brief-zoom', { href: mapLevelHash({ topic: st.id, concept: null, problem: null }) }, tp(`Zoom in: ${cs.length} subtopics`, `להתקרב: ${subtopicsHe(cs.length)}`)),
     );
   }
 

@@ -3,9 +3,9 @@
 ## [Unreleased]
 
 ### Added (Hebrew, stage 3a of 4: the Map)
-- **The Problem Map in Hebrew (`#/map`):** the side panel (topic, subtopic and problem cards, lock reasons, counts, progress, links, actions and company spotlight), breadcrumbs (mirrored separator in RTL), Map / List switch, lens controls, List view, legend, tooltips, zoom controls and accessible names for focusable districts, subtopics and hexes are drawn in Hebrew via `tp()`, with English topic/subtopic/problem/company names isolated (`\u2066...\u2069`) inside Hebrew sentences.
+- **The Problem Map in Hebrew (`#/map`):** the side panel (topic, subtopic and problem cards, lock reasons, counts, progress, links, actions and company spotlight), breadcrumbs, Map / List switch, lens controls, List view, legend, tooltips, zoom controls and accessible names for focusable districts, subtopics and hexes are drawn in Hebrew via `tp()`, with English topic/subtopic/problem/company names isolated (`\u2066...\u2069`) inside Hebrew sentences.
 - **LTR map canvas preserved:** `.map-canvas` stays left to right with English topic, subtopic and problem labels; tier headings read in Hebrew (`שלב 1`..`6`) with `dir="rtl"`. Zoom buttons remain bottom right.
-- Pure formatting helpers `lockReason(blockedBy, { detail, lang })` and `topicStateText(st, lang)` in `src/js/data/map-layout.js` (English byte-identical, unit-tested in `tests/map-layout.test.js`); shared `TIER_TITLES_HE` exported from `src/js/data/learning-path.js`.
+- Pure formatting helpers `lockReason(blockedBy, { detail, lang })` and `topicStateText(st, lang)` in `src/js/data/map-layout.js` (English byte-identical, unit-tested in `tests/map-layout.test.js`); shared `TIER_TITLES_HE` exported from `src/js/data/learning-path.js` and reused by both Map and Path.
 - Marked `#/map` as a Hebrew route in `src/js/main.js` (every browse page is now Hebrew; only the exam room stays English) and updated the Hebrew e2e smoke step for the Map at 1440 px and 390 px.
 
 ### Added (Hebrew, stage 2 of 4)

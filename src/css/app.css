@@ -9796,10 +9796,6 @@ body.resizing-y * {
   transform: rotate(135deg);
 }
 
-[dir='rtl'] .map-crumbs li + li::before {
-  content: '\2039';
-}
-
 [dir='rtl'] .map-tip {
   direction: rtl;
   text-align: start;

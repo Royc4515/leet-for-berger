@@ -7,15 +7,14 @@ import { pathShare } from '../../data/share.js';
 import { h, mount, difficulty, stateBlock, loadingState, hexMark, tp } from '../dom.js';
 import { siteFooter } from '../footer.js';
 import { catalogEntry } from '../../problems/index.js';
-import { pathProgress, conceptLabel, topicStartsOpen, TIER_SUMMARIES } from '../../data/learning-path.js';
+import { pathProgress, conceptLabel, topicStartsOpen, TIER_SUMMARIES, TIER_TITLES_HE } from '../../data/learning-path.js';
 import { TOPICS } from '../../data/taxonomy.js';
 import { loadPath } from '../../data/path-loader.js';
 
 const topicTitle = (id) => TOPICS.find((t) => t.id === id)?.title ?? id;
 const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
 const STATUS_LABEL_HE = { solved: 'נפתרה', assisted: 'נפתרה עם עזרה', attempted: 'ניסית' };
-// By tier index, beside the English in essential-path.json and TIER_SUMMARIES (data/learning-path.js).
-const TIER_TITLES_HE = ['אוצר מילים', 'דפוסים ראשונים', 'דפוסים מתקדמים', 'מבני נתונים מרכזיים', 'מבנים מורכבים', 'מתקדם'];
+// By tier index, beside the English in TIER_SUMMARIES (data/learning-path.js).
 const TIER_SUMMARIES_HE = [
   'אפשר לשמור, לספור ולחפש במעבר אחד, ולקרוא שאילתת SQL בסיסית.',
   'הדפוסים הראשונים עם שם כבר מוכרים: Two Pointers, Stack, Prefix Sum, Sorting & Intervals, Bit Manipulation ו-Recursion.',
