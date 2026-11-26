@@ -32,6 +32,8 @@ const pages = () => [
   // An action, not a page: main.js replays the guide of the page you are on.
   { kind: 'action', id: 'page-guide', label: tr('Guide for this page', 'הדרכה לעמוד הזה'), keywords: 'tour help walkthrough onboarding how explain הדרכה עזרה סיור הסבר', run: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) },
   ...themePaletteItems(),
+  // The site language (lang-boot.js), each option named in its own language so anyone finds it.
+  ...(globalThis.lfbLang?.options ?? []).map((o) => ({ kind: 'setting', id: `site-lang-${o.value}`, label: `${tr('Language', 'שפה')}: ${o.label}`, keywords: 'language hebrew english rtl שפה עברית אנגלית', run: () => globalThis.lfbLang.set(o.value) })),
   // Who built the site: opens the author's pages in a new tab, never in place of the practice.
   ...authorPaletteItems((href) => window.open(href, '_blank', 'noopener,noreferrer'), siteLang()),
 ];

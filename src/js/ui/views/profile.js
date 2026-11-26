@@ -212,6 +212,16 @@ export function renderProfile(root, { store }) {
     'Appearance',
     h('div.profile-field', {}, h('span.quiz-label', {}, 'Site theme'), siteThemeControl(themes.signal), h('p.hint-text', {}, 'System follows your device.')),
     h('div.profile-field', {}, h('label.quiz-label', { for: codeSelect.id }, 'Code theme'), codeSelect, h('p.hint-text', {}, 'The editor\'s colours. Match site follows the site theme.')),
+    // The site language (lang-boot.js): each option in its own language, so anyone can find theirs.
+    globalThis.lfbLang
+      ? h(
+          'div.profile-field',
+          {},
+          h('span.quiz-label', {}, 'Language / שפה'),
+          segmented({ label: 'Language', options: globalThis.lfbLang.options, value: globalThis.lfbLang.current(), onChange: (v) => globalThis.lfbLang.set(v) }),
+          h('p.hint-text', {}, 'The problems and the problem screen stay in English, as in an interview.'),
+        )
+      : null,
   );
 
   /**
