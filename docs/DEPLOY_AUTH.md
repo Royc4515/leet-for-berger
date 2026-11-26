@@ -131,6 +131,17 @@ five minutes, after the steps above.
    next full hour, **Integrations > Cron > push-run** shows a successful run, and
    `select status_code, content from net._http_response order by created desc limit 1;` shows
    `200` and `{"checked":0,"sent":0,"dropped":0}` until someone turns reminders on.
+4. **Reminder language (Hebrew stage 4)**: run `deploy/supabase/migrations/20261126_push_lang.sql`
+   in the **SQL Editor** first (adds `push_settings.lang`, defaulting existing rows to `'en'`),
+   then redeploy the function from `deploy/supabase`:
+
+   ```
+   npx supabase functions deploy push --use-api --no-verify-jwt --project-ref <your project ref>
+   ```
+
+   Verify: open `#/me` in Hebrew while signed in with notifications on; **Table Editor >
+   push_settings** now shows `lang = 'he'` for your row, and **לשלוח בדיקה** delivers the Hebrew
+   test notification ("בדיקת קשר: שומעים חזק וברור").
 
 Never delete the `push_keys` row: a new key pair cuts off every device subscribed with the old one.
 

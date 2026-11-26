@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createHandler, cleanSubscription, MAX_FAILURES, TEST_EVERY_MS, testCopy } from '../deploy/supabase/functions/push/core.js';
+import { createHandler, cleanSubscription, MAX_FAILURES, TEST_EVERY_MS, TEST_TITLE_HE, testCopy } from '../deploy/supabase/functions/push/core.js';
 import { pushLibFiles, PUSH_LIB } from '../scripts/content/build-push.mjs';
 
 const SITE = 'https://royc4515.github.io/leet-for-berger/';
@@ -92,7 +92,7 @@ test('subscribe needs a session and a time zone, stores the device and the setti
   assert.equal((await call('POST', '/subscribe', { token: 'tok-ana', body: { subscription: { endpoint: 'ftp://x' }, timeZone: 'Asia/Jerusalem' } })).status, 400);
   const ok = await call('POST', '/subscribe', { token: 'tok-ana', body: { subscription: SUB(1), timeZone: 'Asia/Jerusalem' } });
   assert.equal(ok.status, 200);
-  assert.deepEqual(ok.body, { hours: [16, 20], off: [], timeZone: 'Asia/Jerusalem', devices: 1 });
+  assert.deepEqual(ok.body, { hours: [16, 20], off: [], timeZone: 'Asia/Jerusalem', lang: 'en', devices: 1 });
   await call('POST', '/subscribe', { token: 'tok-ana', body: { subscription: SUB(2), timeZone: 'Asia/Jerusalem', hours: [8, 21] } });
   assert.deepEqual(db.settings.get('u-ana').hours, [8, 21]);
   assert.equal(db.subs.length, 2);
@@ -104,11 +104,11 @@ test('subscribe needs a session and a time zone, stores the device and the setti
 test('settings: defaults until changed, cleaned when saved', async () => {
   const { call } = fakeServer();
   assert.equal((await call('GET', '/settings')).status, 401);
-  assert.deepEqual((await call('GET', '/settings', { token: 'tok-ana' })).body, { hours: [16, 20], off: [], timeZone: 'UTC', devices: 0 });
+  assert.deepEqual((await call('GET', '/settings', { token: 'tok-ana' })).body, { hours: [16, 20], off: [], timeZone: 'UTC', lang: 'en', devices: 0 });
   const saved = await call('POST', '/settings', { token: 'tok-ana', body: { hours: [20, 9, 9, 25], off: ['away', 'spam'], timeZone: 'Asia/Jerusalem' } });
-  assert.deepEqual(saved.body, { hours: [9, 20], off: ['away'], timeZone: 'Asia/Jerusalem', devices: 0 });
+  assert.deepEqual(saved.body, { hours: [9, 20], off: ['away'], timeZone: 'Asia/Jerusalem', lang: 'en', devices: 0 });
   const kept = await call('POST', '/settings', { token: 'tok-ana', body: { off: [] } });
-  assert.deepEqual(kept.body, { hours: [9, 20], off: [], timeZone: 'Asia/Jerusalem', devices: 0 }, 'what is not sent stays');
+  assert.deepEqual(kept.body, { hours: [9, 20], off: [], timeZone: 'Asia/Jerusalem', lang: 'en', devices: 0 }, 'what is not sent stays');
 });
 
 test('unsubscribe removes only the caller\'s own device', async () => {
@@ -222,6 +222,66 @@ test('testCopy: the default rest day is Saturday; one hour, none, and no rest da
   assert.match(testCopy({ hours: [9], restDay: null }).body, /at 09:00, only when something is due\.$/);
   assert.match(testCopy({ hours: [], restDay: 6 }).body, /no reminder hours yet/);
   for (const c of [testCopy({ hours: [16, 20], restDay: 6 }), testCopy({ hours: [], restDay: null })]) assert.doesNotMatch(c.title + c.body, /[\u2013\u2014!]/);
+});
+
+test('testCopy in Hebrew: builds hours and rest day dynamically with owner-approved title', () => {
+  const sat = testCopy({ hours: [16, 20], restDay: 6, lang: 'he' });
+  assert.equal(sat.title, TEST_TITLE_HE);
+  assert.equal(sat.body, 'התזכורות מגיעות עכשיו למכשיר הזה. האמיתיות מגיעות ב-16:00 ו-20:00, רק כשיש משהו לעשות, ואף פעם לא בשבת.');
+  const fri = testCopy({ hours: [8, 13, 21], restDay: 5, lang: 'he' });
+  assert.equal(fri.body, 'התזכורות מגיעות עכשיו למכשיר הזה. האמיתיות מגיעות ב-08:00, 13:00 ו-21:00, רק כשיש משהו לעשות, ואף פעם לא ביום שישי.');
+  const noRest = testCopy({ hours: [9], restDay: null, lang: 'he' });
+  assert.equal(noRest.body, 'התזכורות מגיעות עכשיו למכשיר הזה. האמיתיות מגיעות ב-09:00, רק כשיש משהו לעשות.');
+  const none = testCopy({ hours: [], restDay: 6, lang: 'he' });
+  assert.equal(none.body, 'התזכורות מגיעות עכשיו למכשיר הזה. עוד לא נבחרו שעות לתזכורות: אפשר לבחור בפרופיל.');
+  for (const c of [sat, fri, noRest, none]) assert.doesNotMatch(c.title + c.body, /[\u2013\u2014!]/);
+});
+
+test('language: stored on subscribe and settings, preserved across partial saves, invalid rejected', async () => {
+  const { call } = fakeServer();
+  assert.equal((await call('POST', '/subscribe', { token: 'tok-ana', body: { subscription: SUB(1), timeZone: 'Asia/Jerusalem', lang: 'fr' } })).status, 400);
+  assert.equal((await call('POST', '/settings', { token: 'tok-ana', body: { lang: 42 } })).status, 400);
+  const sub = await call('POST', '/subscribe', { token: 'tok-ana', body: { subscription: SUB(1), timeZone: 'Asia/Jerusalem', lang: 'he' } });
+  assert.equal(sub.status, 200);
+  assert.equal(sub.body.lang, 'he');
+  const kept = await call('POST', '/settings', { token: 'tok-ana', body: { hours: [16] } });
+  assert.equal(kept.body.lang, 'he', 'partial update keeps stored language');
+  const switched = await call('POST', '/settings', { token: 'tok-ana', body: { lang: 'en' } });
+  assert.equal(switched.body.lang, 'en');
+});
+
+test('run and test push speak each user\'s stored language', async () => {
+  const { call, run, db, sent } = fakeServer();
+  await call('POST', '/subscribe', { token: 'tok-ana', body: { subscription: SUB(1), timeZone: 'Asia/Jerusalem', lang: 'he' } });
+  await call('POST', '/subscribe', { token: 'tok-ben', body: { subscription: SUB(2), timeZone: 'Asia/Jerusalem', lang: 'en' } });
+  db.state.set('u-ana', STREAK_STATE);
+  db.state.set('u-ben', STREAK_STATE);
+
+  assert.deepEqual((await run()).body, { checked: 2, sent: 2, dropped: 0 });
+  const anaPush = sent.find((s) => s.endpoint === SUB(1).endpoint);
+  const benPush = sent.find((s) => s.endpoint === SUB(2).endpoint);
+  assert.deepEqual(anaPush.payload, { title: 'לשמור על רצף של 2 ימים', body: 'מספיק לפתור בעיה אחת היום. נשארו 8 שע׳ 0 דק׳.', url: `${SITE}#/daily`, tag: 'streak' });
+  assert.deepEqual(benPush.payload, { title: 'Keep your 2-day streak', body: 'Solve one problem today. 8 h 0 min left.', url: `${SITE}#/daily`, tag: 'streak' });
+
+  // Unfinished problem in Hebrew keeps the problem title in English.
+  db.log.length = 0;
+  sent.length = 0;
+  db.state.set('u-ana', { ...STREAK_STATE, activeDays: ['2026-11-25'], problems: { 'pair-sum-target': { status: 'attempted', submissions: 1, accepted: 0, history: [{ at: '2026-11-25T08:00:00Z', language: 'python' }] } } });
+  db.state.set('u-ben', { ...STREAK_STATE, activeDays: ['2026-11-25'] });
+  await run();
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].payload.title, 'לסיים את Pair Sum Target');
+  assert.equal(sent[0].payload.url, `${SITE}#/problem/pair-sum-target`);
+
+  // Test push for Hebrew user speaks Hebrew with their hours and rest day.
+  sent.length = 0;
+  assert.deepEqual(await call('POST', '/test', { token: 'tok-ana', body: { endpoint: SUB(1).endpoint } }), { status: 200, body: { sent: true } });
+  assert.deepEqual(sent[0].payload, {
+    title: TEST_TITLE_HE,
+    body: 'התזכורות מגיעות עכשיו למכשיר הזה. האמיתיות מגיעות ב-16:00 ו-20:00, רק כשיש משהו לעשות, ואף פעם לא בשבת.',
+    url: `${SITE}#/me`,
+    tag: 'test',
+  });
 });
 
 test('unknown routes answer 404; the public key is public', async () => {

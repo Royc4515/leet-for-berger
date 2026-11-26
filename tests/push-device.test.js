@@ -267,14 +267,25 @@ test('test: asks the server to push to this device by its endpoint; no subscript
   assert.deepEqual([t.method, t.route, t.auth, t.body], ['POST', '/test', 'Bearer jwt', { endpoint: 'https://push.example/abc' }]);
 });
 
-test('settings and save: GET, and a POST that carries the time zone', async () => {
+test('settings and save: GET, and a POST that carries the time zone and site language', async () => {
   const b = fakeBrowser();
   const client = createPushClient({ account: b.account, scope: b.scope, fetchImpl: b.fetchImpl });
+  assert.equal(client.lang(), 'en');
   await client.settings();
   await client.save({ hours: [7] });
   assert.deepEqual(b.calls.map((c) => `${c.method} ${c.route}`), ['GET /settings', 'POST /settings']);
   assert.deepEqual(b.calls[1].body.hours, [7]);
   assert.equal(typeof b.calls[1].body.timeZone, 'string');
+  assert.equal(b.calls[1].body.lang, 'en');
+
+  const he = fakeBrowser();
+  he.scope.lfbLang = { current: () => 'he' };
+  const heClient = createPushClient({ account: he.account, scope: he.scope, fetchImpl: he.fetchImpl });
+  assert.equal(heClient.lang(), 'he');
+  await heClient.enable({ hours: [16, 20] });
+  assert.equal(he.calls.find((c) => c.route === '/subscribe').body.lang, 'he');
+  await heClient.save({ off: ['away'] });
+  assert.equal(he.calls.find((c) => c.route === '/settings').body.lang, 'he');
 });
 
 test('support through the client: an iPhone Safari tab installs first; no Push API elsewhere is unsupported', async () => {

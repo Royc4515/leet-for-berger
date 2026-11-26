@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added (Hebrew, stage 4 of 4: Web Push reminders)
+- **Web Push reminders in the user's language (`deploy/supabase/functions/push`, `src/js/auth/push-client.js`, `src/js/data/push-plan.js`):** added `lang` (`'en'` | `'he'`, default `'en'`) to `push_settings` (`db/schema.sql`, `deploy/supabase/migrations/20261126_push_lang.sql`). The browser sends its site language on subscribe and settings save (and syncs on visiting `#/me` after a language switch); the push Edge Function persists it, validates it, and passes it to `notificationCopy` and `testCopy`.
+- **Hebrew test push (`deploy/supabase/functions/push/core.js`):** owner-approved title ("בדיקת קשר: שומעים חזק וברור") with dynamic hours and rest day matching the English copy. Rebuilt `deploy/supabase/functions/push/lib/` via `scripts/content/build-push.mjs`, added unit tests across `tests/push-plan.test.js`, `tests/push-device.test.js` and `tests/push-server.test.js`, and documented the migration and Edge Function redeploy in `docs/DEPLOY_AUTH.md` section 8.
+
 ### Added (Hebrew, stage 3b of 4: guided tours)
 - **Guided tours in Hebrew (`src/js/data/tours.js`, `src/js/ui/tour.js`):** Hebrew copy for every browse and setup tour (`welcome`, `problems`, `map`, `path`, `daily`, `companies`, `company`, `modes`, `quiz`, `interview`, `battle`) within the 24/80-character limits, with `tourCopy(id, lang)` and bilingual `validateTour(tour)`. The exam-room tours (`workspace`, `mentor`) stay English and left to right on any site language.
 - **RTL tour card and placement (`src/js/data/tour-layout.js`, `src/js/ui/tour.js`):** replaced the hardcoded LTR placeholder with the tour's resolved language (`pageLang()`), translated controls (`הבא`, `חזרה`, `לדלג`, `סיום`, step counter and live status) via `tp()`, mirrored keyboard arrow direction in RTL, and mirrored beside-target tie-breaking in `placeCard(..., { dir })` (unit-tested in `tests/tours.test.js`, e2e-verified at 1440 px and 390 px).
