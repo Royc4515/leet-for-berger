@@ -81,12 +81,18 @@ test('every topic has its own source file and enough questions for a full round'
 
 test('every question in the bank has a valid classification in content/quiz/classes.json', () => {
   assert.deepEqual(validateClasses(SOURCE, readClasses()), []);
-  const sample = [{ id: 'a-1' }, { id: 'a-2', code: 'x = 1' }, { id: 'a-3' }];
-  const bad = validateClasses(sample, { 'a-2': 'concept', 'a-1': 'concept-with-code', 'a-3': 'bogus', 'extra-1': 'syntax' }).join('\n');
-  for (const want of ['sorted alphabetically', 'has a code block', 'has no code block', 'unknown class bogus', 'not found in bank']) {
+  const sample = [{ id: 'a-1' }, { id: 'a-2', code: 'x = 1' }, { id: 'a-3' }, { id: 'a-4' }];
+  const bad = validateClasses(sample, {
+    'a-2': { class: 'concept', action: 'retire' },
+    'a-1': { class: 'concept-with-code' },
+    'a-3': { class: 'bogus' },
+    'a-4': { class: 'syntax' },
+    'extra-1': { class: 'syntax', action: 'retire' },
+  }).join('\n');
+  for (const want of ['sorted alphabetically', 'has a code block', 'must not have an action', 'has no code block', 'unknown class bogus', 'requires action rescue or retire', 'not found in bank']) {
     assert.match(bad, new RegExp(want));
   }
-  assert.match(validateClasses(sample, { 'a-1': 'concept', 'a-2': 'concept-with-code' }).join('\n'), /a-3: missing class/);
+  assert.match(validateClasses(sample, { 'a-1': { class: 'concept' }, 'a-2': { class: 'concept-with-code' } }).join('\n'), /a-3: missing class entry/);
 });
 
 test('correct answers are spread over positions as authored', () => {
