@@ -3,6 +3,9 @@
  * Modes hub. Persistence stays in the view layer (via state/user-data.js) so this module stays
  * DOM- and I/O-free (CLAUDE.md invariant 6).
  */
+import { bandLabel } from './interview.js';
+import { oaFormatLabel } from './mock-oa.js';
+import { botLabel } from './battle.js';
 
 const VALID_BANDS = new Set(['strong', 'mid', 'low']);
 
@@ -65,16 +68,18 @@ export function parseLastResults(raw) {
 /**
  * Formats a stored interview result for the Modes hub card.
  * @param {{ formatLabel?: string, score: number, band: string, bandLabel: string, solved: number, total: number } | null | undefined} entry
+ * @param {'en' | 'he'} [lang] the stored labels are English; Hebrew maps them by band and format
  * @returns {{ text: string, band: string, bandLabel: string } | null}
  */
-export function formatLastInterview(entry) {
+export function formatLastInterview(entry, lang = 'en') {
   if (!entry) return null;
+  const he = lang === 'he';
   const parts = [];
-  if (entry.formatLabel) parts.push(entry.formatLabel);
-  parts.push(`${entry.score} / 100 (${entry.bandLabel})`);
-  parts.push(`${entry.solved} / ${entry.total} solved`);
+  if (entry.formatLabel) parts.push(he ? oaFormatLabel(entry.formatLabel, 'he') : entry.formatLabel);
+  parts.push(`${entry.score} / 100 (${he ? bandLabel(entry.band, 'he') || entry.bandLabel : entry.bandLabel})`);
+  parts.push(he ? `${entry.solved} / ${entry.total} נפתרו` : `${entry.solved} / ${entry.total} solved`);
   return {
-    text: `Last session: ${parts.join(' · ')}`,
+    text: he ? `הסשן האחרון: ${parts.join(' · ')}` : `Last session: ${parts.join(' · ')}`,
     band: entry.band,
     bandLabel: entry.bandLabel,
   };
@@ -83,10 +88,16 @@ export function formatLastInterview(entry) {
 /**
  * Formats a stored battle result for the Modes hub card.
  * @param {{ won: boolean, botName: string, problemTitle: string } | null | undefined} entry
+ * @param {'en' | 'he'} [lang] the problem title stays English (docs/I18N.md)
  * @returns {{ text: string, won: boolean } | null}
  */
-export function formatLastBattle(entry) {
+export function formatLastBattle(entry, lang = 'en') {
   if (!entry) return null;
+  if (lang === 'he') {
+    const bot = botLabel(entry.botName, 'he');
+    const outcome = entry.won ? `ניצחון מול ${bot}` : `${bot} סיים ראשון`;
+    return { text: `המרוץ האחרון: ${outcome} · ${entry.problemTitle}`, won: entry.won };
+  }
   const outcome = entry.won ? `Won vs ${entry.botName}` : `${entry.botName} finished first`;
   return {
     text: `Last race: ${outcome} · ${entry.problemTitle}`,

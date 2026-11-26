@@ -5,14 +5,15 @@
  */
 import { shareButton } from '../share.js';
 import { companyShare } from '../../data/share.js';
-import { h, mount, difficulty, chip, chipGroup, segmented, ilMark, stateBlock, loadingState, hexMark, companyMark } from '../dom.js';
+import { h, mount, difficulty, chip, chipGroup, segmented, ilMark, stateBlock, loadingState, hexMark, companyMark, tp, pageLang } from '../dom.js';
 import { siteFooter } from '../footer.js';
 import { loadSets, loadProblemTopics, loadCompanyLogos, companyLogo } from '../../data/company-loader.js';
 import { TOPICS } from '../../data/taxonomy.js';
 import { expandRows, companyProgress, monogram, frequencyLevel } from '../../data/company-sets.js';
-import { filterRanked, findBySlug, israelBadge, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
+import { filterRanked, findBySlug, israelBadge, israelFilterLabel, ISRAEL_FILTERS, DEFAULT_ISRAEL_FILTER } from '../../data/israel-hiring.js';
 
 const RECENCY_LABEL = { '30d': 'Last 30 days', '3m': 'Last 3 months', '6m': 'Last 6 months', older: 'Older' };
+const RECENCY_LABEL_HE = { '30d': 'ב-30 הימים האחרונים', '3m': 'ב-3 החודשים האחרונים', '6m': 'ב-6 החודשים האחרונים', older: 'לפני יותר מחצי שנה' };
 
 export { loadSets };
 
@@ -34,8 +35,8 @@ export async function loadRankedCompanies() {
  * @param {string} [label]
  * @returns {HTMLElement}
  */
-export function israelFilterControl(initial, onChange, label = 'Show companies') {
-  return segmented({ label, options: ISRAEL_FILTERS.map((f) => ({ value: f.id, label: f.label })), value: initial, onChange });
+export function israelFilterControl(initial, onChange, label = tp('Show companies', 'אילו חברות להציג')) {
+  return segmented({ label, options: ISRAEL_FILTERS.map((f) => ({ value: f.id, label: israelFilterLabel(f.id, pageLang()) })), value: initial, onChange });
 }
 
 /**
@@ -44,7 +45,7 @@ export function israelFilterControl(initial, onChange, label = 'Show companies')
  * @returns {HTMLElement|null}
  */
 export function israelBadgeEl(level) {
-  const text = israelBadge(level);
+  const text = israelBadge(level, pageLang());
   return text ? h(`span.tag.il-badge.il-${level}`, {}, text) : null;
 }
 
@@ -54,16 +55,26 @@ const isSolvedIn = (state) => (id) => state.problems[id]?.status === 'solved';
 function careersLink(company) {
   const href = company.careersIL ?? company.careers;
   if (!href) return null;
-  const [text, label] = company.careersIL ? ['Jobs in Israel', 'jobs in Israel'] : ['Careers site', 'careers site'];
-  return h('a.btn.btn-secondary.btn-sm.company-careers', { href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': `${company.name} ${label} (opens in a new tab)` }, text, h('span.company-careers-arrow', { 'aria-hidden': 'true' }, '↗'));
+  const [text, label] = company.careersIL
+    ? [tp('Jobs in Israel', 'משרות בישראל'), tp(`${company.name} jobs in Israel (opens in a new tab)`, `משרות ב-${company.name} בישראל (נפתח בכרטיסייה חדשה)`)]
+    : [tp('Careers site', 'אתר הקריירה'), tp(`${company.name} careers site (opens in a new tab)`, `אתר הקריירה של ${company.name} (נפתח בכרטיסייה חדשה)`)];
+  return h('a.btn.btn-secondary.btn-sm.company-careers', { href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': label }, text, h('span.company-careers-arrow', { 'aria-hidden': 'true' }, '↗'));
 }
 
 /** Names identify which companies asked a problem; no logos ship (docs/research/DESIGN_DIRECTIONS.md). */
 const TRADEMARK_NOTE = 'Company names and logos are trademarks of their owners, used here only to say which companies asked a problem. No affiliation or endorsement.';
+const TRADEMARK_NOTE_HE = 'שמות החברות והלוגואים שלהן הם סימנים מסחריים של בעליהם, ומופיעים כאן רק כדי לציין אילו חברות שאלו בעיה. אין כאן קשר או המלצה מצד החברות.';
+// Read at render time: the page language is known only then.
+const trademarkNote = () => tp(TRADEMARK_NOTE, TRADEMARK_NOTE_HE);
 const ISRAEL_LINE = {
   major: 'Major engineering presence in Israel',
   present: 'Hires engineers in Israel',
   none: 'No Israeli engineering hiring found',
+};
+const ISRAEL_LINE_HE = {
+  major: 'מרכז פיתוח גדול בישראל',
+  present: 'מגייסת מהנדסים בישראל',
+  none: 'לא מצאנו גיוס מהנדסים בישראל',
 };
 const topicTitle = (id) => TOPICS.find((t) => t.id === id)?.title ?? id;
 
@@ -72,10 +83,10 @@ const progressBar = (done, total) =>
   h('span.progress-bar', { 'aria-hidden': 'true' }, h('span.progress-fill', { style: { width: `${total ? Math.round((done / total) * 100) : 0}%` } }));
 
 /** "x of y solved", or why there is nothing to count yet. */
-const solvedText = (prog) => (prog.onSite ? `${prog.solved} of ${prog.onSite} solved` : 'Nothing to practice here yet');
+const solvedText = (prog) => (prog.onSite ? tp(`${prog.solved} of ${prog.onSite} solved`, `${prog.solved} מתוך ${prog.onSite} נפתרו`) : tp('Nothing to practice here yet', 'עוד אין כאן מה לתרגל'));
 
 function loading(root) {
-  mount(root, h('div.page', {}, loadingState({ label: 'Loading companies...' })));
+  mount(root, h('div.page', {}, loadingState({ label: tp('Loading companies...', 'טוען חברות…') })));
 }
 
 function loadFailed(root) {
@@ -85,11 +96,11 @@ function loadFailed(root) {
       'div.page.page-narrow',
       {},
       stateBlock({
-        title: 'Could not load companies',
-        body: 'Company data could not be loaded. Check your connection and reload.',
+        title: tp('Could not load companies', 'לא הצלחנו לטעון את החברות'),
+        body: tp('Company data could not be loaded. Check your connection and reload.', 'לא הצלחנו לטעון את נתוני החברות. כדאי לבדוק את החיבור ולטעון מחדש.'),
         kind: 'error',
         headingTag: 'h1',
-        action: { label: 'Reload', onClick: () => location.reload() },
+        action: { label: tp('Reload', 'לטעון מחדש'), onClick: () => location.reload() },
       }),
       siteFooter(),
     ),
@@ -108,16 +119,16 @@ export function renderCompanies(root, { store }) {
   const grid = h('div.company-grid');
   const count = h('p.hint-text.company-count', { role: 'status' });
   // What "Jobs in Israel" means, said where the list is: a link, checked once, not a live count.
-  const jobsNote = h('p.hint-text.company-jobs-note', { hidden: true }, 'Companies whose page links straight to their own job search in Israel. Open roles change daily: the search shows what is open now.');
+  const jobsNote = h('p.hint-text.company-jobs-note', { hidden: true }, tp('Companies whose page links straight to their own job search in Israel. Open roles change daily: the search shows what is open now.', 'חברות שהדף שלהן מקשר ישר לחיפוש המשרות שלהן בישראל. המשרות הפתוחות משתנות כל יום: החיפוש מראה מה פתוח עכשיו.'));
   let data = null;
 
   function renderGrid() {
     const state = store.get();
     const list = filterRanked(data.ranked, filters);
-    count.textContent = `${list.length} ${list.length === 1 ? 'company' : 'companies'}`;
+    count.textContent = tp(`${list.length} ${list.length === 1 ? 'company' : 'companies'}`, list.length === 1 ? 'חברה אחת' : `${list.length} חברות`);
     jobsNote.hidden = filters.filter !== 'jobs';
     if (!list.length) {
-      mount(grid, h('p.empty', {}, 'No companies match.'));
+      mount(grid, h('p.empty', {}, tp('No companies match.', 'אין חברות מתאימות.')));
       return;
     }
     mount(
@@ -135,7 +146,7 @@ export function renderCompanies(root, { store }) {
             {},
             h('span.company-card-name', {}, c.name, c.israeli ? ilMark() : null),
             h('span.company-card-sub', {}, solvedText(prog)),
-            filters.filter === 'all' && israelBadge(c.israel) ? h('span.company-card-sub.company-card-level', {}, israelBadge(c.israel)) : null,
+            filters.filter === 'all' && israelBadge(c.israel) ? h('span.company-card-sub.company-card-level', {}, israelBadge(c.israel, pageLang())) : null,
             progressBar(prog.solved, prog.onSite),
           ),
         );
@@ -147,7 +158,7 @@ export function renderCompanies(root, { store }) {
     if (disposed) return;
     if (!d) return loadFailed(root);
     data = d;
-    const search = h('input.search', { type: 'search', placeholder: 'Search companies', 'aria-label': 'Search companies' });
+    const search = h('input.search', { type: 'search', placeholder: tp('Search companies', 'חיפוש חברות'), 'aria-label': tp('Search companies', 'חיפוש חברות') });
     search.addEventListener('input', () => {
       filters.query = search.value;
       renderGrid();
@@ -163,9 +174,16 @@ export function renderCompanies(root, { store }) {
           h(
             'div',
             {},
-            h('span.eyebrow', {}, `${data.ranked.length} companies · ${data.ranked.filter((c) => c.israel === 'major' || c.israel === 'present').length} hire engineers in Israel`),
-            h('h1', {}, 'Companies'),
-            h('p.page-sub', {}, 'Pick a company to see the problems it asks most, and practice the version it asks.'),
+            h(
+              'span.eyebrow',
+              {},
+              tp(
+                `${data.ranked.length} companies · ${data.ranked.filter((c) => c.israel === 'major' || c.israel === 'present').length} hire engineers in Israel`,
+                `${data.ranked.length} חברות · ${data.ranked.filter((c) => c.israel === 'major' || c.israel === 'present').length} מגייסות מהנדסים בישראל`,
+              ),
+            ),
+            h('h1', {}, tp('Companies', 'חברות')),
+            h('p.page-sub', {}, tp('Pick a company to see the problems it asks most, and practice the version it asks.', 'אפשר לבחור חברה, לראות את הבעיות שהיא שואלת הכי הרבה ולתרגל את הגרסה שלה.')),
           ),
         ),
         h(
@@ -183,8 +201,8 @@ export function renderCompanies(root, { store }) {
         count,
         jobsNote,
         grid,
-        h('p.hint-text.company-source', {}, 'Company tags are crowdsourced from public datasets (content/SOURCES.md). Treat them as a trend, not a promise. Israel hiring labels: content/israel-hiring.md.'),
-        siteFooter({ note: TRADEMARK_NOTE }),
+        h('p.hint-text.company-source', {}, tp('Company tags are crowdsourced from public datasets (content/SOURCES.md). Treat them as a trend, not a promise. Israel hiring labels: content/israel-hiring.md.', 'השיוך לחברות נאסף ממאגרי מידע ציבוריים שהקהילה מעדכנת (content/SOURCES.md). כדאי לקרוא אותו כמגמה, לא כהבטחה. תוויות הגיוס בישראל: content/israel-hiring.md.')),
+        siteFooter({ note: trademarkNote() }),
       ),
     );
     renderGrid();
@@ -224,16 +242,17 @@ export function renderCompany(root, { store, slug }) {
   let logos = null;
 
   const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
+  const STATUS_LABEL_HE = { solved: 'נפתרה', assisted: 'נפתרה עם עזרה', attempted: 'ניסית' };
 
   /** Frequency as a labelled 3-step meter; the word and recency are the text, the steps decorate. */
   const freqMeter = (r) => {
-    const level = frequencyLevel(r.frequency);
+    const level = frequencyLevel(r.frequency, pageLang());
     return h(
       'span.freq-meter',
-      { title: `Frequency ${r.frequency} of 100` },
+      { title: tp(`Frequency ${r.frequency} of 100`, `תדירות ${r.frequency} מתוך 100`) },
       h('span.freq-steps', { 'aria-hidden': 'true' }, [1, 2, 3].map((i) => h(`span.freq-step${i <= level.steps ? '.is-on' : ''}`))),
       h('span.freq-label', {}, level.label),
-      h('span.freq-text', {}, RECENCY_LABEL[r.recency]),
+      h('span.freq-text', {}, tp(RECENCY_LABEL, RECENCY_LABEL_HE)[r.recency]),
     );
   };
 
@@ -249,12 +268,12 @@ export function renderCompany(root, { store, slug }) {
     const big = (value, label) => h('div.company-fact', {}, h('div.company-fact-value', {}, value), h('div.company-fact-label', {}, label));
     mount(
       facts,
-      big(`${prog.solved} / ${prog.onSite}`, 'solved of what you can practice here'),
-      big(`${high}`, 'asked often (high frequency)'),
+      big(`${prog.solved} / ${prog.onSite}`, tp('solved of what you can practice here', 'נפתרו מתוך מה שאפשר לתרגל כאן')),
+      big(`${high}`, tp('asked often (high frequency)', 'נשאלות לעיתים קרובות (תדירות גבוהה)')),
       h(
         'div.company-fact.company-mix',
         {},
-        h('div.company-fact-label', {}, `Difficulty of its top ${all.length}`),
+        h('div.company-fact-label', {}, tp(`Difficulty of its top ${all.length}`, `רמת הקושי של ${all.length} המובילות`)),
         h('div.mix-bar', { 'aria-hidden': 'true' }, mix.map((m) => h(`span.mix-seg.mix-${m.d.toLowerCase()}`, { style: { flexGrow: String(m.n) } }))),
         h('div.mix-legend', {}, mix.map((m) => h('span', {}, difficulty(m.d), ` ${Math.round((m.n / mixTotal) * 100)}%`))),
       ),
@@ -268,10 +287,10 @@ export function renderCompany(root, { store, slug }) {
     const top = [...counts].sort((a, b) => b[1] - a[1] || topicTitle(a[0]).localeCompare(topicTitle(b[0]))).slice(0, 6);
     mount(
       asks,
-      h('h2.section-title', { id: 'asks-title' }, 'What it asks most'),
+      h('h2.section-title', { id: 'asks-title' }, tp('What it asks most', 'מה היא שואלת הכי הרבה')),
       top.length
-        ? h('ul.asks-list', {}, top.map(([t, n]) => h('li', {}, h('a.asks-topic', { href: `#/map/${t}` }, hexMark('new'), topicTitle(t)), h('span.asks-count', {}, `${n} ${n === 1 ? 'problem' : 'problems'}`))))
-        : h('p.hint-text', {}, 'None of its problems are on the site yet.'),
+        ? h('ul.asks-list', {}, top.map(([t, n]) => h('li', {}, h('a.asks-topic', { href: `#/map/${t}` }, hexMark('new'), topicTitle(t)), h('span.asks-count', {}, tp(`${n} ${n === 1 ? 'problem' : 'problems'}`, n === 1 ? 'בעיה אחת' : `${n} בעיות`)))))
+        : h('p.hint-text', {}, tp('None of its problems are on the site yet.', 'עוד אין באתר אף אחת מהבעיות שלה.')),
     );
   }
 
@@ -279,7 +298,10 @@ export function renderCompany(root, { store, slug }) {
     const state = store.get();
     const all = expandRows(sets, company);
     const prog = companyProgress(all, isSolvedIn(state));
-    summary.textContent = `${company.total} tagged problems. ${prog.onSite} of the top ${all.length} can be practiced here, ${prog.solved} solved.`;
+    summary.textContent = tp(
+      `${company.total} tagged problems. ${prog.onSite} of the top ${all.length} can be practiced here, ${prog.solved} solved.`,
+      `${company.total} בעיות משויכות. אפשר לתרגל כאן ${prog.onSite} מתוך ${all.length} המובילות, ${prog.solved} נפתרו.`,
+    );
     mount(headProgress, h('span.company-progress-text', {}, solvedText(prog)), progressBar(prog.solved, prog.onSite));
     renderBriefing();
     const rows = all.filter((r) => (!filters.onSiteOnly || r.practice) && (filters.difficulty === 'All' || r.problem.difficulty === filters.difficulty));
@@ -289,10 +311,10 @@ export function renderCompany(root, { store, slug }) {
       mount(
         emptyHost,
         stateBlock({
-          title: 'No matching problems',
-          body: 'No problems match these filters. Try another difficulty or include problems not on the site yet.',
+          title: tp('No matching problems', 'אין בעיות מתאימות'),
+          body: tp('No problems match these filters. Try another difficulty or include problems not on the site yet.', 'אין בעיות שמתאימות לסינון הזה. אפשר לבחור רמת קושי אחרת או להציג גם בעיות שעוד אין באתר.'),
           kind: 'empty',
-          action: clearFilters ? { label: 'Clear filters', variant: 'btn-secondary', onClick: clearFilters } : null,
+          action: clearFilters ? { label: tp('Clear filters', 'לנקות את הסינון'), variant: 'btn-secondary', onClick: clearFilters } : null,
         }),
       );
       return;
@@ -304,16 +326,19 @@ export function renderCompany(root, { store, slug }) {
       rows.map((r) => {
         const entry = r.practice ? state.problems[r.practice.contentId] : null;
         const status = entry?.status === 'solved' ? (entry.revealed ? 'assisted' : 'solved') : entry ? 'attempted' : 'todo';
-        const statusLabel = STATUS_LABEL[status];
+        const statusLabel = tp(STATUS_LABEL, STATUS_LABEL_HE)[status];
         const name = r.problem.number ? `${r.problem.number}. ${r.problem.title}` : r.problem.title;
         let practice;
-        if (!r.practice) practice = h('span.tag.tag-muted', {}, 'Not on the site yet');
+        if (!r.practice) practice = h('span.tag.tag-muted', {}, tp('Not on the site yet', 'עוד לא באתר'));
         else
           practice = h(
             'a.btn.btn-secondary.btn-sm.practice-link',
             // The visible word is short; the name says which problem, and whether it is a sibling version.
-            { href: `#/problem/${r.practice.contentId}`, 'aria-label': r.similar ? `Practice a similar version of ${name}` : `Practice ${name}` },
-            r.similar ? 'Practice similar' : 'Practice',
+            {
+              href: `#/problem/${r.practice.contentId}`,
+              'aria-label': r.similar ? tp(`Practice a similar version of ${name}`, `לתרגל גרסה דומה של ${name}`) : tp(`Practice ${name}`, `לתרגל את ${name}`),
+            },
+            r.similar ? tp('Practice similar', 'לתרגל גרסה דומה') : tp('Practice', 'לתרגל'),
           );
         return h(
           `tr${r.practice ? '.has-practice' : '.row-offsite'}`,
@@ -321,9 +346,9 @@ export function renderCompany(root, { store, slug }) {
           h(
             'td.cell-status',
             {},
-            h(`span.status-pill.s-${status}`, {}, hexMark(status), h('span.sr-only', {}, statusLabel ?? 'Not solved')),
+            h(`span.status-pill.s-${status}`, {}, hexMark(status), h('span.sr-only', {}, statusLabel ?? tp('Not solved', 'לא נפתרה'))),
           ),
-          h('td.cell-title', {}, h('span.company-problem', {}, name), r.versions > 1 ? h('span.tag.tag-muted', { title: 'This company asks several versions of this idea' }, `${r.versions} versions`) : null),
+          h('td.cell-title', {}, h('span.company-problem', {}, name), r.versions > 1 ? h('span.tag.tag-muted', { title: tp('This company asks several versions of this idea', 'החברה שואלת כמה גרסאות של הרעיון הזה') }, tp(`${r.versions} versions`, `${r.versions} גרסאות`)) : null),
           h('td.cell-diff', {}, difficulty(r.problem.difficulty)),
           h('td.cell-freq', {}, freqMeter(r)),
           h('td.cell-practice', {}, practice),
@@ -345,11 +370,11 @@ export function renderCompany(root, { store, slug }) {
           'div.page.page-narrow',
           {},
           stateBlock({
-            title: 'Not found',
-            body: 'No company data for this name.',
+            title: tp('Not found', 'לא נמצא'),
+            body: tp('No company data for this name.', 'אין נתונים על חברה בשם הזה.'),
             kind: 'empty',
             headingTag: 'h1',
-            action: { label: 'All companies', href: '#/companies' },
+            action: { label: tp('All companies', 'לכל החברות'), href: '#/companies' },
           }),
           siteFooter(),
         ),
@@ -357,8 +382,8 @@ export function renderCompany(root, { store, slug }) {
       return;
     }
     const diff = chipGroup({
-      label: 'Difficulty',
-      options: ['All', 'Easy', 'Medium', 'Hard'].map((d) => ({ value: d, label: d === 'All' ? 'All difficulties' : d, attrs: { 'data-value': d } })),
+      label: tp('Difficulty', 'רמת קושי'),
+      options: ['All', 'Easy', 'Medium', 'Hard'].map((d) => ({ value: d, label: d === 'All' ? tp('All difficulties', 'כל הרמות') : d, attrs: { 'data-value': d } })),
       value: filters.difficulty,
       onChange: (d) => {
         filters.difficulty = d;
@@ -367,7 +392,7 @@ export function renderCompany(root, { store, slug }) {
     });
     // A filter chip that toggles on its own (not part of an exclusive group).
     const onSite = chip({
-      label: 'On the site only',
+      label: tp('On the site only', 'רק מה שיש באתר'),
       pressed: filters.onSiteOnly,
       attrs: { id: 'on-site-only' },
       onClick: () => {
@@ -389,7 +414,19 @@ export function renderCompany(root, { store, slug }) {
       h(
         'table.problem-table.company-table',
         {},
-        h('thead', {}, h('tr', {}, h('th.cell-status', { scope: 'col' }, h('span.sr-only', {}, 'Status')), h('th', { scope: 'col' }, 'Problem'), h('th', { scope: 'col' }, 'Difficulty'), h('th', { scope: 'col' }, 'Frequency'), h('th', { scope: 'col' }, h('span.sr-only', {}, 'Practice')))),
+        h(
+          'thead',
+          {},
+          h(
+            'tr',
+            {},
+            h('th.cell-status', { scope: 'col' }, h('span.sr-only', {}, tp('Status', 'סטטוס'))),
+            h('th', { scope: 'col' }, tp('Problem', 'בעיה')),
+            h('th', { scope: 'col' }, tp('Difficulty', 'רמת קושי')),
+            h('th', { scope: 'col' }, tp('Frequency', 'תדירות')),
+            h('th', { scope: 'col' }, h('span.sr-only', {}, tp('Practice', 'תרגול'))),
+          ),
+        ),
         body,
       ),
     );
@@ -398,7 +435,7 @@ export function renderCompany(root, { store, slug }) {
       h(
         'div.page',
         {},
-        h('a.back-link', { href: '#/companies' }, 'All companies'),
+        h('a.back-link', { href: '#/companies' }, tp('All companies', 'כל החברות')),
         h(
           'header.page-head.company-head',
           // The brand's own colour glows faintly behind the header (measured from its logo).
@@ -407,7 +444,7 @@ export function renderCompany(root, { store, slug }) {
           h(
             'div.company-head-copy',
             {},
-            h('span.eyebrow', {}, ISRAEL_LINE[company.israel] ?? 'Company'),
+            h('span.eyebrow', {}, tp(ISRAEL_LINE, ISRAEL_LINE_HE)[company.israel] ?? tp('Company', 'חברה')),
             h('h1', {}, company.name, company.israeli ? ilMark() : null),
             summary,
             headProgress,
@@ -420,18 +457,18 @@ export function renderCompany(root, { store, slug }) {
             // site (content/company-careers.json, checked by check-careers.mjs).
             careersLink(company),
             shareButton({
-              name: `Share ${company.name}'s practice set`,
+              name: tp(`Share ${company.name}'s practice set`, `לשתף את סט התרגול של ${company.name}`),
               get: (lang) => companyShare({ ...company, ...companyProgress(expandRows(sets, company), isSolvedIn(store.get())), lang }),
             }),
           ),
         ),
         facts,
         asks,
-        h('h2.section-title.company-list-title', {}, 'The problems, most asked first'),
+        h('h2.section-title.company-list-title', {}, tp('The problems, most asked first', 'הבעיות, מהנשאלת ביותר')),
         h('div.filters.company-filters', {}, diff, onSite),
         tableWrap,
         emptyHost,
-        siteFooter({ note: TRADEMARK_NOTE }),
+        siteFooter({ note: trademarkNote() }),
       ),
     );
     renderRows();

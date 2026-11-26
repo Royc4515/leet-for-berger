@@ -19,6 +19,21 @@ export const BOT_LEVELS = [
   { id: 'grandmaster', label: 'Grandmaster bot', speed: 0.55 },
 ];
 
+const BOT_LABELS_HE = { rookie: 'בוט מתחיל', regular: 'בוט רגיל', grandmaster: 'בוט גראנדמאסטר' };
+
+/**
+ * A bot's name in the page language. Takes a level id or the stored English label (the last race
+ * keeps the English one); an unknown value comes back as it is. The race itself stays English.
+ * @param {string} levelOrLabel
+ * @param {'en' | 'he'} [lang]
+ * @returns {string}
+ */
+export function botLabel(levelOrLabel, lang = 'en') {
+  const l = BOT_LEVELS.find((x) => x.id === levelOrLabel || x.label === levelOrLabel);
+  if (!l) return levelOrLabel;
+  return lang === 'he' ? BOT_LABELS_HE[l.id] : l.label;
+}
+
 /**
  * A bot whose test count climbs in steps, like a human fixing one edge case at a time.
  * Seeded so a rematch with the same seed replays the same race.

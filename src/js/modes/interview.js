@@ -71,15 +71,30 @@ export function problemStatus(session, problemId) {
   return 'todo';
 }
 
+const BAND_LABELS = {
+  en: { strong: 'Strong', mid: 'Developing', low: 'Needs work' },
+  he: { strong: 'חזק', mid: 'מתפתח', low: 'דורש עוד עבודה' },
+};
+
+/**
+ * Plain-text label of a score band in the page language (docs/I18N.md).
+ * @param {'strong' | 'mid' | 'low' | string} band
+ * @param {'en' | 'he'} [lang]
+ * @returns {string} the label, or '' for an unknown band
+ */
+export function bandLabel(band, lang = 'en') {
+  return (BAND_LABELS[lang] ?? BAND_LABELS.en)[band] ?? '';
+}
+
 /**
  * Score colour band and plain-text label (never colour alone, docs/DESIGN.md rule 6).
  * @param {number} score
+ * @param {'en' | 'he'} [lang]
  * @returns {{ band: 'strong' | 'mid' | 'low', label: string }}
  */
-export function scoreBand(score) {
-  if (score >= 75) return { band: 'strong', label: 'Strong' };
-  if (score >= 45) return { band: 'mid', label: 'Developing' };
-  return { band: 'low', label: 'Needs work' };
+export function scoreBand(score, lang = 'en') {
+  const band = score >= 75 ? 'strong' : score >= 45 ? 'mid' : 'low';
+  return { band, label: bandLabel(band, lang) };
 }
 
 /**
@@ -129,9 +144,10 @@ export function finish(session, now = Date.now()) {
  * violations cost points. Weights are intentionally simple so a candidate can predict them.
  * @param {ReturnType<typeof createSession>} session
  * @param {number} [now] used only while the session is still running; a finished one uses endedAt
+ * @param {'en' | 'he'} [lang] language of the band label
  * @returns {{ score: number, band: ReturnType<typeof scoreBand>, usedMs: number, solved: number, problems: object[], runs: number, submissions: number, tabSwitches: number }}
  */
-export function analytics(session, now = Date.now()) {
+export function analytics(session, now = Date.now(), lang = 'en') {
   const problems = Object.entries(session.perProblem).map(([id, p]) => ({
     id,
     coverage: p.total ? p.bestPassed / p.total : 0,
@@ -147,7 +163,7 @@ export function analytics(session, now = Date.now()) {
   const score = Math.max(0, Math.round(coverage * 90 + speedBonus - integrityPenalty));
   return {
     score,
-    band: scoreBand(score),
+    band: scoreBand(score, lang),
     usedMs,
     solved: problems.filter((p) => p.solved).length,
     problems,
