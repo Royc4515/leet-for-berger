@@ -3,7 +3,7 @@
  * setting in one place: the leaderboard nickname, the themes, the quiz language, the page guides,
  * the reminders, GitHub sync, signing out and your data. Works signed out too, for the progress kept in this browser.
  */
-import { h, mount, segmented, confirmDialog, toast } from '../dom.js';
+import { h, mount, segmented, confirmDialog, toast, tp, siteLang, pageLang } from '../dom.js';
 import { siteFooter } from '../footer.js';
 import { services } from '../../auth/services.js';
 import { userInitials } from '../../auth/account.js';
@@ -21,17 +21,22 @@ import { createPushPanel } from '../push-panel.js';
 import { parseLastResults, formatLastInterview, formatLastBattle } from '../../modes/last-results.js';
 
 const SYNC_TEXT = { idle: '', syncing: 'Syncing your progress...', synced: 'Progress synced to your account', error: 'Sync failed. Your progress is safe on this device and syncs again on your next solve.' };
+const SYNC_TEXT_HE = { idle: '', syncing: 'מסנכרן את ההתקדמות…', synced: 'ההתקדמות סונכרנה לחשבון', error: 'הסנכרון נכשל. ההתקדמות שמורה במכשיר הזה ותסונכרן שוב בפתרון הבא.' };
 const LANG_KEY = 'lfb:quiz-lang';
 /** Rest day choices, Sunday first as the Israeli week; the value is getDay(), or 'none'. */
 const REST_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const REST_DAYS_HE = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת'];
 /** What each reminder kind is called on its switch (data/notifications.js NOTIFICATION_KINDS). */
 const REMINDER_LABELS = { streak: 'Coding streak', 'quiz-streak': 'Daily quiz streak', away: 'Welcome back after a few days away', unfinished: 'Problems you left unfinished', restart: 'Start a new streak after a break' };
+const REMINDER_LABELS_HE = { streak: 'רצף הקוד', 'quiz-streak': 'רצף החידון היומי', away: 'חזרה אחרי כמה ימים של הפסקה', unfinished: 'בעיות שנשארו באמצע', restart: 'רצף חדש אחרי הפסקה' };
 
 const readLang = () => {
   try {
-    return localStorage.getItem(LANG_KEY) === 'he' ? 'he' : 'en';
+    const saved = localStorage.getItem(LANG_KEY);
+    // Never chosen: the quiz shows its questions in the site language (ui/views/quiz.js).
+    return saved === 'he' || saved === 'en' ? saved : siteLang();
   } catch {
-    return 'en';
+    return siteLang();
   }
 };
 
@@ -67,11 +72,11 @@ export function renderProfile(root, { store }) {
   /** Who is signed in, or how to sign in, or that this site has no accounts. */
   function identity(s) {
     if (s?.status === 'signed-in') {
-      const who = s.user.name ?? s.user.email ?? 'Signed in';
-      const sync = SYNC_TEXT[s.sync] ?? '';
+      const who = s.user.name ?? s.user.email ?? tp('Signed in', 'חשבון מחובר');
+      const sync = tp(SYNC_TEXT, SYNC_TEXT_HE)[s.sync] ?? '';
       return h(
         'section.profile-id',
-        { 'aria-label': 'Account' },
+        { 'aria-label': tp('Account', 'חשבון') },
         h('span.profile-avatar', { 'aria-hidden': 'true' }, userInitials(s.user)),
         h(
           'div.profile-id-copy',
@@ -80,28 +85,38 @@ export function renderProfile(root, { store }) {
           s.user.name && s.user.email ? h('span.hint-text', {}, s.user.email) : null,
           sync ? h(`span.profile-sync${s.sync === 'error' ? '.bad' : s.sync === 'synced' ? '.ok' : ''}`, {}, sync) : null,
         ),
-        h('div.profile-id-actions', {}, h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: signOut }, 'Sign out')),
+        h('div.profile-id-actions', {}, h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: signOut }, tp('Sign out', 'להתנתק'))),
       );
     }
     if (accounts) {
       return h(
         'section.profile-id',
-        { 'aria-label': 'Account' },
+        { 'aria-label': tp('Account', 'חשבון') },
         h('span.profile-avatar.is-guest', { 'aria-hidden': 'true' }),
-        h('div.profile-id-copy', {}, h('strong.profile-name', {}, 'Not signed in'), h('span.hint-text', {}, 'Your progress is saved in this browser only. Sign in to keep it on every device and join the daily quiz leaderboard.')),
+        h(
+          'div.profile-id-copy',
+          {},
+          h('strong.profile-name', {}, tp('Not signed in', 'עוד לא התחברת')),
+          h('span.hint-text', {}, tp('Your progress is saved in this browser only. Sign in to keep it on every device and join the daily quiz leaderboard.', 'ההתקדמות נשמרת רק בדפדפן הזה. אחרי התחברות היא נשמרת בכל מכשיר, ואפשר להצטרף לטבלת המובילים של החידון היומי.')),
+        ),
         h(
           'div.profile-id-actions',
           {},
-          h('button.btn.btn-primary.btn-sm', { type: 'button', onClick: () => account.signIn('google') }, 'Continue with Google'),
-          h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => account.signIn('github') }, 'Continue with GitHub'),
+          h('button.btn.btn-primary.btn-sm', { type: 'button', onClick: () => account.signIn('google') }, tp('Continue with Google', 'להמשיך עם Google')),
+          h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => account.signIn('github') }, tp('Continue with GitHub', 'להמשיך עם GitHub')),
         ),
       );
     }
     return h(
       'section.profile-id',
-      { 'aria-label': 'Account' },
+      { 'aria-label': tp('Account', 'חשבון') },
       h('span.profile-avatar.is-guest', { 'aria-hidden': 'true' }),
-      h('div.profile-id-copy', {}, h('strong.profile-name', {}, 'Your progress'), h('span.hint-text', {}, 'Accounts are not set up on this copy of the site, so your progress is saved in this browser.')),
+      h(
+        'div.profile-id-copy',
+        {},
+        h('strong.profile-name', {}, tp('Your progress', 'ההתקדמות שלך')),
+        h('span.hint-text', {}, tp('Accounts are not set up on this copy of the site, so your progress is saved in this browser.', 'בעותק הזה של האתר אין חשבונות, ולכן ההתקדמות נשמרת בדפדפן הזה.')),
+      ),
     );
   }
 
@@ -109,29 +124,43 @@ export function renderProfile(root, { store }) {
   function progressSection(signedIn) {
     const n = profileNumbers({ progress: store.get(), quiz: loadQuizProgress(), now: new Date() });
     const last = readLast();
-    const interview = formatLastInterview(last.interview);
-    const battle = formatLastBattle(last.battle);
+    const interview = formatLastInterview(last.interview, pageLang());
+    const battle = formatLastBattle(last.battle, pageLang());
     const cell = (value, label) => h('div.stat-cell', {}, h('div.stat-value', {}, value), h('div.stat-label', {}, label));
+    const days = (d) => tp(`${d} ${d === 1 ? 'day' : 'days'}`, d === 1 ? 'יום אחד' : `${d} ימים`);
     return section(
       'progress',
-      'Your progress',
+      tp('Your progress', 'ההתקדמות שלך'),
       h(
         'div.stats-row.profile-stats',
         {},
-        cell(`${n.solved}`, 'Solved'),
-        cell(`${n.streak} ${n.streak === 1 ? 'day' : 'days'}`, 'Coding streak'),
-        cell(n.accuracy == null ? '-' : `${n.accuracy}%`, 'Accuracy'),
-        cell(`${n.quizStreak} ${n.quizStreak === 1 ? 'day' : 'days'}`, 'Quiz streak'),
+        cell(`${n.solved}`, tp('Solved', 'נפתרו')),
+        cell(days(n.streak), tp('Coding streak', 'רצף קוד')),
+        cell(n.accuracy == null ? '-' : `${n.accuracy}%`, tp('Accuracy', 'דיוק')),
+        cell(days(n.quizStreak), tp('Quiz streak', 'רצף חידון')),
       ),
       h(
         'ul.profile-facts',
         {},
-        h('li', {}, `${n.submissions} ${n.submissions === 1 ? 'submission' : 'submissions'}, ${n.quizDays} daily ${n.quizDays === 1 ? 'quiz' : 'quizzes'}, ${n.quizAnswered} quiz ${n.quizAnswered === 1 ? 'question' : 'questions'} answered`),
+        h(
+          'li',
+          {},
+          tp(
+            `${n.submissions} ${n.submissions === 1 ? 'submission' : 'submissions'}, ${n.quizDays} daily ${n.quizDays === 1 ? 'quiz' : 'quizzes'}, ${n.quizAnswered} quiz ${n.quizAnswered === 1 ? 'question' : 'questions'} answered`,
+            `${n.submissions === 1 ? 'הגשה אחת' : `${n.submissions} הגשות`}, ${n.quizDays === 1 ? 'חידון יומי אחד' : `${n.quizDays} חידונים יומיים`}, ${n.quizAnswered === 1 ? 'שאלת חידון אחת שנענתה' : `${n.quizAnswered} שאלות חידון שנענו`}`,
+          ),
+        ),
         interview ? h('li', {}, interview.text) : null,
         battle ? h('li', {}, battle.text) : null,
       ),
-      signedIn ? h('p.hint-text', {}, 'Problems, streaks and quiz progress sync to your account, so they are the same on every device.') : null,
-      h('div.profile-links', {}, h('a.btn.btn-ghost.btn-sm', { href: '#/daily' }, 'Calendar'), h('a.btn.btn-ghost.btn-sm', { href: '#/map' }, 'Map'), h('a.btn.btn-ghost.btn-sm', { href: '#/quiz' }, 'Quiz topics')),
+      signedIn ? h('p.hint-text', {}, tp('Problems, streaks and quiz progress sync to your account, so they are the same on every device.', 'הבעיות, הרצפים וההתקדמות בחידון מסונכרנים לחשבון, ולכן הם זהים בכל מכשיר.')) : null,
+      h(
+        'div.profile-links',
+        {},
+        h('a.btn.btn-ghost.btn-sm', { href: '#/daily' }, tp('Calendar', 'ללוח השנה')),
+        h('a.btn.btn-ghost.btn-sm', { href: '#/map' }, tp('Map', 'למפה')),
+        h('a.btn.btn-ghost.btn-sm', { href: '#/quiz' }, tp('Quiz topics', 'לנושאי החידון')),
+      ),
     );
   }
 
@@ -143,14 +172,14 @@ export function renderProfile(root, { store }) {
       loadNickname();
     }
     let body;
-    if (nickname.state === 'loading' || nickname.state === 'idle') body = h('p.hint-text', {}, 'Loading your leaderboard name...');
-    else if (nickname.state === 'error') body = h('p.hint-text', {}, 'The leaderboard is unavailable right now, so the name cannot be changed. Try again later.');
+    if (nickname.state === 'loading' || nickname.state === 'idle') body = h('p.hint-text', {}, tp('Loading your leaderboard name...', 'טוען את השם בטבלת המובילים…'));
+    else if (nickname.state === 'error') body = h('p.hint-text', {}, tp('The leaderboard is unavailable right now, so the name cannot be changed. Try again later.', 'טבלת המובילים לא זמינה כרגע, ולכן אי אפשר לשנות את השם. כדאי לנסות שוב מאוחר יותר.'));
     else if (!editing) {
       body = h(
         'div.profile-row',
         {},
-        h('span', {}, 'Shown as ', h('strong', { dir: 'auto' }, nickname.name), nickname.custom ? null : h('span.hint-text', {}, ' (your account name)')),
-        h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => { editing = true; draw(); queueMicrotask(() => root.querySelector('#profile-nickname-input')?.focus()); } }, 'Change'),
+        h('span', {}, tp('Shown as ', 'מוצג בשם '), h('strong', { dir: 'auto' }, nickname.name), nickname.custom ? null : h('span.hint-text', {}, tp(' (your account name)', ' (השם בחשבון)'))),
+        h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => { editing = true; draw(); queueMicrotask(() => root.querySelector('#profile-nickname-input')?.focus()); } }, tp('Change', 'לשנות')),
       );
     } else {
       const input = h('input.quiz-name-input#profile-nickname-input', { type: 'text', maxlength: String(NICKNAME_MAX), autocomplete: 'nickname', dir: 'auto', value: nickname.custom ? nickname.name : '', placeholder: nickname.name, 'aria-describedby': 'profile-nickname-hint' });
@@ -161,20 +190,27 @@ export function renderProfile(root, { store }) {
             e.preventDefault();
             const { name, ok } = normalizeNickname(input.value);
             if (!ok) {
-              toast(`Use ${NICKNAME_MIN} to ${NICKNAME_MAX} characters.`, 'error');
+              toast(tp(`Use ${NICKNAME_MIN} to ${NICKNAME_MAX} characters.`, `צריך ${NICKNAME_MIN} עד ${NICKNAME_MAX} תווים.`), 'error');
               input.focus();
               return;
             }
             saveNickname(name);
           },
         },
-        h('label.quiz-label', { for: 'profile-nickname-input' }, 'Nickname'),
+        h('label.quiz-label', { for: 'profile-nickname-input' }, tp('Nickname', 'כינוי')),
         input,
-        h('p.hint-text#profile-nickname-hint', {}, `${NICKNAME_MIN} to ${NICKNAME_MAX} characters. Everyone on the leaderboard sees it. Leave it empty to use your account name.`),
-        h('div.profile-links', {}, h('button.btn.btn-primary.btn-sm', { type: 'submit' }, 'Save'), h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => { editing = false; draw(); } }, 'Cancel')),
+        h(
+          'p.hint-text#profile-nickname-hint',
+          {},
+          tp(
+            `${NICKNAME_MIN} to ${NICKNAME_MAX} characters. Everyone on the leaderboard sees it. Leave it empty to use your account name.`,
+            `${NICKNAME_MIN} עד ${NICKNAME_MAX} תווים. כל מי שבטבלת המובילים רואה אותו. אפשר להשאיר ריק כדי להשתמש בשם שבחשבון.`,
+          ),
+        ),
+        h('div.profile-links', {}, h('button.btn.btn-primary.btn-sm', { type: 'submit' }, tp('Save', 'לשמור')), h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => { editing = false; draw(); } }, tp('Cancel', 'ביטול'))),
       );
     }
-    return section('nickname', 'Leaderboard name', body);
+    return section('nickname', tp('Leaderboard name', 'הכינוי בטבלת המובילים'), body);
   }
 
   async function loadNickname() {
@@ -196,9 +232,9 @@ export function renderProfile(root, { store }) {
       if (disposed) return;
       nickname = { state: 'ready', name: saved?.name ?? name, custom: saved?.custom ?? Boolean(name) };
       editing = false;
-      toast('Name saved', 'success');
+      toast(tp('Name saved', 'הכינוי נשמר'), 'success');
     } catch {
-      toast('Could not save the name. Try again.', 'error');
+      toast(tp('Could not save the name. Try again.', 'לא הצלחנו לשמור את הכינוי. כדאי לנסות שוב.'), 'error');
     }
     draw();
   }
@@ -209,17 +245,17 @@ export function renderProfile(root, { store }) {
   codeSelect.id = 'profile-code-theme';
   const appearance = section(
     'appearance',
-    'Appearance',
-    h('div.profile-field', {}, h('span.quiz-label', {}, 'Site theme'), siteThemeControl(themes.signal), h('p.hint-text', {}, 'System follows your device.')),
-    h('div.profile-field', {}, h('label.quiz-label', { for: codeSelect.id }, 'Code theme'), codeSelect, h('p.hint-text', {}, 'The editor\'s colours. Match site follows the site theme.')),
+    tp('Appearance', 'מראה'),
+    h('div.profile-field', {}, h('span.quiz-label', {}, tp('Site theme', 'מראה האתר')), siteThemeControl(themes.signal), h('p.hint-text', {}, tp('System follows your device.', 'System פועל לפי הגדרות המכשיר.'))),
+    h('div.profile-field', {}, h('label.quiz-label', { for: codeSelect.id }, tp('Code theme', 'צבעי הקוד')), codeSelect, h('p.hint-text', {}, tp('The editor\'s colours. Match site follows the site theme.', 'הצבעים של עורך הקוד. Match site פועל לפי מראה האתר.'))),
     // The site language (lang-boot.js): each option in its own language, so anyone can find theirs.
     globalThis.lfbLang
       ? h(
           'div.profile-field',
           {},
-          h('span.quiz-label', {}, 'Language / שפה'),
-          segmented({ label: 'Language', options: globalThis.lfbLang.options, value: globalThis.lfbLang.current(), onChange: (v) => globalThis.lfbLang.set(v) }),
-          h('p.hint-text', {}, 'The problems and the problem screen stay in English, as in an interview.'),
+          h('span.quiz-label', {}, tp('Language / שפה', 'שפה')),
+          segmented({ label: tp('Language', 'שפה'), options: globalThis.lfbLang.options, value: globalThis.lfbLang.current(), onChange: (v) => globalThis.lfbLang.set(v) }),
+          h('p.hint-text', {}, tp('The problems and the problem screen stay in English, as in an interview.', 'הבעיות ומסך הבעיה נשארים באנגלית, כמו בראיון.')),
         )
       : null,
   );
@@ -232,21 +268,21 @@ export function renderProfile(root, { store }) {
   const restSelect = h(
     'select.select#profile-rest-day',
     {},
-    REST_DAYS.map((name, day) => h('option', { value: String(day) }, day === 6 ? `${name} (default)` : name)),
-    h('option', { value: 'none' }, 'No rest day'),
+    REST_DAYS.map((name, day) => h('option', { value: String(day) }, tp(day === 6 ? `${name} (default)` : name, day === 6 ? `${REST_DAYS_HE[day]} (ברירת מחדל)` : REST_DAYS_HE[day]))),
+    h('option', { value: 'none' }, tp('No rest day', 'בלי יום מנוחה')),
   );
   restSelect.addEventListener('change', () => {
     const day = restSelect.value === 'none' ? null : Number(restSelect.value);
     store.update((s) => setRestDay(s, day, new Date()));
-    toast(day === null ? 'Every day now counts for your streaks' : `Your streaks rest on ${REST_DAYS[day]}`, 'success');
+    toast(day === null ? tp('Every day now counts for your streaks', 'מעכשיו כל יום נספר ברצפים') : tp(`Your streaks rest on ${REST_DAYS[day]}`, `יום המנוחה מהרצפים: ${REST_DAYS_HE[day]}`), 'success');
     restSelect.focus({ preventScroll: true });
   });
   const restField = h(
     'div.profile-field',
     {},
-    h('label.quiz-label', { for: restSelect.id }, 'Streak rest day'),
+    h('label.quiz-label', { for: restSelect.id }, tp('Streak rest day', 'יום מנוחה מהרצף')),
     restSelect,
-    h('p.hint-text', {}, 'A day off on it never breaks your coding or quiz streak, and practice on it still counts.'),
+    h('p.hint-text', {}, tp('A day off on it never breaks your coding or quiz streak, and practice on it still counts.', 'הפסקה ביום הזה לא שוברת את רצף הקוד או את רצף החידון, ותרגול בו עדיין נספר.')),
   );
 
   /** Device preferences: the quiz language and the page guides; the streak rest day. */
@@ -255,13 +291,13 @@ export function renderProfile(root, { store }) {
     restSelect.value = rest === null ? 'none' : String(rest);
     return section(
       'preferences',
-      'Preferences',
+      tp('Preferences', 'העדפות'),
       h(
         'div.profile-field',
         {},
-        h('span.quiz-label', {}, 'Quiz language'),
+        h('span.quiz-label', {}, tp('Quiz language', 'שפת החידון')),
         segmented({
-          label: 'Quiz language',
+          label: tp('Quiz language', 'שפת החידון'),
           options: [{ value: 'en', label: 'English' }, { value: 'he', label: 'עברית' }],
           value: readLang(),
           onChange: (v) => {
@@ -270,16 +306,21 @@ export function renderProfile(root, { store }) {
             } catch {
               /* storage blocked: the quiz page asks again */
             }
-            toast(v === 'he' ? 'Quizzes will be in Hebrew' : 'Quizzes will be in English', 'success');
+            toast(v === 'he' ? tp('Quizzes will be in Hebrew', 'החידונים יהיו בעברית') : tp('Quizzes will be in English', 'החידונים יהיו באנגלית'), 'success');
           },
         }),
-        h('p.hint-text', {}, 'Shared links are written in this language too.'),
+        h('p.hint-text', {}, tp('Shared links are written in this language too.', 'גם קישורים לשיתוף נכתבים בשפה הזו.')),
       ),
       h(
         'div.profile-field',
         {},
-        h('span.quiz-label', {}, 'Page guides'),
-        h('div.profile-row', {}, h('span.hint-text', {}, 'Each page shows a short guide on your first visit.'), h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => { saveSeen({}); toast('Guides will show again on each page', 'success'); } }, 'Show them again')),
+        h('span.quiz-label', {}, tp('Page guides', 'הדרכות בעמודים')),
+        h(
+          'div.profile-row',
+          {},
+          h('span.hint-text', {}, tp('Each page shows a short guide on your first visit.', 'בביקור הראשון בכל עמוד מוצגת הדרכה קצרה.')),
+          h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => { saveSeen({}); toast(tp('Guides will show again on each page', 'ההדרכות יוצגו שוב בכל עמוד'), 'success'); } }, tp('Show them again', 'להציג אותן שוב')),
+        ),
       ),
       restField,
     );
@@ -320,20 +361,26 @@ export function renderProfile(root, { store }) {
         dispatchEvent(new CustomEvent(NOTIFICATIONS_CHANGED_EVENT));
         pushPanel?.kindsChanged();
       });
-      return h('label.switch', { for: input.id }, input, h('span', {}, REMINDER_LABELS[kind]));
+      return h('label.switch', { for: input.id }, input, h('span', {}, tp(REMINDER_LABELS[kind], REMINDER_LABELS_HE[kind])));
     });
     return section(
       'reminders',
-      'Reminders',
+      tp('Reminders', 'תזכורות'),
       h(
         'p.hint-text',
         {},
         pushPanel
-          ? 'A streak that ends tonight, the daily quiz, a problem you left. The bell in the header shows them while the site is open; notifications reach your devices when it is closed.'
-          : 'The bell in the header lists what needs you: a streak that ends tonight, the daily quiz, a problem you left. Only while this site is open.',
+          ? tp(
+              'A streak that ends tonight, the daily quiz, a problem you left. The bell in the header shows them while the site is open; notifications reach your devices when it is closed.',
+              'רצף שמסתיים הלילה, החידון היומי, בעיה שנשארה באמצע. הפעמון בכותרת מציג אותן כשהאתר פתוח; ההתראות מגיעות למכשירים גם כשהוא סגור.',
+            )
+          : tp(
+              'The bell in the header lists what needs you: a streak that ends tonight, the daily quiz, a problem you left. Only while this site is open.',
+              'הפעמון בכותרת מציג מה מחכה: רצף שמסתיים הלילה, החידון היומי, בעיה שנשארה באמצע. רק כשהאתר פתוח.',
+            ),
       ),
       pushPanel?.el,
-      h('div.profile-field.push-kinds', {}, h('h3.push-sub', {}, 'What to remind you about'), h('div.profile-switches', {}, switches)),
+      h('div.profile-field.push-kinds', {}, h('h3.push-sub', {}, tp('What to remind you about', 'על מה להזכיר')), h('div.profile-switches', {}, switches)),
     );
   }
 
@@ -346,7 +393,7 @@ export function renderProfile(root, { store }) {
       // The shared block brings its own small title; the page has a heading instead.
       ghEl?.querySelector('.account-section-title')?.remove();
     }
-    return ghEl ? section('github', 'GitHub sync', ghEl) : null;
+    return ghEl ? section('github', tp('GitHub sync', 'סנכרון GitHub'), ghEl) : null;
   }
 
   /** What is stored and how to delete it. */
@@ -354,34 +401,64 @@ export function renderProfile(root, { store }) {
     if (s?.status === 'signed-in') {
       return section(
         'data',
-        'Your data',
-        h('p.hint-text', {}, 'Signing out removes your progress from this device; it stays in your account, quiz included.'),
-        h('p.hint-text', {}, 'To delete your account and everything in it, email ', h('a', { href: 'mailto:LeetForBerger@gmail.com' }, 'LeetForBerger@gmail.com'), ' from the address you signed in with. ', h('a', { href: 'privacy.html' }, 'Privacy Policy')),
+        tp('Your data', 'הנתונים שלך'),
+        h('p.hint-text', {}, tp('Signing out removes your progress from this device; it stays in your account, quiz included.', 'התנתקות מוחקת את ההתקדמות מהמכשיר הזה; היא נשארת בחשבון, כולל החידון.')),
+        h(
+          'p.hint-text',
+          {},
+          tp('To delete your account and everything in it, email ', 'כדי למחוק את החשבון וכל מה שבו, אפשר לשלוח מייל אל '),
+          h('a', { href: 'mailto:LeetForBerger@gmail.com' }, 'LeetForBerger@gmail.com'),
+          tp(' from the address you signed in with. ', ' מהכתובת שאיתה התחברת. '),
+          h('a', { href: 'privacy.html' }, tp('Privacy Policy', 'מדיניות הפרטיות')),
+        ),
       );
     }
     return section(
       'data',
-      'Your data',
-      h('p.hint-text', {}, 'Your progress, drafts, quiz results and last sessions are kept in this browser only. ', h('a', { href: 'privacy.html' }, 'Privacy Policy')),
-      h('div.profile-links', {}, h('button.btn.btn-secondary.btn-sm.profile-delete', { type: 'button', onClick: deleteLocal }, 'Delete progress on this device')),
+      tp('Your data', 'הנתונים שלך'),
+      h(
+        'p.hint-text',
+        {},
+        tp('Your progress, drafts, quiz results and last sessions are kept in this browser only. ', 'ההתקדמות, הטיוטות, תוצאות החידון והסשנים האחרונים נשמרים רק בדפדפן הזה. '),
+        h('a', { href: 'privacy.html' }, tp('Privacy Policy', 'מדיניות הפרטיות')),
+      ),
+      h('div.profile-links', {}, h('button.btn.btn-secondary.btn-sm.profile-delete', { type: 'button', onClick: deleteLocal }, tp('Delete progress on this device', 'למחוק את ההתקדמות במכשיר הזה'))),
     );
   }
 
   async function signOut() {
-    const ok = await confirmDialog({ title: 'Sign out?', body: 'Your progress stays in your account and is removed from this device.', confirmLabel: 'Sign out', danger: true });
+    const ok = await confirmDialog({
+      title: tp('Sign out?', 'להתנתק?'),
+      body: tp('Your progress stays in your account and is removed from this device.', 'ההתקדמות נשארת בחשבון ונמחקת מהמכשיר הזה.'),
+      confirmLabel: tp('Sign out', 'להתנתק'),
+      danger: true,
+    });
     if (!ok || (await account.signOut())) return;
     if (!account.get().user) return;
-    const anyway = await confirmDialog({ title: 'Sign out without saving?', body: 'Your latest progress could not be saved to your account. Signing out now removes it from this device.', confirmLabel: 'Sign out anyway', danger: true });
+    const anyway = await confirmDialog({
+      title: tp('Sign out without saving?', 'להתנתק בלי לשמור?'),
+      body: tp('Your latest progress could not be saved to your account. Signing out now removes it from this device.', 'לא הצלחנו לשמור בחשבון את ההתקדמות האחרונה. התנתקות עכשיו תמחק אותה מהמכשיר הזה.'),
+      confirmLabel: tp('Sign out anyway', 'להתנתק בכל זאת'),
+      danger: true,
+    });
     if (anyway) await account.signOut({ force: true });
   }
 
   async function deleteLocal() {
-    const ok = await confirmDialog({ title: 'Delete progress on this device?', body: 'Solved problems, streaks, drafts, quiz results and last sessions are removed from this browser. This cannot be undone.', confirmLabel: 'Delete', danger: true });
+    const ok = await confirmDialog({
+      title: tp('Delete progress on this device?', 'למחוק את ההתקדמות במכשיר הזה?'),
+      body: tp(
+        'Solved problems, streaks, drafts, quiz results and last sessions are removed from this browser. This cannot be undone.',
+        'בעיות שנפתרו, רצפים, טיוטות, תוצאות החידון והסשנים האחרונים יימחקו מהדפדפן הזה. אי אפשר לבטל את זה.',
+      ),
+      confirmLabel: tp('Delete', 'למחוק'),
+      danger: true,
+    });
     if (!ok) return;
     // The same order as signing out: the store is emptied first, so nothing writes it back.
     store.reset?.();
     clearUserData();
-    toast('Progress deleted from this device', 'success');
+    toast(tp('Progress deleted from this device', 'ההתקדמות נמחקה מהמכשיר הזה'), 'success');
     draw();
   }
 
@@ -394,7 +471,7 @@ export function renderProfile(root, { store }) {
       h(
         'div.page.page-narrow.profile-page',
         {},
-        h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, 'Account and settings'), h('h1', {}, 'Profile'))),
+        h('header.page-head', {}, h('div', {}, h('span.eyebrow', {}, tp('Account and settings', 'חשבון והגדרות')), h('h1', {}, tp('Profile', 'פרופיל')))),
         identity(s),
         progressSection(signedIn),
         nicknameSection(s),

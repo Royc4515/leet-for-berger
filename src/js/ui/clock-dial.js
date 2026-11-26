@@ -9,7 +9,7 @@
  * Keyboard and screen readers: each hex is a slider (arrows move it an hour, across faces too,
  * Delete removes it). Pure maths in data/push-device.js.
  */
-import { h } from './dom.js';
+import { h, tp, pageLang } from './dom.js';
 import { glide } from './motion.js';
 import { formatHour, daylight, faceOf, clockAngle, clockPos, faceHour, nearestAt, nearestTurn, stepHour, moveHour, toggleHour, nextReminder, describeNext, MAX_PUSH_HOURS } from '../data/push-device.js';
 
@@ -107,7 +107,7 @@ export function createClockDial({ hours: initial, now, restDay, onChange, onFull
   const countLabel = h('span.dial-count-label');
   const next = h('span.dial-next');
   const selTime = h('strong.dial-count');
-  const remove = h('button.btn.btn-secondary.btn-sm.dial-remove', { type: 'button', onClick: () => removeHour(selected, true) }, 'Remove');
+  const remove = h('button.btn.btn-secondary.btn-sm.dial-remove', { type: 'button', onClick: () => removeHour(selected, true) }, tp('Remove', 'להסיר'));
   const summary = h('div.dial-summary', {}, count, countLabel, next);
   const selection = h('div.dial-selection', { hidden: true }, selTime, remove);
   const center = h('div.dial-center', {}, summary, selection);
@@ -123,9 +123,9 @@ export function createClockDial({ hours: initial, now, restDay, onChange, onFull
     return icon;
   };
   const faceButton = (f, label) => h('button.segmented-btn.clock-face-btn', { type: 'button', 'aria-pressed': 'false', dataset: { face: f }, onClick: () => turn(f) }, faceIcon(f), h('span', {}, label), h('span.clock-face-count'));
-  const dayBtn = faceButton('day', 'Day');
-  const nightBtn = faceButton('night', 'Night');
-  const faces = h('div.segmented.clock-faces', { role: 'group', 'aria-label': 'Hours shown' }, dayBtn, nightBtn);
+  const dayBtn = faceButton('day', tp('Day', 'יום'));
+  const nightBtn = faceButton('night', tp('Night', 'לילה'));
+  const faces = h('div.segmented.clock-faces', { role: 'group', 'aria-label': tp('Hours shown', 'השעות המוצגות') }, dayBtn, nightBtn);
   const el = h('div.clock-wrap', {}, dial, faces);
 
   function knobFor(hour) {
@@ -148,7 +148,7 @@ export function createClockDial({ hours: initial, now, restDay, onChange, onFull
     b.style.setProperty('--a', `${angle}deg`);
     b.setAttribute('aria-valuenow', String(hour));
     b.setAttribute('aria-valuetext', formatHour(hour));
-    b.setAttribute('aria-label', `Reminder at ${formatHour(hour)}`);
+    b.setAttribute('aria-label', tp(`Reminder at ${formatHour(hour)}`, `תזכורת ב-${formatHour(hour)}`));
     b.querySelector('.dial-knob-hex').textContent = String(hour).padStart(2, '0');
     const away = faceOf(hour) !== face;
     b.classList.toggle('is-away', away);
@@ -188,12 +188,18 @@ export function createClockDial({ hours: initial, now, restDay, onChange, onFull
       b.setAttribute('aria-pressed', String(f === face));
       const n = hours.filter((x) => faceOf(x) === f).length;
       b.querySelector('.clock-face-count').textContent = n ? String(n) : '';
-      b.setAttribute('aria-label', `${f === 'day' ? 'Day, 06:00 to 17:00' : 'Night, 18:00 to 05:00'}: ${n} ${n === 1 ? 'reminder' : 'reminders'}`);
+      b.setAttribute(
+        'aria-label',
+        tp(
+          `${f === 'day' ? 'Day, 06:00 to 17:00' : 'Night, 18:00 to 05:00'}: ${n} ${n === 1 ? 'reminder' : 'reminders'}`,
+          `${f === 'day' ? 'יום, 06:00 עד 17:00' : 'לילה, 18:00 עד 05:00'}: ${n === 1 ? 'תזכורת אחת' : `${n} תזכורות`}`,
+        ),
+      );
     }
     glide(faces, '[aria-pressed="true"]');
     count.textContent = String(hours.length);
-    countLabel.textContent = hours.length === 1 ? 'reminder a day' : 'reminders a day';
-    next.textContent = describeNext(nextReminder({ hours, now: now(), restDay: restDay() }));
+    countLabel.textContent = hours.length === 1 ? tp('reminder a day', 'תזכורת ביום') : tp('reminders a day', 'תזכורות ביום');
+    next.textContent = describeNext(nextReminder({ hours, now: now(), restDay: restDay() }), pageLang());
     const isSel = selected !== null && hours.includes(selected) && faceOf(selected) === face;
     summary.hidden = isSel;
     selection.hidden = !isSel;

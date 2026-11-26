@@ -6,9 +6,9 @@
  * Built once per visit and updated in place: the profile page redraws on every sync, and a rebuilt
  * switch or hour button would drop keyboard focus and a half-finished choice.
  */
-import { h, toast } from './dom.js';
+import { h, toast, tp, pageLang } from './dom.js';
 import { createPushClient } from '../auth/push-client.js';
-import { describeHours, suggestHour, MAX_PUSH_HOURS } from '../data/push-device.js';
+import { describeHours, suggestHour, MAX_PUSH_HOURS, WEEKDAYS_HE } from '../data/push-device.js';
 import { createClockDial } from './clock-dial.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -68,33 +68,33 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
   const status = h('p.push-device-status', { id: statusId });
   const input = h('input', { type: 'checkbox', role: 'switch', id: 'push-device-switch', 'aria-describedby': statusId });
   const guideId = 'push-guide';
-  const howButton = h('button.btn.btn-secondary.btn-sm.push-how', { type: 'button', 'aria-expanded': 'false', 'aria-controls': guideId }, 'Show me how');
-  const control = support === 'install' ? howButton : support === 'ready' ? h('label.switch.switch-lg.push-switch', { for: input.id }, input, h('span.sr-only', {}, 'Notifications on this device')) : null;
+  const howButton = h('button.btn.btn-secondary.btn-sm.push-how', { type: 'button', 'aria-expanded': 'false', 'aria-controls': guideId }, tp('Show me how', 'להראות איך'));
+  const control = support === 'install' ? howButton : support === 'ready' ? h('label.switch.switch-lg.push-switch', { for: input.id }, input, h('span.sr-only', {}, tp('Notifications on this device', 'התראות במכשיר הזה'))) : null;
   // A test push the whole way (server, push service, this device), for "is it working?" later on.
-  const testButton = h('button.btn.btn-ghost.btn-sm.push-test', { type: 'button', hidden: true }, 'Send a test');
-  const card = h(`div.push-device${support === 'install' ? '.has-button' : ''}`, {}, h('span.push-device-icon', { 'aria-hidden': 'true' }, icon('bell')), h('span.push-device-title', {}, 'Notifications on this device'), status, control, testButton);
+  const testButton = h('button.btn.btn-ghost.btn-sm.push-test', { type: 'button', hidden: true }, tp('Send a test', 'לשלוח בדיקה'));
+  const card = h(`div.push-device${support === 'install' ? '.has-button' : ''}`, {}, h('span.push-device-icon', { 'aria-hidden': 'true' }, icon('bell')), h('span.push-device-title', {}, tp('Notifications on this device', 'התראות במכשיר הזה')), status, control, testButton);
 
   /* ---------- The iPhone guide: three taps, one screen, where the button is ---------- */
   const step = (n, art, title, line) => h('li.push-step', {}, h('span.push-step-num', { 'aria-hidden': 'true' }, String(n)), h('span.push-step-art', { 'aria-hidden': 'true' }, art), h('span.push-step-copy', {}, h('strong', {}, title), h('span', {}, line)));
   const guide = h(
     'div.push-guide',
     { id: guideId, hidden: true, role: 'region', 'aria-labelledby': 'push-guide-title' },
-    h('h3.push-guide-title#push-guide-title', {}, 'Get reminders on your iPhone or iPad'),
+    h('h3.push-guide-title#push-guide-title', {}, tp('Get reminders on your iPhone or iPad', 'תזכורות ב-iPhone או ב-iPad')),
     h(
       'ol.push-steps',
       {},
       // iOS 16.4 to 18 show Share in the toolbar, iOS 26 under the three dots, Chrome in the address bar.
-      step(1, icon('share', 'push-step-icon'), 'Tap Share', 'The square with an arrow, in the toolbar or the address bar. Not there? Tap the three dots first.'),
-      step(2, icon('add', 'push-step-icon'), 'Tap Add to Home Screen', 'Scroll the list down if you do not see it, then tap Add.'),
-      step(3, h('img.push-step-app', { src: 'src/brand/apple-touch-icon.png', alt: '', width: 40, height: 40 }), 'Open Leet Berger from your Home Screen', 'Sign in there and turn on notifications on this page.'),
+      step(1, icon('share', 'push-step-icon'), tp('Tap Share', 'ללחוץ על "שיתוף" (Share)'), tp('The square with an arrow, in the toolbar or the address bar. Not there? Tap the three dots first.', 'הריבוע עם החץ, בסרגל הכלים או בשורת הכתובת. לא מופיע? קודם ללחוץ על שלוש הנקודות.')),
+      step(2, icon('add', 'push-step-icon'), tp('Tap Add to Home Screen', 'ללחוץ על "הוספה למסך הבית" (Add to Home Screen)'), tp('Scroll the list down if you do not see it, then tap Add.', 'אם זה לא מופיע, לגלול את הרשימה למטה, ואז ללחוץ על "הוספה" (Add).')),
+      step(3, h('img.push-step-app', { src: 'src/brand/apple-touch-icon.png', alt: '', width: 40, height: 40 }), tp('Open Leet Berger from your Home Screen', 'לפתוח את Leet Berger ממסך הבית'), tp('Sign in there and turn on notifications on this page.', 'להתחבר שם ולהפעיל התראות בעמוד הזה.')),
     ),
-    h('div.push-guide-foot', {}, h('span.hint-text', {}, 'You do this once. It takes under a minute.'), h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => setGuide(false) }, 'Close')),
+    h('div.push-guide-foot', {}, h('span.hint-text', {}, tp('You do this once. It takes under a minute.', 'עושים את זה פעם אחת. זה לוקח פחות מדקה.')), h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => setGuide(false) }, tp('Close', 'לסגור'))),
   );
   function setGuide(open) {
     st.guide = open;
     guide.hidden = !open;
     howButton.setAttribute('aria-expanded', String(open));
-    howButton.textContent = open ? 'Hide the steps' : 'Show me how';
+    howButton.textContent = open ? tp('Hide the steps', 'להסתיר את השלבים') : tp('Show me how', 'להראות איך');
     if (!open) howButton.focus({ preventScroll: true });
   }
   howButton.addEventListener('click', () => setGuide(!st.guide));
@@ -103,13 +103,13 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
   const summary = h('span.push-hours-summary');
   const saved = h('span.push-saved');
   const dialHost = h('div.push-dial-host');
-  const addButton = h('button.btn.btn-secondary.btn-sm.push-add', { type: 'button', onClick: () => dial?.add(suggestHour(st.view.hours)) }, 'Add a reminder');
-  const howTo = h('p.hint-text.push-howto', {}, 'Drag a hex round the clock to move it; past the 6 at the bottom, day turns to night. Tap an hour to add one; tap a hex, then Remove, to take it off.');
+  const addButton = h('button.btn.btn-secondary.btn-sm.push-add', { type: 'button', onClick: () => dial?.add(suggestHour(st.view.hours)) }, tp('Add a reminder', 'להוסיף תזכורת'));
+  const howTo = h('p.hint-text.push-howto', {}, tp('Drag a hex round the clock to move it; past the 6 at the bottom, day turns to night. Tap an hour to add one; tap a hex, then Remove, to take it off.', 'גוררים משושה סביב השעון כדי להזיז אותו; אחרי ה-6 בתחתית, היום מתחלף בלילה. לחיצה על שעה מוסיפה תזכורת; לחיצה על משושה ואז על "להסיר" מורידה אותה.'));
   const hoursHint = h('p.hint-text.push-hours-hint');
   const hours = h(
     'div.push-hours',
     { hidden: true },
-    h('div.push-hours-head', {}, h('h3.push-sub', {}, 'When'), h('p.push-hours-line', { 'aria-live': 'polite' }, summary, saved)),
+    h('div.push-hours-head', {}, h('h3.push-sub', {}, tp('When', 'מתי')), h('p.push-hours-line', { 'aria-live': 'polite' }, summary, saved)),
     h('div.push-hours-body', {}, dialHost, h('div.push-hours-side', {}, howTo, hoursHint, addButton)),
   );
   /** @type {ReturnType<typeof createClockDial>|null} made the first time the hours show */
@@ -129,7 +129,7 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
         clearTimeout(saveTimer);
         saveTimer = setTimeout(saveHours, SAVE_AFTER_MS);
       },
-      onFull: () => toast(`${MAX_PUSH_HOURS} a day at most. Remove one first.`, 'warn'),
+      onFull: () => toast(tp(`${MAX_PUSH_HOURS} a day at most. Remove one first.`, `לכל היותר ${MAX_PUSH_HOURS} ביום. צריך להסיר אחת קודם.`), 'warn'),
     });
     dialHost.append(dial.el);
   }
@@ -139,15 +139,21 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
   const el = h('div.push-panel', {}, card, guide, hours);
 
   function statusText() {
-    if (support === 'install') return 'On iPhone and iPad, notifications work once this site is on your Home Screen. Three taps.';
-    if (support === 'update') return 'Notifications on iPhone and iPad need iOS 16.4 or later. Update iOS, then turn this on.';
-    if (support === 'unsupported') return 'This browser cannot show notifications. Chrome, Edge, Firefox and Safari can.';
-    if (!signedIn()) return 'Sign in to turn this on. Reminders follow your account to each device you turn on.';
-    if (st.busy) return st.on ? 'Turning off...' : 'Turning on...';
-    if (!st.checked) return 'Checking this device...';
+    const he = pageLang() === 'he';
+    if (support === 'install') return he ? 'ב-iPhone וב-iPad ההתראות עובדות אחרי שהאתר נוסף למסך הבית. שלוש לחיצות.' : 'On iPhone and iPad, notifications work once this site is on your Home Screen. Three taps.';
+    if (support === 'update') return he ? 'התראות ב-iPhone וב-iPad דורשות iOS 16.4 ומעלה. אחרי עדכון iOS אפשר להפעיל אותן כאן.' : 'Notifications on iPhone and iPad need iOS 16.4 or later. Update iOS, then turn this on.';
+    if (support === 'unsupported') return he ? 'הדפדפן הזה לא יכול להציג התראות. Chrome, Edge, Firefox ו-Safari יכולים.' : 'This browser cannot show notifications. Chrome, Edge, Firefox and Safari can.';
+    if (!signedIn()) return he ? 'כדי להפעיל, צריך להתחבר. התזכורות עוברות עם החשבון לכל מכשיר שבו הן פועלות.' : 'Sign in to turn this on. Reminders follow your account to each device you turn on.';
+    if (st.busy) return st.on ? (he ? 'מכבה…' : 'Turning off...') : he ? 'מפעיל…' : 'Turning on...';
+    if (!st.checked) return he ? 'בודק את המכשיר…' : 'Checking this device...';
     const others = (st.view?.devices ?? 0) - (st.on ? 1 : 0);
-    if (st.on) return `On. Reminders come at your hours below, even when the site is closed.${others > 0 ? ` Also on ${others === 1 ? '1 other device' : `${others} other devices`}.` : ''}`;
-    if (client.permission() === 'denied') return 'Blocked by your browser. Allow notifications for this site in its settings, then turn this on.';
+    const othersHe = others === 1 ? 'במכשיר אחד נוסף' : `ב-${others} מכשירים נוספים`;
+    if (st.on) {
+      if (he) return `מופעל. התזכורות מגיעות בשעות שמופיעות למטה, גם כשהאתר סגור.${others > 0 ? ` פועל גם ${othersHe}.` : ''}`;
+      return `On. Reminders come at your hours below, even when the site is closed.${others > 0 ? ` Also on ${others === 1 ? '1 other device' : `${others} other devices`}.` : ''}`;
+    }
+    if (client.permission() === 'denied') return he ? 'חסום בדפדפן. צריך לאשר התראות לאתר הזה בהגדרות הדפדפן, ואז להפעיל כאן.' : 'Blocked by your browser. Allow notifications for this site in its settings, then turn this on.';
+    if (he) return `מכובה. אפשר להפעיל כדי לקבל כאן תזכורות, גם כשהאתר סגור.${others > 0 ? ` פועל ${othersHe}.` : ''}`;
     return `Off. Turn it on to get reminders here, even when the site is closed.${others > 0 ? ` On for ${others === 1 ? '1 other device' : `${others} other devices`}.` : ''}`;
   }
 
@@ -166,12 +172,15 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
     const picked = st.view.hours;
     const full = picked.length >= MAX_PUSH_HOURS;
     showDial();
-    summary.textContent = describeHours(picked);
+    summary.textContent = describeHours(picked, pageLang());
     saved.textContent = st.saved;
     addButton.disabled = full;
     const rest = restDay();
     const zone = st.view.timeZone && st.view.timeZone !== 'UTC' ? st.view.timeZone : client.timeZone();
-    hoursHint.textContent = `Your time, ${zone}. ${rest === null ? '' : `Nothing on your rest day, ${WEEKDAYS[rest]}. `}${full ? `${MAX_PUSH_HOURS} a day at most.` : `Up to ${MAX_PUSH_HOURS} a day.`}`;
+    hoursHint.textContent = tp(
+      `Your time, ${zone}. ${rest === null ? '' : `Nothing on your rest day, ${WEEKDAYS[rest]}. `}${full ? `${MAX_PUSH_HOURS} a day at most.` : `Up to ${MAX_PUSH_HOURS} a day.`}`,
+      `לפי השעון שלך, ${zone}. ${rest === null ? '' : `ביום המנוחה (${rest === 6 ? 'שבת' : `יום ${WEEKDAYS_HE[rest]}`}) אין תזכורות. `}${full ? `לכל היותר ${MAX_PUSH_HOURS} ביום.` : `עד ${MAX_PUSH_HOURS} ביום.`}`,
+    );
   }
 
   async function check() {
@@ -200,12 +209,12 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
             st.view = res.view;
             savedHours = res.view.hours;
             dial?.set(res.view.hours);
-            toast('Notifications are on. A test is on its way.', 'success');
+            toast(tp('Notifications are on. A test is on its way.', 'ההתראות פועלות. התראת בדיקה בדרך.'), 'success');
             // The first push comes now, not at the next send hour: proof the whole way works.
             client.test().catch(() => {});
-          } else if (res.reason === 'denied') toast('Notifications are blocked for this site in your browser', 'warn');
+          } else if (res.reason === 'denied') toast(tp('Notifications are blocked for this site in your browser', 'הדפדפן חוסם התראות מהאתר הזה'), 'warn');
         })
-        .catch((err) => toast(err?.message || 'Reminders are unavailable right now', 'error'))
+        .catch((err) => toast(err?.message || tp('Reminders are unavailable right now', 'התזכורות לא זמינות כרגע'), 'error'))
         .finally(() => {
           st.busy = false;
           update();
@@ -221,7 +230,7 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
       .then((view) => {
         st.on = false;
         st.view = view;
-        toast('Notifications are off for this device', 'success');
+        toast(tp('Notifications are off for this device', 'ההתראות כבויות במכשיר הזה'), 'success');
       })
       .finally(() => {
         st.busy = false;
@@ -237,14 +246,14 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
     client
       .test()
       .then((r) => {
-        if (r.sent) toast('Test sent. It should arrive in a few seconds.', 'success');
+        if (r.sent) toast(tp('Test sent. It should arrive in a few seconds.', 'הבדיקה נשלחה. היא אמורה להגיע בעוד כמה שניות.'), 'success');
         else {
           // The push service no longer knows this device: the server dropped it, so show it off.
-          toast('The test did not get through. Turn notifications off and on again.', 'warn');
+          toast(tp('The test did not get through. Turn notifications off and on again.', 'הבדיקה לא הגיעה. כדאי לכבות את ההתראות ולהפעיל אותן שוב.'), 'warn');
           check();
         }
       })
-      .catch((err) => toast(err?.message || 'Could not send a test right now', 'error'))
+      .catch((err) => toast(err?.message || tp('Could not send a test right now', 'לא הצלחנו לשלוח בדיקה כרגע'), 'error'))
       .finally(() => {
         testing = false;
       });
@@ -258,10 +267,10 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
       savedHours = view.hours;
       if (disposed) return;
       // A newer pick waits for its own save; this one only confirms what it sent.
-      if (st.view.hours === wanted) st = { ...st, view, saved: 'Saved' };
+      if (st.view.hours === wanted) st = { ...st, view, saved: tp('Saved', 'נשמר') };
     } catch (err) {
       if (disposed) return;
-      toast(err?.message || 'Your hours were not saved. Try again.', 'error');
+      toast(err?.message || tp('Your hours were not saved. Try again.', 'השעות לא נשמרו. כדאי לנסות שוב.'), 'error');
       if (savedHours) {
         st = { ...st, view: { ...st.view, hours: savedHours }, saved: '' };
         dial?.set(savedHours);
@@ -294,7 +303,7 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
     /** The page's reminder kinds changed: they apply to the account's devices too. */
     kindsChanged() {
       if (!signedIn() || !st.view || !(st.on || st.view.devices > 0)) return;
-      client.save({ off: offKinds() }).catch(() => toast('Your reminder choices were not saved to your account. Try again.', 'error'));
+      client.save({ off: offKinds() }).catch(() => toast(tp('Your reminder choices were not saved to your account. Try again.', 'הבחירות בתזכורות לא נשמרו בחשבון. כדאי לנסות שוב.'), 'error'));
     },
     destroy() {
       // Leaving the page right after a pick still saves it.

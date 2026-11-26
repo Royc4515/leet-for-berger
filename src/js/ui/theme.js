@@ -20,10 +20,11 @@ let unsavedCode = null;
 
 // The site theme options come from theme-boot.js in English; their words are translated here, where
 // they are shown, so the boot script's values and order stay the one source.
-const SITE_LABEL_HE = { dark: 'כהה', light: 'בהיר', system: 'לפי המערכת' };
+// Mode and theme names stay in English on the Hebrew site too (owner's decision), as the quips say them.
+const SITE_LABEL_HE = { dark: 'Dark', light: 'Light', system: 'System' };
 const siteLabel = (o) => tr(o.label, SITE_LABEL_HE[o.value] ?? o.label);
 // Code theme names stay in English on the Hebrew site; only "Match site" is words, not a name.
-const codeLabel = (o) => (o.value === MATCH_SITE ? tr(o.label, 'כמו האתר') : o.label);
+const codeLabel = (o) => o.label;
 
 /** @returns {string} the saved code theme choice (a CODE_THEME_OPTIONS value) */
 export function getCodeThemePref() {
@@ -99,7 +100,7 @@ export function codeThemeSelect(signal) {
     'select.select.code-theme-select',
     { 'aria-label': tp('Code theme', 'צבעי הקוד'), title: tp('Code theme', 'צבעי הקוד') },
     // Inside a page (the profile, the exam room's toolbar): the page's language, English in the exam room.
-    CODE_THEME_OPTIONS.map((o) => h('option', { value: o.value }, o.value === MATCH_SITE ? tp(o.label, 'כמו האתר') : o.label)),
+    CODE_THEME_OPTIONS.map((o) => h('option', { value: o.value }, o.value === MATCH_SITE ? tp(o.label, 'Match site') : o.label)),
   );
   select.value = getCodeThemePref();
   select.addEventListener('change', () => setCodeThemePref(select.value));

@@ -3139,11 +3139,52 @@ try {
     if (!(sides.brand > sides.search)) throw new Error(`the header does not mirror: ${JSON.stringify(sides)}`);
     if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/43-he-problems.png` });
 
-    // A page not translated yet stays English and left to right inside the Hebrew shell.
-    await hp.goto(`${BASE}#/path`);
-    await hp.waitForSelector('.path-tier');
-    const path = await look();
-    if (path.viewDir !== 'ltr' || path.viewLang !== 'en' || path.title !== 'מסלול הלמידה' || path.over > 0) throw new Error(`an English page in the Hebrew shell: ${JSON.stringify(path)}`);
+    // A page not translated yet (the map, stage 3) stays English and left to right inside the Hebrew shell.
+    await hp.goto(`${BASE}#/map`);
+    await hp.waitForSelector('.map-canvas');
+    const map = await look();
+    if (map.viewDir !== 'ltr' || map.viewLang !== 'en' || map.title !== 'מפה' || map.over > 0) throw new Error(`an English page in the Hebrew shell: ${JSON.stringify(map)}`);
+
+    // Stage 2: these pages are drawn in Hebrew, mirrored, and fit the screen; each has its shot.
+    for (const [hash, wait, h1, shotName] of [
+      ['#/daily', '.cal-grid, .calendar, .daily-page', 'האתגר היומי', '44-he-daily'],
+      ['#/path', '.path-tier', 'מסלול הלמידה', '44-he-path'],
+      ['#/companies', '.company-card', 'חברות', '44-he-companies'],
+      ['#/companies/google', '.problem-table tbody tr, .company-table tbody tr', null, '44-he-company'],
+      ['#/modes', '.mode-card', 'אימונים', '44-he-modes'],
+      ['#/interview', '.setup-card', null, '44-he-interview-setup'],
+      ['#/battle', '.pick-row', null, '44-he-battle-setup'],
+      ['#/quiz', '.quiz-topic', null, '44-he-quiz'],
+      ['#/me', '.profile-section-title', null, '44-he-profile'],
+    ]) {
+      await hp.goto(`${BASE}${hash}`);
+      await hp.waitForSelector(wait, { timeout: 30000 });
+      const page = await look();
+      // A company page's heading is the company's name, in English; the page around it is Hebrew.
+      const hebrew = await hp.evaluate(() => /[\u0590-\u05FF]/.test(document.querySelector('#view .page-head, #view header, #view')?.textContent ?? ''));
+      if (page.viewDir !== null || page.over > 0 || (h1 && page.h1 !== h1) || !hebrew) throw new Error(`${hash} in Hebrew: ${JSON.stringify(page)}`);
+      if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/${shotName}.png`, fullPage: hash === '#/modes' });
+    }
+
+    // A running interview is the exam room: English and left to right, its dialogs too.
+    await hp.goto(`${BASE}#/interview`);
+    await hp.click('button:has-text("להתחיל את הראיון")');
+    await hp.waitForSelector('.session-banner.interview');
+    await hp.waitForSelector('.monaco-editor', { timeout: 30000 });
+    const session = await hp.evaluate(() => {
+      const host = document.querySelector('.session-banner').closest('[dir]');
+      return { dir: host?.getAttribute('dir'), lang: host?.getAttribute('lang'), end: [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'End interview') };
+    });
+    if (session.dir !== 'ltr' || session.lang !== 'en' || !session.end) throw new Error(`a running interview must be English: ${JSON.stringify(session)}`);
+    await hp.click('button:has-text("End interview")');
+    await hp.waitForSelector('dialog.modal[open]');
+    const dlg = await hp.evaluate(() => ({ dir: document.querySelector('dialog.modal').getAttribute('dir'), buttons: [...document.querySelectorAll('dialog.modal button')].map((b) => b.textContent.trim()) }));
+    if (dlg.dir !== 'ltr' || dlg.buttons[0] !== 'Cancel') throw new Error(`an exam-room dialog must be English: ${JSON.stringify(dlg)}`);
+    await hp.click('dialog.modal button:has-text("End interview")');
+    // The report after the session is a page again: Hebrew.
+    await hp.waitForSelector('.score-ring');
+    if (!(await hp.evaluate(() => /[\u0590-\u05FF]/.test(document.querySelector('#view h1, #view h2')?.textContent ?? '')))) throw new Error('the interview report should be in Hebrew');
+    if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/44-he-interview-report.png` });
 
     // The exam room: the problem screen is English and left to right, whatever the site language.
     await hp.goto(`${BASE}#/problem/pair-sum-target`);

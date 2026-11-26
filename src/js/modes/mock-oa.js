@@ -16,6 +16,22 @@ export const OA_FORMATS = [
   { id: 'hard-oa', label: 'Hard OA', minutes: 90, slots: ['Medium', 'Medium', 'Hard'], note: '2 Medium + 1 Hard, 90 minutes' },
 ];
 
+const FORMAT_LABELS_HE = { screen: 'ראיון טלפוני', oa: 'מבחן OA', 'hard-oa': 'מבחן OA קשה' };
+
+/**
+ * A format's name in the page language. Takes the format or its stored English label (the last
+ * session keeps the English one), so a saved result reads in Hebrew too; an unknown label comes
+ * back as it is.
+ * @param {{ id: string, label: string } | string} format
+ * @param {'en' | 'he'} [lang]
+ * @returns {string}
+ */
+export function oaFormatLabel(format, lang = 'en') {
+  const f = typeof format === 'string' ? OA_FORMATS.find((x) => x.label === format) : format;
+  if (!f) return typeof format === 'string' ? format : '';
+  return lang === 'he' ? FORMAT_LABELS_HE[f.id] ?? f.label : f.label;
+}
+
 /**
  * @typedef {{ id: string, difficulty: string }} OaCandidate
  */

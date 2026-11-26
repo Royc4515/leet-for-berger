@@ -5,7 +5,7 @@
  * another tab says nothing. Silent inside a session (interview, mock OA, battle): no jokes on the clock.
  * Loaded by main.js after the first page, like the reminders bell, so it is not a startup module.
  */
-import { toast } from './dom.js';
+import { toast, siteLang } from './dom.js';
 import { themeQuip } from '../data/theme-quips.js';
 
 let installed = false;
@@ -24,7 +24,7 @@ export function installThemeQuips() {
     // "Back to dark" already made its point; the switch it makes needs no second line.
     if (quiet) return void (quiet = false);
     if (document.body.classList.contains('lockdown')) return;
-    const quip = themeQuip(e.detail, Math.random, last);
+    const quip = themeQuip(e.detail, Math.random, last, siteLang());
     if (!quip) return;
     last = quip.text;
     const undo = quip.undo;

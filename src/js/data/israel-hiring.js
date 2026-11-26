@@ -22,14 +22,27 @@ export const ISRAEL_FILTERS = [
 export const DEFAULT_ISRAEL_FILTER = 'hiring';
 
 const BADGES = { major: 'Major in Israel', present: 'Israel office', none: '' };
+const BADGES_HE = { major: 'מרכז פיתוח גדול בישראל', present: 'מגייסת מהנדסים בישראל', none: '' };
+const FILTER_LABELS_HE = { hiring: 'מגייסות בישראל', jobs: 'משרות בישראל', top: 'מובילות בישראל', all: 'הכול' };
 
 /**
  * Short label for the badge on a company card; empty when the company does not hire in Israel.
  * @param {IsraelLevel} level
+ * @param {'en'|'he'} [lang]
  * @returns {string}
  */
-export function israelBadge(level) {
-  return BADGES[level] ?? '';
+export function israelBadge(level, lang = 'en') {
+  return (lang === 'he' ? BADGES_HE : BADGES)[level] ?? '';
+}
+
+/**
+ * An Israel filter's label (ISRAEL_FILTERS) in a language; the id itself for an unknown one.
+ * @param {string} id
+ * @param {'en'|'he'} [lang]
+ * @returns {string}
+ */
+export function israelFilterLabel(id, lang = 'en') {
+  return (lang === 'he' ? FILTER_LABELS_HE[id] : ISRAEL_FILTERS.find((f) => f.id === id)?.label) ?? id;
 }
 
 /**

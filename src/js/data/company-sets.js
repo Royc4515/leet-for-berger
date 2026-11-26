@@ -163,10 +163,12 @@ export function monogram(name) {
  * A row's 0-100 frequency as a 3-step meter with a word, so the scale reads without colour. The
  * cut points split the shipped rows into rough thirds (about 63 and 75 at the time of writing).
  * @param {number} frequency
- * @returns {{ steps: 1|2|3, label: 'High'|'Medium'|'Low' }}
+ * @param {'en'|'he'} [lang] the word's language (frequency, not difficulty: Hebrew translates it)
+ * @returns {{ steps: 1|2|3, label: string }} label: 'High' | 'Medium' | 'Low' in English
  */
-export function frequencyLevel(frequency) {
-  if (frequency >= 75) return { steps: 3, label: 'High' };
-  if (frequency >= 60) return { steps: 2, label: 'Medium' };
-  return { steps: 1, label: 'Low' };
+export function frequencyLevel(frequency, lang = 'en') {
+  const he = lang === 'he';
+  if (frequency >= 75) return { steps: 3, label: he ? 'גבוהה' : 'High' };
+  if (frequency >= 60) return { steps: 2, label: he ? 'בינונית' : 'Medium' };
+  return { steps: 1, label: he ? 'נמוכה' : 'Low' };
 }

@@ -53,7 +53,7 @@ const level = (difficulty, lang) => (lang === 'he' ? HE_LEVEL[difficulty] ?? dif
 export function problemShare({ id, title, difficulty, lang = 'en' }) {
   const text =
     lang === 'he'
-      ? `מצליחים לפתור את ${title}? שאלה ${level(difficulty, lang)}, נבדקת על 15 טסטים ישר בדפדפן.`
+      ? `מצליחים לפתור את ${title}? שאלה ${level(difficulty, lang)}, נבדקת על 15 בדיקות ישר בדפדפן.`
       : `Can you solve ${title}? ${article(difficulty)} ${difficulty} one, judged on 15 tests right in the browser.`;
   return { title: `${title} · ${SITE_NAME}`, text, page: SHARE_PAGES.problem(id), hash: `#/problem/${id}` };
 }
@@ -66,7 +66,7 @@ export function problemShare({ id, title, difficulty, lang = 'en' }) {
 export function solveShare({ id, title, difficulty, language, firstSolve = false, lang = 'en' }) {
   const text =
     lang === 'he'
-      ? `${firstSolve ? 'פתרתי עכשיו' : 'פתרתי'} את ${title} (${level(difficulty, lang)}) ב-${language}: עברו 15 מתוך 15 טסטים. תורך.`
+      ? `${firstSolve ? 'פתרתי עכשיו' : 'פתרתי'} את ${title} (${level(difficulty, lang)}) ב-${language}: עברו 15 מתוך 15 בדיקות. תורך.`
       : `${firstSolve ? 'Just solved' : 'Solved'} ${title} (${difficulty}) in ${language}: 15 of 15 tests passed. Your turn.`;
   return { title: lang === 'he' ? `פתרתי את ${title} · ${SITE_NAME}` : `Solved ${title} · ${SITE_NAME}`, text, page: SHARE_PAGES.problem(id), hash: `#/problem/${id}` };
 }

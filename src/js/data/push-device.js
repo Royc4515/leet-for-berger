@@ -177,6 +177,8 @@ export function suggestHour(hours) {
 }
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+/** The same days in Hebrew, Sunday first: "יום ראשון". */
+export const WEEKDAYS_HE = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
 /**
  * When the next reminder can come: the first send hour after now, skipping the rest day, when
@@ -200,9 +202,18 @@ export function nextReminder({ hours, now, restDay = null }) {
 /**
  * "Next at 16:00", "Next tomorrow at 09:00", "Next on Sunday at 16:00".
  * @param {ReturnType<typeof nextReminder>} next
+ * @param {'en'|'he'} [lang]
  * @returns {string}
  */
-export function describeNext(next) {
+export function describeNext(next, lang = 'en') {
+  if (lang === 'he') {
+    if (!next) return 'לחיצה על הטבעת מוסיפה תזכורת';
+    const at = formatHour(next.hour);
+    if (next.days === 0) return `הבאה ב-${at}`;
+    if (next.days === 1) return `הבאה מחר ב-${at}`;
+    const day = WEEKDAYS_HE[WEEKDAYS.indexOf(next.weekday)] ?? next.weekday;
+    return day === 'שבת' ? `הבאה בשבת ב-${at}` : `הבאה ביום ${day} ב-${at}`;
+  }
   if (!next) return 'Tap the ring to add one';
   const at = formatHour(next.hour);
   if (next.days === 0) return `Next at ${at}`;
@@ -228,9 +239,16 @@ export function toggleHour(hours, hour) {
 /**
  * The line above the picker: how many a day, and when. An empty list means none, said plainly.
  * @param {number[]} hours any order: listed earliest first
+ * @param {'en'|'he'} [lang]
  * @returns {string}
  */
-export function describeHours(hours) {
+export function describeHours(hours, lang = 'en') {
+  if (lang === 'he') {
+    if (!hours.length) return 'אין התראות. כדי לקבל אותן שוב, צריך להוסיף שעה.';
+    const times = [...new Set(hours)].sort((a, b) => a - b).map(formatHour);
+    const list = times.length === 1 ? times[0] : `${times.slice(0, -1).join(', ')} ו-${times.at(-1)}`;
+    return `${times.length === 1 ? 'לכל היותר אחת ביום' : `לכל היותר ${times.length} ביום`}, ב-${list}`;
+  }
   if (!hours.length) return 'No notifications. Add an hour to get them again.';
   const times = [...new Set(hours)].sort((a, b) => a - b).map(formatHour);
   const list = times.length === 1 ? times[0] : `${times.slice(0, -1).join(', ')} and ${times.at(-1)}`;

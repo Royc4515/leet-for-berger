@@ -56,17 +56,17 @@ const routes = [
   [/^#\/problem\/([\w-]+)$/, loadProblemRoute, 'problems', ([, id]) => catalogEntry(id)?.title ?? 'Problem'],
   // Map levels (#/map/<topic>/<subtopic>/<problem>) zoom inside one mounted view: see `update` in route().
   [/^#\/map(?:\/([\w-]+)(?:\/([\w-]+)(?:\/([\w-]+))?)?)?$/, async (_, [, ...parts]) => { const m = await import('./ui/views/map.js'); return (root) => m.renderMap(root, { store, parts }); }, 'map', () => tr('Map', 'מפה')],
-  [/^#\/daily$/, async () => { const m = await import('./ui/views/daily.js'); return (root) => m.renderDaily(root, { store }); }, 'problems', () => tr('Daily challenge', 'האתגר היומי')],
-  [/^#\/path$/, async () => { const m = await import('./ui/views/path.js'); return (root) => m.renderPath(root, { store }); }, 'path', () => tr('Learning Path', 'מסלול הלמידה')],
-  [/^#\/companies$/, async () => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompanies(root, { store }); }, 'companies', () => tr('Companies', 'חברות')],
-  [/^#\/companies\/([\w-]+)$/, async (_, [, slug]) => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompany(root, { store, slug }); }, 'companies', () => tr('Companies', 'חברות')],
-  [/^#\/modes$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderModesHub(root); }, 'modes', () => tr('Modes', 'אימונים')],
-  [/^#\/interview$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderInterview(root, { store }); }, 'modes', () => tr('Interview', 'ראיון')],
-  [/^#\/quiz$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizHub(root); }, 'modes', () => tr('Quiz', 'חידון')],
-  [/^#\/quiz\/board$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizBoard(root); }, 'modes', () => tr('Leaderboard', 'טבלת המובילים')],
-  [/^#\/quiz\/daily$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderDailyQuiz(root); }, 'modes', () => tr('Daily quiz', 'החידון היומי')],
-  [/^#\/battle$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderBattle(root, { store }); }, 'modes', () => tr('1v1 Battle', 'קרב 1 על 1')],
-  [/^#\/me$/, async () => { const m = await import('./ui/views/profile.js'); return (root) => m.renderProfile(root, { store }); }, null, () => tr('Profile', 'פרופיל')],
+  [/^#\/daily$/, async () => { const m = await import('./ui/views/daily.js'); return (root) => m.renderDaily(root, { store }); }, 'problems', () => tr('Daily challenge', 'האתגר היומי'), true],
+  [/^#\/path$/, async () => { const m = await import('./ui/views/path.js'); return (root) => m.renderPath(root, { store }); }, 'path', () => tr('Learning Path', 'מסלול הלמידה'), true],
+  [/^#\/companies$/, async () => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompanies(root, { store }); }, 'companies', () => tr('Companies', 'חברות'), true],
+  [/^#\/companies\/([\w-]+)$/, async (_, [, slug]) => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompany(root, { store, slug }); }, 'companies', () => tr('Companies', 'חברות'), true],
+  [/^#\/modes$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderModesHub(root); }, 'modes', () => tr('Modes', 'אימונים'), true],
+  [/^#\/interview$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderInterview(root, { store }); }, 'modes', () => tr('Interview', 'ראיון'), true],
+  [/^#\/quiz$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizHub(root); }, 'modes', () => tr('Quiz', 'חידון'), true],
+  [/^#\/quiz\/board$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizBoard(root); }, 'modes', () => tr('Leaderboard', 'טבלת המובילים'), true],
+  [/^#\/quiz\/daily$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderDailyQuiz(root); }, 'modes', () => tr('Daily quiz', 'החידון היומי'), true],
+  [/^#\/battle$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderBattle(root, { store }); }, 'modes', () => tr('1v1 Battle', 'קרב 1 על 1'), true],
+  [/^#\/me$/, async () => { const m = await import('./ui/views/profile.js'); return (root) => m.renderProfile(root, { store }); }, null, () => tr('Profile', 'פרופיל'), true],
 ];
 
 /** The workspace view and the problem module load in parallel (ADR 0008). */
