@@ -3,7 +3,7 @@
  * one, else the text and the link are copied and a toast says so. What each page sends is built
  * by src/js/data/share.js.
  */
-import { h, toast } from './dom.js';
+import { h, toast, tp } from './dom.js';
 import { shareUrl, shareLanguage } from '../data/share.js';
 import { SITE_URL } from '../config.js';
 
@@ -44,12 +44,12 @@ export async function shareOrCopy({ title, text, url }) {
       return 'shared';
     }
     await navigator.clipboard.writeText(`${text}\n${url}`);
-    toast('Link copied. Paste it anywhere.', 'success');
+    toast(tp('Link copied. Paste it anywhere.', 'הקישור הועתק. אפשר להדביק אותו בכל מקום.'), 'success');
     return 'copied';
   } catch (err) {
     // Closing the share sheet is not a failure.
     if (err?.name === 'AbortError') return 'cancelled';
-    toast('Could not share. Copy the address from the address bar instead.', 'error');
+    toast(tp('Could not share. Copy the address from the address bar instead.', 'השיתוף לא הצליח. אפשר להעתיק את הקישור משורת הכתובת.'), 'error');
     return 'failed';
   }
 }
@@ -72,7 +72,7 @@ function readerLanguage() {
  *   label: visible text ("Share"); name: what is shared, for its accessible name ("Share this problem")
  * @returns {HTMLButtonElement}
  */
-export function shareButton({ get, label = 'Share', name, compact = false }) {
+export function shareButton({ get, label = tp('Share', 'שיתוף'), name, compact = false }) {
   return h(
     `button.btn.btn-secondary.btn-sm.share-btn${compact ? '.btn-icon' : ''}`,
     {

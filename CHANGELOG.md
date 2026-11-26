@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added (Hebrew, stage 1 of 4, owner's request)
+- **The site speaks Hebrew, right to left.** A Hebrew device opens it in Hebrew; a language button in the header (the account sheet on a narrow phone) switches, saved per device (`lfb:site-lang`). `src/js/lang-boot.js` sets `lang` and `dir` before the first paint, like the theme.
+- **Translated in this stage:** the header, the tab bar, the footer, the account menu, the palette, the reminders bell, the sign-in and reminders offers, toasts and dialogs, and the Problems page. Other pages stay English and left to right inside the Hebrew shell until their stage (`docs/I18N.md`).
+- **The exam room stays English:** the problem screen and the timed sessions are English and left to right on any site language, as in a real interview. Topic names, difficulty, verdicts and company names stay English everywhere.
+- **The layout mirrors** through logical CSS properties (start and end instead of left and right); code, the map canvas and the reminder clock stay left to right inside Hebrew pages. The privacy policy stays an English page.
+- `docs/I18N.md`: how it works, the Hebrew terms and voice. `tests/i18n.test.js` checks the boot script and that every `tr()` / `tp()` pair has Hebrew; an e2e step opens the site as a Hebrew device.
+
 ### Added (sign-in and reminders offers, owner's request)
 - **After an Accepted solve or a finished quiz, the site offers the next step in the middle of the screen.** A guest gets "Save your progress" (Continue with Google or GitHub); right after that sign-in, or after a later solve for a member without reminders, "Don't lose your streak" with **Turn on reminders**, which asks for permission from that tap and turns on the defaults (16:00 and 20:00, every kind) with a test notification. Never on arrival, never inside an interview, mock OA or battle; a guest is asked at most 3 times, 3 days apart, a member at most 4 times, a week apart, and never once the browser refused notifications. On an iPhone in Safari the button opens the Home Screen guide.
 - **A banner at the top of the Problems page** offers reminders to a member without them, and sign-in to a guest with progress, until it is done; its X hides it for a week.

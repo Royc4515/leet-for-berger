@@ -7,8 +7,8 @@
  * (auth/push-client.js `enable`), so the push client is loaded before the button can be pressed.
  * Loaded by main.js after the first page, so it is not a startup module.
  */
-import { h, toast } from './dom.js';
-import { NUDGE_COPY, emptyNudgeState, normalizeNudgeState, nudgeAfterPractice, nudgeAfterSignIn, homeBanner, recordNudge, hideBanner } from '../data/nudges.js';
+import { h, toast, tr, siteLang } from './dom.js';
+import { nudgeCopy, emptyNudgeState, normalizeNudgeState, nudgeAfterPractice, nudgeAfterSignIn, homeBanner, recordNudge, hideBanner } from '../data/nudges.js';
 
 /** Which offers this device has shown, and banners hidden (a device preference, like the tours). */
 const STATE_KEY = 'lfb:nudges:v1';
@@ -37,6 +37,9 @@ function saveState(state) {
 }
 
 const update = (fn) => saveState(fn(loadState()));
+
+/** The offers' copy in the site language (shell copy: dialogs and the banner both follow it). */
+const copyNow = () => nudgeCopy(siteLang());
 
 /** The push client, loaded once; null when accounts are off. */
 let clientPromise = null;
@@ -69,13 +72,13 @@ async function turnOnReminders(client) {
   try {
     const res = await client.enable();
     if (!res.ok) return res.reason;
-    toast(NUDGE_COPY.push.done, 'success');
+    toast(copyNow().push.done, 'success');
     // The whole way a reminder goes, as the profile's switch does: proof that it works.
     client.test().catch(() => {});
     dispatchEvent(new CustomEvent(CHANGED));
     return 'on';
   } catch (err) {
-    toast(err?.message || 'Reminders are unavailable right now.', 'error');
+    toast(err?.message || tr('Reminders are unavailable right now.', 'התזכורות לא זמינות כרגע.'), 'error');
     return 'error';
   }
 }
@@ -95,7 +98,7 @@ function openReminderSettings() {
  */
 function openDialog(kind, { account, client, support }) {
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  const copy = NUDGE_COPY[kind];
+  const copy = copyNow()[kind];
   const body = h('p', { id: 'nudge-body' }, copy.body);
   const actions = h('div.modal-actions.nudge-actions');
   const dlg = h(
@@ -122,8 +125,8 @@ function openDialog(kind, { account, client, support }) {
     };
     actions.append(
       later,
-      h('button.btn.btn-secondary', { type: 'button', onClick: () => start('github') }, 'Continue with GitHub'),
-      h('button.btn.btn-primary', { type: 'button', onClick: () => start('google') }, 'Continue with Google'),
+      h('button.btn.btn-secondary', { type: 'button', onClick: () => start('github') }, tr('Continue with GitHub', 'להמשיך עם GitHub')),
+      h('button.btn.btn-primary', { type: 'button', onClick: () => start('google') }, tr('Continue with Google', 'להמשיך עם Google')),
     );
   } else if (support === 'ready') {
     const on = h(
@@ -136,7 +139,7 @@ function openDialog(kind, { account, client, support }) {
           if (result === 'denied') {
             body.textContent = copy.denied;
             on.remove();
-            later.textContent = 'OK';
+            later.textContent = tr('OK', 'הבנתי');
             later.focus();
             return;
           }
@@ -226,20 +229,21 @@ export function nudgeBanner({ account, hasProgress, signal }) {
     if (mine !== token || signal.aborted || !f) return;
     const kind = homeBanner({ ...f, hasProgress: hasProgress(), state: loadState(), now: Date.now() });
     if (!kind) return void host.replaceChildren();
-    const copy = NUDGE_COPY.banner[kind];
+    const all = copyNow();
+    const copy = all.banner[kind];
     const action =
       kind === 'signin'
         ? h('button.btn.btn-primary', { type: 'button', onClick: () => openDialog('signin', { account, client: f.client, support: f.push.support }) }, copy.action)
         : f.push.support === 'ready'
           ? h('button.btn.btn-primary', { type: 'button', onClick: async (e) => { e.currentTarget.disabled = true; await turnOnReminders(f.client); render(); } }, copy.action)
-          : h('button.btn.btn-primary', { type: 'button', onClick: openReminderSettings }, NUDGE_COPY.push.install);
+          : h('button.btn.btn-primary', { type: 'button', onClick: openReminderSettings }, all.push.install);
     host.replaceChildren(
       h(
         'section.nudge-banner',
         { 'aria-labelledby': 'nudge-banner-title', dataset: { nudge: kind } },
         h('span.nudge-mark', { 'aria-hidden': 'true' }),
         h('div.nudge-banner-text', {}, h('h2#nudge-banner-title', {}, copy.title), h('p', {}, copy.body)),
-        h('div.nudge-banner-actions', {}, action, h('button.btn.btn-ghost.btn-icon.nudge-hide', { type: 'button', 'aria-label': NUDGE_COPY.banner.hide, title: NUDGE_COPY.banner.hide, onClick: () => update((s) => hideBanner(s, kind, Date.now())) }, h('span', { 'aria-hidden': 'true' }, '×'))),
+        h('div.nudge-banner-actions', {}, action, h('button.btn.btn-ghost.btn-icon.nudge-hide', { type: 'button', 'aria-label': all.banner.hide, title: all.banner.hide, onClick: () => update((s) => hideBanner(s, kind, Date.now())) }, h('span', { 'aria-hidden': 'true' }, '×'))),
       ),
     );
   };

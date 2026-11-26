@@ -536,7 +536,7 @@ textarea {
 .skip-link {
   position: fixed;
   top: var(--s-2);
-  left: var(--s-2);
+  inset-inline-start: var(--s-2);
   z-index: 100;
   padding: var(--s-2) var(--s-4);
   background: var(--accent);
@@ -638,13 +638,13 @@ textarea {
   bottom: -11px;
   width: 8px;
   height: 9px;
-  margin-left: -4px;
+  margin-inline-start: -4px;
   background: var(--accent);
   clip-path: var(--hex);
 }
 
 .header-right {
-  margin-left: auto;
+  margin-inline-start: auto;
   display: flex;
   align-items: center;
   gap: var(--s-2);
@@ -659,16 +659,25 @@ textarea {
 
 :root[data-theme='light'] .theme-toggle .icon-sun,
 :root:not([data-theme='light']) .theme-toggle .icon-moon,
-.account-menu .theme-toggle {
+.account-menu .theme-toggle,
+.account-menu .lang-toggle {
   display: none;
 }
 
+/* The language button (lang-boot.js): a short mark in the header, the full word in the sheet. */
+.lang-toggle-short {
+  min-width: var(--ctl-sm);
+  font-weight: 650;
+}
+
 @media (max-width: 420px) {
-  .header-right > .theme-toggle {
+  .header-right > .theme-toggle,
+  .header-right > .lang-toggle {
     display: none;
   }
 
-  .account-menu .theme-toggle {
+  .account-menu .theme-toggle,
+  .account-menu .lang-toggle {
     display: inline-flex;
   }
 }
@@ -678,7 +687,8 @@ textarea {
   align-items: center;
   gap: var(--s-2);
   height: 34px;
-  padding: 0 var(--s-2) 0 var(--s-3);
+  padding-block: 0 0;
+  padding-inline: var(--s-3) var(--s-2);
   background: var(--panel);
   border: 1px solid var(--border-strong);
   border-radius: var(--r-sm);
@@ -716,7 +726,8 @@ kbd,
   align-items: center;
   gap: var(--s-2);
   height: 34px;
-  padding: 0 var(--s-3) 0 var(--s-2);
+  padding-block: 0 0;
+  padding-inline: var(--s-2) var(--s-3);
   border-radius: var(--r-sm);
   color: var(--muted);
   font-size: var(--fs-sm);
@@ -836,7 +847,7 @@ kbd,
     left: 50%;
     width: 28px;
     height: 2px;
-    margin-left: -14px;
+    margin-inline-start: -14px;
     background: var(--accent);
     border-radius: 0 0 var(--r-tag) var(--r-tag);
   }
@@ -1043,7 +1054,8 @@ body.lockdown .app-header {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s-1) var(--s-4);
-  margin: 0 0 0 auto;
+  margin-block: 0 0;
+  margin-inline: auto 0;
 }
 
 /* LinkedIn and GitHub carry their mark before the word, in the link's own colour. */
@@ -1073,7 +1085,7 @@ body.lockdown .app-header {
 @media (max-width: 640px) {
   .site-links-credit {
     flex-basis: 100%;
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 }
 
@@ -1663,7 +1675,7 @@ textarea.mentor-input:focus {
 }
 
 .search {
-  padding-left: 38px;
+  padding-inline-start: 38px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23a1988a' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cpath d='M11 11l3.5 3.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: 13px 50%;
@@ -1671,7 +1683,7 @@ textarea.mentor-input:focus {
 
 .select {
   appearance: none;
-  padding-right: 30px;
+  padding-inline-end: 30px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%23a1988a' stroke-width='1.6'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 11px center;
@@ -1749,7 +1761,7 @@ textarea.mentor-input {
 
 .problem-table th {
   padding: var(--s-3) var(--s-4);
-  text-align: left;
+  text-align: start;
   font-family: var(--mono);
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -1874,7 +1886,7 @@ textarea.mentor-input {
 .company-mark.is-il::after {
   content: '';
   position: absolute;
-  right: 18%;
+  inset-inline-end: 18%;
   bottom: 22%;
   width: 7px;
   height: 7px;
@@ -1944,7 +1956,7 @@ textarea.mentor-input {
 
 /* The Israel dot sits on the tile's corner, ringed in the page colour so it reads as a badge. */
 .company-mark.is-tile.is-il::after {
-  right: -3px;
+  inset-inline-end: -3px;
   bottom: -3px;
   width: 10px;
   height: 10px;
@@ -2127,7 +2139,7 @@ textarea.mentor-input {
   .nudge-banner {
     position: relative;
     flex-wrap: wrap;
-    padding-right: var(--s-7);
+    padding-inline-end: var(--s-7);
   }
 
   .nudge-banner-actions {
@@ -2141,7 +2153,7 @@ textarea.mentor-input {
   .nudge-hide {
     position: absolute;
     top: var(--s-2);
-    right: var(--s-2);
+    inset-inline-end: var(--s-2);
   }
 
 }
@@ -2211,7 +2223,7 @@ body.lockdown .toast-host {
 
 .toast-action {
   flex: none;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .toast.leaving {
@@ -2382,7 +2394,8 @@ body.lockdown .toast-host {
 .palette-input {
   width: 100%;
   height: 56px;
-  padding: 0 var(--s-5) 0 48px;
+  padding-block: 0 0;
+  padding-inline: 48px var(--s-5);
   border: 0;
   border-bottom: 1px solid var(--border);
   background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23a1988a' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='M12.5 12.5l4 4'/%3E%3C/svg%3E") no-repeat 18px 50%;
@@ -3700,7 +3713,7 @@ body.lockdown .toast-host {
 }
 
 .map-list-count {
-  margin-left: auto;
+  margin-inline-start: auto;
   color: var(--muted);
   font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
@@ -3806,11 +3819,11 @@ body.lockdown .toast-host {
 
 .stat-cell {
   padding: var(--s-3) var(--s-4);
-  border-right: 1px solid var(--border);
+  border-inline-end: 1px solid var(--border);
 }
 
 .stat-cell:last-child {
-  border-right: 0;
+  border-inline-end: 0;
 }
 
 .stat-value {
@@ -4181,12 +4194,12 @@ body.lockdown .toast-host {
 }
 
 .random-btn {
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .dashboard-table .cell-status {
   width: 44px;
-  padding-right: 0;
+  padding-inline-end: 0;
 }
 
 .dashboard-table .cell-diff {
@@ -4206,7 +4219,7 @@ body.lockdown .toast-host {
 }
 
 .planned-title {
-  margin-right: var(--s-2);
+  margin-inline-end: var(--s-2);
 }
 
 .dashboard-empty .state {
@@ -4445,7 +4458,7 @@ body.lockdown .toast-host {
   }
 
   .stat-cell:nth-child(2) {
-    border-right: 0;
+    border-inline-end: 0;
   }
 
   .stat-cell:nth-child(-n + 2) {
@@ -4498,11 +4511,11 @@ body.lockdown .toast-host {
   .dashboard-page > .stats-row .stat-cell {
     padding: var(--s-2);
     border-bottom: 0;
-    border-right: 1px solid var(--border);
+    border-inline-end: 1px solid var(--border);
   }
 
   .dashboard-page > .stats-row .stat-cell:last-child {
-    border-right: 0;
+    border-inline-end: 0;
   }
 
   .dashboard-page > .stats-row .stat-value {
@@ -4528,7 +4541,8 @@ body.lockdown .toast-host {
     order: 2;
     display: block;
     margin-bottom: var(--s-3);
-    padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3);
+    padding-block: var(--s-2) var(--s-2);
+    padding-inline: var(--s-3) var(--s-2);
   }
 
   .dashboard-page .today-daily-copy {
@@ -4638,7 +4652,7 @@ body.lockdown .toast-host {
   }
 
   .random-btn {
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 
   /* Tables become two-line rows: status and title, then difficulty and topic. */
@@ -4883,7 +4897,7 @@ body.resizing-y * {
 .problem-limits {
   margin-bottom: var(--s-4);
   padding: var(--s-2) var(--s-3);
-  border-left: 2px solid var(--accent-line);
+  border-inline-start: 2px solid var(--accent-line);
   background: var(--panel-2);
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
   color: var(--text-2);
@@ -4950,7 +4964,7 @@ body.resizing-y * {
 
 .constraints {
   margin: 0;
-  padding-left: var(--s-5);
+  padding-inline-start: var(--s-5);
 }
 
 .constraints li {
@@ -5119,7 +5133,7 @@ body.resizing-y * {
 
 .walkthrough-steps {
   margin: 0;
-  padding-left: var(--s-5);
+  padding-inline-start: var(--s-5);
   display: grid;
   gap: var(--s-2);
 }
@@ -5221,13 +5235,13 @@ body.resizing-y * {
 }
 
 .toolbar-help {
-  padding-left: var(--s-3);
-  border-left: 1px solid var(--border);
+  padding-inline-start: var(--s-3);
+  border-inline-start: 1px solid var(--border);
 }
 
 .toolbar-run {
   gap: var(--s-2);
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 /* The longest option ("TypeScript (editor only)") would push the toolbar onto a second row. */
@@ -5265,7 +5279,7 @@ body.resizing-y * {
 
 .turnstile-host {
   position: fixed;
-  right: var(--s-3);
+  inset-inline-end: var(--s-3);
   bottom: var(--s-3);
   z-index: 60;
 }
@@ -5371,7 +5385,7 @@ body.resizing-y * {
 }
 
 .idle-hex:nth-child(5) {
-  margin-right: var(--s-3);
+  margin-inline-end: var(--s-3);
 }
 
 .console-keys {
@@ -5393,7 +5407,7 @@ body.resizing-y * {
   display: grid;
   gap: var(--s-2);
   padding: var(--s-3);
-  border-left: 3px solid var(--bad);
+  border-inline-start: 3px solid var(--bad);
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
   background: var(--bad-soft);
 }
@@ -5451,7 +5465,7 @@ body.resizing-y * {
 }
 
 .result-head .next-problem {
-  margin-left: auto;
+  margin-inline-start: auto;
   align-self: center;
 }
 
@@ -5672,7 +5686,7 @@ body.resizing-y * {
 
 .growth {
   padding: var(--s-2) var(--s-3);
-  border-left: 3px solid var(--border-strong);
+  border-inline-start: 3px solid var(--border-strong);
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
   background: var(--panel-2);
   color: var(--text-2);
@@ -5688,11 +5702,11 @@ body.resizing-y * {
 }
 
 .growth-matches {
-  border-left-color: var(--ok);
+  border-inline-start-color: var(--ok);
 }
 
 .growth-slower-than-target {
-  border-left-color: var(--warn);
+  border-inline-start-color: var(--warn);
 }
 
 .growth-head {
@@ -5710,7 +5724,7 @@ body.resizing-y * {
   display: none;
   min-height: 0;
   flex-direction: column;
-  margin-left: var(--s-2);
+  margin-inline-start: var(--s-2);
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -5734,7 +5748,8 @@ body.resizing-y * {
   align-items: center;
   justify-content: space-between;
   gap: var(--s-2);
-  padding: var(--s-2) var(--s-2) var(--s-2) var(--s-4);
+  padding-block: var(--s-2) var(--s-2);
+  padding-inline: var(--s-4) var(--s-2);
   border-bottom: 1px solid var(--border);
 }
 
@@ -5744,7 +5759,7 @@ body.resizing-y * {
 }
 
 .mentor-head strong {
-  margin-right: var(--s-2);
+  margin-inline-end: var(--s-2);
   font-family: var(--display);
 }
 
@@ -5823,7 +5838,7 @@ body.resizing-y * {
     grid-column: 1;
     position: relative;
     z-index: 2;
-    margin-left: 0;
+    margin-inline-start: 0;
     box-shadow: var(--shadow-2);
   }
 }
@@ -5927,7 +5942,7 @@ body.resizing-y * {
   }
 
   .result-head .next-problem {
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 
   .io-row {
@@ -6033,7 +6048,7 @@ body.resizing-y * {
   position: absolute;
   top: 14px;
   bottom: 14px;
-  left: 14px;
+  inset-inline-start: 14px;
   width: 2px;
   background: linear-gradient(var(--border-strong), var(--border-strong));
 }
@@ -6112,7 +6127,7 @@ body.resizing-y * {
 .checkpoint {
   display: inline-block;
   padding: 0 var(--s-1-5);
-  margin-right: var(--s-half);
+  margin-inline-end: var(--s-half);
   border-radius: var(--r-tag);
   background: var(--panel-3);
   color: var(--muted);
@@ -6156,7 +6171,7 @@ body.resizing-y * {
   border: 0;
   border-radius: var(--r-md);
   color: var(--text);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -6294,7 +6309,7 @@ body.resizing-y * {
 
 @media (max-width: 640px) {
   .path-route::before {
-    left: 10px;
+    inset-inline-start: 10px;
   }
 
   .path-tier {
@@ -6579,16 +6594,16 @@ body.resizing-y * {
 
 .company-table .cell-status {
   width: 44px;
-  padding-right: 0;
+  padding-inline-end: 0;
 }
 
 .company-table .cell-practice {
   width: 170px;
-  text-align: right;
+  text-align: end;
 }
 
 .company-problem {
-  margin-right: var(--s-2);
+  margin-inline-end: var(--s-2);
   font-weight: 600;
 }
 
@@ -7010,7 +7025,7 @@ body.resizing-y * {
   display: grid;
   gap: var(--s-1);
   margin: 0;
-  padding-left: var(--s-5);
+  padding-inline-start: var(--s-5);
   color: var(--text-2);
   font-size: var(--fs-sm);
 }
@@ -7032,7 +7047,7 @@ body.resizing-y * {
   border: 1px solid var(--border-strong);
   border-radius: var(--r-md);
   color: var(--text);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
 }
@@ -7051,7 +7066,7 @@ body.resizing-y * {
   content: '';
   position: absolute;
   top: var(--s-3);
-  right: var(--s-3);
+  inset-inline-end: var(--s-3);
   width: 10px;
   height: 6px;
   border-left: 2px solid var(--accent);
@@ -7157,7 +7172,7 @@ body.resizing-y * {
   border-radius: var(--r-sm);
   color: var(--text);
   font-size: var(--fs-sm);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
 }
@@ -7583,7 +7598,8 @@ body.resizing-y * {
   .setup-bar {
     flex-wrap: nowrap;
     gap: var(--s-3);
-    padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3);
+    padding-block: var(--s-2) var(--s-2);
+    padding-inline: var(--s-3) var(--s-2);
   }
 
   .setup-bar-summary {
@@ -7879,7 +7895,7 @@ body.resizing-y * {
   .account-avatar::after {
     content: '';
     position: absolute;
-    right: -2px;
+    inset-inline-end: -2px;
     bottom: -2px;
     display: none;
     width: 11px;
@@ -7923,7 +7939,7 @@ body.resizing-y * {
 
 .account-menu {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   top: calc(100% + var(--s-2));
   z-index: 50;
   display: grid;
@@ -8057,7 +8073,7 @@ body.resizing-y * {
 .notify-count {
   position: absolute;
   top: 1px;
-  right: 0;
+  inset-inline-end: 0;
   min-width: 17px;
   height: 17px;
   padding: 0 var(--s-1);
@@ -8081,7 +8097,7 @@ body.resizing-y * {
 
 .notify-panel {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   top: calc(100% + var(--s-2));
   z-index: 50;
   display: grid;
@@ -8865,7 +8881,7 @@ body.resizing-y * {
 }
 
 .legal ul {
-  padding-left: var(--s-5);
+  padding-inline-start: var(--s-5);
 }
 
 .legal a:not(.btn):not(.back-link):not(.site-links a) {
@@ -9749,4 +9765,63 @@ body.resizing-y * {
   .next-ring {
     opacity: 0.9;
   }
+}
+
+
+/* ---------- Right to left (lang-boot.js: dir="rtl" on <html> for Hebrew) ----------
+   Layout mirrors through logical properties (inline-start / inline-end) everywhere above. What
+   logical properties cannot express is here: icons drawn as backgrounds on one side of a field. */
+/* Code, the map's canvas and the reminder clock are drawn left to right in any language: code is
+   code, and the map and the clock place things by coordinates. Isolated, so they never reorder the
+   Hebrew around them. */
+[dir='rtl'] pre,
+[dir='rtl'] code,
+[dir='rtl'] kbd,
+[dir='rtl'] .map-canvas,
+[dir='rtl'] .hour-clock {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Chevrons drawn with two borders and a rotation keep physical borders (a mirrored border with the
+   same rotation draws a different arrow). The ones that point along the line turn the other way. */
+[dir='rtl'] .back-link::before {
+  transform: rotate(-135deg);
+}
+
+[dir='rtl'] .extra-card:not([open]) > summary::before,
+[dir='rtl'] .path-topic-toggle:not([aria-expanded='true']) .path-chevron {
+  transform: rotate(135deg);
+}
+
+[dir='rtl'] .search {
+  background-position: right 13px center;
+}
+
+[dir='rtl'] .select {
+  background-position: left 11px center;
+}
+
+[dir='rtl'] .palette-input {
+  background-position: right 18px center;
+}
+
+/* Hebrew type. JetBrains Mono has no Hebrew letters, and its wide space pulls Hebrew words apart:
+   in a Hebrew page the labels set in mono (eyebrows, counts, kickers) take the interface's sans,
+   while code itself (pre, code, kbd) stays in JetBrains Mono. The exam room (lang="en") keeps the
+   plain stack. Hebrew is never letter-spaced: the tracking that suits Latin capitals breaks it. */
+[lang='he'] {
+  --mono: var(--font);
+}
+
+[lang='he'] :is(pre, code, kbd) {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+[lang='en'] {
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+[lang='he'] :lang(he) {
+  letter-spacing: 0;
 }

@@ -2,7 +2,7 @@
  * Dashboard: progress stats + filterable problem bank. Reads only the catalog: no problem module
  * loads here (docs/adr/0008-lazy-problem-modules.md).
  */
-import { h, mount, difficulty, chipGroup, stateBlock, hexMark } from '../dom.js';
+import { h, mount, difficulty, chipGroup, stateBlock, hexMark, tp, pageLang } from '../dom.js';
 import { siteFooter } from '../footer.js';
 import { catalog, TOPICS, DIFFICULTIES } from '../../problems/index.js';
 import { stats, restDayOf } from '../../state/progress.js';
@@ -16,7 +16,7 @@ import { nudgeBanner } from '../nudges.js';
 import { services } from '../../auth/services.js';
 import { QUIZ_STORAGE_KEY } from '../../state/user-data.js';
 
-const HEAD_DATE = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+const HEAD_DATE_OPTS = { weekday: 'long', day: 'numeric', month: 'long' };
 
 // Phone: the list shows this many rows, then "Show more" (owner's request: 225 rows were one
 // 21,000 px scroll). The breakpoint is the one where the table turns into list rows (app.css).
@@ -24,6 +24,9 @@ const PHONE_PAGE = 30;
 const PHONE_QUERY = '(max-width: 640px)';
 
 const STATUS_LABEL = { solved: 'Solved', assisted: 'Assisted', attempted: 'Attempted' };
+const STATUS_LABEL_HE = { solved: 'נפתרה', assisted: 'נפתרה עם עזרה', attempted: 'ניסית' };
+/** "225 problems" in Hebrew, with its own singular. */
+const heProblems = (n) => (n === 1 ? 'בעיה אחת' : `${n} בעיות`);
 const topicLabel = (id) => TOPICS.find((t) => t.id === id)?.label ?? id;
 
 /**
@@ -51,10 +54,10 @@ export function renderDashboard(root, { store }) {
         h(
           'tr',
           {},
-          h('th.cell-status', { scope: 'col' }, h('span.sr-only', {}, 'Status')),
-          h('th', { scope: 'col' }, 'Title'),
-          h('th', { scope: 'col' }, 'Difficulty'),
-          h('th', { scope: 'col' }, 'Topic'),
+          h('th.cell-status', { scope: 'col' }, h('span.sr-only', {}, tp('Status', 'סטטוס'))),
+          h('th', { scope: 'col' }, tp('Title', 'שם')),
+          h('th', { scope: 'col' }, tp('Difficulty', 'רמת קושי')),
+          h('th', { scope: 'col' }, tp('Topic', 'נושא')),
         ),
       ),
       tableBody,
@@ -62,9 +65,9 @@ export function renderDashboard(root, { store }) {
   );
   const emptyHost = h('div.dashboard-empty', { hidden: true });
   const statsRow = h('div.stats-row');
-  const today = h('section.today-row', { 'aria-label': 'Practice today' });
+  const today = h('section.today-row', { 'aria-label': tp('Practice today', 'תרגול היום') });
   const countLine = h('p.hint-text.filter-count', { role: 'status' });
-  const clearInline = h('button.btn.btn-ghost.btn-sm.filter-clear', { type: 'button', hidden: true, onClick: () => clearFilters() }, 'Clear filters');
+  const clearInline = h('button.btn.btn-ghost.btn-sm.filter-clear', { type: 'button', hidden: true, onClick: () => clearFilters() }, tp('Clear filters', 'לנקות את הסינון'));
   const moreHost = h('div.list-more', { hidden: true });
   const phone = typeof matchMedia === 'function' ? matchMedia(PHONE_QUERY) : null;
   let shown = PHONE_PAGE;
@@ -75,10 +78,19 @@ export function renderDashboard(root, { store }) {
     if (!path) return;
     const state = store.get();
     const spots = weakSpots(path, state.problems);
-    const reason = (s) =>
+    const reasonEn = (s) =>
       [s.unsolved ? `${s.unsolved} attempted, not solved` : null, s.assisted ? `${s.assisted} solved with the solution revealed` : null, s.failedSubmits ? `${s.failedSubmits} rejected ${s.failedSubmits === 1 ? 'submit' : 'submits'}` : null]
         .filter(Boolean)
         .join(', ');
+    const reasonHe = (s) =>
+      [
+        s.unsolved ? (s.unsolved === 1 ? 'בעיה אחת שניסית ועוד לא נפתרה' : `${s.unsolved} בעיות שניסית ועוד לא נפתרו`) : null,
+        s.assisted ? (s.assisted === 1 ? 'בעיה אחת נפתרה אחרי חשיפת הפתרון' : `${s.assisted} בעיות נפתרו אחרי חשיפת הפתרון`) : null,
+        s.failedSubmits ? (s.failedSubmits === 1 ? 'הגשה אחת שנדחתה' : `${s.failedSubmits} הגשות שנדחו`) : null,
+      ]
+        .filter(Boolean)
+        .join(', ');
+    const reason = (s) => tp(reasonEn(s), reasonHe(s));
     mount(
       today,
       dailyCard({ path, state, now: new Date(), compact: true }),
@@ -86,7 +98,7 @@ export function renderDashboard(root, { store }) {
       h(
         `section.today-card.today-weak${spots.length ? '' : '.is-empty'}`,
         { 'aria-labelledby': 'weak-title' },
-        h('div.today-kicker', { id: 'weak-title' }, 'Weak spots'),
+        h('div.today-kicker', { id: 'weak-title' }, tp('Weak spots', 'נקודות חולשה')),
         spots.length
           ? h(
               'ul.weak-list',
@@ -96,12 +108,21 @@ export function renderDashboard(root, { store }) {
                   'li',
                   {},
                   h('div.weak-copy', {}, h('strong', {}, s.title), h('div.hint-text', {}, reason(s))),
-                  s.next ? h('a.btn.btn-secondary.btn-sm', { href: `#/problem/${s.next}` }, 'Practice') : h('span.hint-text', {}, 'Every problem here is solved'),
+                  s.next
+                    ? h('a.btn.btn-secondary.btn-sm', { href: `#/problem/${s.next}` }, tp('Practice', 'לתרגל'))
+                    : h('span.hint-text', {}, tp('Every problem here is solved', 'כל הבעיות כאן נפתרו')),
                 ),
               ),
             )
-          : h('p.hint-text', {}, 'None yet. Topics show up here when you miss submits, leave a problem unsolved or reveal a solution.'),
-        h('a.weak-map-link', { href: '#/map' }, 'See every topic on the map'),
+          : h(
+              'p.hint-text',
+              {},
+              tp(
+                'None yet. Topics show up here when you miss submits, leave a problem unsolved or reveal a solution.',
+                'עדיין ריק. נושא יופיע כאן אחרי הגשה שנדחתה, בעיה שנשארה בלי פתרון או פתרון שנחשף.',
+              ),
+            ),
+        h('a.weak-map-link', { href: '#/map' }, tp('See every topic on the map', 'לראות את כל הנושאים במפה')),
       ),
     );
   }
@@ -125,20 +146,32 @@ export function renderDashboard(root, { store }) {
         h(
           'div.start-copy',
           {},
-          h('strong', {}, 'Start with the learning path or today\'s problem.'),
-          h('span.start-sub', {}, `${available} problems ready to practice, ordered easy to hard. Every solve lights a hex on the map.`),
+          h('strong', {}, tp('Start with the learning path or today\'s problem.', 'אפשר להתחיל במסלול הלמידה או בבעיה של היום.')),
+          h(
+            'span.start-sub',
+            {},
+            tp(
+              `${available} problems ready to practice, ordered easy to hard. Every solve lights a hex on the map.`,
+              `${heProblems(available)} מוכנות לתרגול, מהקלה לקשה. כל פתרון מדליק משושה במפה.`,
+            ),
+          ),
         ),
-        h('div.start-actions', {}, h('a.btn.btn-secondary.btn-sm', { href: '#/path' }, 'Learning path'), h('a.btn.btn-ghost.btn-sm', { href: '#/map' }, 'Open the map')),
+        h(
+          'div.start-actions',
+          {},
+          h('a.btn.btn-secondary.btn-sm', { href: '#/path' }, tp('Learning path', 'מסלול הלמידה')),
+          h('a.btn.btn-ghost.btn-sm', { href: '#/map' }, tp('Open the map', 'לפתוח את המפה')),
+        ),
       );
       return;
     }
-    const solvedCell = statCell('Solved', `${st.solved}`, `of ${available}`);
+    const solvedCell = statCell(tp('Solved', 'נפתרו'), `${st.solved}`, tp(`of ${available}`, `מתוך ${available}`));
     mount(
       statsRow,
       solvedCell,
-      statCell('Streak', `${st.streak} ${st.streak === 1 ? 'day' : 'days'}`),
-      statCell('Accuracy', st.accuracy === null ? '-' : `${st.accuracy}%`),
-      statCell('Submits', `${st.submissions}`),
+      statCell(tp('Streak', 'רצף'), tp(`${st.streak} ${st.streak === 1 ? 'day' : 'days'}`, st.streak === 1 ? 'יום אחד' : `${st.streak} ימים`)),
+      statCell(tp('Accuracy', 'דיוק'), st.accuracy === null ? '-' : `${st.accuracy}%`),
+      statCell(tp('Submits', 'הגשות'), `${st.submissions}`),
     );
     let seen = null;
     try {
@@ -155,8 +188,8 @@ export function renderDashboard(root, { store }) {
   }
 
   const statusCell = (status) => {
-    const label = STATUS_LABEL[status];
-    return h(`span.status-pill.s-${status}`, { title: label ?? 'Not started' }, hexMark(status), h('span.sr-only', {}, label ?? 'Not started'));
+    const label = tp(STATUS_LABEL[status], STATUS_LABEL_HE[status]) ?? tp('Not started', 'עוד לא התחלת');
+    return h(`span.status-pill.s-${status}`, { title: label }, hexMark(status), h('span.sr-only', {}, label));
   };
 
   function hasActiveFilters() {
@@ -179,21 +212,28 @@ export function renderDashboard(root, { store }) {
     clearInline.hidden = !active;
     const matchingAvailable = rows.filter((p) => p.status === 'available').length;
     const matchingPlanned = rows.length - matchingAvailable;
-    countLine.textContent = active
+    countLine.textContent = tp(active
       ? matchingPlanned > 0
         ? `${matchingAvailable} of ${available} ${available === 1 ? 'problem' : 'problems'}, ${matchingPlanned} coming soon`
         : `${matchingAvailable} of ${available} ${available === 1 ? 'problem' : 'problems'}`
       : planned > 0
         ? `${available} ${available === 1 ? 'problem' : 'problems'}, ${planned} coming soon`
-        : `${rows.length} ${rows.length === 1 ? 'problem' : 'problems'}`;
+        : `${rows.length} ${rows.length === 1 ? 'problem' : 'problems'}`,
+    active
+      ? matchingPlanned > 0
+        ? `${matchingAvailable} מתוך ${heProblems(available)}, עוד ${matchingPlanned} בדרך`
+        : `${matchingAvailable} מתוך ${heProblems(available)}`
+      : planned > 0
+        ? `${heProblems(available)}, עוד ${planned} בדרך`
+        : heProblems(rows.length));
 
     const page = phone?.matches ? listPage({ total: rows.length, shown, size: PHONE_PAGE }) : { visible: rows.length, left: 0, next: 0 };
     moreHost.hidden = page.left === 0;
     if (page.left) {
       mount(
         moreHost,
-        h('button.btn.btn-secondary.list-more-btn', { type: 'button', onClick: () => showMore(page.visible) }, `Show ${page.next} more`),
-        h('p.hint-text', {}, `${page.visible} of ${rows.length} shown`),
+        h('button.btn.btn-secondary.list-more-btn', { type: 'button', onClick: () => showMore(page.visible) }, tp(`Show ${page.next} more`, `להציג עוד ${page.next}`)),
+        h('p.hint-text', {}, tp(`${page.visible} of ${rows.length} shown`, `מוצגות ${page.visible} מתוך ${rows.length}`)),
       );
     }
 
@@ -203,10 +243,13 @@ export function renderDashboard(root, { store }) {
       mount(
         emptyHost,
         stateBlock({
-          title: 'No matching problems',
-          body: 'No problems match these filters. Try a broader search or clear the active filters.',
+          title: tp('No matching problems', 'אין בעיות מתאימות'),
+          body: tp(
+            'No problems match these filters. Try a broader search or clear the active filters.',
+            'אף בעיה לא מתאימה לסינון הזה. כדאי לנסות חיפוש רחב יותר או לנקות את הסינון.',
+          ),
           kind: 'empty',
-          action: { label: 'Clear filters', variant: 'btn-secondary', onClick: clearFilters },
+          action: { label: tp('Clear filters', 'לנקות את הסינון'), variant: 'btn-secondary', onClick: clearFilters },
         }),
       );
       return;
@@ -223,7 +266,7 @@ export function renderDashboard(root, { store }) {
           `tr${isAvailable ? '.row-link' : '.row-planned'}.s-${status}`,
           {},
           h('td.cell-status', {}, statusCell(status)),
-          h('td.cell-title', {}, title, isAvailable ? null : h('span.tag.tag-muted', {}, 'Coming soon')),
+          h('td.cell-title', {}, title, isAvailable ? null : h('span.tag.tag-muted', {}, tp('Coming soon', 'בקרוב'))),
           h('td.cell-diff', {}, difficulty(p.difficulty)),
           h('td.cell-topics', {}, p.topics.map((t) => h('span.tag', {}, topicLabel(t)))),
         );
@@ -267,8 +310,9 @@ export function renderDashboard(root, { store }) {
   }
 
   const diffGroup = chipGroup({
-    label: 'Difficulty',
-    options: ['All', ...DIFFICULTIES].map((d) => ({ value: d, label: d, attrs: { 'data-value': d } })),
+    label: tp('Difficulty', 'רמת קושי'),
+    // Easy, Medium and Hard stay in English on the Hebrew site (docs/I18N.md); only "All" is copy.
+    options: ['All', ...DIFFICULTIES].map((d) => ({ value: d, label: d === 'All' ? tp('All', 'הכול') : d, attrs: { 'data-value': d } })),
     value: filters.difficulty,
     onChange: (value) => {
       filters.difficulty = value;
@@ -284,18 +328,18 @@ export function renderDashboard(root, { store }) {
       'aria-controls': 'dashboard-topics',
       onClick: () => setTopicOpen(!topicOpen),
     },
-    'Topic',
+    tp('Topic', 'נושא'),
   );
 
   const syncTopicToggle = () => {
     const active = filters.topic !== 'all';
-    topicToggle.textContent = active ? `Topic: ${topicLabel(filters.topic)}` : 'Topic';
+    topicToggle.textContent = active ? tp(`Topic: ${topicLabel(filters.topic)}`, `נושא: ${topicLabel(filters.topic)}`) : tp('Topic', 'נושא');
     topicToggle.classList.toggle('is-active', active);
   };
 
   const topicGroup = chipGroup({
-    label: 'Topic',
-    options: [{ value: 'all', label: 'All topics', attrs: { 'data-value': 'all' } }, ...TOPICS.map((t) => ({ value: t.id, label: t.label, attrs: { 'data-value': t.id } }))],
+    label: tp('Topic', 'נושא'),
+    options: [{ value: 'all', label: tp('All topics', 'כל הנושאים'), attrs: { 'data-value': 'all' } }, ...TOPICS.map((t) => ({ value: t.id, label: t.label, attrs: { 'data-value': t.id } }))],
     value: filters.topic,
     onChange: (value) => {
       filters.topic = value;
@@ -327,8 +371,8 @@ export function renderDashboard(root, { store }) {
 
   const search = h('input.search.dashboard-search', {
     type: 'search',
-    placeholder: `Search ${available} problems`,
-    'aria-label': 'Search problems',
+    placeholder: tp(`Search ${available} problems`, `חיפוש ב-${available} בעיות`),
+    'aria-label': tp('Search problems', 'חיפוש בעיות'),
   });
   search.addEventListener('input', () => {
     filters.query = search.value;
@@ -341,7 +385,7 @@ export function renderDashboard(root, { store }) {
     const q = filters.query.trim().toLowerCase();
     const pool = catalog.filter((p) => p.status === 'available' && state.problems[p.id]?.status !== 'solved' && (filters.difficulty === 'All' || p.difficulty === filters.difficulty) && (filters.topic === 'all' || p.topics.includes(filters.topic)) && (!q || p.title.toLowerCase().includes(q)));
     if (pool.length) location.hash = `#/problem/${pool[Math.floor(Math.random() * pool.length)].id}`;
-  }, 'aria-label': 'Open a random unsolved problem' }, h('span.hexmark', { 'aria-hidden': 'true' }), 'Random', h('span.random-extra', {}, ' unsolved'));
+  }, 'aria-label': tp('Open a random unsolved problem', 'לפתוח בעיה אקראית שעוד לא נפתרה') }, h('span.hexmark', { 'aria-hidden': 'true' }), tp('Random', 'בעיה אקראית'), h('span.random-extra', {}, tp(' unsolved', ' שלא נפתרה')));
 
   function clearFilters() {
     filters.difficulty = 'All';
@@ -372,8 +416,26 @@ export function renderDashboard(root, { store }) {
       h(
         'header.page-head',
         {},
-        h('div', {}, h('span.eyebrow', {}, HEAD_DATE.format(new Date())), h('h1', {}, 'Problems'), h('p.page-sub', {}, `${available} problems in 26 topics. Every submission runs 15 tests: 5 you can open, 10 hidden.`)),
-        h('nav.view-switch', { 'aria-label': 'Problems view' }, h('a.view-switch-item', { href: '#/', 'aria-current': 'page' }, 'List'), h('a.view-switch-item', { href: '#/map' }, 'Map')),
+        h(
+          'div',
+          {},
+          h('span.eyebrow', {}, new Intl.DateTimeFormat(pageLang() === 'he' ? 'he-IL' : 'en-GB', HEAD_DATE_OPTS).format(new Date())),
+          h('h1', {}, tp('Problems', 'בעיות')),
+          h(
+            'p.page-sub',
+            {},
+            tp(
+              `${available} problems in 26 topics. Every submission runs 15 tests: 5 you can open, 10 hidden.`,
+              `${heProblems(available)} ב-26 נושאים. כל הגשה נבדקת מול 15 בדיקות: 5 גלויות ו-10 מוסתרות.`,
+            ),
+          ),
+        ),
+        h(
+          'nav.view-switch',
+          { 'aria-label': tp('Problems view', 'תצוגת הבעיות') },
+          h('a.view-switch-item', { href: '#/', 'aria-current': 'page' }, tp('List', 'רשימה')),
+          h('a.view-switch-item', { href: '#/map' }, tp('Map', 'מפה')),
+        ),
       ),
       // Reminders for a member without them, sign-in for a guest with something to save (owner's request).
       nudgeBanner({ account: services.account, hasProgress, signal: nudgeAbort.signal }),

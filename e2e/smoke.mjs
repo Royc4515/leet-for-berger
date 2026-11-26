@@ -3104,6 +3104,81 @@ try {
     await ctx.close();
   });
 
+  await check('Hebrew: a Hebrew device opens the site in Hebrew and right to left; the problem screen and pages not translated yet stay English; the switch to English holds; nothing scrolls sideways', async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'he-IL' });
+    const hp = await ctx.newPage();
+    hp.on('console', (m) => m.type() === 'error' && errors.push(`console (Hebrew): ${m.text()}`));
+    hp.on('pageerror', (e) => errors.push(`pageerror (Hebrew): ${e.message}`));
+    await hp.addInitScript(SEEN_TOURS, ALL_TOURS_SEEN);
+    await hp.addInitScript(() => {
+      window.LFB_REMOTE_RUNNER_URL = '';
+      window.LFB_SUPABASE_URL = '';
+    });
+    const look = () =>
+      hp.evaluate(() => ({
+        lang: document.documentElement.lang,
+        dir: document.documentElement.dir,
+        viewDir: document.getElementById('view').getAttribute('dir'),
+        viewLang: document.getElementById('view').getAttribute('lang'),
+        nav: [...document.querySelectorAll('.app-header .nav a')].map((a) => a.textContent.trim()),
+        title: document.getElementById('header-title').textContent,
+        h1: document.querySelector('#view h1')?.textContent ?? null,
+        toggle: document.getElementById('lang-toggle')?.textContent ?? null,
+        over: document.documentElement.scrollWidth - innerWidth,
+      }));
+
+    await hp.goto(`${BASE}#/`);
+    await hp.waitForSelector('.problem-table tbody tr a.problem-link');
+    const home = await look();
+    if (home.lang !== 'he' || home.dir !== 'rtl') throw new Error(`a Hebrew device opens in Hebrew: ${JSON.stringify(home)}`);
+    if (home.nav.join() !== 'בעיות,מפה,מסלול,חברות,אימונים' || home.title !== 'בעיות' || home.toggle !== 'EN') throw new Error(`Hebrew shell: ${JSON.stringify(home)}`);
+    if (home.viewDir !== null || home.h1 !== 'בעיות') throw new Error(`the Problems page is drawn in Hebrew: ${JSON.stringify(home)}`);
+    if (home.over > 0) throw new Error(`Hebrew Problems page scrolls sideways by ${home.over}px`);
+    // The layout mirrors: the brand sits on the right, the search on the left.
+    const sides = await hp.evaluate(() => ({ brand: document.querySelector('.brand').getBoundingClientRect().left, search: document.getElementById('palette-trigger').getBoundingClientRect().left }));
+    if (!(sides.brand > sides.search)) throw new Error(`the header does not mirror: ${JSON.stringify(sides)}`);
+    if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/43-he-problems.png` });
+
+    // A page not translated yet stays English and left to right inside the Hebrew shell.
+    await hp.goto(`${BASE}#/path`);
+    await hp.waitForSelector('.path-tier');
+    const path = await look();
+    if (path.viewDir !== 'ltr' || path.viewLang !== 'en' || path.title !== 'מסלול הלמידה' || path.over > 0) throw new Error(`an English page in the Hebrew shell: ${JSON.stringify(path)}`);
+
+    // The exam room: the problem screen is English and left to right, whatever the site language.
+    await hp.goto(`${BASE}#/problem/pair-sum-target`);
+    await hp.waitForSelector('.monaco-editor', { timeout: 30000 });
+    const exam = await hp.evaluate(() => ({ dir: document.querySelector('.view-workspace')?.getAttribute('dir'), lang: document.querySelector('.view-workspace')?.getAttribute('lang'), submit: document.querySelector('button[data-action="submit"]')?.textContent.trim(), over: document.documentElement.scrollWidth - innerWidth }));
+    if (exam.dir !== 'ltr' || exam.lang !== 'en' || !/Submit/.test(exam.submit ?? '') || exam.over > 0) throw new Error(`the exam room must stay English: ${JSON.stringify(exam)}`);
+    if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/43-he-problem.png` });
+
+    // A phone: the Hebrew Problems page fits; the language button moves out of the narrow header.
+    await hp.setViewportSize({ width: 390, height: 844 });
+    await hp.goto(`${BASE}#/`);
+    await hp.waitForSelector('.problem-table tbody tr a.problem-link, .problem-list a.problem-link');
+    const phone = await look();
+    if (phone.over > 0) throw new Error(`Hebrew Problems page at 390 scrolls sideways by ${phone.over}px`);
+    if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/390-he-problems.png` });
+    await hp.setViewportSize({ width: 1440, height: 900 });
+
+    // The switch: to English, saved, and it holds across a reload.
+    await hp.click('#lang-toggle');
+    await hp.waitForFunction(() => document.documentElement.lang === 'en' && document.getElementById('lang-toggle')?.textContent === 'עב');
+    await hp.waitForSelector('.problem-table tbody tr a.problem-link');
+    await hp.reload();
+    await hp.waitForSelector('.problem-table tbody tr a.problem-link');
+    const back = await look();
+    if (back.dir !== 'ltr' || back.nav[0] !== 'Problems' || (await hp.evaluate(() => localStorage.getItem('lfb:site-lang'))) !== 'en') throw new Error(`the switch to English: ${JSON.stringify(back)}`);
+
+    // The privacy policy is an English text: English and left to right even for a Hebrew choice.
+    await hp.evaluate(() => localStorage.setItem('lfb:site-lang', 'he'));
+    await hp.goto(`${BASE}privacy.html`);
+    await hp.waitForSelector('article.legal h1');
+    const legal = await hp.evaluate(() => ({ dir: document.documentElement.dir, lang: document.documentElement.lang, toggle: Boolean(document.getElementById('lang-toggle')) }));
+    if (legal.dir !== 'ltr' || legal.lang !== 'en' || legal.toggle) throw new Error(`privacy page: ${JSON.stringify(legal)}`);
+    await ctx.close();
+  });
+
   await check('theme quips: going light teases with Back to dark, going dark approves, code themes get their own line, nothing inside a session', async () => {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 } });
     const qp = await ctx.newPage();

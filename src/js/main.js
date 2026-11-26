@@ -10,10 +10,33 @@ import { mountAccountMenu } from './ui/account-menu.js';
 import { createGitHubSync, installationFromUrl } from './auth/github-sync.js';
 import { services } from './auth/services.js';
 import { catalogEntry, loadProblem } from './problems/index.js';
-import { h, mount, toast, stateBlock, loadingState } from './ui/dom.js';
+import { h, mount, toast, stateBlock, loadingState, tr, tp, siteLang } from './ui/dom.js';
 import { loadSeen, hasSeen } from './state/tours.js';
 import { tourForRoute } from './data/tour-routes.js';
 import { viewTransition, glide, installSpotlight, animate, DUR, EASE } from './ui/motion.js';
+
+/**
+ * The static shell (index.html) is written in English; on the Hebrew site its words are replaced
+ * once at start, before anything else draws. Keys are the data-nav values and fixed selectors.
+ */
+function translateShell() {
+  if (siteLang() !== 'he') return;
+  const NAV = { problems: 'בעיות', map: 'מפה', path: 'מסלול', companies: 'חברות', modes: 'אימונים' };
+  document.querySelectorAll('[data-nav]').forEach((a) => {
+    const he = NAV[a.dataset.nav];
+    if (!he) return;
+    const label = a.querySelector('span') ?? a;
+    label.textContent = he;
+  });
+  const set = (sel, fn) => document.querySelectorAll(sel).forEach(fn);
+  set('.skip-link', (a) => (a.textContent = 'דילוג לתוכן'));
+  set('.app-header .brand', (a) => a.setAttribute('aria-label', 'Leet-For-Berger, דף הבית'));
+  set('.app-header .nav', (n) => n.setAttribute('aria-label', 'ניווט ראשי'));
+  set('.tab-bar', (n) => n.setAttribute('aria-label', 'ניווט'));
+  set('.palette-trigger-label', (s) => (s.textContent = 'חיפוש'));
+  set('noscript .noscript', (p) => (p.textContent = 'כדי להריץ קוד בדפדפן, Leet-For-Berger צריך JavaScript.'));
+}
+translateShell();
 
 const store = createStore();
 const view = document.getElementById('view');
@@ -21,39 +44,42 @@ const streakChip = document.getElementById('streak-chip');
 const headerTitle = document.getElementById('header-title');
 
 /**
- * Route table: [pattern, load, navKey, title]. Order matters, first match wins. Each view module
- * loads on demand (ADR 0008): `load` imports it and returns a mounter, or throws when the import
- * fails. Literal import() paths, so the dev server and the browser both see plain static specifiers.
+ * Route table: [pattern, load, navKey, title, hebrew]. Order matters, first match wins. Each view
+ * module loads on demand (ADR 0008): `load` imports it and returns a mounter, or throws when the
+ * import fails. Literal import() paths, so the dev server and the browser both see plain static
+ * specifiers. `hebrew` marks a view drawn in Hebrew on the Hebrew site; any other view stays English
+ * and left to right there (setViewLanguage), so a page never shows English in a mirrored layout.
+ * The problem screen and the timed sessions never get the mark: they are the exam room, in English.
  */
 const routes = [
-  [/^#?\/?$/, async () => { const m = await import('./ui/views/dashboard.js'); return (root) => m.renderDashboard(root, { store }); }, 'problems', 'Problems'],
+  [/^#?\/?$/, async () => { const m = await import('./ui/views/dashboard.js'); return (root) => m.renderDashboard(root, { store }); }, 'problems', () => tr('Problems', 'בעיות'), true],
   [/^#\/problem\/([\w-]+)$/, loadProblemRoute, 'problems', ([, id]) => catalogEntry(id)?.title ?? 'Problem'],
   // Map levels (#/map/<topic>/<subtopic>/<problem>) zoom inside one mounted view: see `update` in route().
-  [/^#\/map(?:\/([\w-]+)(?:\/([\w-]+)(?:\/([\w-]+))?)?)?$/, async (_, [, ...parts]) => { const m = await import('./ui/views/map.js'); return (root) => m.renderMap(root, { store, parts }); }, 'map', 'Map'],
-  [/^#\/daily$/, async () => { const m = await import('./ui/views/daily.js'); return (root) => m.renderDaily(root, { store }); }, 'problems', 'Daily challenge'],
-  [/^#\/path$/, async () => { const m = await import('./ui/views/path.js'); return (root) => m.renderPath(root, { store }); }, 'path', 'Learning Path'],
-  [/^#\/companies$/, async () => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompanies(root, { store }); }, 'companies', 'Companies'],
-  [/^#\/companies\/([\w-]+)$/, async (_, [, slug]) => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompany(root, { store, slug }); }, 'companies', 'Companies'],
-  [/^#\/modes$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderModesHub(root); }, 'modes', 'Modes'],
-  [/^#\/interview$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderInterview(root, { store }); }, 'modes', 'Interview'],
-  [/^#\/quiz$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizHub(root); }, 'modes', 'Quiz'],
-  [/^#\/quiz\/board$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizBoard(root); }, 'modes', 'Leaderboard'],
-  [/^#\/quiz\/daily$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderDailyQuiz(root); }, 'modes', 'Daily quiz'],
-  [/^#\/battle$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderBattle(root, { store }); }, 'modes', '1v1 Battle'],
-  [/^#\/me$/, async () => { const m = await import('./ui/views/profile.js'); return (root) => m.renderProfile(root, { store }); }, null, 'Profile'],
+  [/^#\/map(?:\/([\w-]+)(?:\/([\w-]+)(?:\/([\w-]+))?)?)?$/, async (_, [, ...parts]) => { const m = await import('./ui/views/map.js'); return (root) => m.renderMap(root, { store, parts }); }, 'map', () => tr('Map', 'מפה')],
+  [/^#\/daily$/, async () => { const m = await import('./ui/views/daily.js'); return (root) => m.renderDaily(root, { store }); }, 'problems', () => tr('Daily challenge', 'האתגר היומי')],
+  [/^#\/path$/, async () => { const m = await import('./ui/views/path.js'); return (root) => m.renderPath(root, { store }); }, 'path', () => tr('Learning Path', 'מסלול הלמידה')],
+  [/^#\/companies$/, async () => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompanies(root, { store }); }, 'companies', () => tr('Companies', 'חברות')],
+  [/^#\/companies\/([\w-]+)$/, async (_, [, slug]) => { const m = await import('./ui/views/companies.js'); return (root) => m.renderCompany(root, { store, slug }); }, 'companies', () => tr('Companies', 'חברות')],
+  [/^#\/modes$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderModesHub(root); }, 'modes', () => tr('Modes', 'אימונים')],
+  [/^#\/interview$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderInterview(root, { store }); }, 'modes', () => tr('Interview', 'ראיון')],
+  [/^#\/quiz$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizHub(root); }, 'modes', () => tr('Quiz', 'חידון')],
+  [/^#\/quiz\/board$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderQuizBoard(root); }, 'modes', () => tr('Leaderboard', 'טבלת המובילים')],
+  [/^#\/quiz\/daily$/, async () => { const m = await import('./ui/views/quiz.js'); return (root) => m.renderDailyQuiz(root); }, 'modes', () => tr('Daily quiz', 'החידון היומי')],
+  [/^#\/battle$/, async () => { const m = await import('./ui/views/modes.js'); return (root) => m.renderBattle(root, { store }); }, 'modes', () => tr('1v1 Battle', 'קרב 1 על 1')],
+  [/^#\/me$/, async () => { const m = await import('./ui/views/profile.js'); return (root) => m.renderProfile(root, { store }); }, null, () => tr('Profile', 'פרופיל')],
 ];
 
 /** The workspace view and the problem module load in parallel (ADR 0008). */
 async function loadProblemRoute(_, [, id]) {
-  if (!catalogEntry(id)) return (root) => renderNotFound(root, `Problem "${id}" does not exist or is not published yet.`);
+  if (!catalogEntry(id)) return (root) => renderNotFound(root, tp(`Problem "${id}" does not exist or is not published yet.`, `הבעיה "${id}" לא קיימת או שעוד לא פורסמה.`));
   const [m, problem] = await Promise.all([import('./ui/views/workspace.js'), loadProblem(id).catch(() => null)]);
-  if (!problem) return (root) => renderNotFound(root, `Problem "${id}" could not be loaded. Check your connection and reload.`, 'Could not load', 'error');
+  if (!problem) return (root) => renderNotFound(root, tp(`Problem "${id}" could not be loaded. Check your connection and reload.`, `לא הצלחנו לטעון את הבעיה "${id}". כדאי לבדוק את החיבור ולטעון מחדש.`), tp('Could not load', 'לא הצלחנו לטעון'), 'error');
   return (root) => m.renderWorkspace(root, { problem, store });
 }
 
-function renderNotFound(root, message = 'This page is not on the map. The link may be old, or the address has a typo.', title = 'Not found', kind = 'empty') {
-  const retry = kind === 'error' ? { label: 'Try again', onClick: () => location.reload() } : { label: 'Open the map', href: '#/map' };
-  const page = h('div.page.page-narrow', {}, stateBlock({ title, body: message, kind, headingTag: 'h1', action: retry, secondary: { label: 'Back to problems', href: '#/' } }));
+function renderNotFound(root, message = tp('This page is not on the map. The link may be old, or the address has a typo.', 'הדף הזה לא על המפה. אולי הקישור ישן, או שיש טעות בכתובת.'), title = tp('Not found', 'לא נמצא'), kind = 'empty') {
+  const retry = kind === 'error' ? { label: tp('Try again', 'לנסות שוב'), onClick: () => location.reload() } : { label: tp('Open the map', 'לפתוח את המפה'), href: '#/map' };
+  const page = h('div.page.page-narrow', {}, stateBlock({ title, body: message, kind, headingTag: 'h1', action: retry, secondary: { label: tp('Back to problems', 'חזרה לבעיות'), href: '#/' } }));
   mount(root, page);
   // The footer is not a startup module (tests/startup-graph.test.js): it follows a moment later,
   // and only onto this page if it is still the one shown.
@@ -97,8 +123,23 @@ addEventListener('tour:open', (e) => {
       closeTour();
       closeTour = m.startTour(id);
     })
-    .catch(() => toast('The guide could not load. Check your connection and try again.', 'error'));
+    .catch(() => toast(tr('The guide could not load. Check your connection and try again.', 'לא הצלחנו לטעון את ההדרכה. כדאי לבדוק את החיבור ולנסות שוב.'), 'error'));
 });
+
+/**
+ * On the Hebrew site, a view not drawn in Hebrew yet (or the exam room, never) stays English and
+ * left to right inside the Hebrew shell; the problem screen sets the same on its own root.
+ * @param {boolean} [hebrew] the route's mark
+ */
+function setViewLanguage(hebrew) {
+  if (siteLang() === 'he' && !hebrew) {
+    view.dir = 'ltr';
+    view.lang = 'en';
+  } else {
+    view.removeAttribute('dir');
+    view.removeAttribute('lang');
+  }
+}
 
 function setHeaderTitle(text) {
   if (headerTitle) headerTitle.textContent = text;
@@ -129,7 +170,8 @@ async function route() {
     view.className = 'view';
     cleanup = renderNotFound(view);
     setActiveNav(null);
-    setHeaderTitle('Not found');
+    setHeaderTitle(tr('Not found', 'לא נמצא'));
+    setViewLanguage(true);
     return;
   }
   const [re, load, nav, title] = match;
@@ -141,7 +183,8 @@ async function route() {
   const skeleton = setTimeout(() => {
     if (token !== navToken) return;
     view.className = 'view';
-    mount(view, h('div.page', {}, loadingState({ label: 'Loading page...' })));
+    setViewLanguage(true);
+    mount(view, h('div.page', {}, loadingState({ label: tr('Loading page...', 'טוען את הדף…') })));
   }, 160);
   let mounter;
   try {
@@ -151,7 +194,8 @@ async function route() {
     // Offline or a stale deploy; no console.error here, the browser already logged the failed fetch.
     if (token === navToken) {
       view.className = 'view';
-      cleanup = renderNotFound(view, 'Could not load this page. Check your connection and reload.', 'Could not load', 'error');
+      setViewLanguage(true);
+      cleanup = renderNotFound(view, tr('Could not load this page. Check your connection and reload.', 'לא הצלחנו לטעון את הדף. כדאי לבדוק את החיבור ולטעון מחדש.'), tr('Could not load', 'לא הצלחנו לטעון'), 'error');
     }
     return;
   }
@@ -161,6 +205,7 @@ async function route() {
     // A newer navigation won while this one waited for its transition: let that one mount.
     if (token !== navToken) return;
     view.className = 'view';
+    setViewLanguage(match[4]);
     cleanup = mounter(view) ?? (() => {});
     mountedRe = re;
   };
@@ -192,7 +237,9 @@ function renderStreak() {
   const today = state.activeDays.includes(dayKey());
   // On the rest day nothing ends at midnight, so the chip does not ask for a solve.
   const resting = new Date().getDay() === restDayOf(state);
-  const label = streak ? `${streak}-day streak${today ? '' : resting ? ', today is your rest day' : ', solve one today to keep it'}` : 'No streak yet';
+  const label = streak
+    ? tr(`${streak}-day streak${today ? '' : resting ? ', today is your rest day' : ', solve one today to keep it'}`, `${streak === 1 ? 'רצף של יום אחד' : `רצף של ${streak} ימים`}${today ? '' : resting ? '. היום יום המנוחה שלך' : '. כדי לשמור עליו, צריך לפתור בעיה היום'}`)
+    : tr('No streak yet', 'עדיין אין רצף');
   streakChip.title = label;
   streakChip.href = '#/daily';
   const wasLit = streakChip.classList.contains('is-active');
@@ -214,7 +261,7 @@ let streakRendered = false;
 const openPalette = () =>
   import('./ui/palette.js')
     .then((m) => m.openPalette())
-    .catch(() => toast('Search could not load. Check your connection and try again.', 'error'));
+    .catch(() => toast(tr('Search could not load. Check your connection and try again.', 'לא הצלחנו לטעון את החיפוש. כדאי לבדוק את החיבור ולנסות שוב.'), 'error'));
 document.getElementById('palette-trigger')?.addEventListener('click', openPalette);
 document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k') {
@@ -286,9 +333,9 @@ account.subscribe(async (s) => {
       pendingInstall = null;
       history.replaceState(null, '', location.pathname + location.hash);
       const link = await github.connect(id);
-      toast(`Connected. Accepted solutions go to ${link.repo}.`, 'success');
+      toast(tr(`Connected. Accepted solutions go to ${link.repo}.`, `החיבור הצליח. פתרונות שהתקבלו יישמרו ב-${link.repo}.`), 'success');
     } else if (!github.get()) await github.refresh();
   } catch (err) {
-    toast(`GitHub sync: ${err.message}`, 'error', 6000);
+    toast(tr(`GitHub sync: ${err.message}`, `סנכרון עם GitHub: ${err.message}`), 'error', 6000);
   }
 });

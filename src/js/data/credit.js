@@ -26,33 +26,49 @@ export const AUTHOR_LINKS = Object.freeze([
 /** Attributes every external credit link carries: a new tab that cannot reach back into the site. */
 export const EXTERNAL_LINK = Object.freeze({ target: '_blank', rel: 'noopener noreferrer' });
 
+// Hebrew titles for the accessible names and palette labels. The name, LinkedIn and GitHub stay
+// in Latin script, so the Hebrew name still holds the words the link shows (WCAG 2.5.3).
+const TITLE_HE = Object.freeze({
+  portfolio: `תיק העבודות של ${AUTHOR_NAME}`,
+  linkedin: `${AUTHOR_NAME} ב-LinkedIn`,
+  github: `${AUTHOR_NAME} ב-GitHub`,
+});
+
+/** A link's title in the given language. */
+const titleIn = (link, lang) => (lang === 'he' && link.id && TITLE_HE[link.id]) || link.title;
+
 /**
  * The accessible name of one credit link: whose it is, where it goes, and that it leaves the tab.
  * It contains the words the link shows (the name, LinkedIn, GitHub), so voice control finds it by
  * what is on screen (WCAG 2.5.3, label in name).
- * @param {{ title: string }} link
+ * @param {{ id?: string, title: string }} link
+ * @param {'en'|'he'} [lang]
  * @returns {string}
  */
-export function creditLinkName(link) {
-  return `${link.title} (opens in a new tab)`;
+export function creditLinkName(link, lang = 'en') {
+  return lang === 'he' ? `${titleIn(link, lang)} (נפתח בכרטיסייה חדשה)` : `${link.title} (opens in a new tab)`;
 }
 
 /**
  * Command palette entries that open the author's links ("About the author"; search: author,
  * built by, contact, portfolio, hire). `open` is injected so this stays pure.
  * @param {(href: string) => void} open
+ * @param {'en'|'he'} [lang] Hebrew labels and hints, with Hebrew search words after the English
  * @returns {Array<{ kind: 'link', id: string, label: string, hint: string, keywords: string, run: () => void }>}
  */
-export function authorPaletteItems(open) {
+export function authorPaletteItems(open, lang = 'en') {
+  const he = lang === 'he';
   return AUTHOR_LINKS.map((link, i) => ({
     kind: 'link',
     id: `author-${link.id}`,
     // The portfolio is the name itself, so a search for the name ranks it first.
-    label: i === 0 ? AUTHOR_NAME : link.title,
-    hint: i === 0 ? 'Portfolio, built this site' : 'Built this site',
+    label: i === 0 ? AUTHOR_NAME : titleIn(link, lang),
+    hint: he ? (i === 0 ? 'תיק עבודות, בנה את האתר' : 'בנה את האתר') : i === 0 ? 'Portfolio, built this site' : 'Built this site',
     // The portfolio answers the general searches first: a match nearer the start of the keywords
     // scores higher, and equal scores would fall back to the label, which puts GitHub first.
-    keywords: i === 0 ? 'author built by made by about creator developer contact hire cv resume portfolio' : `${link.id} profile contact author built by made by about creator developer hire cv resume`,
+    keywords:
+      (i === 0 ? 'author built by made by about creator developer contact hire cv resume portfolio' : `${link.id} profile contact author built by made by about creator developer hire cv resume`) +
+      (he ? (i === 0 ? ' יוצר מפתח בנה קשר גיוס קורות חיים תיק עבודות אודות' : ' פרופיל יוצר מפתח בנה קשר גיוס קורות חיים אודות') : ''),
     run: () => open(link.href),
   }));
 }

@@ -108,9 +108,12 @@ export function startTour(id, { onClose, withWelcome = false } = {}) {
   const back = h('button.btn.btn-secondary.btn-sm', { type: 'button' }, 'Back');
   const next = h('button.btn.btn-primary.btn-sm.tour-next', { type: 'button' }, 'Next');
   const live = h('p.sr-only', { role: 'status' });
+  // The tour content is English in this stage (docs/I18N.md), so the whole card, controls included,
+  // stays English and left to right on the Hebrew site rather than English in a mirrored layout.
+  // Stage 3 translates tours: then the controls take tp() and the card follows pageLang().
   const card = h(
     'section.tour-card',
-    {},
+    { dir: 'ltr', lang: 'en' },
     eyebrow,
     title,
     body,

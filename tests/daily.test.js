@@ -60,3 +60,25 @@ test('calendarWeeks: 16 Monday-first weeks ending with the week that holds today
   assert.equal(new Set(flat).size, 112);
   assert.deepEqual(flat, [...flat].sort());
 });
+
+test('formatCountdown in Hebrew: hours and minutes in Hebrew abbreviations; English is unchanged', () => {
+  const ms = 9 * 3600000 + 42 * 60000;
+  assert.equal(formatCountdown(ms, 'he'), '9 שע׳ 42 דק׳');
+  assert.equal(formatCountdown(59 * 60000, 'he'), '59 דק׳');
+  assert.equal(formatCountdown(ms, 'en'), '9 h 42 min');
+  assert.equal(formatCountdown(ms), '9 h 42 min');
+});
+
+test('calendarWeeks starts the week on Monday by default and on Sunday when asked (the Hebrew calendar)', () => {
+  // 2026-11-26 is a Thursday.
+  const base = { today: '2026-11-26', weeks: 1, activeDays: [], dailyFor: () => null, isSolved: () => false };
+  const mon = calendarWeeks(base)[0].map((d) => d.day);
+  assert.equal(mon[0], '2026-11-23');
+  assert.equal(mon[6], '2026-11-29');
+  const sun = calendarWeeks({ ...base, weekStart: 0 })[0].map((d) => d.day);
+  assert.equal(sun[0], '2026-11-22');
+  assert.equal(sun[6], '2026-11-28');
+  assert.ok(sun.includes('2026-11-26'));
+  // On the first day of the week, today opens the row.
+  assert.equal(calendarWeeks({ ...base, today: '2026-11-22', weekStart: 0 })[0][0].day, '2026-11-22');
+});
