@@ -6,6 +6,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { QUIZ_TOPICS, QUIZ_LANGS } from '../src/js/data/quiz-topics.js';
 import { QUIZ_INDEX } from '../src/js/data/quiz-index.js';
 import { readBank, buildOutputs, forLang, readPool, extendPool, poolText, joinDay, POOL } from '../scripts/content/build-quiz.mjs';
+import { readClasses, validateClasses } from '../scripts/content/quiz-audit.mjs';
 import { shareText } from '../src/js/data/quiz-share.js';
 import { createQuizBoard } from '../src/js/auth/quiz-board.js';
 import {
@@ -69,12 +70,23 @@ test('the shipped bank passes validation in both languages', () => {
 });
 
 test('every topic has its own source file and enough questions for a full round', () => {
-  const files = readdirSync('content/quiz').filter((f) => f.endsWith('.json') && f !== 'daily-pool.json').map((f) => f.replace(/\.json$/, '')).sort();
-  assert.deepEqual(files, QUIZ_TOPICS.map((t) => t.id).sort(), 'one file per topic, plus the daily pool, nothing else');
+  const meta = new Set(['daily-pool.json', 'classes.json']);
+  const files = readdirSync('content/quiz').filter((f) => f.endsWith('.json') && !meta.has(f)).map((f) => f.replace(/\.json$/, '')).sort();
+  assert.deepEqual(files, QUIZ_TOPICS.map((t) => t.id).sort(), 'one file per topic, plus the daily pool and classes, nothing else');
   for (const t of QUIZ_TOPICS) {
     const n = SOURCE.filter((x) => x.topic === t.id).length;
     assert.ok(n >= 10, `${t.id} has ${n} questions, at least 10 so a single-topic practice is a full round`);
   }
+});
+
+test('every question in the bank has a valid classification in content/quiz/classes.json', () => {
+  assert.deepEqual(validateClasses(SOURCE, readClasses()), []);
+  const sample = [{ id: 'a-1' }, { id: 'a-2', code: 'x = 1' }, { id: 'a-3' }];
+  const bad = validateClasses(sample, { 'a-2': 'concept', 'a-1': 'concept-with-code', 'a-3': 'bogus', 'extra-1': 'syntax' }).join('\n');
+  for (const want of ['sorted alphabetically', 'has a code block', 'has no code block', 'unknown class bogus', 'not found in bank']) {
+    assert.match(bad, new RegExp(want));
+  }
+  assert.match(validateClasses(sample, { 'a-1': 'concept', 'a-2': 'concept-with-code' }).join('\n'), /a-3: missing class/);
 });
 
 test('correct answers are spread over positions as authored', () => {
