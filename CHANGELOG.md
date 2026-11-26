@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added (sign-in and reminders offers, owner's request)
+- **After an Accepted solve or a finished quiz, the site offers the next step in the middle of the screen.** A guest gets "Save your progress" (Continue with Google or GitHub); right after that sign-in, or after a later solve for a member without reminders, "Don't lose your streak" with **Turn on reminders**, which asks for permission from that tap and turns on the defaults (16:00 and 20:00, every kind) with a test notification. Never on arrival, never inside an interview, mock OA or battle; a guest is asked at most 3 times, 3 days apart, a member at most 4 times, a week apart, and never once the browser refused notifications. On an iPhone in Safari the button opens the Home Screen guide.
+- **A banner at the top of the Problems page** offers reminders to a member without them, and sign-in to a guest with progress, until it is done; its X hides it for a week.
+- Rules and copy in `src/js/data/nudges.js` (pure, `tests/nudges.test.js`), the dialog and banner in `src/js/ui/nudges.js` (loaded after the first page), an e2e step for the whole flow at laptop and phone width. Asking for notification permission on arrival was considered and left out: browsers quietly block sites that do, and a refusal cannot be asked again (ADR 0011).
+
 ### Added (theme quips, owner's request)
 - **Switching a theme gets a line.** Going light teases ("Light mode. Your retinas just filed a bug report.") with a "Back to dark" button on the toast; going dark approves ("Dark mode. Now you look like you know what a segfault is."); System and every code theme have their own, from Terminal Berger's "Hacking like a Berger mode" to Dark Berger's "well done" burger lines, and the pink theme honours Grace Hopper, Margaret Hamilton and Ada Lovelace. All lines approved by the owner; they rotate at random and never repeat back to back, and a new switch replaces the last toast. Only for a switch the user makes (header, Profile, palette, editor toolbar), never inside an interview, mock OA or battle. `src/js/data/theme-quips.js` (pure, unit-tested), `src/js/ui/theme-quips.js` (loaded after the first page), an e2e step. Toasts can carry one action.
 

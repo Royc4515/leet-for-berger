@@ -12,6 +12,9 @@ import { dailyCard } from '../daily-card.js';
 import { quizCard } from '../quiz-card.js';
 import { countUp } from '../motion.js';
 import { listPage } from '../../data/list-page.js';
+import { nudgeBanner } from '../nudges.js';
+import { services } from '../../auth/services.js';
+import { QUIZ_STORAGE_KEY } from '../../state/user-data.js';
 
 const HEAD_DATE = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -352,6 +355,15 @@ export function renderDashboard(root, { store }) {
     search.focus({ preventScroll: true });
   }
 
+  const nudgeAbort = new AbortController();
+  const hasProgress = () => {
+    if (store.get().totals.submissions > 0) return true;
+    try {
+      return Boolean(localStorage.getItem(QUIZ_STORAGE_KEY));
+    } catch {
+      return false;
+    }
+  };
   mount(
     root,
     h(
@@ -363,6 +375,8 @@ export function renderDashboard(root, { store }) {
         h('div', {}, h('span.eyebrow', {}, HEAD_DATE.format(new Date())), h('h1', {}, 'Problems'), h('p.page-sub', {}, `${available} problems in 26 topics. Every submission runs 15 tests: 5 you can open, 10 hidden.`)),
         h('nav.view-switch', { 'aria-label': 'Problems view' }, h('a.view-switch-item', { href: '#/', 'aria-current': 'page' }, 'List'), h('a.view-switch-item', { href: '#/map' }, 'Map')),
       ),
+      // Reminders for a member without them, sign-in for a guest with something to save (owner's request).
+      nudgeBanner({ account: services.account, hasProgress, signal: nudgeAbort.signal }),
       statsRow,
       today,
       h(
@@ -396,6 +410,7 @@ export function renderDashboard(root, { store }) {
   });
   return () => {
     disposed = true;
+    nudgeAbort.abort();
     fillToken++;
     stopCount();
     unsub();

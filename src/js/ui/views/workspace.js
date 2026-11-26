@@ -539,6 +539,8 @@ export function renderWorkspace(root, { problem, store, session = null }) {
 
       if (kind === 'submit' && executable) {
         store.update((s) => recordSubmission(s, { problemId: problem.id, accepted: result.accepted, detail: { language, verdict: result.verdict, passed: result.passed, total: result.total, code } }));
+        // Something worth saving now exists: ui/nudges.js may offer sign-in or reminders after the burst.
+        if (recordsSolve) dispatchEvent(new CustomEvent('practice:done', { detail: { kind: 'solve' } }));
         const github = services.github;
         const revealed = Boolean(store.get().problems[problem.id]?.revealed);
         if (github && shouldAutoSync({ accepted: result.accepted, revealed, link: github.get(), practice: !session })) {
