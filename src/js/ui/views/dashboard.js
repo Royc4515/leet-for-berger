@@ -85,7 +85,7 @@ export function renderDashboard(root, { store }) {
     const reasonHe = (s) =>
       [
         s.unsolved ? (s.unsolved === 1 ? 'בעיה אחת שניסית ועוד לא נפתרה' : `${s.unsolved} בעיות שניסית ועוד לא נפתרו`) : null,
-        s.assisted ? (s.assisted === 1 ? 'בעיה אחת נפתרה אחרי חשיפת הפתרון' : `${s.assisted} נפתרו אחרי חשיפת הפתרון`) : null,
+        s.assisted ? (s.assisted === 1 ? 'בעיה אחת נפתרה אחרי חשיפת הפתרון' : `${s.assisted} בעיות נפתרו אחרי חשיפת הפתרון`) : null,
         s.failedSubmits ? (s.failedSubmits === 1 ? 'הגשה אחת שנדחתה' : `${s.failedSubmits} הגשות שנדחו`) : null,
       ]
         .filter(Boolean)
@@ -119,7 +119,7 @@ export function renderDashboard(root, { store }) {
               {},
               tp(
                 'None yet. Topics show up here when you miss submits, leave a problem unsolved or reveal a solution.',
-                'עוד אין כאן כלום. נושא מופיע כאן אחרי הגשה שנדחתה, בעיה שנשארה בלי פתרון או פתרון שנחשף.',
+                'עדיין ריק. נושא יופיע כאן אחרי הגשה שנדחתה, בעיה שנשארה בלי פתרון או פתרון שנחשף.',
               ),
             ),
         h('a.weak-map-link', { href: '#/map' }, tp('See every topic on the map', 'לראות את כל הנושאים במפה')),
@@ -426,7 +426,7 @@ export function renderDashboard(root, { store }) {
             {},
             tp(
               `${available} problems in 26 topics. Every submission runs 15 tests: 5 you can open, 10 hidden.`,
-              `${heProblems(available)} ב-26 נושאים. כל הגשה רצה על 15 בדיקות: 5 גלויות ו-10 מוסתרות.`,
+              `${heProblems(available)} ב-26 נושאים. כל הגשה נבדקת מול 15 בדיקות: 5 גלויות ו-10 מוסתרות.`,
             ),
           ),
         ),

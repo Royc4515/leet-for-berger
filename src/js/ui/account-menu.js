@@ -14,7 +14,7 @@ const themeButton = () => globalThis.lfbTheme?.button?.({ text: true }) ?? null;
 const langButton = () => globalThis.lfbLang?.button?.({ text: true }) ?? null;
 // A function, not a table: the words follow the site language at render time.
 const syncLabelFor = (sync) =>
-  ({ idle: '', syncing: tr('Syncing...', 'בסנכרון...'), synced: tr('Progress synced', 'ההתקדמות סונכרנה'), error: tr('Sync failed', 'הסנכרון נכשל') })[sync];
+  ({ idle: '', syncing: tr('Syncing...', 'מסנכרן…'), synced: tr('Progress synced', 'ההתקדמות סונכרנה'), error: tr('Sync failed', 'הסנכרון נכשל') })[sync];
 
 /**
  * @param {HTMLElement} host
@@ -268,8 +268,8 @@ export function mountAccountMenu(host, account, github = null) {
 export function githubSection(github, { closeMenu = () => {} } = {}) {
   if (!github?.available) return null;
   const link = github.get();
-  const title = h('div.account-section-title', {}, tr('GitHub sync', 'סנכרון ל-GitHub'));
-  if (!link) return h('div.account-section', {}, title, h('p.hint-text', {}, tr('Checking...', 'בבדיקה...')));
+  const title = h('div.account-section-title', {}, tr('GitHub sync', 'סנכרון עם GitHub'));
+  if (!link) return h('div.account-section', {}, title, h('p.hint-text', {}, tr('Checking...', 'בודק…')));
   if (!link.linked) {
     return h(
       'div.account-section',
@@ -288,7 +288,7 @@ export function githubSection(github, { closeMenu = () => {} } = {}) {
     title,
     h('p.hint-text', {}, tr('Syncing to ', 'הפתרונות נשמרים ב-'), h('a', { href: `https://github.com/${link.repo}`, target: '_blank', rel: 'noopener' }, link.repo)),
     h('label.switch', { for: 'gh-auto' }, auto, h('span', {}, tr('After every Accepted', 'אחרי כל Accepted'))),
-    h('p.hint-text', {}, tr('Solved after revealing the solution? Push it by hand from Submissions; it is marked assisted.', 'נפתרה אחרי הצצה בפתרון? אפשר לשלוח אותה ידנית מ-Submissions, והיא תסומן כנפתרה עם עזרה.')),
+    h('p.hint-text', {}, tr('Solved after revealing the solution? Push it by hand from Submissions; it is marked assisted.', 'נפתרה אחרי חשיפת הפתרון? אפשר לשלוח אותה ידנית מ-Submissions, והיא תסומן כנפתרה עם עזרה.')),
     h(
       'button.btn.btn-ghost.btn-sm',
       {
@@ -301,7 +301,7 @@ export function githubSection(github, { closeMenu = () => {} } = {}) {
             confirmLabel: tr('Disconnect', 'לנתק'),
             danger: true,
           });
-          if (ok) github.disconnect().catch((err) => toast(tr(`GitHub sync: ${err.message}`, `סנכרון ל-GitHub: ${err.message}`), 'error', 6000));
+          if (ok) github.disconnect().catch((err) => toast(tr(`GitHub sync: ${err.message}`, `סנכרון עם GitHub: ${err.message}`), 'error', 6000));
         },
       },
       tr('Disconnect', 'לנתק'),
@@ -315,7 +315,7 @@ export function githubSection(github, { closeMenu = () => {} } = {}) {
  */
 function connectWizard(github) {
   const body = h('div.gh-wizard');
-  const installNote = h('p.hint-text', {}, tr('On GitHub choose "Only select repositories" and pick that one repository.', 'ב-GitHub לבחור "Only select repositories" ואז את ה-repository הזה בלבד.'));
+  const installNote = h('p.hint-text', {}, tr('On GitHub choose "Only select repositories" and pick that one repository.', 'ב-GitHub צריך לבחור "Only select repositories" ואז את ה-repository הזה בלבד.'));
   const connect = (label) => h('a.btn.btn-secondary.btn-sm', { href: github.installUrl }, label);
   // Each step replaces the button that was just pressed, which drops keyboard focus to <body>.
   // Move it to the new step's first control instead (only on a user action, never on first render).

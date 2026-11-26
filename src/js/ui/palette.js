@@ -86,7 +86,7 @@ export function openPalette() {
     input,
     list,
     status,
-    h('div.palette-foot', { 'aria-hidden': 'true' }, h('span', {}, h('kbd', {}, 'Up'), ' ', h('kbd', {}, 'Down'), tr(' move', ' מעבר')), h('span', {}, h('kbd', {}, 'Enter'), tr(' open', ' פתיחה')), h('span', {}, h('kbd', {}, 'Esc'), tr(' close', ' סגירה'))),
+    h('div.palette-foot', { 'aria-hidden': 'true' }, h('span', {}, h('kbd', {}, 'Up'), ' ', h('kbd', {}, 'Down'), tr(' move', ' ניווט')), h('span', {}, h('kbd', {}, 'Enter'), tr(' open', ' פתיחה')), h('span', {}, h('kbd', {}, 'Esc'), tr(' close', ' סגירה'))),
   );
 
   const close = () => {

@@ -83,7 +83,7 @@
   const syncButton = (button) => {
     // Read at call time: lang-boot.js runs first, but this file cannot import (a classic script).
     const he = window.lfbLang?.current?.() === 'he';
-    const label = root.dataset.theme === 'light' ? (he ? 'מעבר לערכה כהה' : 'Switch to dark theme') : he ? 'מעבר לערכה בהירה' : 'Switch to light theme';
+    const label = root.dataset.theme === 'light' ? (he ? 'מעבר למצב כהה' : 'Switch to dark theme') : he ? 'מעבר למצב בהיר' : 'Switch to light theme';
     const text = button.querySelector('.theme-toggle-text');
     if (text) {
       text.textContent = label;

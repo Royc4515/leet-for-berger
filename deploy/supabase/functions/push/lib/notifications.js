@@ -246,7 +246,7 @@ function notificationCopyHe(n, problemTitle) {
       const name = problemTitle(n.data.problemId);
       if (!name) return null;
       const ago = n.data.hours < 24 ? hours(n.data.hours) : days(Math.max(1, n.data.days));
-      return { title: `לסיים את ${name}`, body: `הבעיה נשארה פתוחה לפני ${ago} ועוד לא נפתרה.`, href: `#/problem/${n.data.problemId}`, action: 'להמשיך' };
+      return { title: `לסיים את ${name}`, body: `התחלת אותה לפני ${ago}, והיא עוד לא נפתרה.`, href: `#/problem/${n.data.problemId}`, action: 'להמשיך' };
     }
     case 'away': {
       const id = n.data.resume?.problemId;

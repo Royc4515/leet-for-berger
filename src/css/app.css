@@ -9806,12 +9806,16 @@ body.resizing-y * {
   background-position: right 18px center;
 }
 
-/* Hebrew type. JetBrains Mono has no Hebrew letters: in a Hebrew page the mono stack falls back to
-   the interface's sans for them, so a Hebrew label set in mono reads cleanly while its digits and
-   Latin stay mono. The exam room (lang="en") keeps the plain stack. Hebrew is never letter-spaced:
-   the eyebrow and label tracking that suits Latin capitals pulls Hebrew words apart. */
+/* Hebrew type. JetBrains Mono has no Hebrew letters, and its wide space pulls Hebrew words apart:
+   in a Hebrew page the labels set in mono (eyebrows, counts, kickers) take the interface's sans,
+   while code itself (pre, code, kbd) stays in JetBrains Mono. The exam room (lang="en") keeps the
+   plain stack. Hebrew is never letter-spaced: the tracking that suits Latin capitals breaks it. */
 [lang='he'] {
-  --mono: 'JetBrains Mono', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: var(--font);
+}
+
+[lang='he'] :is(pre, code, kbd) {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 [lang='en'] {

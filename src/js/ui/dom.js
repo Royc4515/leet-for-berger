@@ -286,7 +286,7 @@ export function stateBlock({ title, body, kind = 'empty', headingTag = 'h2', act
  * @param {{ label?: string, rows?: number }} [opts]
  * @returns {HTMLElement}
  */
-export function loadingState({ label = tp('Loading...', 'בטעינה...'), rows = 6 } = {}) {
+export function loadingState({ label = tp('Loading...', 'טוען…'), rows = 6 } = {}) {
   const skeletonRows = Array.from({ length: rows }, () => h('div.skeleton-row', { 'aria-hidden': 'true' }, h('span.skeleton-hex'), h('span.skeleton-bar.skeleton-line')));
   return h(
     'div.state.state-loading',

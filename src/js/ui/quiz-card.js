@@ -59,7 +59,7 @@ export function quizCard({ now, restDay = null }) {
         {},
         done
           ? tp('Same questions for everyone. See where you stand, or share your squares.', 'אותן שאלות לכולם. אפשר לבדוק את המקום בטבלה או לשתף את הריבועים.')
-          : tp('Interview ideas from 5 topics, the same for everyone today. English or Hebrew.', 'רעיונות מראיונות עבודה ב-5 נושאים, אותן שאלות לכולם היום. בעברית או באנגלית.'),
+          : tp('Interview ideas from 5 topics, the same for everyone today. English or Hebrew.', 'שאלות מראיונות עבודה ב-5 נושאים, זהות לכולם היום. בעברית או באנגלית.'),
       ),
       !done && dailyQuizNeedsSignIn() ? h('p.quiz-signin-note', {}, signInNote()) : null,
     ),

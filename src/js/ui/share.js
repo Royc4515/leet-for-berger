@@ -49,7 +49,7 @@ export async function shareOrCopy({ title, text, url }) {
   } catch (err) {
     // Closing the share sheet is not a failure.
     if (err?.name === 'AbortError') return 'cancelled';
-    toast(tp('Could not share. Copy the address from the address bar instead.', 'השיתוף לא הצליח. אפשר להעתיק את הכתובת משורת הכתובת.'), 'error');
+    toast(tp('Could not share. Copy the address from the address bar instead.', 'השיתוף לא הצליח. אפשר להעתיק את הקישור משורת הכתובת.'), 'error');
     return 'failed';
   }
 }

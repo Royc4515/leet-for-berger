@@ -111,15 +111,17 @@ export function formatCountdown(ms, lang = 'en') {
  */
 
 /**
- * Weeks of days for the calendar, oldest week first, Monday first in each week; the last week
- * holds today, so the calendar opens on the present (GitHub's phone view opens on the oldest end).
- * @param {{ today: string, weeks?: number, activeDays: string[], dailyFor: (day: string) => string|null, isSolved: (id: string) => boolean, restDay?: number|null }} input
- *   `restDay` marks that weekday `rest` (the user's, state/progress.js restDayOf)
+ * Weeks of days for the calendar, oldest week first; the last week holds today, so the calendar
+ * opens on the present (GitHub's phone view opens on the oldest end).
+ * @param {{ today: string, weeks?: number, activeDays: string[], dailyFor: (day: string) => string|null, isSolved: (id: string) => boolean, restDay?: number|null, weekStart?: number }} input
+ *   `restDay` marks that weekday `rest` (the user's, state/progress.js restDayOf); `weekStart` is the
+ *   weekday each week begins on (getDay numbering): Monday by default, Sunday for Hebrew, as an
+ *   Israeli calendar prints it
  * @returns {CalendarDay[][]}
  */
-export function calendarWeeks({ today, weeks = 16, activeDays, dailyFor, isSolved, restDay = null }) {
+export function calendarWeeks({ today, weeks = 16, activeDays, dailyFor, isSolved, restDay = null, weekStart = 1 }) {
   const active = new Set(activeDays);
-  const weekday = (parseDay(today).getDay() + 6) % 7; // Monday = 0
+  const weekday = (parseDay(today).getDay() - weekStart + 7) % 7; // days since the week began
   const start = shiftDay(today, weekday + (weeks - 1) * 7);
   const out = [];
   for (let w = 0; w < weeks; w++) {

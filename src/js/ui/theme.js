@@ -81,7 +81,7 @@ export function onThemeChange(cb, signal) {
  * @returns {HTMLElement}
  */
 export function siteThemeControl(signal) {
-  const group = segmented({ label: tp('Site theme', 'ערכת הנושא של האתר'), options: site.options.map((o) => ({ ...o, label: tp(o.label, SITE_LABEL_HE[o.value] ?? o.label) })), value: site.get(), onChange: setSiteThemePref });
+  const group = segmented({ label: tp('Site theme', 'מראה האתר'), options: site.options.map((o) => ({ ...o, label: tp(o.label, SITE_LABEL_HE[o.value] ?? o.label) })), value: site.get(), onChange: setSiteThemePref });
   onThemeChange(() => {
     for (const b of group.querySelectorAll('[data-value]')) b.setAttribute('aria-pressed', String(b.dataset.value === site.get()));
     glide(group, '[aria-pressed="true"]');
@@ -97,7 +97,7 @@ export function siteThemeControl(signal) {
 export function codeThemeSelect(signal) {
   const select = h(
     'select.select.code-theme-select',
-    { 'aria-label': tp('Code theme', 'ערכת הנושא של הקוד'), title: tp('Code theme', 'ערכת הנושא של הקוד') },
+    { 'aria-label': tp('Code theme', 'צבעי הקוד'), title: tp('Code theme', 'צבעי הקוד') },
     // Inside a page (the profile, the exam room's toolbar): the page's language, English in the exam room.
     CODE_THEME_OPTIONS.map((o) => h('option', { value: o.value }, o.value === MATCH_SITE ? tp(o.label, 'כמו האתר') : o.label)),
   );
@@ -115,7 +115,7 @@ export function codeThemeSelect(signal) {
  */
 export function themePaletteItems() {
   return [
-    ...site.options.map((o) => ({ kind: 'setting', id: `theme-${o.value}`, label: tr(`Theme: ${o.label}`, `ערכת נושא: ${siteLabel(o)}`), keywords: 'appearance mode colors colours site מראה ערכת נושא צבעים מצב כהה בהיר', run: () => setSiteThemePref(o.value) })),
-    ...CODE_THEME_OPTIONS.map((o) => ({ kind: 'setting', id: `code-theme-${o.value}`, label: tr(`Code theme: ${o.label}`, `ערכת נושא לקוד: ${codeLabel(o)}`), keywords: `editor syntax colors colours ${o.value === MATCH_SITE ? 'default' : ''} עורך קוד צבעים ערכת נושא`.trim(), run: () => setCodeThemePref(o.value) })),
+    ...site.options.map((o) => ({ kind: 'setting', id: `theme-${o.value}`, label: tr(`Theme: ${o.label}`, `מראה: ${siteLabel(o)}`), keywords: 'appearance mode colors colours site מראה ערכת נושא צבעים מצב כהה בהיר', run: () => setSiteThemePref(o.value) })),
+    ...CODE_THEME_OPTIONS.map((o) => ({ kind: 'setting', id: `code-theme-${o.value}`, label: tr(`Code theme: ${o.label}`, `צבעי קוד: ${codeLabel(o)}`), keywords: `editor syntax colors colours ${o.value === MATCH_SITE ? 'default' : ''} עורך קוד צבעים ערכת נושא`.trim(), run: () => setCodeThemePref(o.value) })),
   ];
 }

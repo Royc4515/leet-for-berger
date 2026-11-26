@@ -31,8 +31,8 @@ function translateShell() {
   const set = (sel, fn) => document.querySelectorAll(sel).forEach(fn);
   set('.skip-link', (a) => (a.textContent = 'דילוג לתוכן'));
   set('.app-header .brand', (a) => a.setAttribute('aria-label', 'Leet-For-Berger, דף הבית'));
-  set('.app-header .nav', (n) => n.setAttribute('aria-label', 'ראשי'));
-  set('.tab-bar', (n) => n.setAttribute('aria-label', 'ניווט ראשי'));
+  set('.app-header .nav', (n) => n.setAttribute('aria-label', 'ניווט ראשי'));
+  set('.tab-bar', (n) => n.setAttribute('aria-label', 'ניווט'));
   set('.palette-trigger-label', (s) => (s.textContent = 'חיפוש'));
   set('noscript .noscript', (p) => (p.textContent = 'כדי להריץ קוד בדפדפן, Leet-For-Berger צריך JavaScript.'));
 }
@@ -184,7 +184,7 @@ async function route() {
     if (token !== navToken) return;
     view.className = 'view';
     setViewLanguage(true);
-    mount(view, h('div.page', {}, loadingState({ label: tr('Loading page...', 'טוען את הדף...') })));
+    mount(view, h('div.page', {}, loadingState({ label: tr('Loading page...', 'טוען את הדף…') })));
   }, 160);
   let mounter;
   try {
@@ -238,7 +238,7 @@ function renderStreak() {
   // On the rest day nothing ends at midnight, so the chip does not ask for a solve.
   const resting = new Date().getDay() === restDayOf(state);
   const label = streak
-    ? tr(`${streak}-day streak${today ? '' : resting ? ', today is your rest day' : ', solve one today to keep it'}`, `רצף של ${streak} ימים${today ? '' : resting ? ', היום יום המנוחה שלך' : ', כדי לשמור עליו צריך לפתור אחת היום'}`)
+    ? tr(`${streak}-day streak${today ? '' : resting ? ', today is your rest day' : ', solve one today to keep it'}`, `${streak === 1 ? 'רצף של יום אחד' : `רצף של ${streak} ימים`}${today ? '' : resting ? '. היום יום המנוחה שלך' : '. כדי לשמור עליו, צריך לפתור בעיה היום'}`)
     : tr('No streak yet', 'עדיין אין רצף');
   streakChip.title = label;
   streakChip.href = '#/daily';
@@ -333,9 +333,9 @@ account.subscribe(async (s) => {
       pendingInstall = null;
       history.replaceState(null, '', location.pathname + location.hash);
       const link = await github.connect(id);
-      toast(`Connected. Accepted solutions go to ${link.repo}.`, 'success');
+      toast(tr(`Connected. Accepted solutions go to ${link.repo}.`, `החיבור הצליח. פתרונות שהתקבלו יישמרו ב-${link.repo}.`), 'success');
     } else if (!github.get()) await github.refresh();
   } catch (err) {
-    toast(`GitHub sync: ${err.message}`, 'error', 6000);
+    toast(tr(`GitHub sync: ${err.message}`, `סנכרון עם GitHub: ${err.message}`), 'error', 6000);
   }
 });
