@@ -68,8 +68,9 @@ test('every persisted lfb: key is user data or a known device preference', () =>
   // Problems page ticks up from, gone when the tab closes and reset to the guest's 0 after sign-out.
   // lfb:return-to is the route a sign-in started from, read once when the provider sends the user back.
   // lfb:nudges:v1 is which sign-in and reminders offers this device has shown (ui/nudges.js);
-  // lfb:nudge-signin a per-tab flag for a sign-in such an offer started.
-  const DEVICE_PREFS = ['lfb:lang', 'lfb:theme', 'lfb:code-theme', 'lfb:split:x', 'lfb:split:y', 'lfb:about-open', 'lfb:map-view', 'lfb:seen-solved', 'lfb:tours:v1', 'lfb:quiz-lang', 'lfb:return-to', 'lfb:nudges:v1', 'lfb:nudge-signin'];
+  // lfb:nudge-signin a per-tab flag for a sign-in such an offer started. lfb:site-lang is the site's
+  // language (lang-boot.js), a device choice like the theme.
+  const DEVICE_PREFS = ['lfb:lang', 'lfb:theme', 'lfb:code-theme', 'lfb:split:x', 'lfb:split:y', 'lfb:about-open', 'lfb:map-view', 'lfb:seen-solved', 'lfb:tours:v1', 'lfb:quiz-lang', 'lfb:return-to', 'lfb:nudges:v1', 'lfb:nudge-signin', 'lfb:site-lang'];
   const files = [];
   const walk = (dir) => {
     for (const f of readdirSync(dir)) {

@@ -87,6 +87,10 @@ Scale (px): `--fs-xs` 12 (floor), `--fs-sm` 13, `--fs-md` 14 (15 on touch), `--f
 
 Easing: `--ease` (out, default), `--ease-in-out` (things that move across the screen), `--ease-spring` (dialogs, toggles; a small overshoot). The same values are exported from `src/js/ui/motion.js` for script-driven animation.
 
+## Language and direction
+
+Owner's request (2026-11-26): the site in Hebrew, right to left, with the problems always in English (`docs/I18N.md`). A language button sits in the header before the search, beside the sun/moon: a short mark of the other language in that language ("עב" / "EN"), and on a phone at 420 px and below it moves into the account sheet with its full word, like the theme switch. Layout rules use logical properties (`margin-inline-start`, `inset-inline-end`, `text-align: start`), so every screen mirrors on its own; physical `left` / `right` remain only for positions computed in pixels and `left: 50%` centring. Inside a Hebrew page, code, the map canvas and the reminder clock stay left to right. The exam room (the problem screen and timed sessions) is English and left to right on any site language.
+
 ## Themes
 
 Owner's request (2026-11-25): a light theme for the whole site, and code themes for the editor, as in VS Code. Only colours change between themes; every meaning stays (green solved, coral tried, amber what to do now), and both site themes pass the same contrast checks.

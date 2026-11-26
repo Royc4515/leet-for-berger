@@ -326,6 +326,10 @@ export function renderWorkspace(root, { problem, store, session = null }) {
   const split = h('div.workspace', {}, left, colHandle, right, mentor.el);
   mount(root, session?.banner ?? null, wsTabs, split, wsActions);
   root.classList.add('view-workspace');
+  // don't touch / the exam room is English and left to right on every site language (owner's
+  // decision, lang-boot.js): problems, code and verdicts read as they will in the real interview.
+  root.dir = 'ltr';
+  root.lang = 'en';
   // On a phone the Run / Submit bar takes the place of the site's tab bar.
   document.body.classList.add('has-workspace');
   setTab('description');
