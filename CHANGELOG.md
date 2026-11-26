@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added (Hebrew, stage 2 of 4)
+- **Every browse page in Hebrew:** the Daily challenge (its 16-week calendar mirrored, weeks from Sunday), the Learning Path, Companies and each company page, the Modes hub with the Interview, Mock OA and Battle setups and the interview report, Profile with the notifications card and the reminder clock, and the Quiz (hub, results, daily quiz, leaderboard). Only the map stays English until stage 3.
+- **The exam room stays English:** a running interview, mock OA or battle, its banner, its dialogs and toasts, are English and left to right on the Hebrew site; the report after it is Hebrew. A dialog speaks the language of what opened it.
+- **The quiz:** its screens follow the site language; the questions follow the quiz language, which now defaults to the site language. Quiz levels read קל / בינוני / קשה in Hebrew (the quiz is Hebrew content; problems keep Easy / Medium / Hard).
+- **Theme quips in Hebrew**, each line written or approved by the owner; mode and theme names (Dark, Light, System, Match site, code theme names) stay English on the Hebrew site.
+- An independent Hebrew review: terms unified (בדיקות, סשן, מבחן OA מדומה, רצף חידון, כל הרמות, כינוי), calques rewritten, the difficulty mix and numbered English titles kept in order inside Hebrew. `docs/I18N.md` holds the decisions.
+
 ### Added (Hebrew, stage 1 of 4, owner's request)
 - **The site speaks Hebrew, right to left.** A Hebrew device opens it in Hebrew; a language button in the header (the account sheet on a narrow phone) switches, saved per device (`lfb:site-lang`). `src/js/lang-boot.js` sets `lang` and `dir` before the first paint, like the theme.
 - **Translated in this stage:** the header, the tab bar, the footer, the account menu, the palette, the reminders bell, the sign-in and reminders offers, toasts and dialogs, and the Problems page. Other pages stay English and left to right inside the Hebrew shell until their stage (`docs/I18N.md`).
