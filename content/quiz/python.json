@@ -56,7 +56,7 @@
    "rebinding"
   ],
   "level": "medium",
-  "q": "b and d are aliases of two lists. One list is extended with a = a + [3], the other with c += [3]. What does this print?",
+  "q": "In Python, variables hold references to objects; for lists, + creates a new list whereas += extends the list in place. What does this print?",
   "code": "a = [1, 2]\nb = a\na = a + [3]\nc = [1, 2]\nd = c\nc += [3]\nprint(b, d)",
   "lang": "python",
   "options": [
@@ -77,7 +77,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "b ו-d הם aliases של שתי lists. list אחת מורחבת עם a = a + [3], והשנייה עם c += [3]. מה יודפס?",
+   "q": "ב-Python, משתנים מחזיקים references ל-objects: ב-list, + יוצר list חדשה בעוד += מרחיב את ה-list במקום. מה יודפס?",
    "options": [
     "[1, 2, 3] [1, 2, 3]",
     "[1, 2] [1, 2]",
@@ -195,7 +195,7 @@
    "aliasing"
   ],
   "level": "easy",
-  "q": "Two 3 x 3 grids are built in different ways, and the top-left cell of each is set to 1. What does this print?",
+  "q": "In Python, list * n repeats the list's existing element references n times, while [expr for _ in range(n)] evaluates expr once per iteration. Two 3 x 3 grids are built and modified. What does this print?",
   "code": "grid = [[0] * 3] * 3\ngrid[0][0] = 1\nprint(grid)\n\nrows = [[0] * 3 for _ in range(3)]\nrows[0][0] = 1\nprint(rows)",
   "lang": "python",
   "options": [
@@ -216,7 +216,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "שתי טבלאות 3 x 3 נבנות בדרכים שונות, והתא השמאלי העליון בכל אחת מקבל 1. מה יודפס?",
+   "q": "ב-Python, list * n חוזר n פעמים על ה-references הקיימים של איברי ה-list, בעוד [expr for _ in range(n)] מחשב את expr פעם בכל איטרציה. שתי טבלאות 3 x 3 נבנות ומשתנות. מה יודפס?",
    "options": [
     "שתיהן מדפיסות [[1, 0, 0], [0, 0, 0], [0, 0, 0]]",
     "שתיהן מדפיסות [[1, 0, 0], [1, 0, 0], [1, 0, 0]]",
@@ -336,7 +336,7 @@
    "evaluated-once"
   ],
   "level": "easy",
-  "q": "add_tag has a default list for tags. It is called twice with the default and once with a new list. What does this print?",
+  "q": "In Python, default parameter expressions are evaluated once when def runs and stored on the function object. add_tag is called twice using the default and once with []. What does this print?",
   "code": "def add_tag(tag, tags=[]):\n    tags.append(tag)\n    return tags\n\nprint(add_tag(\"a\"))\nprint(add_tag(\"b\"))\nprint(add_tag(\"c\", []))",
   "lang": "python",
   "options": [
@@ -357,7 +357,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "ל-add_tag יש list כ-default ל-tags. קוראים לה פעמיים עם ה-default ופעם אחת עם list חדשה. מה יודפס?",
+   "q": "ב-Python, ביטויי default של פרמטרים מחושבים פעם אחת כשה-def רץ ונשמרים על ה-function object. קוראים ל-add_tag פעמיים עם ה-default ופעם אחת עם []. מה יודפס?",
    "options": [
     "['a'], ואז ['b'], ואז ['c']",
     "['a'], ואז ['a', 'b'], ואז ['c']",
@@ -383,7 +383,7 @@
    "global"
   ],
   "level": "medium",
-  "q": "check uses the global limit as its default. limit is changed after the def runs. What does check(50) print?",
+  "q": "In Python, a default parameter expression is evaluated when def executes and stored on the function object. What does this print?",
   "code": "limit = 10\n\ndef check(value, max_value=limit):\n    return value <= max_value\n\nlimit = 100\nprint(check(50))",
   "lang": "python",
   "options": [
@@ -404,7 +404,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "check משתמשת ב-limit הגלובלי כ-default. limit משתנה אחרי שה-def רץ. מה check(50) ידפיס?",
+   "q": "ב-Python, ביטוי של פרמטר default מחושב בזמן הגדרת ה-function (כש-def רץ) ונשמר עליה. מה יודפס?",
    "options": [
     "True",
     "NameError: limit לא מוגדר בתוך check",
@@ -430,7 +430,7 @@
    "loop-variable"
   ],
   "level": "medium",
-  "q": "Three lambdas are created in a loop, each meant to return i * 10 for its own i. What does this print?",
+  "q": "In Python, lambda: expr defines a closure that looks up outer variables in the enclosing scope when called, and a for loop shares one loop variable in that scope. What does this print?",
   "code": "handlers = []\nfor i in range(3):\n    handlers.append(lambda: i * 10)\n\nprint([h() for h in handlers])",
   "lang": "python",
   "options": [
@@ -451,7 +451,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "שלוש lambdas נוצרות בלולאה, וכל אחת אמורה להחזיר i * 10 עבור ה-i שלה. מה יודפס?",
+   "q": "ב-Python, lambda: expr מגדירה closure שמחפש משתנים חיצוניים ב-scope העוטף בזמן הקריאה, ולולאת for חולקת משתנה לולאה אחד באותו scope. מה יודפס?",
    "options": [
     "[20, 20, 20]",
     "[0, 10, 20]",
@@ -983,7 +983,7 @@
    "negative-numbers"
   ],
   "level": "medium",
-  "q": "Integer division and remainder are applied to 7 and -7, and the last value uses / and then int(). What does this print?",
+  "q": "In Python, // is floor division (toward negative infinity), / gives a float, int() truncates toward zero, and % satisfies (a // b) * b + (a % b) == a. What does this print?",
   "code": "a = 7 // 2\nb = -7 // 2\nc = -7 % 2\nd = int(-7 / 2)\nprint(a, b, c, d)",
   "lang": "python",
   "options": [
@@ -1004,7 +1004,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "חילוק שלמים ושארית מופעלים על 7 ועל -7, והערך האחרון משתמש ב-/ ואחר כך ב-int(). מה יודפס?",
+   "q": "ב-Python, // הוא חילוק עם עיגול כלפי מטה (לכיוון מינוס אינסוף), / מחזיר float, int() חותך לכיוון אפס, ו-% מקיים (a // b) * b + (a % b) == a. מה יודפס?",
    "options": [
     "3 -3 -1 -3",
     "3 -4 1 -3",
@@ -1078,7 +1078,7 @@
    "augmented-assignment"
   ],
   "level": "hard",
-  "q": "Player keeps badges and score as class attributes. Only a wins a badge. What does this print?",
+  "q": "In Python, looking up self.x falls back to the class if x is not on the instance, while assigning self.x writes an instance attribute. What does this print?",
   "code": "class Player:\n    badges = []\n    score = 0\n\n    def win(self, badge):\n        self.badges.append(badge)\n        self.score += 1\n\na, b = Player(), Player()\na.win(\"gold\")\nprint(b.badges, b.score, a.score)",
   "lang": "python",
   "options": [
@@ -1099,7 +1099,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "Player שומר את badges ואת score כ-class attributes. רק a זוכה ב-badge. מה יודפס?",
+   "q": "ב-Python, גישה ל-self.x מחפשת ב-class אם x לא קיים על ה-instance, בעוד השמה ל-self.x יוצרת instance attribute. מה יודפס?",
    "options": [
     "[] 0 1",
     "['gold'] 1 1",
@@ -1309,7 +1309,7 @@
    "gil"
   ],
   "level": "easy",
-  "q": "A script downloads 200 web pages one at a time and spends most of its time waiting for replies. Will threads help in standard CPython?",
+  "q": "Standard CPython has a Global Interpreter Lock (GIL) allowing one thread to run Python bytecode at a time. A script downloads 200 web pages, mostly waiting for network replies. Will threads help?",
   "options": [
    "Yes, threads can wait on the network at the same time",
    "No, the global lock lets only one thread run, so nothing overlaps",
@@ -1328,7 +1328,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "script מוריד 200 דפי web אחד אחרי השני, ורוב הזמן שלו עובר בהמתנה לתשובות. האם threads יעזרו ב-CPython הסטנדרטי?",
+   "q": "ב-CPython הסטנדרטי יש Global Interpreter Lock (GIL) שמאפשר רק ל-thread אחד להריץ Python bytecode בכל רגע. script מוריד 200 דפי web ובעיקר מחכה לתשובות מהרשת. האם threads יעזרו?",
    "options": [
     "כן, threads יכולים לחכות לרשת באותו זמן",
     "לא, ה-lock הגלובלי מרשה רק ל-thread אחד לרוץ, ולכן שום דבר לא חופף",
