@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { QUIZ_TOPICS, QUIZ_LANGS } from '../src/js/data/quiz-topics.js';
 import { QUIZ_INDEX } from '../src/js/data/quiz-index.js';
-import { readBank, buildOutputs, forLang, readPool, extendPool, poolText, joinDay, POOL, EXITS, readExits, exitsText, nextDay, previousExits, validateExits } from '../scripts/content/build-quiz.mjs';
+import { readBank, buildOutputs, forLang, readPool, extendPool, poolText, joinDay, POOL, EXITS, readExits, exitsText, nextDay, previousExits, validateExits, parseAllowExitRewrite } from '../scripts/content/build-quiz.mjs';
 import { QUIZ_ROWS } from '../deploy/supabase/functions/daily-quiz/bank.js';
 import { readClasses, validateClasses } from '../scripts/content/quiz-audit.mjs';
 import { shareText } from '../src/js/data/quiz-share.js';
@@ -187,6 +187,31 @@ test('validateExits enforces append-only exits and the tomorrow-UTC guard', () =
     previousExits([['a', 'oop', 0, 4, '2026-11-23', '2026-11-27'], ['b', 'oop', 1, 4, '2026-11-23', null], ['c', 'oop', 2, 4, '2026-11-23']]),
     new Map([['a', '2026-11-27']]),
   );
+  // Explicit one-off override permits moving existing exits to that exact day only, and nothing else.
+  assert.deepEqual(
+    validateExits({ exits: { '2026-11-26': ['a'] }, bank, since, prevExits, minNewDay: '2026-11-27', allowRewriteDay: '2026-11-26' }).problems,
+    [],
+  );
+  // With allowRewriteDay, removing an exit is still refused.
+  assert.match(
+    validateExits({ exits: {}, bank, since, prevExits, minNewDay: '2026-11-27', allowRewriteDay: '2026-11-26' }).problems.join('\n'),
+    /a: exited on 2026-11-27 and cannot be removed/,
+  );
+  // With allowRewriteDay, moving an exit to any day other than allowRewriteDay is still refused.
+  assert.match(
+    validateExits({ exits: { '2026-11-25': ['a'] }, bank, since, prevExits, minNewDay: '2026-11-27', allowRewriteDay: '2026-11-26' }).problems.join('\n'),
+    /a: exit day changed from 2026-11-27 to 2026-11-25/,
+  );
+  // With allowRewriteDay, adding a brand-new exit earlier than tomorrow UTC is still refused.
+  assert.match(
+    validateExits({ exits: { '2026-11-26': ['a', 'b'] }, bank, since, prevExits, minNewDay: '2026-11-27', allowRewriteDay: '2026-11-26' }).problems.join('\n'),
+    /b: new exit day 2026-11-26 is earlier than tomorrow UTC \(2026-11-27\)/,
+  );
+  // CLI flag parser accepts valid YYYY-MM-DD and rejects malformed values.
+  assert.deepEqual(parseAllowExitRewrite([]), { allowRewriteDay: null, error: null });
+  assert.deepEqual(parseAllowExitRewrite(['--allow-exit-rewrite=2026-11-26']), { allowRewriteDay: '2026-11-26', error: null });
+  assert.match(parseAllowExitRewrite(['--allow-exit-rewrite=2026-02-30']).error, /expected YYYY-MM-DD/);
+  assert.match(parseAllowExitRewrite(['--allow-exit-rewrite=']).error, /expected YYYY-MM-DD/);
 });
 
 test('extendPool: a new question joins on the given day; existing days keep theirs', () => {
@@ -385,7 +410,7 @@ test('daily quiz falls back to repeats of a topic when there are fewer topics th
 
 test('exited questions leave the daily quiz on their exit day and stay in practice, sprint and survival', () => {
   const index = [
-    { id: 't1-1', topic: 't1', since: '2026-11-23', until: '2026-11-27' },
+    { id: 't1-1', topic: 't1', since: '2026-11-23', until: '2026-11-26' },
     { id: 't2-1', topic: 't2', since: '2026-11-23', until: null },
     { id: 't3-1', topic: 't3', since: '2026-11-23', until: null },
     { id: 't4-1', topic: 't4', since: '2026-11-23', until: null },
@@ -394,13 +419,13 @@ test('exited questions leave the daily quiz on their exit day and stay in practi
   ];
   // Before exit day, t1-1 is still eligible; on and after exit day, it is excluded.
   let seenBefore = false;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) {
     const d = new Date(Date.parse('2026-11-23T00:00:00Z') + i * 86400000).toISOString().slice(0, 10);
     if (dailyQuizIds(index, d).includes('t1-1')) seenBefore = true;
   }
   assert.ok(seenBefore, 'exited question is eligible before its exit day');
   for (let i = 0; i < 30; i++) {
-    const d = new Date(Date.parse('2026-11-27T00:00:00Z') + i * 86400000).toISOString().slice(0, 10);
+    const d = new Date(Date.parse('2026-11-26T00:00:00Z') + i * 86400000).toISOString().slice(0, 10);
     assert.ok(!dailyQuizIds(index, d).includes('t1-1'), `exited question picked on ${d}`);
   }
   // Exited questions remain playable in practice, sprint and survival.
@@ -412,6 +437,7 @@ test('exited questions leave the daily quiz on their exit day and stay in practi
 });
 
 test('from DAILY_LANG_CAP_SINCE on, 365 days pick at most one capped language topic, 5 distinct topics and no exited id', () => {
+  assert.equal(DAILY_LANG_CAP_SINCE, '2026-11-26');
   assert.ok(DAILY_CAPPED_TOPICS instanceof Set);
   assert.deepEqual([...DAILY_CAPPED_TOPICS].sort(), ['c-cpp', 'java', 'javascript', 'python']);
   assert.ok(!DAILY_CAPPED_TOPICS.has('bits'), 'bits stays exempt from the programming-language cap');

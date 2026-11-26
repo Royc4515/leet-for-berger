@@ -137,23 +137,45 @@ const isIsoDay = (day) =>
   new Date(Date.parse(`${day}T00:00:00Z`)).toISOString().slice(0, 10) === day;
 
 /**
+ * Parses an optional `--allow-exit-rewrite=YYYY-MM-DD` CLI flag. Pure.
+ * @param {string[]} argv
+ * @returns {{ allowRewriteDay: string|null, error: string|null }}
+ */
+export function parseAllowExitRewrite(argv) {
+  let allowRewriteDay = null;
+  for (const arg of argv) {
+    if (!arg.startsWith('--allow-exit-rewrite=')) continue;
+    const day = arg.slice('--allow-exit-rewrite='.length);
+    if (!isIsoDay(day)) return { allowRewriteDay: null, error: `${arg}: expected YYYY-MM-DD` };
+    allowRewriteDay = day;
+  }
+  return { allowRewriteDay, error: null };
+}
+
+/**
  * Validates `exits` against the bank, join days and the previous committed exits (append-only:
  * refuses removing an exit, moving an exit to another day, or adding a new exit earlier than
- * `minNewDay`). Pure.
+ * `minNewDay`). Passing `allowRewriteDay` permits moving existing exits to that exact day only,
+ * while still refusing removals, moves to any other day, and new exits earlier than `minNewDay`.
+ * Pure.
  * @param {{
  *   exits: Record<string, string[]>,
  *   bank: { id: string }[],
  *   since?: Map<string, string>,
  *   prevExits?: Map<string, string>,
  *   minNewDay?: string|null,
+ *   allowRewriteDay?: string|null,
  * }} opts
  * @returns {{ until: Map<string, string>, problems: string[] }}
  */
-export function validateExits({ exits, bank, since = new Map(), prevExits = new Map(), minNewDay = null }) {
+export function validateExits({ exits, bank, since = new Map(), prevExits = new Map(), minNewDay = null, allowRewriteDay = null }) {
   const problems = [];
   const until = new Map();
+  if (allowRewriteDay !== null && !isIsoDay(allowRewriteDay)) {
+    problems.push(`${allowRewriteDay}: invalid allowRewriteDay`);
+  }
   if (!exits || typeof exits !== 'object' || Array.isArray(exits)) {
-    return { until, problems: ['daily-exits.json must be an object mapping YYYY-MM-DD to id arrays'] };
+    return { until, problems: [...problems, 'daily-exits.json must be an object mapping YYYY-MM-DD to id arrays'] };
   }
   const inBank = new Set(bank.map((q) => q.id));
   for (const [day, ids] of Object.entries(exits)) {
@@ -177,7 +199,7 @@ export function validateExits({ exits, bank, since = new Map(), prevExits = new 
   for (const [id, prevDay] of prevExits) {
     if (!until.has(id)) {
       problems.push(`${id}: exited on ${prevDay} and cannot be removed from daily-exits.json`);
-    } else if (until.get(id) !== prevDay) {
+    } else if (until.get(id) !== prevDay && !(allowRewriteDay && until.get(id) === allowRewriteDay)) {
       problems.push(`${id}: exit day changed from ${prevDay} to ${until.get(id)}; existing exits cannot move`);
     }
   }
@@ -279,6 +301,11 @@ export function buildOutputs(bank, since, until = new Map()) {
 
 // Run as a script, not when a test imports the helpers.
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const { allowRewriteDay, error: flagError } = parseAllowExitRewrite(process.argv.slice(2));
+  if (flagError) {
+    console.error(flagError);
+    process.exit(1);
+  }
   const now = Date.now();
   const bank = readBank();
   const problems = validateBank({ topics: QUIZ_TOPICS, questions: bank });
@@ -299,7 +326,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     // First build before bank.js exists.
   }
   const exits = readExits();
-  const { until, problems: exitProblems } = validateExits({ exits, bank, since, prevExits, minNewDay: nextDay(now) });
+  const { until, problems: exitProblems } = validateExits({ exits, bank, since, prevExits, minNewDay: nextDay(now), allowRewriteDay });
   if (exitProblems.length) {
     console.error(`content/quiz/daily-exits.json has ${exitProblems.length} problem(s):\n  ${exitProblems.slice(0, 40).join('\n  ')}`);
     process.exit(1);

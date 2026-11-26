@@ -46,7 +46,7 @@ export const DAILY_QUIZ_SIZE = 5;
 export const DAILY_QUIZ_EPOCH = '2026-11-23';
 
 /** First day the daily quiz caps programming-language topics (java, python, javascript, c-cpp). */
-export const DAILY_LANG_CAP_SINCE = '2026-11-27';
+export const DAILY_LANG_CAP_SINCE = '2026-11-26';
 
 /** Maximum number of capped programming-language topics per daily quiz from DAILY_LANG_CAP_SINCE on. */
 export const DAILY_LANG_CAP = 1;

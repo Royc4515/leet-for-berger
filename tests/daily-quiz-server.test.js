@@ -26,14 +26,15 @@ const addDays = (day, n) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 864000
 const perfect = (day) => dailyIds(day).map((id) => ({ id, choice: BANK.get(id).answer }));
 
 // Exact daily picks captured from main before daily exits and the language cap were introduced.
+// 2026-11-26 is intentionally omitted: by the owner's decision, daily exits and the language cap
+// were moved forward to start on 2026-11-26 (2 plays already scored on the old questions stay as recorded).
 const PAST_DAYS_SNAPSHOT = {
   '2026-11-23': ['operating-systems-kernel-checks-user-pointer', 'design-patterns-singleton-good-fit', 'java-remove-inside-for-each', 'solid-lsp-stronger-precondition', 'data-structures-visited-set-in-graphs'],
   '2026-11-24': ['databases-choose-left-join', 'python-tuple-holding-list', 'c-cpp-array-decays-to-pointer', 'security-innerhtml-event-handler', 'java-stringbuilder-in-loop'],
   '2026-11-25': ['python-generator-runs-lazily', 'networking-https-what-network-sees', 'algorithms-first-occurrence', 'solid-cc-coincidental-duplication', 'system-design-scale-up-vs-out'],
-  '2026-11-26': ['javascript-nan-never-equals', 'bits-unsigned-wraparound', 'algorithms-states-times-work', 'python-int-no-overflow', 'solid-ocp-rule-list'],
 };
 
-test('past days (2026-11-23 through 2026-11-26) never change in either picker', () => {
+test('past days (2026-11-23 through 2026-11-25) never change in either picker', () => {
   for (const [day, expected] of Object.entries(PAST_DAYS_SNAPSHOT)) {
     assert.deepEqual(dailyQuizIds(QUIZ_INDEX, day), expected, `browser picker changed ${day}`);
     assert.deepEqual(dailyIds(day), expected, `server picker changed ${day}`);
