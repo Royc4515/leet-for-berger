@@ -5,7 +5,7 @@
  * either one (Profile, the workspace toolbar, the command palette). Both are device preferences,
  * not account data (state/user-data.js).
  */
-import { h, segmented } from './dom.js';
+import { h, segmented, tr } from './dom.js';
 import { glide } from './motion.js';
 import { CODE_THEME_OPTIONS, MATCH_SITE, codeThemeFor, parseCodeThemePref } from '../data/themes.js';
 
@@ -17,6 +17,13 @@ const site = globalThis.lfbTheme ?? { options: [], get: () => 'dark', set: () =>
 
 // With storage blocked a choice still holds for this page.
 let unsavedCode = null;
+
+// The site theme options come from theme-boot.js in English; their words are translated here, where
+// they are shown, so the boot script's values and order stay the one source.
+const SITE_LABEL_HE = { dark: 'כהה', light: 'בהיר', system: 'לפי המערכת' };
+const siteLabel = (o) => tr(o.label, SITE_LABEL_HE[o.value] ?? o.label);
+// Code theme names stay in English on the Hebrew site; only "Match site" is words, not a name.
+const codeLabel = (o) => (o.value === MATCH_SITE ? tr(o.label, 'כמו האתר') : o.label);
 
 /** @returns {string} the saved code theme choice (a CODE_THEME_OPTIONS value) */
 export function getCodeThemePref() {
@@ -74,7 +81,7 @@ export function onThemeChange(cb, signal) {
  * @returns {HTMLElement}
  */
 export function siteThemeControl(signal) {
-  const group = segmented({ label: 'Site theme', options: site.options, value: site.get(), onChange: setSiteThemePref });
+  const group = segmented({ label: tr('Site theme', 'ערכת הנושא של האתר'), options: site.options.map((o) => ({ ...o, label: siteLabel(o) })), value: site.get(), onChange: setSiteThemePref });
   onThemeChange(() => {
     for (const b of group.querySelectorAll('[data-value]')) b.setAttribute('aria-pressed', String(b.dataset.value === site.get()));
     glide(group, '[aria-pressed="true"]');
@@ -90,8 +97,8 @@ export function siteThemeControl(signal) {
 export function codeThemeSelect(signal) {
   const select = h(
     'select.select.code-theme-select',
-    { 'aria-label': 'Code theme', title: 'Code theme' },
-    CODE_THEME_OPTIONS.map((o) => h('option', { value: o.value }, o.label)),
+    { 'aria-label': tr('Code theme', 'ערכת הנושא של הקוד'), title: tr('Code theme', 'ערכת הנושא של הקוד') },
+    CODE_THEME_OPTIONS.map((o) => h('option', { value: o.value }, codeLabel(o))),
   );
   select.value = getCodeThemePref();
   select.addEventListener('change', () => setCodeThemePref(select.value));
@@ -107,7 +114,7 @@ export function codeThemeSelect(signal) {
  */
 export function themePaletteItems() {
   return [
-    ...site.options.map((o) => ({ kind: 'setting', id: `theme-${o.value}`, label: `Theme: ${o.label}`, keywords: 'appearance mode colors colours site', run: () => setSiteThemePref(o.value) })),
-    ...CODE_THEME_OPTIONS.map((o) => ({ kind: 'setting', id: `code-theme-${o.value}`, label: `Code theme: ${o.label}`, keywords: `editor syntax colors colours ${o.value === MATCH_SITE ? 'default' : ''}`.trim(), run: () => setCodeThemePref(o.value) })),
+    ...site.options.map((o) => ({ kind: 'setting', id: `theme-${o.value}`, label: tr(`Theme: ${o.label}`, `ערכת נושא: ${siteLabel(o)}`), keywords: 'appearance mode colors colours site מראה ערכת נושא צבעים מצב כהה בהיר', run: () => setSiteThemePref(o.value) })),
+    ...CODE_THEME_OPTIONS.map((o) => ({ kind: 'setting', id: `code-theme-${o.value}`, label: tr(`Code theme: ${o.label}`, `ערכת נושא לקוד: ${codeLabel(o)}`), keywords: `editor syntax colors colours ${o.value === MATCH_SITE ? 'default' : ''} עורך קוד צבעים ערכת נושא`.trim(), run: () => setCodeThemePref(o.value) })),
   ];
 }

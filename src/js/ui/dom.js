@@ -52,6 +52,51 @@ export function trustedHtml(tag, html) {
   return el;
 }
 
+/**
+ * The site language, set before the first paint by lang-boot.js: 'he' or 'en'.
+ * @returns {'en'|'he'}
+ */
+export function siteLang() {
+  return globalThis.lfbLang?.current?.() === 'he' ? 'he' : 'en';
+}
+
+/**
+ * The language of the page in #view: the site language, except where the route keeps the view
+ * English (main.js setViewLanguage: a page not translated yet, and always the exam room, which
+ * sets lang="en" on its own root too).
+ * @returns {'en'|'he'}
+ */
+export function pageLang() {
+  const view = globalThis.document?.getElementById?.('view');
+  const own = view?.getAttribute?.('lang');
+  return own ? (own === 'he' ? 'he' : 'en') : siteLang();
+}
+
+/**
+ * Shell copy in the site language: the header's menus, the palette, dialogs, toasts, the bell.
+ * `tr('Sign in', 'התחברות')`. Strings sit beside the code that uses them, in both languages, so
+ * nothing ships in one without the other (docs/I18N.md).
+ * @template T
+ * @param {T} en
+ * @param {T} he
+ * @returns {T}
+ */
+export function tr(en, he) {
+  return siteLang() === 'he' ? he : en;
+}
+
+/**
+ * Page copy in the page's language (pageLang): everything drawn inside #view, including shared
+ * pieces that also appear on pages still in English or in the exam room.
+ * @template T
+ * @param {T} en
+ * @param {T} he
+ * @returns {T}
+ */
+export function tp(en, he) {
+  return pageLang() === 'he' ? he : en;
+}
+
 let toastHost;
 /**
  * A toast (docs/DESIGN.md): confirms something that already happened, never the only place a result
@@ -86,7 +131,7 @@ let dialogSeq = 0;
  * @param {{ title: string, body: string, confirmLabel?: string, danger?: boolean }} opts
  * @returns {Promise<boolean>}
  */
-export function confirmDialog({ title, body, confirmLabel = 'Confirm', danger = false }) {
+export function confirmDialog({ title, body, confirmLabel = tr('Confirm', 'אישור'), danger = false }) {
   return new Promise((resolve) => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const seq = ++dialogSeq;
@@ -112,7 +157,7 @@ export function confirmDialog({ title, body, confirmLabel = 'Confirm', danger = 
         h(
           'div.modal-actions',
           {},
-          h('button.btn.btn-ghost', { type: 'button', value: 'cancel', onClick: () => close(false) }, 'Cancel'),
+          h('button.btn.btn-ghost', { type: 'button', value: 'cancel', onClick: () => close(false) }, tr('Cancel', 'ביטול')),
           h(`button.btn.${danger ? 'btn-danger' : 'btn-primary'}`, { type: 'button', onClick: () => close(true) }, confirmLabel),
         ),
       ),
@@ -241,7 +286,7 @@ export function stateBlock({ title, body, kind = 'empty', headingTag = 'h2', act
  * @param {{ label?: string, rows?: number }} [opts]
  * @returns {HTMLElement}
  */
-export function loadingState({ label = 'Loading...', rows = 6 } = {}) {
+export function loadingState({ label = tp('Loading...', 'בטעינה...'), rows = 6 } = {}) {
   const skeletonRows = Array.from({ length: rows }, () => h('div.skeleton-row', { 'aria-hidden': 'true' }, h('span.skeleton-hex'), h('span.skeleton-bar.skeleton-line')));
   return h(
     'div.state.state-loading',

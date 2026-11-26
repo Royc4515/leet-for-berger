@@ -6,7 +6,7 @@
  *
  * Reminders are never toasts: DESIGN.md keeps toasts for confirming something that already happened.
  */
-import { h, mount } from './dom.js';
+import { h, mount, tr, siteLang } from './dom.js';
 import { dueNotifications, notificationCopy } from '../data/notifications.js';
 import { loadNotificationState, saveNotificationState, dismiss, loadQuizDays, NOTIFICATIONS_CHANGED_EVENT } from '../state/notifications.js';
 import { listDraftEdits } from '../state/drafts.js';
@@ -42,7 +42,7 @@ export function dueItems(store, now) {
   const prefs = loadNotificationState();
   const state = store.get();
   const due = dueNotifications({ activeDays: state.activeDays, problems: state.problems, quizDays: loadQuizDays(), drafts: listDraftEdits() }, now, { ...prefs, restDay: restDayOf(state) });
-  return due.map((n) => ({ n, copy: notificationCopy(n, { problemTitle: (id) => catalogEntry(id)?.title }) })).filter((x) => x.copy);
+  return due.map((n) => ({ n, copy: notificationCopy(n, { problemTitle: (id) => catalogEntry(id)?.title, lang: siteLang() }) })).filter((x) => x.copy);
 }
 
 /**
@@ -55,13 +55,13 @@ export function mountNotifyBell(host, { store, now = () => new Date() }) {
   let open = false;
 
   const count = h('span.notify-count', { 'aria-hidden': 'true' });
-  const toggle = h('button.notify-toggle', { type: 'button', title: 'Reminders', 'aria-controls': PANEL_ID, 'aria-expanded': 'false' }, bellIcon(), count);
+  const toggle = h('button.notify-toggle', { type: 'button', title: tr('Reminders', 'תזכורות'), 'aria-controls': PANEL_ID, 'aria-expanded': 'false' }, bellIcon(), count);
   const list = h('div.notify-list');
-  const heading = h('h2.notify-title', { id: TITLE_ID, tabindex: '-1' }, 'Reminders');
+  const heading = h('h2.notify-title', { id: TITLE_ID, tabindex: '-1' }, tr('Reminders', 'תזכורות'));
   const panel = h(
     'div.notify-panel',
     { id: PANEL_ID, role: 'region', 'aria-labelledby': TITLE_ID, hidden: true },
-    h('div.notify-head', {}, heading, h('a.btn-link.notify-settings', { href: '#/me' }, 'Settings')),
+    h('div.notify-head', {}, heading, h('a.btn-link.notify-settings', { href: '#/me' }, tr('Settings', 'הגדרות'))),
     list,
   );
   const backdrop = h('div.notify-backdrop', { hidden: true, 'aria-hidden': 'true', onClick: () => setOpen(false, true) });
@@ -92,10 +92,10 @@ export function mountNotifyBell(host, { store, now = () => new Date() }) {
     const n = items.length;
     root.dataset.count = String(n);
     count.textContent = n ? String(n) : '';
-    toggle.setAttribute('aria-label', n ? `Reminders, ${n} due` : 'Reminders, none due');
+    toggle.setAttribute('aria-label', n ? tr(`Reminders, ${n} due`, n === 1 ? 'תזכורות, אחת ממתינה' : `תזכורות, ${n} ממתינות`) : tr('Reminders, none due', 'תזכורות, אין כרגע'));
     if (!open) return;
     if (!n) {
-      mount(list, h('p.hint-text.notify-empty', {}, 'Nothing due right now. Streaks, the daily quiz and work you left will show up here.'));
+      mount(list, h('p.hint-text.notify-empty', {}, tr('Nothing due right now. Streaks, the daily quiz and work you left will show up here.', 'אין כרגע תזכורות. רצפים, החידון היומי ובעיות שנשארו פתוחות יופיעו כאן.')));
       return;
     }
     mount(
@@ -117,7 +117,7 @@ export function mountNotifyBell(host, { store, now = () => new Date() }) {
                 'div.notify-actions',
                 {},
                 h('a.btn.btn-secondary.btn-sm.notify-go', { href: copy.href, 'aria-label': `${copy.action}: ${copy.title}` }, copy.action),
-                h('button.btn.btn-ghost.btn-sm.notify-dismiss', { type: 'button', 'aria-label': `Dismiss: ${copy.title}`, onClick: () => onDismiss(item.key, i) }, 'Dismiss'),
+                h('button.btn.btn-ghost.btn-sm.notify-dismiss', { type: 'button', 'aria-label': tr(`Dismiss: ${copy.title}`, `לסגור: ${copy.title}`), onClick: () => onDismiss(item.key, i) }, tr('Dismiss', 'לסגור')),
               ),
             ),
           ),

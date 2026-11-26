@@ -170,11 +170,14 @@ export function dueNotifications(facts, now, { settings = {}, dismissed = {}, re
  * What a notification says on the page, and where its button goes. No exclamation marks: none of
  * these is a success.
  * @param {Notification} n
- * @param {{ problemTitle?: (problemId: string) => string|null|undefined }} [names] the catalog's title for a problem
+ * @param {{ problemTitle?: (problemId: string) => string|null|undefined, lang?: 'en'|'he' }} [opts]
+ *   problemTitle: the catalog's title for a problem (titles stay in English in both languages);
+ *   lang: the copy's language (the bell passes the site language; the push server uses English)
  * @returns {{ title: string, body: string, href: string, action: string }|null} null when it would
  *   name a problem the catalog does not have (the caller shows nothing rather than an id)
  */
-export function notificationCopy(n, { problemTitle = () => null } = {}) {
+export function notificationCopy(n, { problemTitle = () => null, lang = 'en' } = {}) {
+  if (lang === 'he') return notificationCopyHe(n, problemTitle);
   const days = (d) => (d === 1 ? '1 day' : `${d} days`);
   const hours = (h) => (h === 1 ? '1 hour' : `${h} hours`);
   switch (n.kind) {
@@ -207,6 +210,53 @@ export function notificationCopy(n, { problemTitle = () => null } = {}) {
     }
     case 'restart':
       return { title: 'Start a new streak', body: `No streak for ${days(n.data.days)}. One solve or today's quiz starts one.`, href: '#/daily', action: "Today's problem" };
+    default:
+      return null;
+  }
+}
+
+/**
+ * The Hebrew copy: the same reminders, links and rules, phrased in Hebrew (docs/I18N.md: buttons
+ * in the infinitive, no gendered second person, Hebrew dual forms for 1 and 2).
+ * @param {Notification} n
+ * @param {(problemId: string) => string|null|undefined} problemTitle
+ * @returns {{ title: string, body: string, href: string, action: string }|null}
+ */
+function notificationCopyHe(n, problemTitle) {
+  const days = (d) => (d === 1 ? 'יום אחד' : d === 2 ? 'יומיים' : `${d} ימים`);
+  const hours = (h) => (h === 1 ? 'שעה' : h === 2 ? 'שעתיים' : `${h} שעות`);
+  const passed = (d) => (d === 1 ? 'עבר יום אחד' : `עברו ${days(d)}`);
+  const left = (ms) => `נשארו ${formatCountdown(ms, 'he')}.`;
+  switch (n.kind) {
+    case 'streak':
+      return {
+        title: n.data.streak > 1 ? `לשמור על רצף של ${n.data.streak} ימים` : 'לשמור על הרצף',
+        body: `מספיק לפתור בעיה אחת היום. ${left(n.data.msLeft)}`,
+        href: '#/daily',
+        action: 'לבעיה של היום',
+      };
+    case 'quiz-streak':
+      return {
+        title: n.data.streak > 1 ? `לשמור על רצף של ${n.data.streak} ימים בחידון` : 'לשמור על הרצף בחידון',
+        body: `מספיק לשחק בחידון היומי. ${left(n.data.msLeft)}`,
+        href: '#/quiz/daily',
+        action: 'לשחק בחידון היומי',
+      };
+    case 'unfinished': {
+      const name = problemTitle(n.data.problemId);
+      if (!name) return null;
+      const ago = n.data.hours < 24 ? hours(n.data.hours) : days(Math.max(1, n.data.days));
+      return { title: `לסיים את ${name}`, body: `הבעיה נשארה פתוחה לפני ${ago} ועוד לא נפתרה.`, href: `#/problem/${n.data.problemId}`, action: 'להמשיך' };
+    }
+    case 'away': {
+      const id = n.data.resume?.problemId;
+      const name = id ? problemTitle(id) : null;
+      return name
+        ? { title: 'ברוכים השבים', body: `${passed(n.data.days)}. אפשר להמשיך את ${name} מאותה נקודה.`, href: `#/problem/${id}`, action: 'להמשיך' }
+        : { title: 'ברוכים השבים', body: `${passed(n.data.days)}. הבעיה של היום היא דרך טובה לחזור.`, href: '#/daily', action: 'לבעיה של היום' };
+    }
+    case 'restart':
+      return { title: 'להתחיל רצף חדש', body: `אין רצף כבר ${days(n.data.days)}. פתרון אחד או החידון של היום יתחילו רצף חדש.`, href: '#/daily', action: 'לבעיה של היום' };
     default:
       return null;
   }

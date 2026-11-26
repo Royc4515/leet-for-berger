@@ -42,6 +42,38 @@ export const NUDGE_COPY = Object.freeze({
   }),
 });
 
+/** The same copy in Hebrew (docs/I18N.md: buttons in the infinitive, no gendered second person). */
+export const NUDGE_COPY_HE = Object.freeze({
+  signin: Object.freeze({
+    title: 'לשמור את ההתקדמות',
+    body: 'הפתרונות שמורים רק בדפדפן הזה. התחברות שומרת אותם בכל מכשיר ושומרת על הרצף.',
+    later: 'לא עכשיו',
+  }),
+  push: Object.freeze({
+    title: 'לא לאבד את הרצף',
+    body: 'תזכורת ב-16:00 וב-20:00, רק כשיש משהו לעשות. אף פעם לא ביום המנוחה.',
+    action: 'להפעיל תזכורות',
+    install: 'להראות איך',
+    later: 'לא עכשיו',
+    denied: 'ההתראות חסומות באתר הזה. אפשר לאשר אותן בהגדרות האתר בדפדפן (הסמל ליד הכתובת), ואז להפעיל תזכורות מהפרופיל.',
+    done: 'התזכורות הופעלו. התראת ניסיון בדרך.',
+  }),
+  banner: Object.freeze({
+    push: Object.freeze({ title: 'לא לאבד את הרצף', body: 'להפעיל תזכורות: התראה לפני שהרצף נגמר, רק כשיש משהו לעשות.', action: 'להפעיל תזכורות' }),
+    signin: Object.freeze({ title: 'לשמור את ההתקדמות', body: 'הפתרונות שמורים רק בדפדפן הזה. התחברות שומרת אותם בכל מכשיר.', action: 'להתחבר' }),
+    hide: 'להסתיר לשבוע',
+  }),
+});
+
+/**
+ * The dialog and banner copy in a language.
+ * @param {'en'|'he'} [lang]
+ * @returns {typeof NUDGE_COPY}
+ */
+export function nudgeCopy(lang = 'en') {
+  return lang === 'he' ? NUDGE_COPY_HE : NUDGE_COPY;
+}
+
 /**
  * @typedef {{ count: number, at: number }} NudgeLog how many times a dialog was shown, and when last
  * @typedef {{ signin: NudgeLog, push: NudgeLog, bannerHiddenUntil: { signin: number, push: number } }} NudgeState

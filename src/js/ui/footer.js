@@ -3,7 +3,7 @@
  * credit at its end. Its own module, not ui/dom.js: dom.js loads at startup, and the footer is only
  * needed once a view renders (tests/startup-graph.test.js, ADR 0008).
  */
-import { h } from './dom.js';
+import { h, tp, pageLang } from './dom.js';
 import { tourForRoute } from '../data/tour-routes.js';
 import { AUTHOR_NAME, AUTHOR_LINKS, EXTERNAL_LINK, creditLinkName } from '../data/credit.js';
 
@@ -20,16 +20,16 @@ export function siteFooter({ note = '' } = {}) {
     h('span.site-links-brand', {}, h('span.hexmark.solved', { 'aria-hidden': 'true' }), h('span.site-links-copy', {}, 'Leet-For-Berger')),
     h(
       'nav.site-links-nav',
-      { 'aria-label': 'Footer' },
-      h('a', { href: '#/map' }, 'Map'),
-      h('a', { href: '#/daily' }, 'Daily'),
-      h('a', { href: '#/path' }, 'Path'),
+      { 'aria-label': tp('Footer', 'קישורים בתחתית העמוד') },
+      h('a', { href: '#/map' }, tp('Map', 'מפה')),
+      h('a', { href: '#/daily' }, tp('Daily', 'האתגר היומי')),
+      h('a', { href: '#/path' }, tp('Path', 'מסלול')),
       // main.js owns tours (they outlive a view); the footer only asks for one, and only on a page
       // that has one (the profile, the daily quiz and its leaderboard do not: the button did nothing).
       tourForRoute(globalThis.location?.hash ?? '')
-        ? h('button.site-links-tour', { type: 'button', 'aria-haspopup': 'dialog', onClick: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) }, 'Guide for this page')
+        ? h('button.site-links-tour', { type: 'button', 'aria-haspopup': 'dialog', onClick: () => dispatchEvent(new CustomEvent('tour:open', { detail: 'page' })) }, tp('Guide for this page', 'הדרכה לעמוד הזה'))
         : null,
-      h('a', { href: 'privacy.html' }, 'Privacy Policy'),
+      h('a', { href: 'privacy.html' }, tp('Privacy Policy', 'מדיניות הפרטיות')),
     ),
     siteCredit(),
     note ? h('p.site-links-note', {}, note) : null,
@@ -61,11 +61,12 @@ function creditIcon(d) {
  */
 export function siteCredit() {
   const [portfolio, ...rest] = AUTHOR_LINKS;
-  const link = (l, text) => h('a', { href: l.href, ...EXTERNAL_LINK, 'aria-label': creditLinkName(l), dataset: { credit: l.id } }, l.icon ? creditIcon(l.icon) : null, text);
+  const lang = pageLang();
+  const link = (l, text) => h('a', { href: l.href, ...EXTERNAL_LINK, 'aria-label': creditLinkName(l, lang), dataset: { credit: l.id } }, l.icon ? creditIcon(l.icon) : null, text);
   return h(
     'div.site-links-credit',
     {},
-    h('span', {}, 'Built by ', link(portfolio, AUTHOR_NAME)),
+    h('span', {}, tp('Built by ', 'נבנה על ידי '), link(portfolio, AUTHOR_NAME)),
     // A space between links: the flex gap spaces them on screen, but copied text and reader mode
     // read the text nodes, which would run "Roy CarmelliLinkedInGitHub" together.
     rest.map((l) => [' ', link(l, l.label)]),

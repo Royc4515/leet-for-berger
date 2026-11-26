@@ -97,12 +97,14 @@ export function msUntilNextDaily(now) {
 /**
  * "9 h 41 min" or "41 min": minutes only, no ticking seconds (a calm clock).
  * @param {number} ms
+ * @param {'en'|'he'} [lang] the page language; Hebrew uses the usual short units
  * @returns {string}
  */
-export function formatCountdown(ms) {
+export function formatCountdown(ms, lang = 'en') {
   const totalMin = Math.max(1, Math.ceil(ms / 60000));
   const hours = Math.floor(totalMin / 60);
   const min = totalMin % 60;
+  if (lang === 'he') return hours ? `${hours} שע׳ ${min} דק׳` : `${min} דק׳`;
   return hours ? `${hours} h ${min} min` : `${min} min`;
 }
 

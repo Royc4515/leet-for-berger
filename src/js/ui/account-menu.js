@@ -2,7 +2,7 @@
  * Header control for accounts: "Sign in" (Google or GitHub) when signed out, the user and
  * "Sign out" when signed in, nothing when accounts are not configured.
  */
-import { h, mount, confirmDialog, toast } from './dom.js';
+import { h, mount, confirmDialog, toast, tr } from './dom.js';
 import { newRepoUrl } from '../auth/github-sync.js';
 import { userInitials } from '../auth/account.js';
 
@@ -11,7 +11,10 @@ const MENU_ID = 'account-panel';
 // The sun/moon switch from theme-boot.js. app.css shows it here only on a narrow phone, where the
 // header has no room for it; null if the boot script did not run.
 const themeButton = () => globalThis.lfbTheme?.button?.({ text: true }) ?? null;
-const SYNC_LABEL = { idle: '', syncing: 'Syncing...', synced: 'Progress synced', error: 'Sync failed' };
+const langButton = () => globalThis.lfbLang?.button?.({ text: true }) ?? null;
+// A function, not a table: the words follow the site language at render time.
+const syncLabelFor = (sync) =>
+  ({ idle: '', syncing: tr('Syncing...', 'בסנכרון...'), synced: tr('Progress synced', 'ההתקדמות סונכרנה'), error: tr('Sync failed', 'הסנכרון נכשל') })[sync];
 
 /**
  * @param {HTMLElement} host
@@ -86,17 +89,17 @@ export function mountAccountMenu(host, account, github = null) {
   const confirmSignOut = async () => {
     close({ returnFocus: true });
     const ok = await confirmDialog({
-      title: 'Sign out?',
-      body: 'Your progress stays in your account and is removed from this device.',
-      confirmLabel: 'Sign out',
+      title: tr('Sign out?', 'להתנתק?'),
+      body: tr('Your progress stays in your account and is removed from this device.', 'ההתקדמות נשמרת בחשבון ונמחקת מהמכשיר הזה.'),
+      confirmLabel: tr('Sign out', 'להתנתק'),
       danger: true,
     });
     if (!ok || (await account.signOut())) return;
     if (!account.get().user) return;
     const anyway = await confirmDialog({
-      title: 'Sign out without saving?',
-      body: 'Your latest progress could not be saved to your account. Signing out now removes it from this device.',
-      confirmLabel: 'Sign out anyway',
+      title: tr('Sign out without saving?', 'להתנתק בלי לשמור?'),
+      body: tr('Your latest progress could not be saved to your account. Signing out now removes it from this device.', 'לא הצלחנו לשמור בחשבון את ההתקדמות האחרונה. התנתקות עכשיו תמחק אותה מהמכשיר הזה.'),
+      confirmLabel: tr('Sign out anyway', 'להתנתק בכל זאת'),
       danger: true,
     });
     if (anyway) await account.signOut({ force: true });
@@ -148,28 +151,29 @@ export function mountAccountMenu(host, account, github = null) {
     pendingFocus = null;
     if (s.status === 'signed-out') {
       const menu = h('div.account-menu', { hidden: !open, id: MENU_ID },
-        h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => account.signIn('google') }, 'Continue with Google'),
-        h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => account.signIn('github') }, 'Continue with GitHub'),
-        h('p.hint-text', {}, 'Signing in syncs your progress across devices. ', h('a', { href: 'privacy.html' }, 'Privacy Policy')),
+        h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => account.signIn('google') }, tr('Continue with Google', 'להמשיך עם Google')),
+        h('button.btn.btn-secondary.btn-sm', { type: 'button', onClick: () => account.signIn('github') }, tr('Continue with GitHub', 'להמשיך עם GitHub')),
+        h('p.hint-text', {}, tr('Signing in syncs your progress across devices. ', 'התחברות מסנכרנת את ההתקדמות בין המכשירים. '), h('a', { href: 'privacy.html' }, tr('Privacy Policy', 'מדיניות הפרטיות'))),
         s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null,
         themeButton(),
-        h('a.btn.btn-ghost.btn-sm.account-profile-link', { href: '#/me' }, 'Profile and settings'),
+        langButton(),
+        h('a.btn.btn-ghost.btn-sm.account-profile-link', { href: '#/me' }, tr('Profile and settings', 'פרופיל והגדרות')),
       );
-      const toggle = h('button.btn.btn-ghost.btn-sm.account-toggle', { type: 'button', 'aria-controls': MENU_ID, 'aria-expanded': String(open) }, 'Sign in');
+      const toggle = h('button.btn.btn-ghost.btn-sm.account-toggle', { type: 'button', 'aria-controls': MENU_ID, 'aria-expanded': String(open) }, tr('Sign in', 'להתחבר'));
       // Opening the menu is the intent to sign in: start loading supabase-js now (a no-op once loaded).
       bindToggle(toggle, () => account.start());
       mount(host, h('div.account', {}, toggle, makeBackdrop(), menu));
       restoreFocus(focusToRestore);
       return;
     }
-    const who = s.user.name ?? s.user.email ?? 'Signed in';
-    const syncLabel = SYNC_LABEL[s.sync];
+    const who = s.user.name ?? s.user.email ?? tr('Signed in', 'חשבון מחובר');
+    const syncLabel = syncLabelFor(s.sync);
     // On a phone the header shows only the initials and a status dot (app.css), so the panel
     // says who is signed in and how the sync went.
     const me = h(
       'div.account-section.account-me',
       {},
-      h('span.account-section-title', {}, 'Signed in as'),
+      h('span.account-section-title', {}, tr('Signed in as', 'החשבון המחובר')),
       h('strong.account-me-name', { dir: 'auto' }, who),
       s.user.name && s.user.email ? h('span.hint-text', {}, s.user.email) : null,
       syncLabel ? h(`span.account-me-sync${s.sync === 'error' ? '.bad' : ''}`, {}, syncLabel) : null,
@@ -181,8 +185,9 @@ export function mountAccountMenu(host, account, github = null) {
       ghSection(),
       s.error ? h('p.hint-text', { role: 'alert' }, s.error) : null,
       themeButton(),
-      h('a.btn.btn-ghost.btn-sm.account-profile-link', { href: '#/me' }, 'Profile and settings'),
-      h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: confirmSignOut }, 'Sign out'),
+      langButton(),
+      h('a.btn.btn-ghost.btn-sm.account-profile-link', { href: '#/me' }, tr('Profile and settings', 'פרופיל והגדרות')),
+      h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: confirmSignOut }, tr('Sign out', 'להתנתק')),
     );
     // The name stays in the button for its accessible name; on a phone it is visually hidden
     // behind the initials badge, which is decoration.
@@ -263,15 +268,15 @@ export function mountAccountMenu(host, account, github = null) {
 export function githubSection(github, { closeMenu = () => {} } = {}) {
   if (!github?.available) return null;
   const link = github.get();
-  const title = h('div.account-section-title', {}, 'GitHub sync');
-  if (!link) return h('div.account-section', {}, title, h('p.hint-text', {}, 'Checking...'));
+  const title = h('div.account-section-title', {}, tr('GitHub sync', 'סנכרון ל-GitHub'));
+  if (!link) return h('div.account-section', {}, title, h('p.hint-text', {}, tr('Checking...', 'בבדיקה...')));
   if (!link.linked) {
     return h(
       'div.account-section',
       {},
       title,
       link.githubUser === false
-        ? h('p.hint-text', {}, 'Sign in with GitHub to save your accepted solutions to a repository of yours.')
+        ? h('p.hint-text', {}, tr('Sign in with GitHub to save your accepted solutions to a repository of yours.', 'אפשר להתחבר עם GitHub כדי לשמור את הפתרונות שהתקבלו ב-repository משלך.'))
         : connectWizard(github),
     );
   }
@@ -281,9 +286,9 @@ export function githubSection(github, { closeMenu = () => {} } = {}) {
     'div.account-section',
     {},
     title,
-    h('p.hint-text', {}, 'Syncing to ', h('a', { href: `https://github.com/${link.repo}`, target: '_blank', rel: 'noopener' }, link.repo)),
-    h('label.switch', { for: 'gh-auto' }, auto, h('span', {}, 'After every Accepted')),
-    h('p.hint-text', {}, 'Solved after revealing the solution? Push it by hand from Submissions; it is marked assisted.'),
+    h('p.hint-text', {}, tr('Syncing to ', 'הפתרונות נשמרים ב-'), h('a', { href: `https://github.com/${link.repo}`, target: '_blank', rel: 'noopener' }, link.repo)),
+    h('label.switch', { for: 'gh-auto' }, auto, h('span', {}, tr('After every Accepted', 'אחרי כל Accepted'))),
+    h('p.hint-text', {}, tr('Solved after revealing the solution? Push it by hand from Submissions; it is marked assisted.', 'נפתרה אחרי הצצה בפתרון? אפשר לשלוח אותה ידנית מ-Submissions, והיא תסומן כנפתרה עם עזרה.')),
     h(
       'button.btn.btn-ghost.btn-sm',
       {
@@ -291,15 +296,15 @@ export function githubSection(github, { closeMenu = () => {} } = {}) {
         onClick: async () => {
           closeMenu();
           const ok = await confirmDialog({
-            title: 'Disconnect GitHub?',
-            body: `New solutions will stop being saved to ${link.repo}. Nothing in the repository is deleted.`,
-            confirmLabel: 'Disconnect',
+            title: tr('Disconnect GitHub?', 'לנתק את GitHub?'),
+            body: tr(`New solutions will stop being saved to ${link.repo}. Nothing in the repository is deleted.`, `פתרונות חדשים לא יישמרו יותר ב-${link.repo}. שום דבר ב-repository לא נמחק.`),
+            confirmLabel: tr('Disconnect', 'לנתק'),
             danger: true,
           });
-          if (ok) github.disconnect().catch((err) => toast(`GitHub sync: ${err.message}`, 'error', 6000));
+          if (ok) github.disconnect().catch((err) => toast(tr(`GitHub sync: ${err.message}`, `סנכרון ל-GitHub: ${err.message}`), 'error', 6000));
         },
       },
-      'Disconnect',
+      tr('Disconnect', 'לנתק'),
     ),
   );
 }
@@ -310,7 +315,7 @@ export function githubSection(github, { closeMenu = () => {} } = {}) {
  */
 function connectWizard(github) {
   const body = h('div.gh-wizard');
-  const installNote = h('p.hint-text', {}, 'On GitHub choose "Only select repositories" and pick that one repository.');
+  const installNote = h('p.hint-text', {}, tr('On GitHub choose "Only select repositories" and pick that one repository.', 'ב-GitHub לבחור "Only select repositories" ואז את ה-repository הזה בלבד.'));
   const connect = (label) => h('a.btn.btn-secondary.btn-sm', { href: github.installUrl }, label);
   // Each step replaces the button that was just pressed, which drops keyboard focus to <body>.
   // Move it to the new step's first control instead (only on a user action, never on first render).
@@ -319,19 +324,19 @@ function connectWizard(github) {
     body.querySelector('a[href], button, input')?.focus({ preventScroll: true });
   };
   const askStep = () => [
-    h('p.hint-text', {}, 'Save each accepted solution to a GitHub repository of yours. Do you have a repository for them?'),
+    h('p.hint-text', {}, tr('Save each accepted solution to a GitHub repository of yours. Do you have a repository for them?', 'כל פתרון שהתקבל יישמר ב-repository משלך ב-GitHub. יש כבר repository בשבילם?')),
     h(
       'div.gh-wizard-actions',
       {},
-      h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => show(installNote, connect('Connect it'), back()) }, 'Yes'),
-      h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: create }, 'No, create one'),
+      h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: () => show(installNote, connect(tr('Connect it', 'לחבר אותו')), back()) }, tr('Yes', 'כן')),
+      h('button.btn.btn-ghost.btn-sm', { type: 'button', onClick: create }, tr('No, create one', 'לא, ליצור חדש')),
     ),
   ];
-  const back = () => h('button.btn-link', { type: 'button', onClick: () => show(askStep()) }, 'Back');
+  const back = () => h('button.btn-link', { type: 'button', onClick: () => show(askStep()) }, tr('Back', 'חזרה'));
   function create() {
     const priv = h('input', { type: 'radio', name: 'gh-vis', id: 'gh-vis-private', value: 'private', checked: true });
     const pub = h('input', { type: 'radio', name: 'gh-vis', id: 'gh-vis-public', value: 'public' });
-    const link = h('a.btn.btn-secondary.btn-sm', { href: newRepoUrl(), target: '_blank', rel: 'noopener' }, '1. Create it on GitHub');
+    const link = h('a.btn.btn-secondary.btn-sm', { href: newRepoUrl(), target: '_blank', rel: 'noopener' }, tr('1. Create it on GitHub', '1. ליצור אותו ב-GitHub'));
     const update = () => link.setAttribute('href', newRepoUrl({ visibility: pub.checked ? 'public' : 'private' }));
     priv.addEventListener('change', update);
     pub.addEventListener('change', update);
@@ -339,15 +344,15 @@ function connectWizard(github) {
       h(
         'fieldset.gh-vis',
         {},
-        h('legend.hint-text', {}, 'Visibility'),
-        h('label', { for: 'gh-vis-private' }, priv, ' Private'),
-        h('label', { for: 'gh-vis-public' }, pub, ' Public (a portfolio others can see)'),
-        h('p.hint-text', {}, 'You can make it public later in GitHub settings.'),
+        h('legend.hint-text', {}, tr('Visibility', 'נראות')),
+        h('label', { for: 'gh-vis-private' }, priv, tr(' Private', ' פרטי')),
+        h('label', { for: 'gh-vis-public' }, pub, tr(' Public (a portfolio others can see)', ' ציבורי (תיק עבודות שאחרים יכולים לראות)')),
+        h('p.hint-text', {}, tr('You can make it public later in GitHub settings.', 'אפשר להפוך אותו לציבורי מאוחר יותר בהגדרות של GitHub.')),
       ),
       link,
-      h('p.hint-text', {}, 'It opens prefilled as leetcode-solutions; rename it if you like. Then:'),
+      h('p.hint-text', {}, tr('It opens prefilled as leetcode-solutions; rename it if you like. Then:', 'הוא נפתח עם השם leetcode-solutions, ואפשר לשנות אותו. ואז:')),
       installNote,
-      connect('2. Connect it'),
+      connect(tr('2. Connect it', '2. לחבר אותו')),
       back(),
     );
   }
