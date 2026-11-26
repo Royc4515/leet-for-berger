@@ -703,7 +703,7 @@
    "three-valued-logic"
   ],
   "level": "hard",
-  "q": "One order has a NULL customer_id. The query is meant to list customers who never ordered. What does it return?",
+  "q": "In SQL three-valued logic, comparing any value to NULL yields UNKNOWN (neither TRUE nor FALSE), and WHERE keeps only rows where the condition is TRUE. What does this query return?",
   "code": "-- customers(id, name): (1,'Ana'), (2,'Ben'), (3,'Cy')\n-- orders(customer_id): (1), (NULL)\nSELECT name\nFROM customers\nWHERE id NOT IN (SELECT customer_id FROM orders);",
   "lang": "sql",
   "options": [
@@ -724,7 +724,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "באחת ההזמנות ה-customer_id הוא NULL. ה-query אמור להציג לקוחות שמעולם לא הזמינו. מה הוא מחזיר?",
+   "q": "בלוגיקה תלת-ערכית של SQL, השוואה של כל ערך ל-NULL מחזירה UNKNOWN (לא TRUE ולא FALSE), ו-WHERE משאיר רק rows שבהן התנאי הוא TRUE. מה ה-query הזה מחזיר?",
    "options": [
     "אף row",
     "Ben ו-Cy",
