@@ -3104,7 +3104,7 @@ try {
     await ctx.close();
   });
 
-  await check('Hebrew: a Hebrew device opens the site in Hebrew and right to left; the problem screen and pages not translated yet stay English; the switch to English holds; nothing scrolls sideways', async () => {
+  await check('Hebrew: a Hebrew device opens the site in Hebrew and right to left; every browse page is Hebrew and only the exam room stays English; the switch to English holds; nothing scrolls sideways', async () => {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'he-IL' });
     const hp = await ctx.newPage();
     hp.on('console', (m) => m.type() === 'error' && errors.push(`console (Hebrew): ${m.text()}`));
@@ -3139,11 +3139,35 @@ try {
     if (!(sides.brand > sides.search)) throw new Error(`the header does not mirror: ${JSON.stringify(sides)}`);
     if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/43-he-problems.png` });
 
-    // A page not translated yet (the map, stage 3) stays English and left to right inside the Hebrew shell.
+    // Stage 3a: the Map is drawn in Hebrew around an LTR canvas (topic/subtopic/problem labels stay English).
     await hp.goto(`${BASE}#/map`);
-    await hp.waitForSelector('.map-canvas');
+    await hp.waitForSelector('.map-canvas .district');
     const map = await look();
-    if (map.viewDir !== 'ltr' || map.viewLang !== 'en' || map.title !== 'מפה' || map.over > 0) throw new Error(`an English page in the Hebrew shell: ${JSON.stringify(map)}`);
+    const mapState = await hp.evaluate(() => ({
+      canvasDir: getComputedStyle(document.querySelector('.map-canvas')).direction,
+      crumb: document.querySelector('.map-crumbs li')?.textContent?.trim(),
+      brief: document.querySelector('.map-brief')?.textContent ?? '',
+      legend: document.querySelector('.map-legend')?.textContent ?? '',
+      zoomIn: document.querySelector('.map-controls .map-ctl')?.getAttribute('aria-label'),
+    }));
+    if (map.viewDir !== null || map.h1 !== 'מפה' || map.title !== 'מפה' || map.over > 0) throw new Error(`Hebrew map page: ${JSON.stringify(map)}`);
+    if (mapState.canvasDir !== 'ltr' || mapState.crumb !== 'כל הנושאים' || !/מתוך/.test(mapState.brief) || !/נפתרה/.test(mapState.legend) || mapState.zoomIn !== 'להגדיל') {
+      throw new Error(`Hebrew map details: ${JSON.stringify(mapState)}`);
+    }
+    if (shotsDir) await hp.waitForTimeout(500), await hp.screenshot({ path: `${shotsDir}/45-he-map.png` });
+    // Locked topic + problem card + List view in Hebrew.
+    await hp.goto(`${BASE}#/map/sliding-window`);
+    await hp.waitForSelector('.brief-state.is-locked');
+    const locked = await hp.evaluate(() => document.querySelector('.brief-state.is-locked')?.textContent ?? '');
+    if (!/נעול/.test(locked) || !/נפתח אחרי/.test(locked)) throw new Error(`Hebrew locked reason: ${locked}`);
+    if (shotsDir) await hp.waitForTimeout(500), await hp.screenshot({ path: `${shotsDir}/45-he-map-topic.png` });
+    await hp.click('.map-view-toggle button[data-value="list"]');
+    await hp.waitForSelector('.map-list-tier');
+    const listText = await hp.evaluate(() => document.querySelector('.map-list')?.textContent ?? '');
+    if (!/שלב 1/.test(listText) || !/מתוך/.test(listText)) throw new Error(`Hebrew map list: ${listText.slice(0, 120)}`);
+    if (shotsDir) await hp.waitForTimeout(300), await hp.screenshot({ path: `${shotsDir}/45-he-map-list.png` });
+    await hp.click('.map-view-toggle button[data-value="map"]');
+    await hp.waitForSelector('.map-canvas .district');
 
     // Stage 2: these pages are drawn in Hebrew, mirrored, and fit the screen; each has its shot.
     for (const [hash, wait, h1, shotName] of [
@@ -3193,14 +3217,32 @@ try {
     if (exam.dir !== 'ltr' || exam.lang !== 'en' || !/Submit/.test(exam.submit ?? '') || exam.over > 0) throw new Error(`the exam room must stay English: ${JSON.stringify(exam)}`);
     if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/43-he-problem.png` });
 
-    // A phone: the Hebrew Problems page fits; the language button moves out of the narrow header.
+    // A phone: the Hebrew Problems and Map pages fit; the language button moves out of the narrow header.
     await hp.setViewportSize({ width: 390, height: 844 });
     await hp.goto(`${BASE}#/`);
     await hp.waitForSelector('.problem-table tbody tr a.problem-link, .problem-list a.problem-link');
     const phone = await look();
     if (phone.over > 0) throw new Error(`Hebrew Problems page at 390 scrolls sideways by ${phone.over}px`);
     if (shotsDir) await hp.waitForTimeout(400), await hp.screenshot({ path: `${shotsDir}/390-he-problems.png` });
-    await hp.setViewportSize({ width: 1440, height: 900 });
+    await hp.goto(`${BASE}#/map`);
+    await hp.waitForSelector('.map-canvas .district');
+    const phoneMap = await look();
+    if (phoneMap.over > 0) throw new Error(`Hebrew Map page at 390 scrolls sideways by ${phoneMap.over}px`);
+    if (shotsDir) {
+      await hp.waitForTimeout(500);
+      await hp.screenshot({ path: `${shotsDir}/390-he-map.png`, fullPage: true });
+      await hp.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+      await hp.waitForTimeout(200);
+      await hp.screenshot({ path: `${shotsDir}/390-he-map-light.png`, fullPage: true });
+      await hp.setViewportSize({ width: 1440, height: 900 });
+      await hp.waitForTimeout(400);
+      await hp.screenshot({ path: `${shotsDir}/45-he-map-light.png` });
+      await hp.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    } else {
+      await hp.setViewportSize({ width: 1440, height: 900 });
+    }
+    await hp.goto(`${BASE}#/`);
+    await hp.waitForSelector('.problem-table tbody tr a.problem-link');
 
     // The switch: to English, saved, and it holds across a reload.
     await hp.click('#lang-toggle');
