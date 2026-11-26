@@ -3,7 +3,7 @@
  * filters, paginated grid or list of option buttons with roving arrow-key focus, empty state, and
  * an aria-live selected summary. Returns a cleanup that removes its listeners (invariant 7).
  */
-import { h, mount, segmented, stateBlock } from './dom.js';
+import { h, mount, segmented, stateBlock, tp } from './dom.js';
 
 /**
  * Pure filter for picker items (unit-tested in tests/picker.test.js).
@@ -140,10 +140,10 @@ export function createPicker({
   alwaysIncludeIds = [],
   keepSelectedOutsideFilter = false,
   predicate = null,
-  emptyTitle = 'No matching options',
-  emptyBody = 'Try a different search or clear the active filters.',
+  emptyTitle = tp('No matching options', 'אין אפשרויות מתאימות'),
+  emptyBody = tp('Try a different search or clear the active filters.', 'כדאי לנסות חיפוש אחר או לנקות את הסינון.'),
   formatCount = ({ filtered, total }) => `${filtered} of ${total}`,
-  formatSelected = (item) => (item ? ['Selected: ', h('strong', {}, item.label ?? item.id)] : 'Nothing selected'),
+  formatSelected = (item) => (item ? [tp('Selected: ', 'נבחרה: '), h('strong', {}, item.label ?? item.id)] : tp('Nothing selected', 'לא נבחר דבר')),
   renderOption,
   onSelect,
   onClear = null,
@@ -179,8 +179,8 @@ export function createPicker({
   if (search) {
     searchInput = h('input.search.picker-search', {
       type: 'search',
-      placeholder: search.placeholder ?? 'Search',
-      'aria-label': search.ariaLabel ?? `Search ${label.toLowerCase()}`,
+      placeholder: search.placeholder ?? tp('Search', 'חיפוש'),
+      'aria-label': search.ariaLabel ?? tp(`Search ${label.toLowerCase()}`, `חיפוש: ${label}`),
     });
     const onInput = () => {
       query = searchInput.value;
@@ -314,7 +314,7 @@ export function createPicker({
           title: emptyTitle,
           body: emptyBody,
           kind: 'empty',
-          action: { label: 'Clear filters', variant: 'btn-secondary', onClick: clearAll },
+          action: { label: tp('Clear filters', 'לנקות את הסינון'), variant: 'btn-secondary', onClick: clearAll },
         }),
       );
       return;
@@ -350,7 +350,7 @@ export function createPicker({
     const remaining = filteredItems.length - shown.length;
     if (remaining > 0) {
       moreBtn.hidden = false;
-      moreBtn.textContent = `Show more (${remaining} more)`;
+      moreBtn.textContent = tp(`Show more (${remaining} more)`, `להציג עוד (${remaining})`);
     } else {
       moreBtn.hidden = true;
     }

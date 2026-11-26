@@ -2,7 +2,7 @@
  * Header control for accounts: "Sign in" (Google or GitHub) when signed out, the user and
  * "Sign out" when signed in, nothing when accounts are not configured.
  */
-import { h, mount, confirmDialog, toast, tr } from './dom.js';
+import { h, mount, confirmDialog, toast, tr, siteLang } from './dom.js';
 import { newRepoUrl } from '../auth/github-sync.js';
 import { userInitials } from '../auth/account.js';
 
@@ -89,6 +89,7 @@ export function mountAccountMenu(host, account, github = null) {
   const confirmSignOut = async () => {
     close({ returnFocus: true });
     const ok = await confirmDialog({
+      lang: siteLang(),
       title: tr('Sign out?', 'להתנתק?'),
       body: tr('Your progress stays in your account and is removed from this device.', 'ההתקדמות נשמרת בחשבון ונמחקת מהמכשיר הזה.'),
       confirmLabel: tr('Sign out', 'להתנתק'),
@@ -97,6 +98,7 @@ export function mountAccountMenu(host, account, github = null) {
     if (!ok || (await account.signOut())) return;
     if (!account.get().user) return;
     const anyway = await confirmDialog({
+      lang: siteLang(),
       title: tr('Sign out without saving?', 'להתנתק בלי לשמור?'),
       body: tr('Your latest progress could not be saved to your account. Signing out now removes it from this device.', 'לא הצלחנו לשמור בחשבון את ההתקדמות האחרונה. התנתקות עכשיו תמחק אותה מהמכשיר הזה.'),
       confirmLabel: tr('Sign out anyway', 'להתנתק בכל זאת'),
@@ -296,6 +298,7 @@ export function githubSection(github, { closeMenu = () => {} } = {}) {
         onClick: async () => {
           closeMenu();
           const ok = await confirmDialog({
+      lang: siteLang(),
             title: tr('Disconnect GitHub?', 'לנתק את GitHub?'),
             body: tr(`New solutions will stop being saved to ${link.repo}. Nothing in the repository is deleted.`, `פתרונות חדשים לא יישמרו יותר ב-${link.repo}. שום דבר ב-repository לא נמחק.`),
             confirmLabel: tr('Disconnect', 'לנתק'),

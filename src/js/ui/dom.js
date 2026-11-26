@@ -112,7 +112,8 @@ export function toast(message, kind = 'info', ms = 3200, action = null) {
   const t = h(
     `div.toast.toast-${kind}`,
     {},
-    h('span.toast-text', {}, message),
+    // dir=auto: an English toast from the exam room reads left to right on the Hebrew site.
+    h('span.toast-text', { dir: 'auto' }, message),
     action
       ? h('button.btn.btn-ghost.btn-sm.toast-action', { type: 'button', onClick: () => (t.classList.add('leaving'), setTimeout(() => t.remove(), 300), action.onClick()) }, action.label)
       : null,
@@ -128,10 +129,18 @@ let dialogSeq = 0;
 /**
  * Accessible confirm dialog using <dialog>. Native confirm() is avoided because it
  * blocks the event loop (and the test-runner watchdog timers with it).
- * @param {{ title: string, body: string, confirmLabel?: string, danger?: boolean }} opts
+ * @param {{ title: string, body: string, confirmLabel?: string, danger?: boolean, lang?: 'en'|'he' }} opts
+ *   `lang`: the shell's dialogs pass siteLang(); a page's dialog leaves it out
  * @returns {Promise<boolean>}
  */
-export function confirmDialog({ title, body, confirmLabel = tr('Confirm', 'אישור'), danger = false }) {
+export function confirmDialog({ title, body, confirmLabel, danger = false, lang }) {
+  // A dialog speaks the language of what opened it: the page's by default, so one opened in the exam
+  // room (the problem screen, a running session) is English and left to right like the room;
+  // the shell's own dialogs (signing out, GitHub) pass the site language.
+  const exam = Boolean(globalThis.document?.body?.classList.contains('lockdown'));
+  const dialogLang = exam ? 'en' : (lang ?? pageLang());
+  const say = (en, he) => (dialogLang === 'he' ? he : en);
+  confirmLabel ??= say('Confirm', 'אישור');
   return new Promise((resolve) => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const seq = ++dialogSeq;
@@ -148,7 +157,7 @@ export function confirmDialog({ title, body, confirmLabel = tr('Confirm', 'אי�
     };
     const dlg = h(
       'dialog.modal',
-      { 'aria-labelledby': titleId, 'aria-describedby': bodyId },
+      { 'aria-labelledby': titleId, 'aria-describedby': bodyId, dir: dialogLang === 'he' ? 'rtl' : 'ltr', lang: dialogLang },
       h(
         'div.modal-card',
         {},
@@ -157,7 +166,7 @@ export function confirmDialog({ title, body, confirmLabel = tr('Confirm', 'אי�
         h(
           'div.modal-actions',
           {},
-          h('button.btn.btn-ghost', { type: 'button', value: 'cancel', onClick: () => close(false) }, tr('Cancel', 'ביטול')),
+          h('button.btn.btn-ghost', { type: 'button', value: 'cancel', onClick: () => close(false) }, say('Cancel', 'ביטול')),
           h(`button.btn.${danger ? 'btn-danger' : 'btn-primary'}`, { type: 'button', onClick: () => close(true) }, confirmLabel),
         ),
       ),
