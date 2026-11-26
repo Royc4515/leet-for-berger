@@ -19,6 +19,26 @@ import { dueNotifications, NOTIFICATION_KINDS } from './notifications.js';
 export const DEFAULT_PUSH_HOURS = [16, 20];
 /** More than this is no longer a reminder; it is noise the user would turn off. */
 export const MAX_PUSH_HOURS = 6;
+/** Languages a push reminder can be written in (matches the site languages, docs/I18N.md). */
+export const PUSH_LANGS = ['en', 'he'];
+
+/**
+ * True for a supported push language ('en' or 'he').
+ * @param {unknown} lang
+ * @returns {lang is 'en'|'he'}
+ */
+export function isPushLang(lang) {
+  return lang === 'en' || lang === 'he';
+}
+
+/**
+ * Normalizes a stored or incoming language to a supported push language, defaulting to 'en'.
+ * @param {unknown} lang
+ * @returns {'en'|'he'}
+ */
+export function normalizePushLang(lang) {
+  return lang === 'he' ? 'he' : 'en';
+}
 
 /**
  * @typedef {{ hours: number[], off: import('./notifications.js').NotificationKind[] }} PushSettings

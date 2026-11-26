@@ -8,14 +8,14 @@
  *
  * Routes:
  *   GET  /key                  the VAPID public key a browser subscribes with (public by design)
- *   GET  /settings             the caller's send hours, kinds off, time zone and device count
- *   POST /settings { hours?, off?, timeZone? }      what is not sent stays as it was
- *   POST /subscribe { subscription: { endpoint, keys: { p256dh, auth } }, timeZone, hours?, off? }
+ *   GET  /settings             the caller's send hours, kinds off, time zone, language and device count
+ *   POST /settings { hours?, off?, timeZone?, lang? }  what is not sent stays as it was
+ *   POST /subscribe { subscription: { endpoint, keys: { p256dh, auth } }, timeZone, hours?, off?, lang? }
  *   POST /unsubscribe { endpoint }
  *   POST /test { endpoint }    a test push to the caller's own device, right after it is turned on
  *   POST /run                  the hourly cron (header x-push-secret): pushes what is due
  */
-import { pickPush, normalizePushSettings, toWallClock, zonedFacts, isTimeZone } from './lib/push-plan.js';
+import { pickPush, normalizePushSettings, normalizePushLang, isPushLang, toWallClock, zonedFacts, isTimeZone } from './lib/push-plan.js';
 import { notificationCopy } from './lib/notifications.js';
 import { dayKey, restDayOf } from './lib/progress.js';
 import { shiftDay } from './lib/daily.js';
@@ -28,15 +28,26 @@ export const LOG_DAYS = 30;
 export const TEST_EVERY_MS = 30 * 1000;
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const WEEKDAYS_HE = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+/** Owner-approved Hebrew radio-check title for the test push (stage 4). */
+export const TEST_TITLE_HE = 'בדיקת קשר: שומעים חזק וברור';
 
 /**
  * What the test push says (owner's request: something with a bit of fun): a radio check, then
  * what the real reminders will do, with the user's own hours and rest day.
- * @param {{ hours: number[], restDay: number|null }} settings
+ * @param {{ hours: number[], restDay: number|null, lang?: 'en'|'he' }} settings
  * @returns {{ title: string, body: string }}
  */
-export function testCopy({ hours, restDay }) {
+export function testCopy({ hours, restDay, lang = 'en' }) {
   const times = hours.map((h) => `${String(h).padStart(2, '0')}:00`);
+  if (lang === 'he') {
+    const list = times.length < 2 ? times[0] : `${times.slice(0, -1).join(', ')} ו-${times.at(-1)}`;
+    const rest = restDay === null ? '' : restDay === 6 ? ', ואף פעם לא בשבת' : `, ואף פעם לא ביום ${WEEKDAYS_HE[restDay]}`;
+    const when = times.length
+      ? `האמיתיות מגיעות ב-${list}, רק כשיש משהו לעשות${rest}.`
+      : 'עוד לא נבחרו שעות לתזכורות: אפשר לבחור בפרופיל.';
+    return { title: TEST_TITLE_HE, body: `התזכורות מגיעות עכשיו למכשיר הזה. ${when}` };
+  }
   const list = times.length < 2 ? times[0] : `${times.slice(0, -1).join(', ')} and ${times.at(-1)}`;
   const when = times.length
     ? `The real ones come at ${list}, only when something is due${restDay === null ? '' : `, and never on ${WEEKDAYS[restDay]}`}.`
@@ -74,7 +85,7 @@ function sameSecret(a, b) {
 }
 
 /**
- * @typedef {{ user_id: string, hours: number[], off: string[], time_zone: string }} SettingsRow
+ * @typedef {{ user_id: string, hours: number[], off: string[], time_zone: string, lang?: 'en'|'he' }} SettingsRow
  * @typedef {{ id: number, user_id: string, endpoint: string, p256dh: string, auth: string, failures: number }} SubscriptionRow
  * @typedef {{ user_id: string, day: string, hour: number, kind: string, key: string }} LogRow
  */
@@ -114,8 +125,9 @@ export function createHandler({ getUser, now = () => Date.now(), siteUrl, cronSe
     if (!sub) return json(404, { error: 'Turn notifications on for this device first' });
     if (now() - (lastTest.get(user.id) ?? -Infinity) < TEST_EVERY_MS) return json(429, { error: 'A test is on its way. Try again in a moment.' });
     lastTest.set(user.id, now());
-    const { hours } = normalizePushSettings((await db.settings.get(user.id)) ?? {});
-    const copy = testCopy({ hours, restDay: restDayOf(await db.state.of(user.id)) });
+    const row = (await db.settings.get(user.id)) ?? {};
+    const { hours } = normalizePushSettings(row);
+    const copy = testCopy({ hours, restDay: restDayOf(await db.state.of(user.id)), lang: normalizePushLang(row.lang) });
     const result = await send(sub, { ...copy, url: new URL('#/me', siteUrl).href, tag: 'test' });
     if (result === 'gone') await db.subs.drop(sub.id);
     return json(200, { sent: result === 'ok' });
@@ -129,16 +141,17 @@ export function createHandler({ getUser, now = () => Date.now(), siteUrl, cronSe
 
   /** The stored settings, with what `body` changes; the time zone only when it is a real one. */
   async function mergedSettings(userId, body) {
-    const prev = (await db.settings.get(userId)) ?? { hours: undefined, off: [], time_zone: 'UTC' };
+    const prev = (await db.settings.get(userId)) ?? { hours: undefined, off: [], time_zone: 'UTC', lang: 'en' };
     const clean = normalizePushSettings({ hours: body?.hours ?? prev.hours, off: body?.off ?? prev.off });
     const timeZone = body?.timeZone === undefined ? prev.time_zone : body.timeZone;
-    return { user_id: userId, hours: clean.hours, off: clean.off, time_zone: timeZone };
+    const lang = normalizePushLang(body?.lang === undefined ? prev.lang : body.lang);
+    return { user_id: userId, hours: clean.hours, off: clean.off, time_zone: timeZone, lang };
   }
 
   async function view(userId) {
-    const row = (await db.settings.get(userId)) ?? { hours: undefined, off: [], time_zone: 'UTC' };
+    const row = (await db.settings.get(userId)) ?? { hours: undefined, off: [], time_zone: 'UTC', lang: 'en' };
     const { hours, off } = normalizePushSettings(row);
-    return { hours, off, timeZone: row.time_zone, devices: (await db.subs.ofUser(userId)).length };
+    return { hours, off, timeZone: row.time_zone, lang: normalizePushLang(row.lang), devices: (await db.subs.ofUser(userId)).length };
   }
 
   /** The hourly cron: every user whose local hour is a send hour gets at most one push. */
@@ -163,7 +176,7 @@ export function createHandler({ getUser, now = () => Date.now(), siteUrl, cronSe
       const facts = zonedFacts({ activeDays: state.activeDays ?? [], problems: state.problems ?? {}, quizDays: Object.keys(state.quiz?.daily ?? {}) }, tz);
       const n = pickPush({ facts, now: wall, restDay: restDayOf(state), settings, sentToday: log.filter((r) => r.day === day), sentKeys: log.map((r) => r.key) });
       if (!n) continue;
-      const copy = notificationCopy(n, { problemTitle: (id) => titles[id] });
+      const copy = notificationCopy(n, { problemTitle: (id) => titles[id], lang: normalizePushLang(row.lang) });
       if (!copy) continue;
       // Claimed before sending: a second run in the same hour finds it taken and sends nothing.
       if (!(await db.log.claim({ user_id: row.user_id, day, hour, kind: n.kind, key: n.key }))) continue;
@@ -199,6 +212,7 @@ export function createHandler({ getUser, now = () => Date.now(), siteUrl, cronSe
       if (req.method === 'POST' && (route === '/settings' || route === '/subscribe')) {
         const body = await req.json().catch(() => null);
         if (body?.timeZone !== undefined && !isTimeZone(body.timeZone)) return json(400, { error: 'Unknown time zone' });
+        if (body?.lang !== undefined && !isPushLang(body.lang)) return json(400, { error: 'Unknown language' });
         if (route === '/subscribe') {
           if (!isTimeZone(body?.timeZone)) return json(400, { error: 'Unknown time zone' });
           let sub;

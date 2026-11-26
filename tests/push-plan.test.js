@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pickPush, normalizePushSettings, toWallClock, zonedFacts, isTimeZone, DEFAULT_PUSH_HOURS, MAX_PUSH_HOURS } from '../src/js/data/push-plan.js';
+import { pickPush, normalizePushSettings, PUSH_LANGS, isPushLang, normalizePushLang, toWallClock, zonedFacts, isTimeZone, DEFAULT_PUSH_HOURS, MAX_PUSH_HOURS } from '../src/js/data/push-plan.js';
 import { dayKey } from '../src/js/state/progress.js';
 
 // Local wall-clock times, so the plan means the same in every time zone the tests run in.
@@ -114,4 +114,16 @@ test('isTimeZone accepts IANA zones and refuses the rest', () => {
   assert.equal(isTimeZone('Mars/Olympus'), false);
   assert.equal(isTimeZone(''), false);
   assert.equal(isTimeZone(42), false);
+});
+
+test('push languages: en and he are accepted; anything else defaults to en', () => {
+  assert.deepEqual(PUSH_LANGS, ['en', 'he']);
+  assert.equal(isPushLang('en'), true);
+  assert.equal(isPushLang('he'), true);
+  assert.equal(isPushLang('fr'), false);
+  assert.equal(isPushLang(null), false);
+  assert.equal(normalizePushLang('he'), 'he');
+  assert.equal(normalizePushLang('en'), 'en');
+  assert.equal(normalizePushLang('fr'), 'en');
+  assert.equal(normalizePushLang(undefined), 'en');
 });

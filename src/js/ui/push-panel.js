@@ -191,7 +191,11 @@ export function createPushPanel({ account, restDay, offKinds, onServerKinds, cli
     st = { ...st, checked: true, on: local && (!view || view.devices > 0), view };
     savedHours = view?.hours ?? null;
     if (view) dial?.set(view.hours);
-    if (view && view.devices > 0) onServerKinds(view.off);
+    if (view && view.devices > 0) {
+      onServerKinds(view.off);
+      // Keep the server's reminder language in step after the user switches the site language.
+      if (view.lang && client.lang && view.lang !== client.lang()) client.save({}).catch(() => {});
+    }
     update();
   }
 

@@ -85,11 +85,11 @@ const handle = createHandler({
   },
   db: {
     settings: {
-      get: async (userId: string) => must(await admin.from('push_settings').select('user_id, hours, off, time_zone').eq('user_id', userId).maybeSingle()),
+      get: async (userId: string) => must(await admin.from('push_settings').select('user_id, hours, off, time_zone, lang').eq('user_id', userId).maybeSingle()),
       async upsert(row) {
         must(await admin.from('push_settings').upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: 'user_id' }));
       },
-      all: async () => must(await admin.from('push_settings').select('user_id, hours, off, time_zone')) ?? [],
+      all: async () => must(await admin.from('push_settings').select('user_id, hours, off, time_zone, lang')) ?? [],
     },
     subs: {
       async upsert(row) {
