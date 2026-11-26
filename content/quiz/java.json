@@ -748,7 +748,7 @@
    "unsupported-operation"
   ],
   "level": "medium",
-  "q": "days is created with List.of, then add() is called on it. What happens?",
+  "q": "In Java, List.of(...) is a factory method that creates a fixed-content list. What happens when this program runs?",
   "code": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        List<String> days = List.of(\"mon\", \"tue\");\n        days.add(\"wed\");\n        System.out.println(days);\n    }\n}",
   "lang": "java",
   "options": [
@@ -769,12 +769,12 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "days נוצרת עם List.of, ואז קוראים עליה ל-add(). מה יקרה?",
+   "q": "ב-Java, List.of(...) היא factory method שיוצרת list עם תוכן קבוע. מה יקרה כשהתוכנית הזו תרוץ?",
    "options": [
     "[mon, tue, wed]",
     "UnsupportedOperationException ב-runtime",
-    "שגיאת compile: List.of מחזירה טיפוס לקריאה בלבד",
-    "[mon, tue], כי ה-add מתעלמים ממנו"
+    "שגיאת compile: List.of מחזירה טיפוס read-only",
+    "[mon, tue], כי מתעלמים מהקריאה ל-add"
    ],
    "why": "List.of מחזירה list unmodifiable. הטיפוס שלה הוא עדיין List, ולכן add() עוברת compile, אבל הקריאה זורקת exception כשהיא רצה. כשצריך list שאפשר לשנות, מעתיקים אותה ל-new ArrayList<>(...).",
    "wrong": [
@@ -933,7 +933,7 @@
    "compile-error"
   ],
   "level": "medium",
-  "q": "A FileNotFoundException is thrown. The catch for Exception comes before the catch for IOException. What happens?",
+  "q": "In Java, FileNotFoundException extends IOException, which extends Exception, and catch clauses are checked top to bottom. What happens?",
   "code": "import java.io.*;\npublic class Main {\n    public static void main(String[] args) {\n        try {\n            throw new FileNotFoundException(\"x.txt\");\n        } catch (Exception e) {\n            System.out.println(\"general\");\n        } catch (IOException e) {\n            System.out.println(\"io\");\n        }\n    }\n}",
   "lang": "java",
   "options": [
@@ -954,7 +954,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "נזרק FileNotFoundException. ה-catch של Exception מופיע לפני ה-catch של IOException. מה יקרה?",
+   "q": "ב-Java, FileNotFoundException יורש מ-IOException שיורש מ-Exception, ו-catch blocks נבדקים מלמעלה למטה. מה יקרה?",
    "options": [
     "general",
     "io, כי תמיד נבחר ה-catch המתאים הכי ספציפי",
@@ -1072,7 +1072,7 @@
    "mutation"
   ],
   "level": "easy",
-  "q": "A field is declared final List<String> names = new ArrayList<>(). Which statement does the compiler reject?",
+  "q": "In Java, object variables hold references, and the final modifier marks a variable as constant after initialization. Given final List<String> names = new ArrayList<>(), which statement does the compiler reject?",
   "options": [
    "names.add(\"x\")",
    "names.clear()",
@@ -1091,7 +1091,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "field מוגדר כ-final List<String> names = new ArrayList<>(). איזו הוראה ה-compiler ידחה?",
+   "q": "ב-Java, משתני object מחזיקים references, והמילה final מסמנת משתנה כקבוע אחרי האתחול. עבור final List<String> names = new ArrayList<>(), איזו הוראה ה-compiler ידחה?",
    "options": [
     "names.add(\"x\")",
     "names.clear()",

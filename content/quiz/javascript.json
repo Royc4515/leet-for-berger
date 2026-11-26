@@ -294,7 +294,7 @@
    "settimeout"
   ],
   "level": "easy",
-  "q": "A loop schedules three timers using var i. What numbers are printed after 100 ms, in order?",
+  "q": "In JavaScript, var is function-scoped (not per-iteration), and setTimeout(fn, ms) schedules fn to run after the current code finishes. What numbers are printed after 100 ms, in order?",
   "code": "for (var i = 0; i < 3; i++) {\n  setTimeout(() => {\n    console.log(i);\n  }, 100);\n}",
   "lang": "javascript",
   "options": [
@@ -315,7 +315,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "לולאה מתזמנת שלושה טיימרים עם var i. אילו מספרים יודפסו אחרי 100 ms, לפי הסדר?",
+   "q": "ב-JavaScript, ל-var יש function scope (לא לכל איטרציה), ו-setTimeout(fn, ms) מתזמן את fn לרוץ אחרי שהקוד הנוכחי מסתיים. אילו מספרים יודפסו אחרי 100 ms, לפי הסדר?",
    "options": [
     "0 1 2",
     "3 3 3",
@@ -480,7 +480,7 @@
    "call-site"
   ],
   "level": "easy",
-  "q": "speak is defined on dog and then copied onto cat. What does cat.speak() return?",
+  "q": "In JavaScript, functions are first-class values that can be assigned as properties on any object, and this inside a method refers to its receiver. What does cat.speak() return?",
   "code": "const dog = {\n  name: \"Rex\",\n  speak() { return this.name + \" barks\"; },\n};\nconst cat = { name: \"Tom\" };\ncat.speak = dog.speak;\nconsole.log(cat.speak());",
   "lang": "javascript",
   "options": [
@@ -501,7 +501,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "speak מוגדרת על dog ואז מועתקת ל-cat. מה cat.speak() תחזיר?",
+   "q": "ב-JavaScript, functions הן ערכים שאפשר להציב כ-properties על כל object, ו-this בתוך method מתייחס ל-receiver שלה. מה cat.speak() תחזיר?",
    "options": [
     "Rex barks",
     "Tom barks",
@@ -527,7 +527,7 @@
    "callback"
   ],
   "level": "medium",
-  "q": "Inside a class method, map() gets an arrow function that reads this.name. What is printed?",
+  "q": "In JavaScript, list.map(fn) transforms each element with fn, and (m) => ... is an arrow function that captures bindings from its enclosing scope. What is printed?",
   "code": "class Team {\n  constructor() { this.name = \"core\"; }\n  tags(list) {\n    return list.map((m) => m + \"@\" + this.name);\n  }\n}\nconsole.log(new Team().tags([\"a\", \"b\"]));",
   "lang": "javascript",
   "options": [
@@ -548,7 +548,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "בתוך method של class, map() מקבלת arrow function שקוראת את this.name. מה יודפס?",
+   "q": "ב-JavaScript, list.map(fn) ממירה כל איבר בעזרת fn, ו-(m) => ... היא arrow function שלוכדת bindings מה-scope העוטף שלה. מה יודפס?",
    "options": [
     "[ 'a@core', 'b@core' ]",
     "[ 'a@undefined', 'b@undefined' ]",
@@ -575,7 +575,7 @@
    "detached-method"
   ],
   "level": "medium",
-  "q": "c.click is passed to run() three ways: wrapped in an arrow, bound with bind, and passed directly. What does this print?",
+  "q": "In JavaScript, class methods run in strict mode where a bare call callback() has undefined as this, while fn.bind(obj) fixes this to obj. c.click is passed to run() three ways. What does this print?",
   "code": "class Clicker {\n  constructor() { this.count = 0; }\n  click() { this.count++; }\n}\nconst c = new Clicker();\nfunction run(callback) { callback(); }\nrun(() => c.click());\nrun(c.click.bind(c));\ntry { run(c.click); } catch (e) { console.log(e.name); }\nconsole.log(c.count);",
   "lang": "javascript",
   "options": [
@@ -596,7 +596,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "מעבירים את c.click ל-run() בשלוש דרכים: עטופה ב-arrow, קשורה עם bind, וישירות. מה יודפס?",
+   "q": "ב-JavaScript, class methods רצות ב-strict mode שבו בקריאה ישירה callback() ה-this הוא undefined, בעוד fn.bind(obj) מקבע את this ל-obj. מעבירים את c.click ל-run() בשלוש דרכים. מה יודפס?",
    "options": [
     "3",
     "TypeError, ואז 0",
@@ -997,7 +997,7 @@
    "promise"
   ],
   "level": "easy",
-  "q": "getUser() is an async function that returns a user object. main() calls it without await. What does main() print?",
+  "q": "In JavaScript, async functions always return a Promise, and await unwraps a Promise inside an async function. What does main() print?",
   "code": "async function getUser() {\n  return { name: \"Noa\" };\n}\nasync function main() {\n  const user = getUser();\n  console.log(user.name);\n}\nmain();",
   "lang": "javascript",
   "options": [
@@ -1018,12 +1018,12 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "getUser() היא async function שמחזירה object של משתמש. main() קוראת לה בלי await. מה main() תדפיס?",
+   "q": "ב-JavaScript, async functions תמיד מחזירות Promise, ו-await מחלץ את הערך מ-Promise בתוך async function. מה main() תדפיס?",
    "options": [
     "Noa",
     "undefined",
     "Promise { 'Noa' }",
-    "TypeError: אי אפשר לקרוא name של promise"
+    "TypeError: אי אפשר לגשת ל-name של promise"
    ],
    "why": "async function תמיד מחזירה promise. בלי await, user הוא ה-promise הזה ולא ה-object, ול-promise אין property בשם name, ולכן ה-log מדפיס undefined. const user = await getUser() מתקן את זה.",
    "wrong": [
@@ -1044,7 +1044,7 @@
    "allsettled"
   ],
   "level": "medium",
-  "q": "Three jobs run together and the 100 ms one rejects. What is printed, and roughly when?",
+  "q": "In JavaScript, Promise.all() takes an array of concurrent promises and returns one promise, routing fulfillment to .then() and rejection to .catch(). What is printed, and roughly when?",
   "code": "const job = (ms, v, fail) => new Promise((res, rej) =>\n  setTimeout(() => (fail ? rej(new Error(v)) : res(v)), ms));\nPromise.all([job(300, \"a\"), job(100, \"b\", true), job(200, \"c\")])\n  .then((r) => console.log(\"ok\", r))\n  .catch((e) => console.log(\"failed\", e.message));",
   "lang": "javascript",
   "options": [
@@ -1065,7 +1065,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "שלושה jobs רצים יחד, וה-job של 100 ms עושה reject. מה יודפס, ובערך מתי?",
+   "q": "ב-JavaScript, Promise.all() מקבל מערך של promises שרצים במקביל ומחזיר Promise אחד, עם .then() להצלחה ו-.catch() לשגיאה. מה יודפס, ובערך מתי?",
    "options": [
     "failed b אחרי בערך 100 ms",
     "ok [ 'a', 'c' ] אחרי בערך 300 ms",
@@ -1184,7 +1184,7 @@
    "type-coercion"
   ],
   "level": "easy",
-  "q": "A form field gives the string \"5\", and the code compares it with the number 5 in three ways. What is printed?",
+  "q": "In JavaScript, == and === are equality operators (loose and strict), and Number() converts a value to a number. What is printed?",
   "code": "const fromForm = \"5\";\nconst count = 5;\nconsole.log(fromForm == count);\nconsole.log(fromForm === count);\nconsole.log(Number(fromForm) === count);",
   "lang": "javascript",
   "options": [
@@ -1205,7 +1205,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "שדה בטופס מחזיר את המחרוזת \"5\", והקוד משווה אותה למספר 5 בשלוש דרכים. מה יודפס?",
+   "q": "ב-JavaScript, == ו-=== הם אופרטורי שוויון (loose ו-strict), ו-Number() ממיר ערך למספר. מה יודפס?",
    "options": [
     "true, true, true",
     "false, false, true",
@@ -1231,7 +1231,7 @@
    "number-isnan"
   ],
   "level": "easy",
-  "q": "A validator rejects bad numbers with if (Number(input) === NaN). Typing abc never triggers it. Why?",
+  "q": "In JavaScript, numbers follow IEEE 754 and Number(s) converts a string to a number. A validator checks if (Number(input) === NaN), yet the input \"abc\" passes. Why?",
   "options": [
    "NaN is not equal to anything, not even NaN; use Number.isNaN()",
    "=== is too strict for NaN; the looser == NaN would catch it",
@@ -1250,7 +1250,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "validator דוחה מספרים לא תקינים עם if (Number(input) === NaN). הקלדה של abc אף פעם לא מפעילה אותו. למה?",
+   "q": "ב-JavaScript, מספרים עובדים לפי IEEE 754 ו-Number(s) ממיר מחרוזת למספר. validator בודק if (Number(input) === NaN), אבל הקלט \"abc\" עובר. למה?",
    "options": [
     "NaN לא שווה לשום דבר, אפילו לא ל-NaN: צריך Number.isNaN()",
     "=== קפדני מדי בשביל NaN: ה-== המקל יותר יתפוס אותו",
@@ -1321,7 +1321,7 @@
    "rebinding"
   ],
   "level": "easy",
-  "q": "settings is declared with const. The code changes one property, then tries to assign a whole new object. What is printed?",
+  "q": "In JavaScript, object variables hold references, and const declares a constant variable binding. What is printed?",
   "code": "const settings = { theme: \"light\" };\nsettings.theme = \"dark\";\nconsole.log(settings.theme);\ntry {\n  settings = { theme: \"blue\" };\n} catch (e) {\n  console.log(e.name);\n}",
   "lang": "javascript",
   "options": [
@@ -1342,7 +1342,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "settings מוצהר עם const. הקוד משנה property אחד, ואז מנסה להציב object חדש שלם. מה יודפס?",
+   "q": "ב-JavaScript, משתני object מחזיקים references, ו-const מצהיר על binding קבוע למשתנה. מה יודפס?",
    "options": [
     "light, ואז TypeError",
     "רק dark: גם ההשמה השנייה עובדת",

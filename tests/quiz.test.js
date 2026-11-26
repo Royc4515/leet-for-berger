@@ -5,7 +5,9 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { QUIZ_TOPICS, QUIZ_LANGS } from '../src/js/data/quiz-topics.js';
 import { QUIZ_INDEX } from '../src/js/data/quiz-index.js';
-import { readBank, buildOutputs, forLang, readPool, extendPool, poolText, joinDay, POOL } from '../scripts/content/build-quiz.mjs';
+import { readBank, buildOutputs, forLang, readPool, extendPool, poolText, joinDay, POOL, EXITS, readExits, exitsText, nextDay, previousExits, validateExits, parseAllowExitRewrite } from '../scripts/content/build-quiz.mjs';
+import { QUIZ_ROWS } from '../deploy/supabase/functions/daily-quiz/bank.js';
+import { readClasses, validateClasses } from '../scripts/content/quiz-audit.mjs';
 import { shareText } from '../src/js/data/quiz-share.js';
 import { createQuizBoard } from '../src/js/auth/quiz-board.js';
 import {
@@ -13,6 +15,9 @@ import {
   SURVIVAL_CAP,
   DAILY_QUIZ_SIZE,
   DAILY_QUIZ_EPOCH,
+  DAILY_LANG_CAP_SINCE,
+  DAILY_LANG_CAP,
+  DAILY_CAPPED_TOPICS,
   dailyQuizNumber,
   shuffleOptions,
   pickIds,
@@ -69,12 +74,29 @@ test('the shipped bank passes validation in both languages', () => {
 });
 
 test('every topic has its own source file and enough questions for a full round', () => {
-  const files = readdirSync('content/quiz').filter((f) => f.endsWith('.json') && f !== 'daily-pool.json').map((f) => f.replace(/\.json$/, '')).sort();
-  assert.deepEqual(files, QUIZ_TOPICS.map((t) => t.id).sort(), 'one file per topic, plus the daily pool, nothing else');
+  const meta = new Set(['daily-pool.json', 'daily-exits.json', 'classes.json']);
+  const files = readdirSync('content/quiz').filter((f) => f.endsWith('.json') && !meta.has(f)).map((f) => f.replace(/\.json$/, '')).sort();
+  assert.deepEqual(files, QUIZ_TOPICS.map((t) => t.id).sort(), 'one file per topic, plus the daily pool, exits and classes, nothing else');
   for (const t of QUIZ_TOPICS) {
     const n = SOURCE.filter((x) => x.topic === t.id).length;
     assert.ok(n >= 10, `${t.id} has ${n} questions, at least 10 so a single-topic practice is a full round`);
   }
+});
+
+test('every question in the bank has a valid classification in content/quiz/classes.json', () => {
+  assert.deepEqual(validateClasses(SOURCE, readClasses()), []);
+  const sample = [{ id: 'a-1' }, { id: 'a-2', code: 'x = 1' }, { id: 'a-3' }, { id: 'a-4' }];
+  const bad = validateClasses(sample, {
+    'a-2': { class: 'concept', action: 'retire' },
+    'a-1': { class: 'concept-with-code' },
+    'a-3': { class: 'bogus' },
+    'a-4': { class: 'syntax' },
+    'extra-1': { class: 'syntax', action: 'retire' },
+  }).join('\n');
+  for (const want of ['sorted alphabetically', 'has a code block', 'must not have an action', 'has no code block', 'unknown class bogus', 'requires action rescue or retire', 'not found in bank']) {
+    assert.match(bad, new RegExp(want));
+  }
+  assert.match(validateClasses(sample, { 'a-1': { class: 'concept' }, 'a-2': { class: 'concept-with-code' } }).join('\n'), /a-3: missing class entry/);
 });
 
 test('correct answers are spread over positions as authored', () => {
@@ -88,11 +110,16 @@ test('correct answers are spread over positions as authored', () => {
 test('the built index and per-language files match content/quiz', () => {
   assert.deepEqual(QUIZ_INDEX.map((e) => e.id), SOURCE.map((x) => x.id), `index is stale; ${REGEN}`);
   const { since } = extendPool(readPool(), SOURCE, '9999-12-31');
-  for (const [path, text] of buildOutputs(SOURCE, since)) {
+  const { until } = validateExits({ exits: readExits(), bank: SOURCE, since });
+  for (const [path, text] of buildOutputs(SOURCE, since, until)) {
     if (path.endsWith('quiz-index.js')) continue; // the index is compared above, as data
     assert.equal(readFileSync(path, 'utf8'), text, `${path} is stale; ${REGEN}`);
   }
-  assert.deepEqual(QUIZ_INDEX.map((e) => [e.id, e.since]), SOURCE.map((x) => [x.id, since.get(x.id)]), `index days are stale; ${REGEN}`);
+  assert.deepEqual(
+    QUIZ_INDEX.map((e) => [e.id, e.since, e.until]),
+    SOURCE.map((x) => [x.id, since.get(x.id), until.get(x.id) ?? null]),
+    `index days are stale; ${REGEN}`,
+  );
 });
 
 test('the daily pool holds exactly the bank: a new question needs a build, a deleted one is refused', () => {
@@ -102,6 +129,89 @@ test('the daily pool holds exactly the bank: a new question needs a build, a del
   assert.deepEqual(missing, [], 'questions in the daily pool were deleted from the bank; deleting one changes past daily quizzes');
   assert.equal(readFileSync(POOL, 'utf8'), poolText(pool), `the pool file is not in build order; ${REGEN}`);
   for (const day of Object.keys(pool)) assert.ok(day >= DAILY_QUIZ_EPOCH, `${day} is before the first daily quiz`);
+});
+
+test('the daily exits file is valid, canonical and matches the committed bank', () => {
+  const { since } = extendPool(readPool(), SOURCE, '9999-12-31');
+  const exits = readExits();
+  const prev = previousExits(QUIZ_ROWS);
+  // Existing exits already committed in bank.js pass even with a far-future minNewDay.
+  const { until, problems } = validateExits({ exits, bank: SOURCE, since, prevExits: prev, minNewDay: '9999-12-31' });
+  assert.deepEqual(problems, []);
+  assert.deepEqual(until, prev);
+  assert.equal(readFileSync(EXITS, 'utf8'), exitsText(exits), `the exits file is not in build order; ${REGEN}`);
+});
+
+test('validateExits enforces append-only exits and the tomorrow-UTC guard', () => {
+  const bank = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+  const since = new Map([['a', '2026-11-23'], ['b', '2026-11-25'], ['c', '2026-11-23']]);
+  const prevExits = new Map([['a', '2026-11-27']]);
+  // Unchanged past exit plus a new exit on minNewDay is allowed.
+  assert.deepEqual(
+    validateExits({ exits: { '2026-11-27': ['a'], '2026-12-01': ['b'] }, bank, since, prevExits, minNewDay: '2026-12-01' }).problems,
+    [],
+  );
+  // Removing an existing exit is refused.
+  assert.match(
+    validateExits({ exits: {}, bank, since, prevExits, minNewDay: '2026-12-01' }).problems.join('\n'),
+    /a: exited on 2026-11-27 and cannot be removed/,
+  );
+  // Moving an existing exit earlier or later is refused.
+  assert.match(
+    validateExits({ exits: { '2026-11-26': ['a'] }, bank, since, prevExits, minNewDay: '2026-12-01' }).problems.join('\n'),
+    /a: exit day changed from 2026-11-27 to 2026-11-26/,
+  );
+  assert.match(
+    validateExits({ exits: { '2026-12-02': ['a'] }, bank, since, prevExits, minNewDay: '2026-12-01' }).problems.join('\n'),
+    /a: exit day changed from 2026-11-27 to 2026-12-02/,
+  );
+  // Adding a new exit earlier than tomorrow UTC is refused.
+  assert.match(
+    validateExits({ exits: { '2026-11-27': ['a'], '2026-11-30': ['b'] }, bank, since, prevExits, minNewDay: '2026-12-01' }).problems.join('\n'),
+    /b: new exit day 2026-11-30 is earlier than tomorrow UTC \(2026-12-01\)/,
+  );
+  // Unknown id, duplicate id, invalid day and exit before join day are refused.
+  const bad = validateExits({
+    exits: { '2026-11-27': ['a', 'missing'], '2026-11-24': ['b'], '2026-02-30': ['a'] },
+    bank,
+    since,
+    prevExits: new Map(),
+    minNewDay: null,
+  }).problems.join('\n');
+  for (const want of ['missing: not in bank', 'b: exit day 2026-11-24 is before join day 2026-11-25', '2026-02-30: invalid exit day', 'a: listed more than once']) {
+    assert.match(bad, new RegExp(want));
+  }
+  assert.equal(nextDay(Date.parse('2026-11-26T23:59:00Z')), '2026-11-27');
+  assert.equal(nextDay(Date.parse('2026-11-26T00:00:00Z')), '2026-11-27');
+  assert.deepEqual(
+    previousExits([['a', 'oop', 0, 4, '2026-11-23', '2026-11-27'], ['b', 'oop', 1, 4, '2026-11-23', null], ['c', 'oop', 2, 4, '2026-11-23']]),
+    new Map([['a', '2026-11-27']]),
+  );
+  // Explicit one-off override permits moving existing exits to that exact day only, and nothing else.
+  assert.deepEqual(
+    validateExits({ exits: { '2026-11-26': ['a'] }, bank, since, prevExits, minNewDay: '2026-11-27', allowRewriteDay: '2026-11-26' }).problems,
+    [],
+  );
+  // With allowRewriteDay, removing an exit is still refused.
+  assert.match(
+    validateExits({ exits: {}, bank, since, prevExits, minNewDay: '2026-11-27', allowRewriteDay: '2026-11-26' }).problems.join('\n'),
+    /a: exited on 2026-11-27 and cannot be removed/,
+  );
+  // With allowRewriteDay, moving an exit to any day other than allowRewriteDay is still refused.
+  assert.match(
+    validateExits({ exits: { '2026-11-25': ['a'] }, bank, since, prevExits, minNewDay: '2026-11-27', allowRewriteDay: '2026-11-26' }).problems.join('\n'),
+    /a: exit day changed from 2026-11-27 to 2026-11-25/,
+  );
+  // With allowRewriteDay, adding a brand-new exit earlier than tomorrow UTC is still refused.
+  assert.match(
+    validateExits({ exits: { '2026-11-26': ['a', 'b'] }, bank, since, prevExits, minNewDay: '2026-11-27', allowRewriteDay: '2026-11-26' }).problems.join('\n'),
+    /b: new exit day 2026-11-26 is earlier than tomorrow UTC \(2026-11-27\)/,
+  );
+  // CLI flag parser accepts valid YYYY-MM-DD and rejects malformed values.
+  assert.deepEqual(parseAllowExitRewrite([]), { allowRewriteDay: null, error: null });
+  assert.deepEqual(parseAllowExitRewrite(['--allow-exit-rewrite=2026-11-26']), { allowRewriteDay: '2026-11-26', error: null });
+  assert.match(parseAllowExitRewrite(['--allow-exit-rewrite=2026-02-30']).error, /expected YYYY-MM-DD/);
+  assert.match(parseAllowExitRewrite(['--allow-exit-rewrite=']).error, /expected YYYY-MM-DD/);
 });
 
 test('extendPool: a new question joins on the given day; existing days keep theirs', () => {
@@ -296,6 +406,58 @@ test('daily quiz falls back to repeats of a topic when there are fewer topics th
   const ids = dailyQuizIds(BANK, '2026-11-23');
   assert.equal(ids.length, DAILY_QUIZ_SIZE);
   assert.equal(new Set(ids).size, DAILY_QUIZ_SIZE);
+});
+
+test('exited questions leave the daily quiz on their exit day and stay in practice, sprint and survival', () => {
+  const index = [
+    { id: 't1-1', topic: 't1', since: '2026-11-23', until: '2026-11-26' },
+    { id: 't2-1', topic: 't2', since: '2026-11-23', until: null },
+    { id: 't3-1', topic: 't3', since: '2026-11-23', until: null },
+    { id: 't4-1', topic: 't4', since: '2026-11-23', until: null },
+    { id: 't5-1', topic: 't5', since: '2026-11-23', until: null },
+    { id: 't6-1', topic: 't6', since: '2026-11-23', until: null },
+  ];
+  // Before exit day, t1-1 is still eligible; on and after exit day, it is excluded.
+  let seenBefore = false;
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(Date.parse('2026-11-23T00:00:00Z') + i * 86400000).toISOString().slice(0, 10);
+    if (dailyQuizIds(index, d).includes('t1-1')) seenBefore = true;
+  }
+  assert.ok(seenBefore, 'exited question is eligible before its exit day');
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(Date.parse('2026-11-26T00:00:00Z') + i * 86400000).toISOString().slice(0, 10);
+    assert.ok(!dailyQuizIds(index, d).includes('t1-1'), `exited question picked on ${d}`);
+  }
+  // Exited questions remain playable in practice, sprint and survival.
+  assert.ok(pickIds({ index, topics: ['t1'], seed: 1 }).includes('t1-1'));
+  const exitedShipped = QUIZ_INDEX.filter((e) => e.until).map((e) => e.id);
+  assert.ok(exitedShipped.length > 0);
+  const allFreePlay = new Set(pickIds({ index: QUIZ_INDEX, seed: 1 }));
+  for (const id of exitedShipped) assert.ok(allFreePlay.has(id), `${id} missing from free play`);
+});
+
+test('from DAILY_LANG_CAP_SINCE on, 365 days pick at most one capped language topic, 5 distinct topics and no exited id', () => {
+  assert.equal(DAILY_LANG_CAP_SINCE, '2026-11-26');
+  assert.ok(DAILY_CAPPED_TOPICS instanceof Set);
+  assert.deepEqual([...DAILY_CAPPED_TOPICS].sort(), ['c-cpp', 'java', 'javascript', 'python']);
+  assert.ok(!DAILY_CAPPED_TOPICS.has('bits'), 'bits stays exempt from the programming-language cap');
+  const byId = new Map(QUIZ_INDEX.map((e) => [e.id, e]));
+  let bitsWithCapped = 0;
+  for (let i = 0; i < 365; i++) {
+    const day = new Date(Date.parse(`${DAILY_LANG_CAP_SINCE}T00:00:00Z`) + i * 86400000).toISOString().slice(0, 10);
+    const ids = dailyQuizIds(QUIZ_INDEX, day);
+    assert.equal(ids.length, DAILY_QUIZ_SIZE, day);
+    const topics = ids.map((id) => byId.get(id).topic);
+    assert.equal(new Set(topics).size, DAILY_QUIZ_SIZE, `${day}: fill-in loop should never be needed`);
+    const cappedCount = topics.filter((t) => DAILY_CAPPED_TOPICS.has(t)).length;
+    assert.ok(cappedCount <= DAILY_LANG_CAP, `${day}: picked ${cappedCount} capped topics (${topics})`);
+    if (cappedCount === 1 && topics.includes('bits')) bitsWithCapped++;
+    for (const id of ids) {
+      const entry = byId.get(id);
+      assert.ok(!entry.until || day < entry.until, `${day}: picked exited question ${id} (until ${entry.until})`);
+    }
+  }
+  assert.ok(bitsWithCapped > 0, 'bits can appear alongside a capped programming-language topic');
 });
 
 test('daily quiz numbers start at 1', () => {

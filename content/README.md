@@ -212,6 +212,9 @@ graph TD
 
 Multiple-choice questions for the Quiz mode, one file per topic (`quiz/<topic>.json`, topic ids and order in `src/js/data/quiz-topics.js`). Each question has its English fields (`q`, `code`, `options`, `answer`, `why`, `wrong` with one line per wrong option and `null` at the answer, `subtopic`, `level`, optional `ref`) and a `he` block with the Hebrew `q`, `options`, `why` and `wrong` (technical terms stay in English; the Hebrew style guide is `quiz/STYLE-HE.md`).
 
-Rules: student and first-job level, understanding rather than recall, our own wording (ideas may come from anywhere, text only from openly licensed sources with attribution), every code snippet run before it ships, every question solved blind by a separate reviewer in both languages.
+Rules: student and first-job level, understanding rather than recall, our own wording (ideas may come from anywhere, text only from openly licensed sources with attribution), every code snippet run before it ships, every question solved blind by a separate reviewer in both languages. Language-specific APIs or keywords are allowed when the stem includes a short neutral explainer of what the feature does (without naming the bug or restating an option).
 
-After any edit run `node scripts/content/build-quiz.mjs`: it validates the bank (`validateBank` in `src/js/modes/quiz.js`) and rebuilds `src/js/data/quiz/<lang>/<topic>.json` and `src/js/data/quiz-index.js`. `tests/quiz.test.js` fails when they are stale.
+After any edit run `node scripts/content/build-quiz.mjs`: it validates the bank (`validateBank` in `src/js/modes/quiz.js`) and rebuilds `src/js/data/quiz/<lang>/<topic>.json`, `src/js/data/quiz-index.js` and `deploy/supabase/functions/daily-quiz/bank.js`. `tests/quiz.test.js` fails when they are stale.
+
+To retire a question from the daily quiz (keeping it in practice, sprint and survival), add its id to `content/quiz/daily-exits.json` under a future UTC date (tomorrow UTC or later) and run `node scripts/content/build-quiz.mjs`. Never delete a pooled question or remove or move an existing entry in `daily-exits.json`; `build-quiz.mjs` checks the file against the committed `bank.js` and refuses any change that would alter past days.
+

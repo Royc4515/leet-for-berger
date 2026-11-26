@@ -9,7 +9,7 @@
    "initialization-order"
   ],
   "level": "hard",
-  "q": "Base's constructor calls show(), and Derived overrides show() to print its own field. What does new Derived() print?",
+  "q": "In Java, instance methods always use dynamic dispatch, and a superclass constructor runs before the subclass field initializers and constructor body. What does new Derived() print?",
   "code": "public class Main {\n    public static void main(String[] args) { new Derived(); }\n}\nclass Base {\n    Base() { show(); }\n    void show() { System.out.println(\"Base\"); }\n}\nclass Derived extends Base {\n    String name = \"derived\";\n    void show() { System.out.println(\"Derived \" + name); }\n}",
   "lang": "java",
   "options": [
@@ -30,7 +30,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "ה-constructor של Base קורא ל-show(), ו-Derived עושה override ל-show() כדי להדפיס field משלו. מה new Derived() ידפיס?",
+   "q": "ב-Java, instance methods תמיד משתמשות ב-dynamic dispatch, וה-constructor של ה-superclass רץ לפני אתחול ה-fields וגוף ה-constructor של ה-subclass. מה new Derived() ידפיס?",
    "options": [
     "Base",
     "Derived derived",
@@ -57,7 +57,7 @@
    "python"
   ],
   "level": "medium",
-  "q": "In Python, Dog defines its own __init__ and does not call super().__init__(). What does this print?",
+  "q": "In Python, __init__ is a regular overridable method, and instance attributes are created when assigned to self. What does this print?",
   "code": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\nclass Dog(Animal):\n    def __init__(self, name, breed):\n        self.breed = breed\n\nd = Dog(\"Rex\", \"lab\")\nprint(d.breed, d.name)",
   "lang": "python",
   "options": [
@@ -78,7 +78,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "ב-Python, ל-Dog יש __init__ משלו, והוא לא קורא ל-super().__init__(). מה יודפס?",
+   "q": "ב-Python, __init__ היא method רגילה שאפשר לעשות לה override, ו-attributes של instance נוצרים בהשמה ל-self. מה יודפס?",
    "options": [
     "lab Rex",
     "lab None",
@@ -105,7 +105,7 @@
    "cpp"
   ],
   "level": "medium",
-  "q": "In C++, the same Dog is stored in a vector of Animal values and in a vector of Animal pointers. sound() is virtual. What does this print?",
+  "q": "In C++, std::vector<T> stores T objects directly by value (each element has type T), while Animal* holds an address, and virtual enables dynamic dispatch. What does this print?",
   "code": "#include <iostream>\n#include <string>\n#include <vector>\nstruct Animal { virtual std::string sound() const { return \"...\"; } };\nstruct Dog : Animal { std::string sound() const override { return \"woof\"; } };\nint main() {\n    Dog d;\n    std::vector<Animal> byValue{d};\n    std::vector<Animal*> byPointer{&d};\n    std::cout << byValue[0].sound() << \" \" << byPointer[0]->sound() << \"\\n\";\n}",
   "lang": "cpp",
   "options": [
@@ -125,7 +125,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "ב-C++, אותו Dog נשמר גם ב-vector של ערכי Animal וגם ב-vector של pointers ל-Animal. sound() היא virtual. מה יודפס?",
+   "q": "ב-C++, std::vector<T> שומר objects מסוג T ישירות by value (כל איבר הוא מסוג T), Animal* מחזיק כתובת, ו-virtual מאפשר dynamic dispatch. מה יודפס?",
    "options": [
     "woof woof",
     "... woof",
@@ -743,7 +743,7 @@
    "python"
   ],
   "level": "medium",
-  "q": "In Python, balance is a property whose setter rejects negative values, and __init__ assigns self.balance. What happens on the last line?",
+  "q": "In Python, @property and @name.setter bind getter and setter methods to attribute access (obj.name and obj.name = val). Here __init__ assigns self.balance. What happens on the last line?",
   "code": "class Account:\n    def __init__(self, balance):\n        self.balance = balance\n    @property\n    def balance(self):\n        return self._balance\n    @balance.setter\n    def balance(self, value):\n        if value < 0:\n            raise ValueError(\"negative balance\")\n        self._balance = value\nacct = Account(-5)",
   "lang": "python",
   "options": [
@@ -764,7 +764,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "ב-Python, balance הוא property שה-setter שלו דוחה ערכים שליליים, ו-__init__ מציב ערך ב-self.balance. מה יקרה בשורה האחרונה?",
+   "q": "ב-Python, @property ו-@name.setter קושרים getter ו-setter לגישה ל-attribute (obj.name ו-obj.name = val). כאן __init__ מציב ב-self.balance. מה יקרה בשורה האחרונה?",
    "options": [
     "Account עם balance של -5, כי __init__ קובע את ה-attribute ישירות",
     "ValueError, כי גם ההשמה ב-__init__ עוברת דרך ה-setter",
@@ -834,7 +834,7 @@
    "class-vs-object"
   ],
   "level": "easy",
-  "q": "Counter has a static block that prints S and a constructor that prints C, and main creates two Counters. What does this print?",
+  "q": "In Java, a static { ... } block belongs to the class itself for class initialization, while a constructor initializes each new object. main creates two Counters. What does this print?",
   "code": "public class Main {\n    public static void main(String[] args) {\n        new Counter();\n        new Counter();\n    }\n}\nclass Counter {\n    static { System.out.print(\"S \"); }\n    Counter() { System.out.print(\"C \"); }\n}",
   "lang": "java",
   "options": [
@@ -855,7 +855,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "ל-Counter יש static block שמדפיס S ו-constructor שמדפיס C, ו-main יוצרת שני Counters. מה יודפס?",
+   "q": "ב-Java, static { ... } הוא block ששייך ל-class עצמו לאתחול ה-class, בעוד constructor מאתחל כל object חדש. main יוצרת שני Counters. מה יודפס?",
    "options": [
     "S C S C",
     "S C C",
@@ -926,7 +926,7 @@
    "constructor"
   ],
   "level": "medium",
-  "q": "The one-argument Pizza constructor calls this(size, 4) and then prints A. The two-argument one sets both fields and prints B. What does this print?",
+  "q": "In Java, this(...) inside a constructor invokes another overloaded constructor of the same class. What does this print?",
   "code": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(new Pizza(\"small\").describe());\n    }\n}\nclass Pizza { String size; int slices;\n    Pizza(String size) { this(size, 4); System.out.print(\"A \"); }\n    Pizza(String size, int slices) {\n        this.size = size; this.slices = slices; System.out.print(\"B \");\n    }\n    String describe() { return size + \"/\" + slices; }\n}",
   "lang": "java",
   "options": [
@@ -947,7 +947,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "ה-constructor של Pizza עם ארגומנט אחד קורא ל-this(size, 4) ואז מדפיס A. ה-constructor עם שני ארגומנטים קובע את שני ה-fields ומדפיס B. מה יודפס?",
+   "q": "ב-Java, this(...) בתוך constructor מפעיל constructor אחר (overloaded) של אותו class. מה יודפס?",
    "options": [
     "B A small/4",
     "A B small/4",

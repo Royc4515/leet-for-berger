@@ -17,7 +17,7 @@ import { hashString } from '../data/recommend.js';
 import { daysBetween } from '../data/daily.js';
 
 /**
- * @typedef {{ id: string, topic: string, since?: string }} IndexEntry  `since`: first day in the daily quiz
+ * @typedef {{ id: string, topic: string, since?: string, until?: string|null }} IndexEntry  `since`: first day in daily; `until`: first day out of daily
  * @typedef {{ id: string, topic: string, subtopic?: string, level: string, q: string, code?: string, lang?: string, options: string[], answer: number, why: string, wrong?: (string|null)[], ref?: string }} QuizQuestion
  * @typedef {{ id: string, title: { en: string, he: string } }} QuizTopic
  * @typedef {{ id: string, label: string, note: string, count: number, lives: number|null, seconds: number|null }} QuizMode
@@ -44,6 +44,19 @@ export const DAILY_QUIZ_SIZE = 5;
 
 /** Days before this one have no daily quiz (the feature did not exist yet). */
 export const DAILY_QUIZ_EPOCH = '2026-11-23';
+
+/** First day the daily quiz caps programming-language topics (java, python, javascript, c-cpp). */
+export const DAILY_LANG_CAP_SINCE = '2026-11-26';
+
+/** Maximum number of capped programming-language topics per daily quiz from DAILY_LANG_CAP_SINCE on. */
+export const DAILY_LANG_CAP = 1;
+
+/**
+ * Topics subject to DAILY_LANG_CAP: the four programming languages. `bits` stays in the
+ * language group in the UI, but tests universal binary/number concepts and is exempt.
+ * @type {Set<string>}
+ */
+export const DAILY_CAPPED_TOPICS = new Set(['java', 'python', 'javascript', 'c-cpp']);
 
 /**
  * The daily quiz's public number: 1 on its first day.
@@ -165,8 +178,10 @@ export function startDailyQuiz({ index, questions, day, now }) {
  * Question ids of the daily quiz for `day`: one per topic from a seeded shuffle of the topics,
  * so five questions cover five subjects. Depends only on the index and the day.
  *
- * Only questions whose `since` day has come take part: a question added to the bank joins from a
- * later day (content/quiz/daily-pool.json), so adding one never changes a day already picked.
+ * Only questions whose `since` day has come and whose `until` exit day has not come take part
+ * (content/quiz/daily-pool.json and content/quiz/daily-exits.json), so adding or retiring a
+ * question never changes a day already picked. From DAILY_LANG_CAP_SINCE on, at most
+ * DAILY_LANG_CAP topics from DAILY_CAPPED_TOPICS can be picked in one day.
  * @param {IndexEntry[]} index
  * @param {string} day "YYYY-MM-DD"
  * @returns {string[]}
@@ -174,14 +189,20 @@ export function startDailyQuiz({ index, questions, day, now }) {
 export function dailyQuizIds(index, day) {
   const rand = mulberry32(hashString(`quiz:${day}`));
   // Sorted first: the pick must not depend on the order questions were written in the file.
-  // don't touch / the pool filter and the sort must match dailyIds in deploy/supabase/functions/daily-quiz/core.js
-  const sorted = index.filter((q) => !q.since || q.since <= day).sort((a, b) => (a.id < b.id ? -1 : 1));
+  // don't touch / the pool filter, sort and language cap must match dailyIds in deploy/supabase/functions/daily-quiz/core.js
+  const sorted = index
+    .filter((q) => (!q.since || q.since <= day) && (!q.until || day < q.until))
+    .sort((a, b) => (a.id < b.id ? -1 : 1));
   const topics = shuffled([...new Set(sorted.map((q) => q.topic))].sort(), rand);
+  const capLang = day >= DAILY_LANG_CAP_SINCE;
+  let capped = 0;
   const picks = [];
   for (const t of topics) {
     if (picks.length === DAILY_QUIZ_SIZE) break;
+    if (capLang && DAILY_CAPPED_TOPICS.has(t) && capped >= DAILY_LANG_CAP) continue;
     const inTopic = sorted.filter((q) => q.topic === t);
     picks.push(inTopic[Math.floor(rand() * inTopic.length)].id);
+    if (DAILY_CAPPED_TOPICS.has(t)) capped++;
   }
   // Fewer topics than slots: fill from the remaining questions.
   const rest = shuffled(sorted.filter((q) => !picks.includes(q.id)), rand);

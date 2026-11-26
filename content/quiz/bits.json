@@ -283,7 +283,7 @@
    "java-overflow"
   ],
   "level": "hard",
-  "q": "What does this Java program print?",
+  "q": "In Java, int is a 32-bit two's complement integer whose arithmetic wraps around, and Math.abs(int) returns an int. What does this print?",
   "code": "public class Main {\n    public static void main(String[] args) {\n        int min = Integer.MIN_VALUE;\n        System.out.println(min);\n        System.out.println(Math.abs(min));\n    }\n}",
   "lang": "java",
   "options": [
@@ -304,7 +304,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "מה תוכנית ה-Java הזו תדפיס?",
+   "q": "ב-Java, int הוא מספר שלם של 32 bits בשיטת המשלים לשניים שגולש ב-wraparound, ו-Math.abs(int) מחזירה int. מה יודפס?",
    "options": [
     "-2147483648, ואז 2147483648",
     "-2147483648, ואז 2147483647",
@@ -423,7 +423,7 @@
    "c-pitfall"
   ],
   "level": "medium",
-  "q": "This C code is meant to check whether x is even. gcc -Wall compiles it with a warning. What does it print?",
+  "q": "In C, == yields an int (0 or 1), 0 is false in if, and == has higher precedence than bitwise &. What does this print?",
   "code": "#include <stdio.h>\n\nint main(void) {\n    int x = 6;\n    if (x & 1 == 0)\n        printf(\"even\\n\");\n    else\n        printf(\"odd\\n\");\n    return 0;\n}",
   "lang": "c",
   "options": [
@@ -443,7 +443,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "קוד ה-C הזה אמור לבדוק אם x זוגי. עם gcc -Wall הוא עובר compile עם warning. מה יודפס?",
+   "q": "ב-C, == מחזיר int (0 או 1), 0 הוא false ב-if, ול-== יש קדימות גבוהה יותר מ-bitwise &. מה יודפס?",
    "options": [
     "even",
     "שגיאת compile, כמו ב-Java: int & boolean לא מותר",
@@ -658,7 +658,7 @@
    "java"
   ],
   "level": "medium",
-  "q": "Java has two right shift operators. -16 is 0xFFFFFFF0 as a 32-bit int. What does this program print?",
+  "q": "In Java, >> is an arithmetic right shift (fills with the sign bit) and >>> is a logical right shift (fills with zeros). -16 is 0xFFFFFFF0 as a 32-bit int. What does this print?",
   "code": "public class Main {\n    public static void main(String[] args) {\n        int x = -16;\n        System.out.println((x >> 2) + \" \" + (x >>> 28));\n    }\n}",
   "lang": "java",
   "options": [
@@ -679,7 +679,7 @@
   "source": "original",
   "status": "reviewed",
   "he": {
-   "q": "ל-Java יש שני אופרטורים של shift ימינה. -16 הוא 0xFFFFFFF0 כ-int של 32 bits. מה התוכנית תדפיס?",
+   "q": "ב-Java, >> הוא arithmetic right shift (ממלא ב-sign bit) ו->>> הוא logical right shift (ממלא באפסים). -16 הוא 0xFFFFFFF0 כ-int של 32 bits. מה התוכנית תדפיס?",
    "options": [
     "-4 -1",
     "1073741820 15",
