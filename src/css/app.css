@@ -992,7 +992,7 @@ body.lockdown .app-header {
   content: '';
   width: 7px;
   height: 7px;
-  border-inline-start: 1.5px solid currentColor;
+  border-left: 1.5px solid currentColor;
   border-bottom: 1.5px solid currentColor;
   transform: rotate(45deg);
 }
@@ -1446,7 +1446,7 @@ body.lockdown .app-header {
   width: 6px;
   height: 6px;
   margin-top: -3px;
-  border-inline-end: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
   border-bottom: 1.5px solid currentColor;
   transform: rotate(45deg);
   transition: transform var(--t-fast) var(--ease);
@@ -5006,7 +5006,7 @@ body.resizing-y * {
   content: '';
   width: 6px;
   height: 6px;
-  border-inline-end: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
   border-bottom: 1.5px solid currentColor;
   transform: rotate(-45deg);
   transition: transform var(--t-fast) var(--ease);
@@ -6182,7 +6182,7 @@ body.resizing-y * {
 .path-chevron {
   width: 7px;
   height: 7px;
-  border-inline-end: 1.5px solid var(--muted);
+  border-right: 1.5px solid var(--muted);
   border-bottom: 1.5px solid var(--muted);
   transform: rotate(-45deg);
   transition: transform var(--t-fast) var(--ease);
@@ -7069,7 +7069,7 @@ body.resizing-y * {
   inset-inline-end: var(--s-3);
   width: 10px;
   height: 6px;
-  border-inline-start: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
   border-bottom: 2px solid var(--accent);
   transform: rotate(-45deg);
 }
@@ -9783,6 +9783,17 @@ body.resizing-y * {
   unicode-bidi: isolate;
 }
 
+/* Chevrons drawn with two borders and a rotation keep physical borders (a mirrored border with the
+   same rotation draws a different arrow). The ones that point along the line turn the other way. */
+[dir='rtl'] .back-link::before {
+  transform: rotate(-135deg);
+}
+
+[dir='rtl'] .extra-card:not([open]) > summary::before,
+[dir='rtl'] .path-topic-toggle:not([aria-expanded='true']) .path-chevron {
+  transform: rotate(135deg);
+}
+
 [dir='rtl'] .search {
   background-position: right 13px center;
 }
@@ -9793,4 +9804,20 @@ body.resizing-y * {
 
 [dir='rtl'] .palette-input {
   background-position: right 18px center;
+}
+
+/* Hebrew type. JetBrains Mono has no Hebrew letters: in a Hebrew page the mono stack falls back to
+   the interface's sans for them, so a Hebrew label set in mono reads cleanly while its digits and
+   Latin stay mono. The exam room (lang="en") keeps the plain stack. Hebrew is never letter-spaced:
+   the eyebrow and label tracking that suits Latin capitals pulls Hebrew words apart. */
+[lang='he'] {
+  --mono: 'JetBrains Mono', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+[lang='en'] {
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+[lang='he'] :lang(he) {
+  letter-spacing: 0;
 }

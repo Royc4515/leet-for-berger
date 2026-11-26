@@ -5,7 +5,7 @@
  * either one (Profile, the workspace toolbar, the command palette). Both are device preferences,
  * not account data (state/user-data.js).
  */
-import { h, segmented, tr } from './dom.js';
+import { h, segmented, tr, tp } from './dom.js';
 import { glide } from './motion.js';
 import { CODE_THEME_OPTIONS, MATCH_SITE, codeThemeFor, parseCodeThemePref } from '../data/themes.js';
 
@@ -81,7 +81,7 @@ export function onThemeChange(cb, signal) {
  * @returns {HTMLElement}
  */
 export function siteThemeControl(signal) {
-  const group = segmented({ label: tr('Site theme', 'ערכת הנושא של האתר'), options: site.options.map((o) => ({ ...o, label: siteLabel(o) })), value: site.get(), onChange: setSiteThemePref });
+  const group = segmented({ label: tp('Site theme', 'ערכת הנושא של האתר'), options: site.options.map((o) => ({ ...o, label: tp(o.label, SITE_LABEL_HE[o.value] ?? o.label) })), value: site.get(), onChange: setSiteThemePref });
   onThemeChange(() => {
     for (const b of group.querySelectorAll('[data-value]')) b.setAttribute('aria-pressed', String(b.dataset.value === site.get()));
     glide(group, '[aria-pressed="true"]');
@@ -97,8 +97,9 @@ export function siteThemeControl(signal) {
 export function codeThemeSelect(signal) {
   const select = h(
     'select.select.code-theme-select',
-    { 'aria-label': tr('Code theme', 'ערכת הנושא של הקוד'), title: tr('Code theme', 'ערכת הנושא של הקוד') },
-    CODE_THEME_OPTIONS.map((o) => h('option', { value: o.value }, codeLabel(o))),
+    { 'aria-label': tp('Code theme', 'ערכת הנושא של הקוד'), title: tp('Code theme', 'ערכת הנושא של הקוד') },
+    // Inside a page (the profile, the exam room's toolbar): the page's language, English in the exam room.
+    CODE_THEME_OPTIONS.map((o) => h('option', { value: o.value }, o.value === MATCH_SITE ? tp(o.label, 'כמו האתר') : o.label)),
   );
   select.value = getCodeThemePref();
   select.addEventListener('change', () => setCodeThemePref(select.value));
