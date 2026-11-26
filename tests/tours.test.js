@@ -2,7 +2,7 @@
 // (data/tour-layout.js). The overlay itself (ui/tour.js) is covered by the e2e smoke test.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TOURS, MODE_TOURS, TOUR_LIMITS, WELCOME, validateTour, tourForRoute } from '../src/js/data/tours.js';
+import { TOURS, MODE_TOURS, TOUR_LIMITS, WELCOME, validateTour, tourCopy, tourForRoute } from '../src/js/data/tours.js';
 import { TOURS_KEY, parseSeen, hasSeen, markSeen, loadSeen, saveSeen } from '../src/js/state/tours.js';
 import { placeCard, spotRect, sheetScroll, SHEET_WIDTH, TOUR_MARGIN, TOUR_GAP } from '../src/js/data/tour-layout.js';
 import { mulberry32 } from '../src/js/engine/rng.js';
@@ -186,3 +186,76 @@ test('spotlight pads the target and stays inside the viewport', () => {
   const huge = spotRect({ top: -100, left: -10, width: 3000, height: 2000 }, { width: VW, height: VH }, 6);
   assert.deepEqual(huge, { top: 0, left: 0, width: VW, height: VH });
 });
+
+test('Hebrew tours: every browse and setup tour has Hebrew copy; exam-room tours stay English', () => {
+  const examRoom = new Set(['workspace', 'mentor']);
+  for (const tour of Object.values(TOURS)) {
+    if (examRoom.has(tour.id)) {
+      assert.equal(tour.examRoom, true, `${tour.id} is an exam-room tour`);
+      const resolved = tourCopy(tour.id, 'he');
+      assert.equal(resolved.lang, 'en', `${tour.id} stays English even when Hebrew is asked`);
+      assert.equal(resolved.label, tour.label);
+      assert.deepEqual(resolved.steps.map((s) => s.title), tour.steps.map((s) => s.title));
+    } else {
+      assert.ok(tour.labelHe, `${tour.id} has labelHe`);
+      for (const s of tour.steps) assert.ok(s.he?.title && s.he?.body, `${tour.id}: "${s.title}" has Hebrew copy`);
+      const he = tourCopy(tour.id, 'he');
+      assert.equal(he.lang, 'he');
+      assert.equal(he.label, tour.labelHe);
+      assert.deepEqual(he.steps.map((s) => s.title), tour.steps.map((s) => s.he.title));
+      assert.deepEqual(he.steps.map((s) => s.body), tour.steps.map((s) => s.he.body));
+    }
+    const en = tourCopy(tour.id);
+    assert.equal(en.lang, 'en');
+    assert.equal(en.label, tour.label);
+    assert.deepEqual(en.steps.map((s) => s.title), tour.steps.map((s) => s.title));
+    assert.deepEqual(en.steps.map((s) => s.body), tour.steps.map((s) => s.body));
+  }
+  assert.equal(tourCopy('unknown', 'he'), null);
+});
+
+test('validation catches Hebrew length, voice and missing-copy violations', () => {
+  const badHe = {
+    id: 'x',
+    label: 'X tour',
+    labelHe: 'Not Hebrew',
+    steps: [
+      { title: 'One', body: 'Fine.', he: { title: 'שלום!', body: 'קו \u2014 ארוך.' } },
+      { title: 'Two', body: 'Fine.', he: { title: 'א'.repeat(TOUR_LIMITS.title + 1), body: 'ב'.repeat(TOUR_LIMITS.body + 1) } },
+      { title: 'Three', body: 'Fine.' },
+    ],
+  };
+  const problems = validateTour(badHe).join('\n');
+  assert.match(problems, /labelHe must contain Hebrew/);
+  assert.match(problems, /step 1 \(he\): no exclamation marks/);
+  assert.match(problems, /step 1 \(he\): no em dash/);
+  assert.match(problems, /step 2 \(he\): title longer/);
+  assert.match(problems, /step 2 \(he\): body longer/);
+  assert.match(problems, /step 3 \(he\): title and body are required/);
+});
+
+test('placement in RTL mirrors beside-target tie-breaking and stays on screen', () => {
+  const vp = { width: VW, height: VH };
+  // A tall centred target with equal room on both sides: right in LTR, left in RTL.
+  const centredTall = { top: 100, left: 520, width: 400, height: 740 };
+  assert.equal(placeCard({ target: centredTall, card, viewport: vp, dir: 'ltr' }).side, 'right');
+  const rtlTie = placeCard({ target: centredTall, card, viewport: vp, dir: 'rtl' });
+  assert.equal(rtlTie.side, 'left');
+  assert.ok(rtlTie.left + card.width <= centredTall.left);
+
+  // Asymmetric tall targets still use whichever side has more room.
+  const panelOnLeft = { top: 120, left: 20, width: 340, height: 740 };
+  assert.equal(placeCard({ target: panelOnLeft, card, viewport: vp, dir: 'rtl' }).side, 'right');
+  const canvasOnRight = { top: 120, left: 420, width: 990, height: 740 };
+  assert.equal(placeCard({ target: canvasOnRight, card, viewport: vp, dir: 'rtl' }).side, 'left');
+
+  const rnd = mulberry32(19);
+  for (let i = 0; i < 400; i++) {
+    const vw = 700 + Math.floor(rnd() * 1300);
+    const vh = 500 + Math.floor(rnd() * 600);
+    const t = { top: rnd() * vh, left: rnd() * vw, width: 10 + rnd() * vw * 0.8, height: 10 + rnd() * vh * 0.8 };
+    const p = placeCard({ target: t, card, viewport: { width: vw, height: vh }, dir: 'rtl' });
+    assert.ok(inside(p, card, vw, vh), `RTL target ${JSON.stringify(t)} in ${vw}x${vh}: ${JSON.stringify(p)}`);
+  }
+});
+

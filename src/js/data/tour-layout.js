@@ -19,12 +19,13 @@ const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), Math.max(lo, hi));
 
 /**
  * Places the card for one step. Desktop: below the target, else above, else beside it (the side
- * with more room), always clamped on screen. Phone: a sheet on the edge away from the target, so
- * the thing being explained is never covered. No target: centred.
- * @param {{ target: Rect|null, card: { width: number, height: number }, viewport: { width: number, height: number }, gap?: number, margin?: number }} opts
+ * with more room; ties favour right in LTR and left in RTL), always clamped on screen. Phone: a
+ * sheet on the edge away from the target, so the thing being explained is never covered. No
+ * target: centred.
+ * @param {{ target: Rect|null, card: { width: number, height: number }, viewport: { width: number, height: number }, gap?: number, margin?: number, dir?: 'ltr'|'rtl' }} opts
  * @returns {Placement}
  */
-export function placeCard({ target, card, viewport, gap = TOUR_GAP, margin = TOUR_MARGIN }) {
+export function placeCard({ target, card, viewport, gap = TOUR_GAP, margin = TOUR_MARGIN, dir = 'ltr' }) {
   const { width: vw, height: vh } = viewport;
   const maxLeft = vw - card.width - margin;
   const maxTop = vh - card.height - margin;
@@ -41,12 +42,19 @@ export function placeCard({ target, card, viewport, gap = TOUR_GAP, margin = TOU
   // A target near the bottom edge: the card's bottom still keeps the margin.
   const above = Math.min(target.top - gap, vh - margin) - card.height;
   if (above >= margin) return { mode: 'float', side: 'above', top: above, left: centredLeft };
-  // Tall targets (a side panel, a whole map): beside it, on the side with more room.
+  // Tall targets (a side panel, a whole map): beside it, on the side with more room (inline-end wins ties).
   const roomRight = vw - (target.left + target.width) - gap - margin;
   const roomLeft = target.left - gap - margin;
   const sideTop = clamp(target.top, margin, maxTop);
-  if (roomRight >= card.width && roomRight >= roomLeft) return { mode: 'float', side: 'right', top: sideTop, left: target.left + target.width + gap };
-  if (roomLeft >= card.width) return { mode: 'float', side: 'left', top: sideTop, left: target.left - gap - card.width };
+  const putRight = () => ({ mode: 'float', side: 'right', top: sideTop, left: target.left + target.width + gap });
+  const putLeft = () => ({ mode: 'float', side: 'left', top: sideTop, left: target.left - gap - card.width });
+  if (dir === 'rtl') {
+    if (roomLeft >= card.width && roomLeft >= roomRight) return putLeft();
+    if (roomRight >= card.width) return putRight();
+  } else {
+    if (roomRight >= card.width && roomRight >= roomLeft) return putRight();
+    if (roomLeft >= card.width) return putLeft();
+  }
   // Nothing fits: overlap the target's lower part rather than leave the screen.
   return { mode: 'float', side: 'below', top: clamp(below, margin, maxTop), left: centredLeft };
 }
